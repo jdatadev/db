@@ -1,0 +1,68 @@
+package dev.jdata.db.schema;
+
+import dev.jdata.db.utils.checks.Checks;
+
+public final class DatabaseSchemaVersion implements Comparable<DatabaseSchemaVersion> {
+
+    public static final int INITIAL_VERSION = 1;
+
+    public static DatabaseSchemaVersion of(int versionNumber) {
+
+        return new DatabaseSchemaVersion(versionNumber);
+    }
+
+    private final int versionNumber;
+
+    private DatabaseSchemaVersion(int versionNumber) {
+
+        this.versionNumber = Checks.isDatabaseSchemaVersionNumber(versionNumber);
+    }
+
+    public int getVersionNumber() {
+        return versionNumber;
+    }
+
+    @Override
+    public int compareTo(DatabaseSchemaVersion other) {
+
+        return Integer.compare(versionNumber, other.versionNumber);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Integer.hashCode(versionNumber);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+
+        final boolean result;
+
+        if (this == object) {
+
+            result = true;
+        }
+        else if (object == null) {
+
+            result = false;
+        }
+        else if (getClass() != object.getClass()) {
+
+            result = false;
+        }
+        else {
+            final DatabaseSchemaVersion other = (DatabaseSchemaVersion)object;
+
+            result = versionNumber == other.versionNumber;
+        }
+
+        return result;
+    }
+
+    @Override
+    public String toString() {
+
+        return getClass().getSimpleName() + " [versionNumber=" + versionNumber + "]";
+    }
+}
