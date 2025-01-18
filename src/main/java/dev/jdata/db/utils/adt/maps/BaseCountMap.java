@@ -27,7 +27,7 @@ public abstract class BaseCountMap<T, M extends Map<T, Integer>> implements Muta
     }
 
     @Override
-    public final int getNumElements() {
+    public final long getNumElements() {
 
         return map.size();
     }

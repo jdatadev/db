@@ -2,13 +2,14 @@ package dev.jdata.db.utils.adt.sets;
 
 import java.util.Arrays;
 
-import dev.jdata.db.utils.adt.DebugConstants;
+import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.elements.IntElements;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class IntSet extends BaseIntegerSet<int[]> {
+public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_INT_SET;
 
@@ -21,11 +22,10 @@ public final class IntSet extends BaseIntegerSet<int[]> {
     }
 
     public IntSet(int initialCapacityExponent, float loadFactor) {
-        super(initialCapacityExponent, loadFactor, int[]::new);
-
-        clearHashed();
+        super(initialCapacityExponent, loadFactor, int[]::new, IntSet::clearSet);
     }
 
+    @Override
     public boolean contains(int element) {
 
         Checks.isNotNegative(element);
@@ -227,17 +227,6 @@ public final class IntSet extends BaseIntegerSet<int[]> {
         return newSet;
     }
 
-    @Override
-    protected void clearHashed() {
-
-        clearSet(getHashed());
-    }
-
-    private static void clearSet(int[] set) {
-
-        Arrays.fill(set, NO_ELEMENT);
-    }
-
     private boolean add(int[] set, int value) {
 
         if (DEBUG) {
@@ -345,5 +334,10 @@ public final class IntSet extends BaseIntegerSet<int[]> {
         }
 
         return newAdded;
+    }
+
+    private static void clearSet(int[] set) {
+
+        Arrays.fill(set, NO_ELEMENT);
     }
 }

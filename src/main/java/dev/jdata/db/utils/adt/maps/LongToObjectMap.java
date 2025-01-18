@@ -1,9 +1,10 @@
 package dev.jdata.db.utils.adt.maps;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.DebugConstants;
+import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Checks;
@@ -44,7 +45,7 @@ public final class LongToObjectMap<T> extends BaseLongArrayMap<T[]> {
 
         final int index = getIndex(key);
 
-        final T result = index != NO_INDEX ? getHashed()[index] : null;
+        final T result = index != NO_INDEX ? getValues()[index] : null;
 
         if (DEBUG) {
 
@@ -70,7 +71,7 @@ public final class LongToObjectMap<T> extends BaseLongArrayMap<T[]> {
 
         if (index != NO_INDEX) {
 
-            getHashed()[index] = value;
+            getValues()[index] = value;
         }
 
         if (DEBUG) {
@@ -80,8 +81,14 @@ public final class LongToObjectMap<T> extends BaseLongArrayMap<T[]> {
     }
 
     @Override
-    void put(T[] map, int index, T[] newMap, int newIndex) {
+    protected void put(T[] values, int index, T[] newValues, int newIndex) {
 
-        newMap[newIndex] = map[index];
+        newValues[newIndex] = values[index];
+    }
+
+    @Override
+    protected void clearValues(T[] values) {
+
+        Arrays.fill(values, null);
     }
 }

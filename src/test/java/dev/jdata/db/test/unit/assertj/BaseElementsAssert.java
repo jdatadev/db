@@ -1,6 +1,6 @@
 package dev.jdata.db.test.unit.assertj;
 
-import dev.jdata.db.utils.adt.Elements;
+import dev.jdata.db.utils.adt.elements.Elements;
 
 public abstract class BaseElementsAssert<S extends BaseElementsAssert<S, A>, A extends Elements> extends BaseAssert<S, A> {
 
@@ -32,11 +32,11 @@ public abstract class BaseElementsAssert<S extends BaseElementsAssert<S, A>, A e
         return getThis();
     }
 
-    public final S hasNumElements(int expectedNumElements) {
+    public final S hasNumElements(long expectedNumElements) {
 
         isNotNull();
 
-        final int actualNumElements = actual.getNumElements();
+        final long actualNumElements = actual.getNumElements();
 
         if (actualNumElements != expectedNumElements) {
 

@@ -6,8 +6,8 @@ import java.util.Objects;
 import dev.jdata.db.data.BaseRows;
 import dev.jdata.db.data.RowDataNumBitsGetter;
 import dev.jdata.db.data.cache.DataCache;
-import dev.jdata.db.utils.adt.lists.LongDoublyLinkedList;
-import dev.jdata.db.utils.adt.lists.LongSinglyLinkedList;
+import dev.jdata.db.utils.adt.lists.LargeLongDoublyLinkedList;
+import dev.jdata.db.utils.adt.lists.LargeLongSinglyLinkedList;
 import dev.jdata.db.utils.adt.maps.LongToLongMap;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -23,15 +23,15 @@ public final class RowCache extends BaseRows implements DataCache {
     private final LargeByteArray cache;
     private final long[] numBits;
 
-    private final LongDoublyLinkedList insertionOrderList;
-    private final LongSinglyLinkedList insertionOrderFreeList;
+    private final LargeLongDoublyLinkedList insertionOrderList;
+    private final LargeLongSinglyLinkedList insertionOrderFreeList;
 
     public RowCache() {
 
         final int initialCapacityExponent = 0;
 
-        this.indexByRow = new LongToLongMap(initialCapacityExponent, long[]::new);
-        this.insertionOrderNodeByRow = new LongToLongMap(initialCapacityExponent, long[]::new);
+        this.indexByRow = new LongToLongMap(initialCapacityExponent);
+        this.insertionOrderNodeByRow = new LongToLongMap(initialCapacityExponent);
 
         final int initialCapacity = 1000;
 
@@ -42,8 +42,8 @@ public final class RowCache extends BaseRows implements DataCache {
 
         final int insertOrderListInnerCapacity = 1000 * 1000;
 
-        this.insertionOrderList = new LongDoublyLinkedList(initialInsertionOrderListCapacity, insertOrderListInnerCapacity);
-        this.insertionOrderFreeList = new LongSinglyLinkedList(initialInsertionOrderListCapacity, insertOrderListInnerCapacity);
+        this.insertionOrderList = new LargeLongDoublyLinkedList(initialInsertionOrderListCapacity, insertOrderListInnerCapacity);
+        this.insertionOrderFreeList = new LargeLongSinglyLinkedList(initialInsertionOrderListCapacity, insertOrderListInnerCapacity);
     }
 
     @Override

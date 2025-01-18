@@ -27,7 +27,7 @@ public abstract class BaseIntCountMap<M extends Map<Integer, Integer>, C extends
     }
 
     @Override
-    public final int getNumElements() {
+    public final long getNumElements() {
 
         return delegate.getNumElements();
     }

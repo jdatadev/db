@@ -10,11 +10,7 @@ public final class BitsUtilTest extends BaseTest {
     @Test
     @Category(UnitTest.class)
     public void testMask() {
-/*
-        assertThatThrownBy(() -> BitsUtil.mask(-1)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> BitsUtil.mask(0)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> BitsUtil.mask(9)).isInstanceOf(IllegalArgumentException.class);
-*/
+
         assertThat(BitsUtil.mask(1)).isEqualTo((byte)0x01);
         assertThat(BitsUtil.mask(2)).isEqualTo((byte)0x03);
         assertThat(BitsUtil.mask(3)).isEqualTo((byte)0x07);
@@ -23,6 +19,90 @@ public final class BitsUtilTest extends BaseTest {
         assertThat(BitsUtil.mask(6)).isEqualTo((byte)0x3F);
         assertThat(BitsUtil.mask(7)).isEqualTo((byte)0x7F);
         assertThat(BitsUtil.mask(8)).isEqualTo((byte)0xFF);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testMaskInt() {
+
+        assertThat(BitsUtil.maskInt(1, 0)).isEqualTo(0x01);
+        assertThat(BitsUtil.maskInt(2, 0)).isEqualTo(0x03);
+        assertThat(BitsUtil.maskInt(3, 0)).isEqualTo(0x07);
+        assertThat(BitsUtil.maskInt(4, 0)).isEqualTo(0x0F);
+        assertThat(BitsUtil.maskInt(5, 0)).isEqualTo(0x1F);
+        assertThat(BitsUtil.maskInt(6, 0)).isEqualTo(0x3F);
+        assertThat(BitsUtil.maskInt(7, 0)).isEqualTo(0x7F);
+        assertThat(BitsUtil.maskInt(8, 0)).isEqualTo(0xFF);
+
+        assertThat(BitsUtil.maskInt(1, 1)).isEqualTo(0x002);
+        assertThat(BitsUtil.maskInt(2, 1)).isEqualTo(0x006);
+        assertThat(BitsUtil.maskInt(3, 1)).isEqualTo(0x00E);
+        assertThat(BitsUtil.maskInt(4, 1)).isEqualTo(0x01E);
+        assertThat(BitsUtil.maskInt(5, 1)).isEqualTo(0x03E);
+        assertThat(BitsUtil.maskInt(6, 1)).isEqualTo(0x07E);
+        assertThat(BitsUtil.maskInt(7, 1)).isEqualTo(0x0FE);
+        assertThat(BitsUtil.maskInt(8, 1)).isEqualTo(0x1FE);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testMaskLong() {
+
+        assertThat(BitsUtil.maskLong(1, 0)).isEqualTo(0x01L);
+        assertThat(BitsUtil.maskLong(2, 0)).isEqualTo(0x03L);
+        assertThat(BitsUtil.maskLong(3, 0)).isEqualTo(0x07L);
+        assertThat(BitsUtil.maskLong(4, 0)).isEqualTo(0x0FL);
+        assertThat(BitsUtil.maskLong(5, 0)).isEqualTo(0x1FL);
+        assertThat(BitsUtil.maskLong(6, 0)).isEqualTo(0x3FL);
+        assertThat(BitsUtil.maskLong(7, 0)).isEqualTo(0x7FL);
+        assertThat(BitsUtil.maskLong(8, 0)).isEqualTo(0xFFL);
+
+        assertThat(BitsUtil.maskLong(1, 1)).isEqualTo(0x002L);
+        assertThat(BitsUtil.maskLong(2, 1)).isEqualTo(0x006L);
+        assertThat(BitsUtil.maskLong(3, 1)).isEqualTo(0x00EL);
+        assertThat(BitsUtil.maskLong(4, 1)).isEqualTo(0x01EL);
+        assertThat(BitsUtil.maskLong(5, 1)).isEqualTo(0x03EL);
+        assertThat(BitsUtil.maskLong(6, 1)).isEqualTo(0x07EL);
+        assertThat(BitsUtil.maskLong(7, 1)).isEqualTo(0x0FEL);
+        assertThat(BitsUtil.maskLong(8, 1)).isEqualTo(0x1FEL);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testApplyShiftedMask() {
+
+        final long value = 0b111000110010L;
+
+        assertThat(BitsUtil.applyShiftedMask(value, 0b11111L,               0)).isEqualTo(0b10010L);
+        assertThat(BitsUtil.applyShiftedMask(value, 0b111110L,              1)).isEqualTo(0b11001L);
+        assertThat(BitsUtil.applyShiftedMask(value, 0b1111100L,             2)).isEqualTo(0b01100L);
+        assertThat(BitsUtil.applyShiftedMask(value, 0b11111000L,            3)).isEqualTo(0b00110L);
+        assertThat(BitsUtil.applyShiftedMask(value, 0b111110000L,           4)).isEqualTo(0b00011L);
+        assertThat(BitsUtil.applyShiftedMask(value, 0b1111100000L,          5)).isEqualTo(0b10001L);
+        assertThat(BitsUtil.applyShiftedMask(value, 0b11111000000L,         6)).isEqualTo(0b11000L);
+        assertThat(BitsUtil.applyShiftedMask(value, 0b111110000000L,        7)).isEqualTo(0b11100L);
+        assertThat(BitsUtil.applyShiftedMask(value, 0b1111100000000L,       8)).isEqualTo(0b01110L);
+        assertThat(BitsUtil.applyShiftedMask(value, 0b11111000000000L,      9)).isEqualTo(0b00111L);
+        assertThat(BitsUtil.applyShiftedMask(value, 0b111110000000000L,     10)).isEqualTo(0b00011L);
+        assertThat(BitsUtil.applyShiftedMask(value, 0b1111100000000000L,    11)).isEqualTo(0b00001L);
+        assertThat(BitsUtil.applyShiftedMask(value, 0b11111000000000000L,   12)).isEqualTo(0b00000L);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testSetWithShiftedMask() {
+
+        final long value = 0b11001L;
+        final long existingValue = 0b111000110010L;
+
+        assertThat(BitsUtil.setWithShiftedMask(existingValue, value, 0b11111L,              0)).isEqualTo(0b111000111001L);
+        assertThat(BitsUtil.setWithShiftedMask(existingValue, value, 0b111110L,             1)).isEqualTo(0b111000110010L);
+        assertThat(BitsUtil.setWithShiftedMask(existingValue, value, 0b1111100L,            2)).isEqualTo(0b111001100110L);
+        assertThat(BitsUtil.setWithShiftedMask(existingValue, value, 0b11111000L,           3)).isEqualTo(0b111011001010L);
+        assertThat(BitsUtil.setWithShiftedMask(existingValue, value, 0b111110000L,          4)).isEqualTo(0b111110010010L);
+        assertThat(BitsUtil.setWithShiftedMask(existingValue, value, 0b1111100000L,         5)).isEqualTo(0b111100110010L);
+        assertThat(BitsUtil.setWithShiftedMask(existingValue, value, 0b11111000000L,        6)).isEqualTo(0b111001110010L);
+        assertThat(BitsUtil.setWithShiftedMask(existingValue, value, 0b111110000000L,       7)).isEqualTo(0b110010110010L);
     }
 
     @Test
@@ -38,6 +118,75 @@ public final class BitsUtilTest extends BaseTest {
         assertThat(BitsUtil.merge((byte)0b10101010, (byte)0b01010101, 6)).isEqualTo((byte)0b10101001);
         assertThat(BitsUtil.merge((byte)0b10101010, (byte)0b01010101, 7)).isEqualTo((byte)0b10101011);
         assertThat(BitsUtil.merge((byte)0b10101010, (byte)0b01010101, 8)).isEqualTo((byte)0b10101010);
+    }
+
+    private static enum TestEnum1 {
+
+        ONE
+    }
+
+    private static enum TestEnum2 {
+
+        ONE,
+        THREE
+    }
+
+    private static enum TestEnum3 {
+
+        ONE,
+        TWO,
+        THREE
+    }
+
+    private static enum TestEnum4 {
+
+        ONE,
+        TWO,
+        THREE,
+        FOUR
+    }
+
+    private static enum TestEnum5 {
+
+        ONE,
+        TWO,
+        THREE,
+        FOUR,
+        FIVE
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testGetNumEnumBitsInt() {
+
+        assertThatThrownBy(() -> BitsUtil.getNumEnumBits(null)).isInstanceOf(NullPointerException.class);
+
+        assertThat(BitsUtil.getNumEnumBits(TestEnum1.class)).isEqualTo(1);
+        assertThat(BitsUtil.getNumEnumBits(TestEnum2.class)).isEqualTo(1);
+        assertThat(BitsUtil.getNumEnumBits(TestEnum3.class)).isEqualTo(2);
+        assertThat(BitsUtil.getNumEnumBits(TestEnum4.class)).isEqualTo(2);
+        assertThat(BitsUtil.getNumEnumBits(TestEnum5.class)).isEqualTo(3);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testGetNumUnsignedBitsInt() {
+
+        assertThatThrownBy(() -> BitsUtil.getNumUnsignedBits(-1)).isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(BitsUtil.getNumUnsignedBits(0)).isEqualTo(1);
+
+        for (int i = 0; i < 31; ++ i) {
+
+            int testValue = 1 << i;
+
+            if (i > 0) {
+
+                testValue |= 1 << (i - 1);
+            }
+
+            assertThat(BitsUtil.getNumUnsignedBits(testValue)).isEqualTo(i + 1);
+        }
     }
 
     @Test

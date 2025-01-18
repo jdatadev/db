@@ -2,13 +2,14 @@ package dev.jdata.db.utils.adt.sets;
 
 import java.util.Arrays;
 
-import dev.jdata.db.utils.adt.DebugConstants;
+import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.elements.LongElements;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class LongSet extends BaseIntegerSet<long[]> {
+public final class LongSet extends BaseIntegerSet<long[]> implements LongElements {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_LONG_SET;
 
@@ -21,9 +22,7 @@ public final class LongSet extends BaseIntegerSet<long[]> {
     }
 
     public LongSet(int initialCapacityExponent, float loadFactor) {
-        super(initialCapacityExponent, loadFactor, long[]::new);
-
-        clearHashed();
+        super(initialCapacityExponent, loadFactor, long[]::new, LongSet::clearSet);
     }
 
     public LongSet(long[] values) {
@@ -35,6 +34,7 @@ public final class LongSet extends BaseIntegerSet<long[]> {
         }
     }
 
+    @Override
     public boolean contains(long element) {
 
         Checks.isNotNegative(element);
@@ -236,27 +236,6 @@ public final class LongSet extends BaseIntegerSet<long[]> {
         return newSet;
     }
 
-    @Override
-    protected void clearHashed() {
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        clearSet(getHashed());
-
-        if (DEBUG) {
-
-            exit();
-        }
-    }
-
-    private static void clearSet(long[] set) {
-
-        Arrays.fill(set, NO_ELEMENT);
-    }
-
     private boolean add(long[] set, long value) {
 
         if (DEBUG) {
@@ -364,5 +343,10 @@ public final class LongSet extends BaseIntegerSet<long[]> {
         }
 
         return newAdded;
+    }
+
+    private static void clearSet(long[] set) {
+
+        Arrays.fill(set, NO_ELEMENT);
     }
 }

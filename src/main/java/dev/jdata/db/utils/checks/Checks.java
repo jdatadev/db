@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.function.Predicate;
 
 import dev.jdata.db.schema.DatabaseSchemaVersion;
+import dev.jdata.db.utils.adt.elements.Elements;
 import dev.jdata.db.utils.function.CharPredicate;
 
 public class Checks {
@@ -249,6 +250,14 @@ public class Checks {
         }
 
         return numElements;
+    }
+
+    public static void areSameNumElements(Elements elements1, Elements elements2) {
+
+        if (elements1.getNumElements() != elements2.getNumElements()) {
+
+            throw new IllegalArgumentException();
+        }
     }
 
     public static int isInitialCapacity(int initialCapacity) {

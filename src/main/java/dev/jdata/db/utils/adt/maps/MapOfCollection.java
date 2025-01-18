@@ -79,7 +79,7 @@ public abstract class MapOfCollection<K, V, C extends Collection<V>, M extends M
     }
 
     @Override
-    public final int getNumElements() {
+    public final long getNumElements() {
         return numElements;
     }
 

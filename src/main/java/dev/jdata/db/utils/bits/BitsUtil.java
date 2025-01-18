@@ -17,6 +17,11 @@ public class BitsUtil {
         return (byte)((1 << numBits) - 1);
     }
 
+    public static int maskInt(int numBits, int shift) {
+
+        return ((1 << numBits) - 1) << shift;
+    }
+
     public static long maskLong(int numBits, int shift) {
 
         return ((1L << numBits) - 1) << shift;
@@ -37,6 +42,20 @@ public class BitsUtil {
         final byte mask = mask(8 - numBitsFromByte1);
 
         return (byte)((byte1 & (~mask)) | (byte2 & mask));
+    }
+
+    public static int getNumEnumBits(Class<? extends Enum<?>> enumClass) {
+
+        Objects.requireNonNull(enumClass);
+
+        return getNumUnsignedBits(enumClass.getEnumConstants().length - 1);
+    }
+
+    public static int getNumUnsignedBits(int value) {
+
+        Checks.isNotNegative(value);
+
+        return getNumStorageBits(value, false);
     }
 
     public static int getNumStorageBits(int value, boolean signed) {

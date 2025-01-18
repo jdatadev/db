@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.adt.maps;
 
-import dev.jdata.db.utils.adt.DebugConstants;
+import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -49,6 +49,16 @@ public final class LongToLongMap extends BaseLongArrayMap<long[]> {
         return result;
     }
 
+    public void keysAndValues(long[] keysDst, long[] valuesDst) {
+
+        final long numElements = getNumElements();
+
+        Checks.areEqual(keysDst.length, numElements);
+        Checks.areEqual(valuesDst.length, numElements);
+
+        keysAndValues(keysDst, getValues(), valuesDst, (src, srcIndex, dst, dstIndex) -> dst[dstIndex] = src[srcIndex]);
+    }
+
     public void put(long key, long value) {
 
         Checks.isNotNegative(key);
@@ -65,7 +75,7 @@ public final class LongToLongMap extends BaseLongArrayMap<long[]> {
 
         if (index != NO_INDEX) {
 
-            getHashed()[index] = value;
+            getValues()[index] = value;
         }
 
         if (DEBUG) {
@@ -74,9 +84,35 @@ public final class LongToLongMap extends BaseLongArrayMap<long[]> {
         }
     }
 
-    @Override
-    void put(long[] map, int index, long[] newMap, int newIndex) {
+    public long removeAndReturnValue(long key) {
 
-        newMap[newIndex] = map[index];
+        Checks.isNotNegative(key);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("key", key));
+        }
+
+        final int index = removeAndReturnIndex(key);
+
+        final long result = index != NO_INDEX ? getHashed()[index] : NO_VALUE;
+
+        if (DEBUG) {
+
+            exit(result, b -> b.add("key", key));
+        }
+
+        return result;
+    }
+
+    @Override
+    protected void put(long[] values, int index, long[] newValues, int newIndex) {
+
+        newValues[newIndex] = values[index];
+    }
+
+    @Override
+    protected void clearValues(long[] valuesArray) {
+
     }
 }

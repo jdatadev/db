@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
 
-import dev.jdata.db.utils.adt.DebugConstants;
+import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.ForEachSequenceElement;
 import dev.jdata.db.utils.adt.MutableElements;
 import dev.jdata.db.utils.checks.Checks;
@@ -63,7 +63,7 @@ public final class TwoDimensionalArray<T> implements MutableElements, PrintDebug
     }
 
     @Override
-    public final int getNumElements() {
+    public final long getNumElements() {
         return numElements;
     }
 

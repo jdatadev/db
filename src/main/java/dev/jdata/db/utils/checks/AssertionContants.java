@@ -11,7 +11,7 @@ public class AssertionContants {
 
     public static final boolean ASSERT_BASE_MAP = ASSERT_MAPS;
     public static final boolean ASSERT_BASE_EXPONENT_MAP = ASSERT_MAPS;
-    public static final boolean ASSERT_BASE_LONG_ARRAY_MAP = ASSERT_MAPS;
+    public static final boolean ASSERT_BASE_LONG_MAP = ASSERT_MAPS;
     public static final boolean ASSERT_LONG_TO_OBJECT_MAP = ASSERT_MAPS;
 
     public static final boolean ASSERT_INT_SET = ASSERT_SETS;

@@ -1,10 +1,18 @@
 package dev.jdata.db.utils.adt.lists;
 
-public interface LongList extends LongListIterable {
+import dev.jdata.db.utils.adt.elements.LongElements;
 
-    long addHead(long value);
-    long addTail(long value);
-    long getHeadNode();
-    long getTailNode();
-    long removeHead();
+public interface LongList extends LongElements {
+
+    boolean containsOnly(long value);
+
+    @FunctionalInterface
+    public interface ContainsOnlyPredicate {
+
+        boolean test(long inputValue, long listValue);
+    }
+
+    boolean containsOnly(long value, ContainsOnlyPredicate predicate);
+
+    long[] toArray();
 }

@@ -1,14 +1,16 @@
 package dev.jdata.db.utils.adt.hashed;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.DebugConstants;
+import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.MutableElements;
+import dev.jdata.db.utils.adt.elements.BaseNumElements;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 
-abstract class BaseHashed<T> implements MutableElements, PrintDebug {
+abstract class BaseHashed<T> extends BaseNumElements implements MutableElements, PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_HASHED;
 
@@ -16,18 +18,17 @@ abstract class BaseHashed<T> implements MutableElements, PrintDebug {
 
     private final float loadFactor;
     private final IntFunction<T> createHashed;
+    private final Consumer<T> clearHashed;
 
     private T hashed;
-    private int numElements;
     private int capacity;
 
     protected abstract int computeCapacity();
     protected abstract T rehash(T hashed, int newCapacity);
-    protected abstract void clearHashed();
 
     abstract int increaseCapacity();
 
-    BaseHashed(int initialCapacity, float loadFactor, IntFunction<T> createHashed) {
+    BaseHashed(int initialCapacity, float loadFactor, IntFunction<T> createHashed, Consumer<T> clearHashed) {
 
         if (DEBUG) {
 
@@ -37,11 +38,15 @@ abstract class BaseHashed<T> implements MutableElements, PrintDebug {
         Checks.isInitialCapacity(initialCapacity);
         Checks.isLoadFactor(loadFactor);
         Objects.requireNonNull(createHashed);
+        Objects.requireNonNull(clearHashed);
 
         this.loadFactor = loadFactor;
         this.createHashed = createHashed;
+        this.clearHashed = clearHashed;
 
         this.hashed = createHashed.apply(initialCapacity);
+
+        clearHashed.accept(hashed);
 
         this.capacity = computeCapacity();
 
@@ -59,32 +64,21 @@ abstract class BaseHashed<T> implements MutableElements, PrintDebug {
             enter();
         }
 
-        this.numElements = 0;
+        super.clearNumElements();
 
-        clearHashed();
+        clearHashed.accept(hashed);
 
         if (DEBUG) {
 
-            exit(numElements);
+            exit();
         }
-    }
-
-    @Override
-    public final boolean isEmpty() {
-
-        return numElements == 0;
-    }
-
-    @Override
-    public final int getNumElements() {
-        return numElements;
     }
 
     protected final T getHashed() {
         return hashed;
     }
 
-    protected static boolean shouldRehash(int numElements, int capacity, float loadFactor) {
+    protected static boolean shouldRehash(long numElements, int capacity, float loadFactor) {
 
         final float load = numElements / (float)capacity;
 
@@ -98,7 +92,7 @@ abstract class BaseHashed<T> implements MutableElements, PrintDebug {
             enter(b -> b.add("numAdditionalElements", numAdditionalElements).add("capacity", capacity));
         }
 
-        if (shouldRehash(numElements + numAdditionalElements, capacity, loadFactor)) {
+        if (shouldRehash(getNumElements() + numAdditionalElements, capacity, loadFactor)) {
 
             final int newCapacity = increaseCapacity();
 
@@ -118,36 +112,6 @@ abstract class BaseHashed<T> implements MutableElements, PrintDebug {
         }
     }
 
-    protected final void increaseNumElements() {
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        ++ numElements;
-
-        if (DEBUG) {
-
-            exit(numElements);
-        }
-    }
-
-    protected final void decreaseNumElements() {
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        -- numElements;
-
-        if (DEBUG) {
-
-            exit(numElements);
-        }
-    }
-
     protected final T createHashed(int capacity) {
 
         Checks.isInitialCapacity(capacity);
@@ -158,6 +122,8 @@ abstract class BaseHashed<T> implements MutableElements, PrintDebug {
         }
 
         final T result = createHashed.apply(capacity);
+
+        clearHashed.accept(result);
 
         if (DEBUG) {
 

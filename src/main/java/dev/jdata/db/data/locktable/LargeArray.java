@@ -3,10 +3,10 @@ package dev.jdata.db.data.locktable;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.LongElements;
+import dev.jdata.db.utils.adt.elements.Elements;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class LargeArray<O, I> implements LongElements {
+public abstract class LargeArray<O, I> implements Elements {
 
     private final int innerCapacity;
 

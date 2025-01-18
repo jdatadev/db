@@ -1,6 +1,6 @@
 package dev.jdata.db.test.unit.assertj;
 
-import dev.jdata.db.utils.adt.Elements;
+import dev.jdata.db.utils.adt.elements.Elements;
 
 public final class ElementsAssert extends BaseElementsAssert<ElementsAssert, Elements> {
 

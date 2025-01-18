@@ -4,6 +4,20 @@ import dev.jdata.db.utils.checks.Checks;
 
 public class Integers {
 
+    public static int checkLongToInt(long value) {
+
+        if (value < Integer.MIN_VALUE) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (value > Integer.MAX_VALUE) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return (int)value;
+    }
+
     public static int checkUnsignedLongToUnsignedInt(long value) {
 
         Checks.isNotNegative(value);

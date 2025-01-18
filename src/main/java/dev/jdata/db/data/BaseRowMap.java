@@ -1,5 +1,6 @@
 package dev.jdata.db.data;
 
+import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
 
 public abstract class BaseRowMap {
@@ -8,9 +9,20 @@ public abstract class BaseRowMap {
 
     private static final int TABLE_ID_BITS = 16;
     private static final int ROW_ID_BITS = NUM_BITS - TABLE_ID_BITS;
+    private static final long ROW_ID_MASK = BitsUtil.maskLong(ROW_ID_BITS, 0);
 
     private static final int MAX_TABLE_ID = 1 << TABLE_ID_BITS;
     private static final long MAX_ROW_ID = 1L << ROW_ID_BITS;
+
+    public static int getTableId(long key) {
+
+        return (int)(key >>> ROW_ID_BITS);
+    }
+
+    public static long getRowId(long key) {
+
+        return key & ROW_ID_MASK;
+    }
 
     protected static long makeKey(int tableId, long rowId) {
 

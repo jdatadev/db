@@ -23,6 +23,16 @@ public abstract class BaseAssert<S extends BaseAssert<S, A>, A> extends Abstract
         failWithActualExpectedAndMessage(actual, expected, "");
     }
 
+    protected final <T> void failWithContains(T value) {
+
+        failWithActualExpected(false, true);
+    }
+
+    protected final <T> void failWithDoesNotContain(T value) {
+
+        failWithActualExpected(true, false);
+    }
+
     protected final void failWithMessage(String message) {
 
         Objects.requireNonNull(message);
