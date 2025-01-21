@@ -56,6 +56,11 @@ public abstract class BaseNumElements extends BaseElements implements Elements, 
             enter();
         }
 
+        if (numElements == 0L) {
+
+            throw new IllegalStateException();
+        }
+
         -- numElements;
 
         if (DEBUG) {

@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.adt.maps;
 
-public final class LongToObjectMapTest extends BaseLongToIntegerOrObjectTest<LongToObjectMap<String>> {
+public final class LongToObjectMapTest extends BaseLongToIntegerOrObjectTest<String[], LongToObjectMap<String>> {
 
     @Override
     LongToObjectMap<String> createMap(int initialCapacity) {
@@ -9,14 +9,37 @@ public final class LongToObjectMapTest extends BaseLongToIntegerOrObjectTest<Lon
     }
 
     @Override
-    int get(LongToObjectMap<String> map, long key) {
+    String[] createValuesArray(int length) {
 
-        return Integer.parseInt(map.get(key));
+        return new String[length];
     }
 
     @Override
-    void put(LongToObjectMap<String> map, long key, int value) {
+    int getValue(String[] values, int index) {
+
+        return valueToInt(values[index]);
+    }
+
+    @Override
+    void keysAndValues(LongToObjectMap<String> map, long[] keysDst, String[] valuesDst) {
+
+        map.keysAndValues(keysDst, valuesDst);
+    }
+
+    @Override
+    int get(LongToObjectMap<String> map, int key) {
+
+        return valueToInt(map.get(key));
+    }
+
+    @Override
+    void put(LongToObjectMap<String> map, int key, int value) {
 
         map.put(key, String.valueOf(value));
+    }
+
+    private static int valueToInt(String value) {
+
+        return Integer.parseInt(value);
     }
 }

@@ -7,6 +7,7 @@ import dev.jdata.db.utils.adt.KeySetElements;
 import dev.jdata.db.utils.adt.elements.Elements;
 import dev.jdata.db.utils.adt.maps.IMapOfCollection;
 import dev.jdata.db.utils.adt.maps.LongKeyMap;
+import dev.jdata.db.utils.adt.sets.IntSet;
 import dev.jdata.db.utils.adt.sets.LongSet;
 
 public class CustomAssertJAssertions extends org.assertj.core.api.Assertions {
@@ -29,6 +30,11 @@ public class CustomAssertJAssertions extends org.assertj.core.api.Assertions {
     public static <K, V, C extends Collection<V>> MapOfCollectionAssert<K, V, C> assertThat(IMapOfCollection<K, V, C> actual) {
 
         return new MapOfCollectionAssert<>(actual);
+    }
+
+    public static IntSetAssert assertThat(IntSet actual) {
+
+        return new IntSetAssert(actual);
     }
 
     public static LongSetAssert assertThat(LongSet actual) {

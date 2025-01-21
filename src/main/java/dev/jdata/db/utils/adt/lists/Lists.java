@@ -11,6 +11,7 @@ import java.util.function.Predicate;
 
 import dev.jdata.db.utils.adt.collections.BaseCollections;
 import dev.jdata.db.utils.adt.collections.Coll;
+import dev.jdata.db.utils.adt.elements.ByIndex;
 
 public class Lists extends BaseCollections {
 
@@ -57,5 +58,25 @@ public class Lists extends BaseCollections {
         Objects.requireNonNull(mapper);
 
         return filterAndMap(list, predicate, mapper, ArrayList::new);
+    }
+
+    public static <T> boolean containsInstance(List<T> list, T instance) {
+
+        return ByIndex.containsInstance(list, list.size(), instance, (b, i) -> b.get(i), IndexOutOfBoundsException::new);
+    }
+
+    public static <T> boolean containsInstance(List<T> list, int startIndex, int numElements, T instance) {
+
+        return ByIndex.containsInstance(list, list.size(), startIndex, numElements, instance, (b, i) -> b.get(i), IndexOutOfBoundsException::new);
+    }
+
+    public static <T> int findIndex(List<T> list, Predicate<T> predicate) {
+
+        return ByIndex.findIndex(list, list.size(), (b, i) -> predicate.test(b.get(i)), IndexOutOfBoundsException::new);
+    }
+
+    public static <T> int findIndex(List<T> list, int startIndex, int numElements, Predicate<T> predicate) {
+
+        return ByIndex.findIndex(list, list.size(), startIndex, numElements, (b, i) -> predicate.test(b.get(i)), IndexOutOfBoundsException::new);
     }
 }

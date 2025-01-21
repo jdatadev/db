@@ -1,6 +1,7 @@
 package dev.jdata.db.utils.checks;
 
 import java.util.Collection;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import dev.jdata.db.schema.DatabaseSchemaVersion;
@@ -39,6 +40,16 @@ public class Checks {
         return value;
     }
 
+    public static long isAboveZero(long value) {
+
+        if (value < 1L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return value;
+    }
+
     public static void areEqual(int value1, int value2) {
 
         if (value1 != value2) {
@@ -54,6 +65,15 @@ public class Checks {
             throw new IllegalArgumentException();
         }
     }
+
+    public static <T> void areNotEqual(T object1, T object2) {
+
+        if (object1.equals(object2)) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
 
     public static int isDecimalPrecision(int value) {
 
@@ -219,6 +239,16 @@ public class Checks {
         return array;
     }
 
+    public static <T> T[] checkElements(T[] array, Consumer<T> check) {
+
+        for (T element : array) {
+
+            check.accept(element);
+        }
+
+        return array;
+    }
+
     public static <T> T[] areElements(T[] array, Predicate<T> predicate) {
 
         for (T element : array) {
@@ -255,6 +285,14 @@ public class Checks {
     public static void areSameNumElements(Elements elements1, Elements elements2) {
 
         if (elements1.getNumElements() != elements2.getNumElements()) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void areSameLength(int[] array1, int[] array2) {
+
+        if (array1.length != array2.length) {
 
             throw new IllegalArgumentException();
         }
@@ -314,6 +352,16 @@ public class Checks {
         }
 
         return offset;
+    }
+
+    public static int isLengthAboveOrAtZero(int length) {
+
+        if (length < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return length;
     }
 
     public static int isLengthAboveZero(int length) {
@@ -479,6 +527,26 @@ public class Checks {
         }
 
         return transactionId;
+    }
+
+    public static int isDescriptor(int descriptor) {
+
+        if (descriptor < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return descriptor;
+    }
+
+    public static int isSessionDescriptor(int sessionDescriptor) {
+
+        return Checks.isDescriptor(sessionDescriptor);
+    }
+
+    public static int isTransactionDescriptor(int transactionDescriptor) {
+
+        return Checks.isDescriptor(transactionDescriptor);
     }
 
     public static int isStatementId(int statementId) {

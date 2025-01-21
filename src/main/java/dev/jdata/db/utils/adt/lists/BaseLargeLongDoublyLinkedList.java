@@ -35,7 +35,7 @@ abstract class BaseLargeLongDoublyLinkedList<T> extends BaseLargeDoublyLinkedLis
 
     final long addHeadValue(T instance, long value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
 
-        final long node = super.addHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
+        final long node = addHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
         setValue(node, value);
 

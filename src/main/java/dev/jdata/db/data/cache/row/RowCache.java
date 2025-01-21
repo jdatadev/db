@@ -82,7 +82,7 @@ public final class RowCache extends BaseRows implements DataCache {
 
         final boolean found;
 
-        final long rowKey = makeKey(tableId, rowId);
+        final long rowKey = makeHashKey(tableId, rowId);
 
         final long index = getByteArrayIndex(rowKey);
 
@@ -128,7 +128,7 @@ public final class RowCache extends BaseRows implements DataCache {
             throw new IllegalArgumentException();
         }
 
-        final long rowKey = makeKey(tableId, rowId);
+        final long rowKey = makeHashKey(tableId, rowId);
 
         addToInsertionOrderList(rowKey);
     }
@@ -160,7 +160,7 @@ public final class RowCache extends BaseRows implements DataCache {
 
     private long getByteArrayIndex(int tableId, long rowId) {
 
-        return getByteArrayIndex(makeKey(tableId, rowId));
+        return getByteArrayIndex(makeHashKey(tableId, rowId));
     }
 
     private long getByteArrayIndex(long rowKey) {

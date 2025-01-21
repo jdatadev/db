@@ -75,7 +75,7 @@ public abstract class BasePath {
 
         Checks.areElements(pathNames, Checks::isPathName);
 
-        this.parts = Arrays.copyOf(pathNames, pathNames.length);
+        this.parts = Array.copyOf(pathNames);
     }
 
     BasePath(String[] pathNames, String additionalPathName) {

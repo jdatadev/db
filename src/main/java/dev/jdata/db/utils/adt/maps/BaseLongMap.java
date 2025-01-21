@@ -101,12 +101,6 @@ public abstract class BaseLongMap<T> extends BaseExponentMap<long[]> implements 
         keysAndValues(dst, null, null, null);
     }
 
-    @FunctionalInterface
-    protected interface ValueSetter<S, T> {
-
-        void setValue(S src, int srcIndex, T dst, int dstIndex);
-    }
-
     protected final <S, D> void keysAndValues(long[] keysDst, S src, D dst, ValueSetter<S, D> valueSetter) {
 
         if (DEBUG) {

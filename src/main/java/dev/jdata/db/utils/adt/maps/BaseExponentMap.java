@@ -5,7 +5,13 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.hashed.BaseExponentHashed;
 
-abstract class BaseExponentMap<T> extends BaseExponentHashed<T> {
+public abstract class BaseExponentMap<T> extends BaseExponentHashed<T> {
+
+    @FunctionalInterface
+    protected interface ValueSetter<S, T> {
+
+        void setValue(S src, int srcIndex, T dst, int dstIndex);
+    }
 
     BaseExponentMap(int initialCapacityExponent, float loadFactor, IntFunction<T> createHashed, Consumer<T> clearHashed) {
         super(initialCapacityExponent, loadFactor, createHashed, clearHashed);

@@ -17,12 +17,26 @@ public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
 
     private static final int NO_ELEMENT = -1;
 
+    public static IntSet of(int ... values) {
+
+        return new IntSet(values);
+    }
+
     public IntSet(int initialCapacityExponent) {
         this(initialCapacityExponent, HashedConstants.DEFAULT_LOAD_FACTOR);
     }
 
     public IntSet(int initialCapacityExponent, float loadFactor) {
         super(initialCapacityExponent, loadFactor, int[]::new, IntSet::clearSet);
+    }
+
+    private IntSet(int[] values) {
+        this(computeCapacityExponent(values.length, HashedConstants.DEFAULT_LOAD_FACTOR), HashedConstants.DEFAULT_LOAD_FACTOR);
+
+        for (int value : values) {
+
+            add(value);
+        }
     }
 
     @Override

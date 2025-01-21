@@ -5,9 +5,10 @@ import java.util.Collections;
 import java.util.Objects;
 
 import dev.jdata.db.test.unit.assertj.CustomAssertJAssertions;
+import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.elements.Elements;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.scalars.Integers;
 
 public abstract class BaseTest extends CustomAssertJAssertions {
 
@@ -66,18 +67,17 @@ public abstract class BaseTest extends CustomAssertJAssertions {
         assertThat(collection).contains(value);
     }
 
+    protected static void checkIsEmpty(Elements elements) {
+
+        Objects.requireNonNull(elements);
+
+        assertThat(elements).isEmpty();
+        assertThat(elements).hasNumElements(0L);
+    }
+
     protected static byte[] byteArray(int ... values) {
 
-        final int length = values.length;
-
-        final byte[] result = new byte[length];
-
-        for (int i = 0; i < length; ++ i) {
-
-            result[i] = Integers.checkUnsignedIntToUnsignedByte(values[i]);
-        }
-
-        return result;
+        return Array.toUnsignedByteArray(values);
     }
 
     protected static RelativeFilePath makeTestFilePath(String fileName) {

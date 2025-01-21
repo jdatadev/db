@@ -13,4 +13,9 @@ public final class Table extends ColumnsObject {
 
         Checks.isTableId(id);
     }
+
+    public boolean hasSyntheticPrimaryKey() {
+
+        throw new UnsupportedOperationException();
+    }
 }

@@ -2,7 +2,7 @@ package dev.jdata.db.utils.adt.lists;
 
 import dev.jdata.db.utils.adt.lists.LongList.ContainsOnlyPredicate;
 
-public final class LargeLongMultiHeadDoublyLinkedList<T> extends BaseLargeLongDoublyLinkedList<T> implements LongMultiList {
+public final class LargeLongMultiHeadDoublyLinkedList<T> extends BaseLargeLongDoublyLinkedList<T> implements LongMutableMultiList<T> {
 
     public LargeLongMultiHeadDoublyLinkedList(int initialOuterCapacity, int innerCapacity) {
         super(initialOuterCapacity, innerCapacity);
@@ -18,11 +18,13 @@ public final class LargeLongMultiHeadDoublyLinkedList<T> extends BaseLargeLongDo
         return containsOnlyValue(value, headNode);
     }
 
+    @Override
     public boolean containsOnly(long value, long headNode, ContainsOnlyPredicate predicate) {
 
         return containsOnlyValue(value, headNode, predicate);
     }
 
+    @Override
     public long findNode(long value, long headNode) {
 
         return findValue(value, headNode);
@@ -38,6 +40,7 @@ public final class LargeLongMultiHeadDoublyLinkedList<T> extends BaseLargeLongDo
         return getValue(removeTailNodeAndReturnNode(instance, tailNode, headNodeSetter, tailNodeSetter));
     }
 
+    @Override
     public long removeNode(T instance, long node, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
 
         return getValue(removeListNodeAndReturnNode(instance, node, headNode, tailNode, headNodeSetter, tailNodeSetter));

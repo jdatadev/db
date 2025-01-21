@@ -1,45 +1,41 @@
 package dev.jdata.db.data.locktable;
 
-import dev.jdata.db.data.locktable.LockTable.LockType;
+import dev.jdata.db.LockType;
+import dev.jdata.db.utils.adt.elements.Elements;
 
-public final class LockHolders {
+public final class LockHolders implements Elements {
 
-    private final long[] transactionValues;
-    private final int[] statementValues;
+    private final long[] lockInfoValues;
 
-    LockHolders(long[] transactionValues, int[] statementValues) {
+    LockHolders(long[] lockInfoValues) {
 
-        this.transactionValues = transactionValues;
-        this.statementValues = statementValues;
+        this.lockInfoValues = lockInfoValues;
     }
 
-    public int getNumTransactionValues() {
+    @Override
+    public boolean isEmpty() {
 
-        return transactionValues.length;
+        return lockInfoValues.length == 0;
     }
 
-    public long getTransactionId(int index) {
+    @Override
+    public long getNumElements() {
 
-        return LockTable.transactionId(transactionValues[index]);
+        return lockInfoValues.length;
+    }
+
+    public int getTransactionDescriptor(int index) {
+
+        return LockTable.transactionDescriptor(lockInfoValues[index]);
     }
 
     public LockType getTransactionLockType(int index) {
 
-        return LockTable.transactionLockType(transactionValues[index]);
-    }
-
-    public int getNumStatementValues() {
-
-        return statementValues.length;
+        return LockTable.transactionLockType(lockInfoValues[index]);
     }
 
     public int getStatementId(int index) {
 
-        return LockTable.statementId(statementValues[index]);
-    }
-
-    public LockType getStatementLockType(int index) {
-
-        return LockTable.statementLockType(statementValues[index]);
+        return LockTable.statementId(lockInfoValues[index]);
     }
 }

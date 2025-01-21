@@ -1,75 +1,8 @@
 package dev.jdata.db.utils.adt.maps;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import dev.jdata.db.utils.scalars.Integers;
 
-public final class LongToLongMapTest extends BaseLongToIntegerOrObjectTest<LongToLongMap> {
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testKeysAndValues() {
-
-        final LongToLongMap map = createMap(0);
-
-        assertThat(map).isEmpty();
-
-        put(map, 123, 234);
-        put(map, 345, 456);
-        put(map, 567, 678);
-
-        final int numElements = 3;
-
-        assertThatThrownBy(() -> {
-
-            final long[] keysDst = new long[numElements + 1];
-            final long[] valuesDst = new long[numElements];
-
-            map.keysAndValues(keysDst, valuesDst);
-        })
-        .isInstanceOf(IllegalArgumentException.class);
-
-        assertThatThrownBy(() -> {
-
-            final long[] keysDst = new long[numElements];
-            final long[] valuesDst = new long[numElements + 1];
-
-            map.keysAndValues(keysDst, valuesDst);
-        })
-        .isInstanceOf(IllegalArgumentException.class);
-
-        final long[] keysDst = new long[numElements];
-        final long[] valuesDst = new long[numElements];
-
-        map.keysAndValues(keysDst, valuesDst);
-
-        for (int i = 0; i < numElements; ++ i) {
-
-            final long expectedValue;
-
-            switch ((int)keysDst[i]) {
-
-            case 123:
-
-                expectedValue = 234L;
-                break;
-
-            case 345:
-
-                expectedValue = 456L;
-                break;
-
-            case 567:
-
-                expectedValue = 678L;
-                break;
-
-            default:
-                throw new UnsupportedOperationException();
-            }
-
-            assertThat(valuesDst[i]).isEqualTo(expectedValue);
-        }
-    }
+public final class LongToLongMapTest extends BaseLongToIntegerOrObjectTest<long[], LongToLongMap> {
 
     @Override
     LongToLongMap createMap(int initialCapacity) {
@@ -78,13 +11,31 @@ public final class LongToLongMapTest extends BaseLongToIntegerOrObjectTest<LongT
     }
 
     @Override
-    int get(LongToLongMap map, long key) {
+    long[] createValuesArray(int length) {
 
-        return (int)map.get(key);
+        return new long[length];
     }
 
     @Override
-    void put(LongToLongMap map, long key, int value) {
+    int getValue(long[] values, int index) {
+
+        return Integers.checkUnsignedLongToUnsignedInt(values[index]);
+    }
+
+    @Override
+    void keysAndValues(LongToLongMap map, long[] keysDst, long[] valuesDst) {
+
+        map.keysAndValues(keysDst, valuesDst);
+    }
+
+    @Override
+    int get(LongToLongMap map, int key) {
+
+        return Integers.checkUnsignedLongToUnsignedInt(map.get(key));
+    }
+
+    @Override
+    void put(LongToLongMap map, int key, int value) {
 
         map.put(key, value);
     }

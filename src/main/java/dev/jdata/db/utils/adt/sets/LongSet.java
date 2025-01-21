@@ -17,6 +17,11 @@ public final class LongSet extends BaseIntegerSet<long[]> implements LongElement
 
     private static final long NO_ELEMENT = -1L;
 
+    public static LongSet of(long ... values) {
+
+        return new LongSet(values);
+    }
+
     public LongSet(int initialCapacityExponent) {
         this(initialCapacityExponent, HashedConstants.DEFAULT_LOAD_FACTOR);
     }
@@ -25,7 +30,7 @@ public final class LongSet extends BaseIntegerSet<long[]> implements LongElement
         super(initialCapacityExponent, loadFactor, long[]::new, LongSet::clearSet);
     }
 
-    public LongSet(long[] values) {
+    private LongSet(long[] values) {
         this(computeCapacityExponent(values.length, HashedConstants.DEFAULT_LOAD_FACTOR), HashedConstants.DEFAULT_LOAD_FACTOR);
 
         for (long value : values) {

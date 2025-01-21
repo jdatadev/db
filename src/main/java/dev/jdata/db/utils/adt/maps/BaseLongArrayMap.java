@@ -9,8 +9,6 @@ abstract class BaseLongArrayMap<T> extends BaseLongMap<T> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_ARRAY_MAP;
 
-//    private static final boolean ASSERT = AssertionContants.ASSERT_BASE_LONG_MAP;
-
     BaseLongArrayMap(int initialCapacityExponent, IntFunction<T> createValuesArray) {
         this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, HashedConstants.DEFAULT_LOAD_FACTOR, createValuesArray);
     }

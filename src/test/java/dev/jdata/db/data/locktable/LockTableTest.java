@@ -6,96 +6,146 @@ import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import dev.jdata.db.data.locktable.LockTable.LockType;
+import dev.jdata.db.LockType;
 import dev.jdata.db.data.locktable.LockTable.NotLockedException;
 import dev.jdata.db.test.unit.BaseTest;
 
 public final class LockTableTest extends BaseTest {
 
-    @Test
-    @Category(UnitTest.class)
-    public void testReadLockAndUnlock() throws NotLockedException {
+    @FunctionalInterface
+    private interface LockTableFunction {
 
-        checkLockAndUnlock(LockTable::tryReadLock, LockTable::readUnlock, LockType.READ);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public void testWriteLockAndUnlock() throws NotLockedException {
-
-        checkLockAndUnlock(LockTable::tryWriteLock, LockTable::writeUnlock, LockType.WRITE);
+        boolean tryLockTable(LockTable lockTable, int tableId, int transactionDescriptor, int statementId);
     }
 
     @FunctionalInterface
-    private interface LockFunction {
+    private interface UnlockTableFunction {
 
-        boolean tryLock(LockTable lockTable, long transactionId, int statementId, int tableId, long rowId);
+        void unlockTable(LockTable lockTable, int tableId, int transactionDescriptor, int statementId) throws NotLockedException;
     }
 
     @FunctionalInterface
-    private interface UnlockFunction {
+    private interface LockRowFunction {
 
-        void unlock(LockTable lockTable, long transactionId, int statementId, int tableId, long rowId) throws NotLockedException;
+        boolean tryLockRow(LockTable lockTable, int tableId, long rowId, int transactionDescriptor, int statementId);
     }
 
-    private void checkLockAndUnlock(LockFunction lockFunction, UnlockFunction unlockFunction, LockType expectedLockType) throws NotLockedException {
+    @FunctionalInterface
+    private interface UnlockRowFunction {
 
-        final LockTable lockTable = new LockTable();
+        void unlockRow(LockTable lockTable, int tableId, long rowId, int transactionDescriptor, int statementId) throws NotLockedException;
+    }
 
-        final long transactionId = 123L;
-        final int statementId = 234;
+    @Test
+    @Category(UnitTest.class)
+    public void testReadLockAndUnlockTable() throws NotLockedException {
 
-        final int tableId = 345;
-        final long rowId = 456L;
+        checkLockAndUnlockTable(LockTable::tryReadLockTable, LockTable::readUnlockTable, LockType.READ);
+    }
 
-        final boolean locked = lockFunction.tryLock(lockTable, transactionId, statementId, tableId, rowId);
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteLockAndUnlockTable() throws NotLockedException {
+
+        checkLockAndUnlockTable(LockTable::tryWriteLockTable, LockTable::writeUnlockTable, LockType.WRITE);
+    }
+
+    private void checkLockAndUnlockTable(LockTableFunction lockFunction, UnlockTableFunction unlockFunction, LockType expectedLockType) throws NotLockedException {
+
+        final int tableId = 123;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        final boolean locked = lockFunction.tryLockTable(lockTable, tableId, transactionDescriptor, statementId);
+
+        assertThat(locked).isTrue();
+
+        checkLockedTable(lockTable, tableId, expectedLockType == LockType.READ ? 1 : 0, expectedLockType == LockType.WRITE ? 1 : 0);
+
+        LockHolders lockHolders = lockTable.getTableLockHolders(tableId);
+
+        assertThat(lockHolders).isNotNull();
+        assertThat(lockHolders.getNumElements()).isEqualTo(1);
+        assertThat(lockHolders.getTransactionDescriptor(0)).isEqualTo(transactionDescriptor);
+        assertThat(lockHolders.getTransactionLockType(0)).isEqualTo(expectedLockType);
+
+        assertThat(lockHolders.getStatementId(0)).isEqualTo(statementId);
+
+        unlockFunction.unlockTable(lockTable, tableId, transactionDescriptor, statementId);
+
+        checkNotLockedTable(lockTable, tableId);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testReadLockAndUnlockRow() throws NotLockedException {
+
+        checkLockAndUnlockRow(LockTable::tryReadLockRow, LockTable::readUnlockRow, LockType.READ);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteLockAndUnlockRow() throws NotLockedException {
+
+        checkLockAndUnlockRow(LockTable::tryWriteLockRow, LockTable::writeUnlockRow, LockType.WRITE);
+    }
+
+    private void checkLockAndUnlockRow(LockRowFunction lockFunction, UnlockRowFunction unlockFunction, LockType expectedLockType) throws NotLockedException {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        final boolean locked = lockFunction.tryLockRow(lockTable, tableId, rowId, transactionDescriptor, statementId);
 
         assertThat(locked).isTrue();
 
         checkLockedRow(lockTable, tableId, rowId, expectedLockType == LockType.READ ? 1 : 0, expectedLockType == LockType.WRITE ? 1 : 0);
 
-        LockHolders lockHolders = lockTable.getLockHolders(tableId, rowId);
+        LockHolders lockHolders = lockTable.getRowLockHolders(tableId, rowId);
 
         assertThat(lockHolders).isNotNull();
-        assertThat(lockHolders.getNumTransactionValues()).isEqualTo(1);
-        assertThat(lockHolders.getTransactionId(0)).isEqualTo(transactionId);
+        assertThat(lockHolders.getNumElements()).isEqualTo(1);
+        assertThat(lockHolders.getTransactionDescriptor(0)).isEqualTo(transactionDescriptor);
         assertThat(lockHolders.getTransactionLockType(0)).isEqualTo(expectedLockType);
 
-        assertThat(lockHolders.getNumStatementValues()).isEqualTo(1);
         assertThat(lockHolders.getStatementId(0)).isEqualTo(statementId);
-        assertThat(lockHolders.getStatementLockType(0)).isEqualTo(expectedLockType);
 
-        unlockFunction.unlock(lockTable, transactionId, statementId, tableId, rowId);
+        unlockFunction.unlockRow(lockTable, tableId, rowId, transactionDescriptor, statementId);
 
-        checkNotLockedRow(lockTable, tableId, rowId);
+        checkNotLockedRows(lockTable, tableId, rowId);
 
-        lockHolders = lockTable.getLockHolders(tableId, rowId);
+        lockHolders = lockTable.getRowLockHolders(tableId, rowId);
 
         assertThat(lockHolders).isNull();
     }
 
     @Test
     @Category(UnitTest.class)
-    public void testReadLockDifferentTransactions() throws NotLockedException {
+    public void testReadLockTableDifferentTransactions() throws NotLockedException {
 
-        final LockTable lockTable = new LockTable();
+        final int tableId = 123;
 
-        final long transactionId1 = 123L;
-        final long transactionId2 = 234L;
-        final long transactionId3 = 345L;
+        final int transactionDescriptor1 = 345;
+        final int transactionDescriptor2 = 456;
+        final int transactionDescriptor3 = 567;
 
-        final int statementId = 456;
+        final int statementId = 678;
 
-        final int tableId = 567;
-        final long rowId = 678L;
+        final LockTable lockTable = new LockTable(tableId + 1);
 
-        assertThat(lockTable.tryReadLock(transactionId1, statementId, tableId, rowId)).isTrue();
-        assertThat(lockTable.tryReadLock(transactionId2, statementId, tableId, rowId)).isTrue();
-        assertThat(lockTable.tryReadLock(transactionId3, statementId, tableId, rowId)).isTrue();
+        assertThat(lockTable.tryReadLockTable(tableId, transactionDescriptor1, statementId)).isTrue();
+        assertThat(lockTable.tryReadLockTable(tableId, transactionDescriptor2, statementId)).isTrue();
+        assertThat(lockTable.tryReadLockTable(tableId, transactionDescriptor3, statementId)).isTrue();
 
-        checkLockedRow(lockTable, tableId, rowId, 3, 0);
+        checkLockedTable(lockTable, tableId, 3, 0);
 
-        final LockHolders lockHolders = lockTable.getLockHolders(tableId, rowId);
+        final LockHolders lockHolders = lockTable.getTableLockHolders(tableId);
 
         final LockType expectedLockType = LockType.READ;
 
@@ -103,141 +153,289 @@ public final class LockTableTest extends BaseTest {
 
         final int numTransactionValues = 3;
 
-        assertThat(lockHolders.getNumTransactionValues()).isEqualTo(numTransactionValues);
+        assertThat(lockHolders.getNumElements()).isEqualTo(numTransactionValues);
 
-        final Set<Long> transationIds = new HashSet<>(numTransactionValues);
+        final Set<Integer> transactionDescriptors = new HashSet<>(numTransactionValues);
 
         for (int i = 0; i < numTransactionValues; ++ i) {
 
-            transationIds.add(lockHolders.getTransactionId(i));
+            transactionDescriptors.add(lockHolders.getTransactionDescriptor(i));
 
             assertThat(lockHolders.getTransactionLockType(i)).isEqualTo(expectedLockType);
         }
 
-        assertThat(transationIds).containsExactlyInAnyOrder(transactionId1, transactionId2, transactionId3);
+        assertThat(transactionDescriptors).containsExactlyInAnyOrder(transactionDescriptor1, transactionDescriptor2, transactionDescriptor3);
 
-        assertThat(lockHolders.getNumStatementValues()).isEqualTo(1);
         assertThat(lockHolders.getStatementId(0)).isEqualTo(statementId);
-        assertThat(lockHolders.getStatementLockType(0)).isEqualTo(expectedLockType);
     }
 
     @Test
     @Category(UnitTest.class)
-    public void testReadLockSameTransaction() {
+    public void testReadLockRowDifferentTransactions() throws NotLockedException {
 
-        checkLockSameTransaction(LockTable::tryReadLock, LockType.READ);
-    }
+        final int tableId = 123;
+        final long rowId = 234L;
 
-    @Test
-    @Category(UnitTest.class)
-    public void testWriteLockSameTransaction() {
+        final int transactionDescriptor1 = 345;
+        final int transactionDescriptor2 = 456;
+        final int transactionDescriptor3 = 567;
 
-        checkLockSameTransaction(LockTable::tryWriteLock, LockType.WRITE);
-    }
+        final int statementId = 678;
 
-    private void checkLockSameTransaction(LockFunction lockFunction, LockType expectedLockType) {
+        final LockTable lockTable = new LockTable(tableId + 1);
 
-        final LockTable lockTable = new LockTable();
+        assertThat(lockTable.tryReadLockRow(tableId, rowId, transactionDescriptor1, statementId)).isTrue();
+        assertThat(lockTable.tryReadLockRow(tableId, rowId, transactionDescriptor2, statementId)).isTrue();
+        assertThat(lockTable.tryReadLockRow(tableId, rowId, transactionDescriptor3, statementId)).isTrue();
 
-        final long transactionId = 123L;
+        checkLockedRow(lockTable, tableId, rowId, 3, 0);
 
-        final int statementId = 234;
+        final LockHolders lockHolders = lockTable.getRowLockHolders(tableId, rowId);
 
-        final int tableId = 345;
-        final long rowId = 456L;
-
-        assertThat(lockFunction.tryLock(lockTable, transactionId, statementId, tableId, rowId)).isTrue();
-        assertThat(lockFunction.tryLock(lockTable, transactionId, statementId, tableId, rowId)).isTrue();
-        assertThat(lockFunction.tryLock(lockTable, transactionId, statementId, tableId, rowId)).isTrue();
-
-        checkLockedRow(lockTable, tableId, rowId, expectedLockType == LockType.READ ? 3 : 0, expectedLockType == LockType.WRITE ? 3 : 0);
-
-        final LockHolders lockHolders = lockTable.getLockHolders(tableId, rowId);
-
-        checkOneLockHolder(lockHolders, transactionId, statementId, expectedLockType);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public void testReadThenWriteDifferentTransactions() {
-
-        checkLockTypeThenOtherLockTypeDifferentTransactions(LockTable::tryReadLock, LockTable::tryWriteLock, LockType.READ);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public void testWriteThenReadDifferentTransactions() {
-
-        checkLockTypeThenOtherLockTypeDifferentTransactions(LockTable::tryWriteLock, LockTable::tryReadLock, LockType.WRITE);
-    }
-
-    private void checkLockTypeThenOtherLockTypeDifferentTransactions(LockFunction lockFunction, LockFunction otherLockFunction, LockType expectedLockType) {
-
-        final LockTable lockTable = new LockTable();
-
-        final long transactionId1 = 123L;
-        final long transactionId2 = 234L;
-
-        final int statementId = 345;
-
-        final int tableId = 456;
-        final long rowId = 567L;
-
-        assertThat(lockFunction.tryLock(lockTable, transactionId1, statementId, tableId, rowId)).isTrue();
-        assertThat(otherLockFunction.tryLock(lockTable, transactionId2, statementId, tableId, rowId)).isFalse();
-
-        checkLockedRow(lockTable, tableId, rowId, expectedLockType == LockType.READ ? 1 : 0, expectedLockType == LockType.WRITE ? 1 : 0);
-
-        final LockHolders lockHolders = lockTable.getLockHolders(tableId, rowId);
+        final LockType expectedLockType = LockType.READ;
 
         assertThat(lockHolders).isNotNull();
 
-        assertThat(lockHolders.getNumTransactionValues()).isEqualTo(1);
-        assertThat(lockHolders.getTransactionId(0)).isEqualTo(transactionId1);
+        final int numTransactionValues = 3;
+
+        assertThat(lockHolders.getNumElements()).isEqualTo(numTransactionValues);
+
+        final Set<Integer> transactionDescriptors = new HashSet<>(numTransactionValues);
+
+        for (int i = 0; i < numTransactionValues; ++ i) {
+
+            transactionDescriptors.add(lockHolders.getTransactionDescriptor(i));
+
+            assertThat(lockHolders.getTransactionLockType(i)).isEqualTo(expectedLockType);
+        }
+
+        assertThat(transactionDescriptors).containsExactlyInAnyOrder(transactionDescriptor1, transactionDescriptor2, transactionDescriptor3);
+
+        assertThat(lockHolders.getStatementId(0)).isEqualTo(statementId);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testReadLockTableSameTransaction() {
+
+        checkLockTableSameTransaction(LockTable::tryReadLockTable, LockType.READ);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteLockTableSameTransaction() {
+
+        checkLockTableSameTransaction(LockTable::tryWriteLockTable, LockType.WRITE);
+    }
+
+    private void checkLockTableSameTransaction(LockTableFunction lockFunction, LockType expectedLockType) {
+
+        final int tableId = 123;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockFunction.tryLockTable(lockTable, tableId, transactionDescriptor, statementId)).isTrue();
+        assertThat(lockFunction.tryLockTable(lockTable, tableId, transactionDescriptor, statementId)).isTrue();
+        assertThat(lockFunction.tryLockTable(lockTable, tableId, transactionDescriptor, statementId)).isTrue();
+
+        checkLockedTable(lockTable, tableId, expectedLockType == LockType.READ ? 3 : 0, expectedLockType == LockType.WRITE ? 3 : 0);
+
+        final LockHolders lockHolders = lockTable.getTableLockHolders(tableId);
+
+        checkOneLockHolder(lockHolders, transactionDescriptor, statementId, expectedLockType);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testReadLockRowSameTransaction() {
+
+        checkLockRowSameTransaction(LockTable::tryReadLockRow, LockType.READ);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteLockRowSameTransaction() {
+
+        checkLockRowSameTransaction(LockTable::tryWriteLockRow, LockType.WRITE);
+    }
+
+    private void checkLockRowSameTransaction(LockRowFunction lockFunction, LockType expectedLockType) {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockFunction.tryLockRow(lockTable, tableId, rowId, transactionDescriptor, statementId)).isTrue();
+        assertThat(lockFunction.tryLockRow(lockTable, tableId, rowId, transactionDescriptor, statementId)).isTrue();
+        assertThat(lockFunction.tryLockRow(lockTable, tableId, rowId, transactionDescriptor, statementId)).isTrue();
+
+        checkLockedRow(lockTable, tableId, rowId, expectedLockType == LockType.READ ? 3 : 0, expectedLockType == LockType.WRITE ? 3 : 0);
+
+        final LockHolders lockHolders = lockTable.getRowLockHolders(tableId, rowId);
+
+        checkOneLockHolder(lockHolders, transactionDescriptor, statementId, expectedLockType);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testReadThenWriteLockTableDifferentTransactions() {
+
+        checkLockTypeThenOtherLockTypeTableDifferentTransactions(LockTable::tryReadLockTable, LockTable::tryWriteLockTable, LockType.READ);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteThenReadLockTableDifferentTransactions() {
+
+        checkLockTypeThenOtherLockTypeTableDifferentTransactions(LockTable::tryWriteLockTable, LockTable::tryReadLockTable, LockType.WRITE);
+    }
+
+    private void checkLockTypeThenOtherLockTypeTableDifferentTransactions(LockTableFunction lockFunction, LockTableFunction otherLockFunction, LockType expectedLockType) {
+
+        final int tableId = 123;
+
+        final int transactionDescriptor1 = 345;
+        final int transactionDescriptor2 = 456;
+
+        final int statementId = 567;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockFunction.tryLockTable(lockTable, tableId, transactionDescriptor1, statementId)).isTrue();
+        assertThat(otherLockFunction.tryLockTable(lockTable, tableId, transactionDescriptor2, statementId)).isFalse();
+
+        checkLockedTable(lockTable, tableId, expectedLockType == LockType.READ ? 1 : 0, expectedLockType == LockType.WRITE ? 1 : 0);
+
+        final LockHolders lockHolders = lockTable.getTableLockHolders(tableId);
+
+        assertThat(lockHolders).isNotNull();
+
+        assertThat(lockHolders.getNumElements()).isEqualTo(1);
+        assertThat(lockHolders.getTransactionDescriptor(0)).isEqualTo(transactionDescriptor1);
         assertThat(lockHolders.getTransactionLockType(0)).isEqualTo(expectedLockType);
 
-        assertThat(lockHolders.getNumStatementValues()).isEqualTo(1);
         assertThat(lockHolders.getStatementId(0)).isEqualTo(statementId);
-        assertThat(lockHolders.getStatementLockType(0)).isEqualTo(expectedLockType);
     }
 
     @Test
     @Category(UnitTest.class)
-    public void testReadThenWriteSameTransactions() {
+    public void testReadThenWriteLockRowDifferentTransactions() {
 
-        checkLockTypeThenOtherLockTypeSameTransaction(LockTable::tryReadLock, LockTable::tryWriteLock);
+        checkLockTypeThenOtherLockTypeRowDifferentTransactions(LockTable::tryReadLockRow, LockTable::tryWriteLockRow, LockType.READ);
     }
 
     @Test
     @Category(UnitTest.class)
-    public void testWriteThenReadSameTransactions() {
+    public void testWriteThenReadLockRowDifferentTransactions() {
 
-        checkLockTypeThenOtherLockTypeSameTransaction(LockTable::tryWriteLock, LockTable::tryReadLock);
+        checkLockTypeThenOtherLockTypeRowDifferentTransactions(LockTable::tryWriteLockRow, LockTable::tryReadLockRow, LockType.WRITE);
     }
 
-    private void checkLockTypeThenOtherLockTypeSameTransaction(LockFunction lockFunction, LockFunction otherLockFunction) {
+    private void checkLockTypeThenOtherLockTypeRowDifferentTransactions(LockRowFunction lockFunction, LockRowFunction otherLockFunction, LockType expectedLockType) {
 
-        final LockTable lockTable = new LockTable();
+        final int tableId = 123;
+        final long rowId = 234L;
 
-        final long transactionId = 123L;
+        final int transactionDescriptor1 = 345;
+        final int transactionDescriptor2 = 456;
 
-        final int statementId = 345;
+        final int statementId = 567;
 
-        final int tableId = 456;
-        final long rowId = 567L;
+        final LockTable lockTable = new LockTable(tableId + 1);
 
-        assertThat(lockFunction.tryLock(lockTable, transactionId, statementId, tableId, rowId)).isTrue();
-        assertThat(otherLockFunction.tryLock(lockTable, transactionId, statementId, tableId, rowId)).isTrue();
+        assertThat(lockFunction.tryLockRow(lockTable, tableId, rowId, transactionDescriptor1, statementId)).isTrue();
+        assertThat(otherLockFunction.tryLockRow(lockTable, tableId, rowId, transactionDescriptor2, statementId)).isFalse();
+
+        checkLockedRow(lockTable, tableId, rowId, expectedLockType == LockType.READ ? 1 : 0, expectedLockType == LockType.WRITE ? 1 : 0);
+
+        final LockHolders lockHolders = lockTable.getRowLockHolders(tableId, rowId);
+
+        assertThat(lockHolders).isNotNull();
+
+        assertThat(lockHolders.getNumElements()).isEqualTo(1);
+        assertThat(lockHolders.getTransactionDescriptor(0)).isEqualTo(transactionDescriptor1);
+        assertThat(lockHolders.getTransactionLockType(0)).isEqualTo(expectedLockType);
+
+        assertThat(lockHolders.getStatementId(0)).isEqualTo(statementId);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testReadThenWriteTableSameTransactions() {
+
+        checkLockTypeThenOtherLockTypeTableSameTransaction(LockTable::tryReadLockTable, LockTable::tryWriteLockTable);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteThenReadTableSameTransactions() {
+
+        checkLockTypeThenOtherLockTypeTableSameTransaction(LockTable::tryWriteLockTable, LockTable::tryReadLockTable);
+    }
+
+    private void checkLockTypeThenOtherLockTypeTableSameTransaction(LockTableFunction lockFunction, LockTableFunction otherLockFunction) {
+
+        final int tableId = 123;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockFunction.tryLockTable(lockTable, tableId, transactionDescriptor, statementId)).isTrue();
+        assertThat(otherLockFunction.tryLockTable(lockTable, tableId, transactionDescriptor, statementId)).isTrue();
+
+        checkLockedTable(lockTable, tableId, 1, 1);
+
+        final LockHolders lockHolders = lockTable.getTableLockHolders(tableId);
+
+        checkLockTypeThenOtherLockTypeSameTransactionLockHolders(lockHolders, transactionDescriptor);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testReadThenWriteRowSameTransactions() {
+
+        checkLockTypeThenOtherLockTypeRowSameTransaction(LockTable::tryReadLockRow, LockTable::tryWriteLockRow);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteThenReadRowSameTransactions() {
+
+        checkLockTypeThenOtherLockTypeRowSameTransaction(LockTable::tryWriteLockRow, LockTable::tryReadLockRow);
+    }
+
+    private void checkLockTypeThenOtherLockTypeRowSameTransaction(LockRowFunction lockFunction, LockRowFunction otherLockFunction) {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockFunction.tryLockRow(lockTable, tableId, rowId, transactionDescriptor, statementId)).isTrue();
+        assertThat(otherLockFunction.tryLockRow(lockTable, tableId, rowId, transactionDescriptor, statementId)).isTrue();
 
         checkLockedRow(lockTable, tableId, rowId, 1, 1);
 
-        final LockHolders lockHolders = lockTable.getLockHolders(tableId, rowId);
+        final LockHolders lockHolders = lockTable.getRowLockHolders(tableId, rowId);
+
+        checkLockTypeThenOtherLockTypeSameTransactionLockHolders(lockHolders, transactionDescriptor);
+    }
+
+    private static void checkLockTypeThenOtherLockTypeSameTransactionLockHolders(LockHolders lockHolders, int transactionDescriptor) {
 
         assertThat(lockHolders).isNotNull();
 
         final int numTransactionValues = 2;
 
-        assertThat(lockHolders.getNumTransactionValues()).isEqualTo(numTransactionValues);
+        assertThat(lockHolders.getNumElements()).isEqualTo(numTransactionValues);
 
         final Set<LockType> transactionLockTypes = new HashSet<>(numTransactionValues);
 
@@ -245,25 +443,342 @@ public final class LockTableTest extends BaseTest {
 
             transactionLockTypes.add(lockHolders.getTransactionLockType(i));
 
-            assertThat(lockHolders.getTransactionId(i)).isEqualTo(transactionId);
+            assertThat(lockHolders.getTransactionDescriptor(i)).isEqualTo(transactionDescriptor);
         }
 
         assertThat(transactionLockTypes).containsExactlyInAnyOrder(LockType.READ, LockType.WRITE);
+    }
 
-        final int numStatementValues = 2;
+    @Test
+    @Category(UnitTest.class)
+    public void testReadLockRowThenReadLockTableSameTransaction() {
 
-        assertThat(lockHolders.getNumStatementValues()).isEqualTo(numStatementValues);
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
 
-        final Set<LockType> statementLockTypes = new HashSet<>(numStatementValues);
+        final LockTable lockTable = new LockTable(tableId + 1);
 
-        for (int i = 0; i < numStatementValues; ++ i) {
+        assertThat(lockTable.tryReadLockRow(tableId, rowId, transactionDescriptor, statementId)).isTrue();
+        assertThat(lockTable.tryReadLockTable(tableId, transactionDescriptor, statementId)).isTrue();
 
-            statementLockTypes.add(lockHolders.getTransactionLockType(i));
+        checkOneLockedRow(lockTable, tableId, rowId, transactionDescriptor, statementId, LockType.READ);
+        checkOneLockedTable(lockTable, tableId, transactionDescriptor, statementId, LockType.READ);
+    }
 
-            assertThat(lockHolders.getTransactionId(i)).isEqualTo(transactionId);
-        }
+    @Test
+    @Category(UnitTest.class)
+    public void testReadLockRowThenWriteLockTableSameTransaction() {
 
-        assertThat(statementLockTypes).containsExactlyInAnyOrder(LockType.READ, LockType.WRITE);
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryReadLockRow(tableId, rowId, transactionDescriptor, statementId)).isTrue();
+        assertThat(lockTable.tryWriteLockTable(tableId, transactionDescriptor, statementId)).isTrue();
+
+        checkOneLockedRow(lockTable, tableId, rowId, transactionDescriptor, statementId, LockType.READ);
+        checkOneLockedTable(lockTable, tableId, transactionDescriptor, statementId, LockType.WRITE);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteLockRowThenReadLockTableSameTransaction() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryWriteLockRow(tableId, rowId, transactionDescriptor, statementId)).isTrue();
+        assertThat(lockTable.tryReadLockTable(tableId, transactionDescriptor, statementId)).isTrue();
+
+        checkOneLockedRow(lockTable, tableId, rowId, transactionDescriptor, statementId, LockType.WRITE);
+        checkOneLockedTable(lockTable, tableId, transactionDescriptor, statementId, LockType.READ);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteLockRowThenWriteLockTableSameTransaction() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryWriteLockRow(tableId, rowId, transactionDescriptor, statementId)).isTrue();
+        assertThat(lockTable.tryWriteLockTable(tableId, transactionDescriptor, statementId)).isTrue();
+
+        checkOneLockedRow(lockTable, tableId, rowId, transactionDescriptor, statementId, LockType.WRITE);
+        checkOneLockedTable(lockTable, tableId, transactionDescriptor, statementId, LockType.WRITE);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testReadLockTableThenReadLockRowSameTransaction() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryReadLockTable(tableId, transactionDescriptor, statementId)).isTrue();
+        assertThat(lockTable.tryReadLockRow(tableId, rowId, transactionDescriptor, statementId)).isTrue();
+
+        checkOneLockedTable(lockTable, tableId, transactionDescriptor, statementId, LockType.READ);
+        checkOneLockedRow(lockTable, tableId, rowId, transactionDescriptor, statementId, LockType.READ);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testReadLockTableThenWriteLockRowSameTransaction() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryReadLockTable(tableId, transactionDescriptor, statementId)).isTrue();
+        assertThat(lockTable.tryWriteLockRow(tableId, rowId, transactionDescriptor, statementId)).isTrue();
+
+        checkOneLockedTable(lockTable, tableId, transactionDescriptor, statementId, LockType.READ);
+        checkOneLockedRow(lockTable, tableId, rowId, transactionDescriptor, statementId, LockType.WRITE);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteLockTableThenReadLockRowSameTransaction() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryWriteLockTable(tableId, transactionDescriptor, statementId)).isTrue();
+        assertThat(lockTable.tryReadLockRow(tableId, rowId, transactionDescriptor, statementId)).isTrue();
+
+        checkOneLockedTable(lockTable, tableId, transactionDescriptor, statementId, LockType.WRITE);
+        checkOneLockedRow(lockTable, tableId, rowId, transactionDescriptor, statementId, LockType.READ);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteLockTableThenWriteLockRowSameTransaction() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor = 345;
+        final int statementId = 456;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryWriteLockTable(tableId, transactionDescriptor, statementId)).isTrue();
+        assertThat(lockTable.tryWriteLockRow(tableId, rowId, transactionDescriptor, statementId)).isTrue();
+
+        checkOneLockedTable(lockTable, tableId, transactionDescriptor, statementId, LockType.WRITE);
+        checkOneLockedRow(lockTable, tableId, rowId, transactionDescriptor, statementId, LockType.WRITE);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testReadLockRowThenReadLockTableDifferentTransactions() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor1 = 345;
+        final int transactionDescriptor2 = 456;
+        final int statementId = 567;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryReadLockRow(tableId, rowId, transactionDescriptor1, statementId)).isTrue();
+        assertThat(lockTable.tryReadLockTable(tableId, transactionDescriptor2, statementId)).isTrue();
+
+        checkOneLockedRow(lockTable, tableId, rowId, transactionDescriptor1, statementId, LockType.READ);
+        checkOneLockedTable(lockTable, tableId, transactionDescriptor2, statementId, LockType.READ);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testReadLockRowThenWriteLockTableDifferentTransactions() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor1 = 345;
+        final int transactionDescriptor2 = 456;
+        final int statementId = 567;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryReadLockRow(tableId, rowId, transactionDescriptor1, statementId)).isTrue();
+        assertThat(lockTable.tryWriteLockTable(tableId, transactionDescriptor2, statementId)).isFalse();
+
+        checkOneLockedRow(lockTable, tableId, rowId, transactionDescriptor1, statementId, LockType.READ);
+        checkNotLockedTable(lockTable, tableId);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteLockRowThenReadLockTableDifferentTransactions() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor1 = 345;
+        final int transactionDescriptor2 = 456;
+        final int statementId = 567;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryWriteLockRow(tableId, rowId, transactionDescriptor1, statementId)).isTrue();
+        assertThat(lockTable.tryReadLockTable(tableId, transactionDescriptor2, statementId)).isFalse();
+
+        checkOneLockedRow(lockTable, tableId, rowId, transactionDescriptor1, statementId, LockType.WRITE);
+        checkNotLockedTable(lockTable, tableId);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteLockRowThenWriteLockTableDifferentTransactions() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor1 = 345;
+        final int transactionDescriptor2 = 456;
+        final int statementId = 567;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryWriteLockRow(tableId, rowId, transactionDescriptor1, statementId)).isTrue();
+        assertThat(lockTable.tryWriteLockTable(tableId, transactionDescriptor2, statementId)).isFalse();
+
+        checkOneLockedRow(lockTable, tableId, rowId, transactionDescriptor1, statementId, LockType.WRITE);
+        checkNotLockedTable(lockTable, tableId);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testReadLockTableThenReadLockRowDifferentTransactions() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor1 = 345;
+        final int transactionDescriptor2 = 456;
+        final int statementId = 567;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryReadLockTable(tableId, transactionDescriptor1, statementId)).isTrue();
+        assertThat(lockTable.tryReadLockRow(tableId, rowId, transactionDescriptor2, statementId)).isTrue();
+
+        checkOneLockedTable(lockTable, tableId, transactionDescriptor1, statementId, LockType.READ);
+        checkOneLockedRow(lockTable, tableId, rowId, transactionDescriptor2, statementId, LockType.READ);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testReadLockTableThenWriteLockRowDifferentTransactions() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor1 = 345;
+        final int transactionDescriptor2 = 456;
+        final int statementId = 567;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryReadLockTable(tableId, transactionDescriptor1, statementId)).isTrue();
+        assertThat(lockTable.tryWriteLockRow(tableId, rowId, transactionDescriptor2, statementId)).isFalse();
+
+        checkOneLockedTable(lockTable, tableId, transactionDescriptor1, statementId, LockType.READ);
+        checkNotLockedRows(lockTable, tableId, rowId);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteLockTableThenReadLockRowDifferentTransactions() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor1 = 345;
+        final int transactionDescriptor2 = 456;
+        final int statementId = 567;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryWriteLockTable(tableId, transactionDescriptor1, statementId)).isTrue();
+        assertThat(lockTable.tryReadLockRow(tableId, rowId, transactionDescriptor2, statementId)).isFalse();
+
+        checkOneLockedTable(lockTable, tableId, transactionDescriptor1, statementId, LockType.WRITE);
+        checkNotLockedRows(lockTable, tableId, rowId);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testWriteLockTableThenWriteLockRowDifferentTransactions() {
+
+        final int tableId = 123;
+        final long rowId = 234L;
+        final int transactionDescriptor1 = 345;
+        final int transactionDescriptor2 = 456;
+        final int statementId = 567;
+
+        final LockTable lockTable = new LockTable(tableId + 1);
+
+        assertThat(lockTable.tryWriteLockTable(tableId, transactionDescriptor1, statementId)).isTrue();
+        assertThat(lockTable.tryWriteLockRow(tableId, rowId, transactionDescriptor2, statementId)).isFalse();
+
+        checkOneLockedTable(lockTable, tableId, transactionDescriptor1, statementId, LockType.WRITE);
+        checkNotLockedRows(lockTable, tableId, rowId);
+    }
+
+    private static void checkOneLockedTable(LockTable lockTable, int tableId, int transactionDescriptor, int statementId, LockType expectedLockType) {
+
+        checkLockedTable(lockTable, tableId, expectedLockType == LockType.READ ? 1 : 0, expectedLockType == LockType.WRITE ? 1 : 0);
+
+        final LockHolders lockHolders = lockTable.getTableLockHolders(tableId);
+
+        checkOneLockHolder(lockHolders, transactionDescriptor, statementId, expectedLockType);
+    }
+
+    private static void checkLockedTable(LockTable lockTable, int tableId, int expectedNumReadLocks, int expectedNumWriteLocks) {
+
+        final LockedTables lockedTables = lockTable.getLockedTables();
+
+        assertThat(lockedTables).isNotNull();
+        assertThat(lockedTables).isNotEmpty();
+        assertThat(lockedTables).hasNumElements(tableId + 1);
+        assertThat(lockedTables.getNumLocks(tableId, LockType.READ)).isEqualTo(expectedNumReadLocks);
+        assertThat(lockedTables.getNumLocks(tableId, LockType.WRITE)).isEqualTo(expectedNumWriteLocks);
+    }
+
+    private static void checkNotLockedTable(LockTable lockTable, int tableId) {
+
+        checkLockedTable(lockTable, tableId, 0, 0);
+
+        assertThat(lockTable.getTableLockHolders(tableId)).isNull();
+    }
+
+    private static void checkOneLockedRow(LockTable lockTable, int tableId, long rowId, int transactionDescriptor, int statementId, LockType expectedLockType) {
+
+        checkLockedRow(lockTable, tableId, rowId, expectedLockType == LockType.READ ? 1 : 0, expectedLockType == LockType.WRITE ? 1 : 0);
+
+        final LockHolders lockHolders = lockTable.getRowLockHolders(tableId, rowId);
+
+        checkOneLockHolder(lockHolders, transactionDescriptor, statementId, expectedLockType);
     }
 
     private static void checkLockedRow(LockTable lockTable, int tableId, long rowId, int expectedNumReadLocks, int expectedNumWriteLocks) {
@@ -279,24 +794,24 @@ public final class LockTableTest extends BaseTest {
         assertThat(lockedRows.getNumLocks(0, LockType.WRITE)).isEqualTo(expectedNumWriteLocks);
     }
 
-    private static void checkNotLockedRow(LockTable lockTable, int tableId, long rowId) {
+    private static void checkNotLockedRows(LockTable lockTable, int tableId, long rowId) {
 
         final LockedRows lockedRows = lockTable.getLockedRows();
 
         assertThat(lockedRows).isNotNull();
         assertThat(lockedRows).isEmpty();
         assertThat(lockedRows).hasNumElements(0L);
+
+        assertThat(lockTable.getRowLockHolders(tableId, rowId)).isNull();
     }
 
-    private static void checkOneLockHolder(LockHolders lockHolders, long transactionId, int statementId, LockType expectedLockType) {
+    private static void checkOneLockHolder(LockHolders lockHolders, int transactionDescriptor, int statementId, LockType expectedLockType) {
 
         assertThat(lockHolders).isNotNull();
-        assertThat(lockHolders.getNumTransactionValues()).isEqualTo(1);
-        assertThat(lockHolders.getTransactionId(0)).isEqualTo(transactionId);
+        assertThat(lockHolders.getNumElements()).isEqualTo(1);
+        assertThat(lockHolders.getTransactionDescriptor(0)).isEqualTo(transactionDescriptor);
         assertThat(lockHolders.getTransactionLockType(0)).isEqualTo(expectedLockType);
 
-        assertThat(lockHolders.getNumStatementValues()).isEqualTo(1);
         assertThat(lockHolders.getStatementId(0)).isEqualTo(statementId);
-        assertThat(lockHolders.getStatementLockType(0)).isEqualTo(expectedLockType);
     }
 }

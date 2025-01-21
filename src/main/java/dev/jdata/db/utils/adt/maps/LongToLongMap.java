@@ -39,7 +39,7 @@ public final class LongToLongMap extends BaseLongArrayMap<long[]> {
 
         final int index = getIndex(key);
 
-        final long result = index != NO_INDEX ? getHashed()[index] : NO_VALUE;
+        final long result = index != NO_INDEX ? getValues()[index] : NO_VALUE;
 
         if (DEBUG) {
 

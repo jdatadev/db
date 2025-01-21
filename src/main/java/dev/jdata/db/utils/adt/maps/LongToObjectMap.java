@@ -55,6 +55,16 @@ public final class LongToObjectMap<T> extends BaseLongArrayMap<T[]> {
         return result;
     }
 
+    public void keysAndValues(long[] keysDst, T[] valuesDst) {
+
+        final long numElements = getNumElements();
+
+        Checks.areEqual(keysDst.length, numElements);
+        Checks.areEqual(valuesDst.length, numElements);
+
+        keysAndValues(keysDst, getValues(), valuesDst, (src, srcIndex, dst, dstIndex) -> dst[dstIndex] = src[srcIndex]);
+    }
+
     public void put(long key, T value) {
 
         Checks.isNotNegative(key);

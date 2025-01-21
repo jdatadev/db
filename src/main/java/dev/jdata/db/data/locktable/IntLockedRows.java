@@ -2,8 +2,8 @@ package dev.jdata.db.data.locktable;
 
 import java.util.Objects;
 
+import dev.jdata.db.LockType;
 import dev.jdata.db.data.BaseRowMap;
-import dev.jdata.db.data.locktable.LockTable.LockType;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
@@ -37,13 +37,13 @@ final class IntLockedRows extends LockedRows {
     @Override
     public int getTableId(long index) {
 
-        return BaseRowMap.getTableId(lockedRows[intIndex(index)]);
+        return BaseRowMap.getHashTableId(lockedRows[intIndex(index)]);
     }
 
     @Override
     public long getRowId(long index) {
 
-        return BaseRowMap.getRowId(lockedRows[intIndex(index)]);
+        return BaseRowMap.getHashRowId(lockedRows[intIndex(index)]);
     }
 
     @Override

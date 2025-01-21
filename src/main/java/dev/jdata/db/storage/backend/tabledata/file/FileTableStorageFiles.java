@@ -16,12 +16,12 @@ public final class FileTableStorageFiles extends BaseStorageFiles<RandomFileAcce
 
     static final int INITIAL_SEQUENCE_NO = 0;
 
-    private int sequenceCounter;
+    private int sequenceNoAllocator;
 
     FileTableStorageFiles(RelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath tableDirectoryPath, List<FileTableStorageFile> files) {
         super(fileSystemAccess, tableDirectoryPath, files);
 
-        this.sequenceCounter = Coll.max(files, INITIAL_SEQUENCE_NO, FileTableStorageFile::getSequenceNo);
+        this.sequenceNoAllocator = Coll.max(files, INITIAL_SEQUENCE_NO, FileTableStorageFile::getSequenceNo);
     }
 
     @Override
@@ -35,7 +35,7 @@ public final class FileTableStorageFiles extends BaseStorageFiles<RandomFileAcce
         Objects.requireNonNull(storageTableFileSchema);
         Checks.isRowId(rowId);
 
-        final int sequenceNo = sequenceCounter ++;
+        final int sequenceNo = sequenceNoAllocator ++;
 
         final RelativeFilePath filePath = constructPath(sequenceNo);
 

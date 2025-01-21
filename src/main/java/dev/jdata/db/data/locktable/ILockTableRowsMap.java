@@ -1,8 +1,6 @@
 package dev.jdata.db.data.locktable;
 
 import dev.jdata.db.utils.adt.elements.Elements;
-import dev.jdata.db.utils.adt.lists.IntMultiList;
-import dev.jdata.db.utils.adt.lists.LongMultiList;
 
 interface ILockTableRowsMap extends Elements {
 
@@ -11,15 +9,13 @@ interface ILockTableRowsMap extends Elements {
     long getLockIndex(long key);
 
     long getLock(long index);
-    long getTransactionIdListsHeadNode(long index);
-    long getTransactionIdListsTailNode(long index);
-    long getStatementIdListsHeadNode(long index);
-    long getStatementIdListsTailNode(long index);
+    long getLockInfoListsHeadNode(long index);
+    long getLockInfoListsTailNode(long index);
 
-    void put(long key, long lock, long transactionIdListsHeadNode, long transactionIdListsTailNode, long statementIdListsHeadNode, long statementIdListsTailNode);
+    void put(long key, long lock, long lockInfoListsHeadNode, long lockInfoListsTailNode);
 
     boolean remove(long key);
 
     LockedRows getLockedRows();
-    LockHolders getLockHolders(long key, LongMultiList transactionIdLists, IntMultiList statementIdLists);
+    long getLockHoldersHeadNode(long key);
 }

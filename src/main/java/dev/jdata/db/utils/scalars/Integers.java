@@ -46,6 +46,8 @@ public class Integers {
 
     public static byte checkUnsignedIntToUnsignedByte(int value) {
 
+        Checks.isNotNegative(value);
+
         if (value > 255) {
 
             throw new IllegalArgumentException();
