@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.maps;
 
+import java.util.List;
+
 import dev.jdata.db.utils.scalars.Integers;
 
 public final class LongToLongMapTest extends BaseLongToIntegerOrObjectTest<long[], LongToLongMap> {
@@ -20,6 +22,23 @@ public final class LongToLongMapTest extends BaseLongToIntegerOrObjectTest<long[
     int getValue(long[] values, int index) {
 
         return Integers.checkUnsignedLongToUnsignedInt(values[index]);
+    }
+
+    @Override
+    <T> void forEachKeysAndValues(LongToLongMap map, T parameter) {
+
+        map.forEachKeyAndValue(parameter, null);
+    }
+
+    @Override
+    <T> void forEachKeysAndValues(LongToLongMap map, T parameter, List<Integer> keysDst, List<Integer> valuesDst, List<T> parameters) {
+
+        map.forEachKeyAndValue(parameter, (k, v, p) -> {
+
+            keysDst.add(Integers.checkUnsignedLongToUnsignedInt(k));
+            valuesDst.add(Integers.checkUnsignedLongToUnsignedInt(v));
+            parameters.add(p);
+        });
     }
 
     @Override

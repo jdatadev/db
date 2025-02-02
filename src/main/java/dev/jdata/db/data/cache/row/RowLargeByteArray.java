@@ -6,11 +6,11 @@ import dev.jdata.db.data.RowDataNumBitsGetter;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class LargeByteArray {
+public final class RowLargeByteArray {
 
     private final byte[][] bytes;
 
-    LargeByteArray(int initialOuterCapacity) {
+    RowLargeByteArray(int initialOuterCapacity) {
 
         this.bytes = new byte[initialOuterCapacity][];
     }

@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.CapacityExponents;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 
@@ -25,7 +26,7 @@ public abstract class BaseExponentHashed<T> extends BaseHashed<T> {
     }
 
     protected BaseExponentHashed(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T> createHashed, Consumer<T> clearHashed) {
-        super(computeCapacity(initialCapacityExponent), loadFactor, createHashed, clearHashed);
+        super(CapacityExponents.computeCapacity(initialCapacityExponent), loadFactor, createHashed, clearHashed);
 
         Checks.isNotNegative(initialCapacityExponent);
         Checks.isAboveZero(capacityExponentIncrease);
@@ -68,7 +69,7 @@ public abstract class BaseExponentHashed<T> extends BaseHashed<T> {
         this.capacityExponent = newCapacityExponent;
         this.keyMask = makeKeyMask(newCapacityExponent);
 
-        final int newCapacity = computeCapacity(newCapacityExponent);
+        final int newCapacity = CapacityExponents.computeCapacity(newCapacityExponent);
 
         if (DEBUG) {
 
@@ -81,7 +82,7 @@ public abstract class BaseExponentHashed<T> extends BaseHashed<T> {
     @Override
     protected final int computeCapacity() {
 
-        return computeCapacity(capacityExponent);
+        return CapacityExponents.computeCapacity(capacityExponent);
     }
 
     private static int makeKeyMask(int capacityExponent) {
@@ -89,18 +90,11 @@ public abstract class BaseExponentHashed<T> extends BaseHashed<T> {
         return (1 << capacityExponent) - 1;
     }
 
-    private static int computeCapacity(int capacityExponent) {
-
-        Checks.isCapacityExponent(capacityExponent);
-
-        return 1 << capacityExponent;
-    }
-
     protected static int computeCapacityExponent(int numElements, float loadFactor) {
 
         int capacityExponent;
 
-        for (capacityExponent = 0; shouldRehash(numElements, computeCapacity(capacityExponent), loadFactor); ++ capacityExponent) {
+        for (capacityExponent = 0; shouldRehash(numElements, CapacityExponents.computeCapacity(capacityExponent), loadFactor); ++ capacityExponent) {
 
         }
 

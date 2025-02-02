@@ -124,6 +124,12 @@ public final class LargeLongSinglyLinkedList extends BaseLargeLongSinglyLinkedLi
         decreaseNumElements();
     }
 
+    @Override
+    public void clear() {
+
+        clearNodes(this, headNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode, l -> l.numElements = 0L);
+    }
+
     private void setHeadNode(long headNode) {
 
         this.headNode = headNode;

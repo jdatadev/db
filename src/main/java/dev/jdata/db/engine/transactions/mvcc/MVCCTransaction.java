@@ -1,98 +1,748 @@
 package dev.jdata.db.engine.transactions.mvcc;
 
+import java.util.Arrays;
 import java.util.Objects;
 
-import dev.jdata.db.data.RowDataNumBitsGetter;
+import dev.jdata.db.DBConstants;
+import dev.jdata.db.DebugConstants;
+import dev.jdata.db.data.RowDataNumBits;
 import dev.jdata.db.dml.DMLInsertRows;
+import dev.jdata.db.dml.DMLInsertUpdateRows;
 import dev.jdata.db.dml.DMLUpdateRows;
 import dev.jdata.db.engine.transactions.TransactionMechanism;
+import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.schema.Table;
+import dev.jdata.db.utils.adt.CapacityExponents;
+import dev.jdata.db.utils.adt.arrays.IntArray;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
-import dev.jdata.db.utils.adt.maps.LongToLongMap;
+import dev.jdata.db.utils.adt.arrays.LongArray;
+import dev.jdata.db.utils.adt.buffers.BitBuffer;
+import dev.jdata.db.utils.adt.lists.BaseList;
+import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadDoublyLinkedList;
+import dev.jdata.db.utils.adt.lists.LongNodeSetter;
+import dev.jdata.db.utils.adt.maps.IntToLongMap;
+import dev.jdata.db.utils.adt.sets.LongSet;
+import dev.jdata.db.utils.bits.BitsUtil;
+import dev.jdata.db.utils.checks.AssertionContants;
+import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
-final class MVCCTransaction extends TransactionMechanism<Object> {
+import dev.jdata.db.utils.debug.PrintDebug;
+import dev.jdata.db.utils.scalars.Integers;
 
-    private final long transactionId;
+final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTransactionState> implements PrintDebug {
 
-    private final LongToLongMap indexByRow;
+    private static final boolean DEBUG = DebugConstants.DEBUG_MVCC_TRANSACTION;
 
-    private byte[][] insertRows;
-    private byte[][] updateRows;
+    private static final boolean ASSERT = AssertionContants.ASSERT_MVCC;
 
-    MVCCTransaction(long transactionId) {
+    private static final Class<?> debugClass = MVCCTransaction.class;
+
+    public static final class MVCCTransactionState {
+
+        @Override
+        public String toString() {
+
+            return getClass().getSimpleName() + " []";
+        }
+    }
+
+    private static enum DMLOperation {
+
+        INSERT,
+        UPDATE,
+/*
+        UPDATE_PREVIOUS_TRANSACTIONS,
+        UPDATE_INSERTED_THIS_TRANSACTION,
+        UPDATE_UPDATED_THIS_TRANSACTION,
+*/
+        UPDATE_ALL,
+
+        DELETE,
+        DELETE_ALL;
+
+
+        public static DMLOperation ofOrdinal(int ordinal) {
+
+            return DMLOperation.values()[ordinal];
+        }
+    }
+
+    private static final long NO_NODE = BaseList.NO_NODE;
+
+    private static final int DML_OPERATION_NUM_BITS;
+
+    static {
+
+        DML_OPERATION_NUM_BITS = BitsUtil.getNumEnumBits(DMLOperation.class);
+
+        Assertions.isLessThanOrEqualTo(DML_OPERATION_NUM_BITS, 3);
+    }
+
+    private static final int BIT_OFFSET_NUM_BITS = Long.SIZE - DML_OPERATION_NUM_BITS;
+
+    private static final int DML_OPERATION_SHIFT = BIT_OFFSET_NUM_BITS;
+    private static final long DML_OPERATION_MASK = BitsUtil.maskLong(DML_OPERATION_NUM_BITS, DML_OPERATION_SHIFT);
+
+    private static final long BIT_OFFSET_MASK = BitsUtil.maskLong(BIT_OFFSET_NUM_BITS, 0);
+
+    private static final int OPERATION_SEQUENCE_NO_NUM_BITS = Long.SIZE - DML_OPERATION_NUM_BITS;
+    private static final long OPERATION_SEQUENCE_NO_MASK = BitsUtil.maskLong(OPERATION_SEQUENCE_NO_NUM_BITS, 0);
+
+    private static final long MAX_BIT_OFFSET = BitsUtil.getMaxLong(BIT_OFFSET_NUM_BITS);
+
+    private boolean[] hasUpdates;
+    private int transactionDesciptor;
+    private long transactionId;
+
+    private long originatingTransactionId;
+
+    private DBIsolationLevel isolationLevel;
+
+    private final LongArray rowOperationBySequenceNo;
+
+    private final IntToLongMap operationListsHeadNodesByTableId;
+    private final IntToLongMap operationListsTailNodesByTableId;
+    private final LargeLongMultiHeadDoublyLinkedList<MVCCTransaction> tableOperationsLists;
+
+    private final BitBuffer insertRows;
+    private final BitBuffer updateRows;
+    private final BitBuffer updateAllRows;
+/*
+    private final MVCCBitBuffer updateToExistingRows;
+    private final MVCCBitBuffer updateToInsertRows;
+*/
+    private final BitBuffer deleteRows;
+    private final IntArray deleteAllRows;
+
+    private final RowBufferComparer rowBufferComparer;
+
+    private long scratcHeadNode;
+    private long scratcTailNode;
+
+    private int operationSequenceNoAllocator;
+
+    MVCCTransaction() {
+        this(20);
+    }
+
+    MVCCTransaction(int innerCapacityExponent) {
+
+        Checks.isCapacityExponent(innerCapacityExponent);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("innerCapacityExponent", innerCapacityExponent));
+        }
+
+        final int innerCapacity = CapacityExponents.computeCapacity(innerCapacityExponent);
+
+        this.rowOperationBySequenceNo = new LongArray(1, 10);
+
+        this.operationListsHeadNodesByTableId = new IntToLongMap(0);
+        this.operationListsTailNodesByTableId = new IntToLongMap(0);
+        this.tableOperationsLists = new LargeLongMultiHeadDoublyLinkedList<>(1, innerCapacity);
+
+        this.insertRows = new BitBuffer(innerCapacityExponent);
+        this.updateRows = new BitBuffer(innerCapacityExponent);
+        this.updateAllRows = new BitBuffer(innerCapacityExponent);
+
+/*
+        this.updateToExistingRows = new MVCCBitBuffer(innerCapacity);
+        this.updateToInsertRows = new MVCCBitBuffer(innerCapacity);
+*/
+        this.deleteRows = new BitBuffer(innerCapacityExponent);
+        this.deleteAllRows = new IntArray(1, innerCapacityExponent);
+
+        this.rowBufferComparer = new RowBufferComparer();
+
+        this.operationSequenceNoAllocator = 0;
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    public boolean hasUpdates(int tableId) {
+
+        Checks.isTableId(tableId);
+
+        return hasUpdates[tableId];
+    }
+
+    public boolean select(TransactionSelect select, BufferedRows commitedRows, LongSet addedRowIdsDst, LongSet removedRowIdsDst) {
+
+        Objects.requireNonNull(select);
+        Checks.isNull(commitedRows, hasUpdates(select.getTableId()));
+        Objects.requireNonNull(addedRowIdsDst);
+        Objects.requireNonNull(removedRowIdsDst);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("select", select).add("commitedRows", commitedRows).add("addedRowIdsDst", addedRowIdsDst).add("removedRowIdsDst", removedRowIdsDst));
+        }
+
+        final long headNode = operationListsHeadNodesByTableId.get(select.getTableId());
+
+        boolean done = false;
+
+        boolean removeAll = false;
+
+        if (headNode != BaseList.NO_NODE) {
+
+            for (long node = headNode; !done && node != BaseList.NO_NODE; node = tableOperationsLists.getNextNode(node)) {
+
+                final long encodedOperation = tableOperationsLists.getValue(node);
+
+                final DMLOperation dmlOperation = decodeOperation(encodedOperation);
+                final long bitOffset = decodeOperationByteBufferBitOffset(encodedOperation);
+
+                if (DEBUG) {
+
+                    debug("dml operation from table operations list", b -> b.add("dmlOperation", dmlOperation).add("bitOffset", bitOffset));
+                }
+
+                switch (dmlOperation) {
+
+                case INSERT:
+
+                    rowBufferComparer.compareRowForInsertOperation(select, insertRows, bitOffset, addedRowIdsDst);
+                    break;
+
+                case UPDATE:
+
+                    rowBufferComparer.compareRowForUpdateOperation(select, updateRows, bitOffset, commitedRows, addedRowIdsDst, removedRowIdsDst);
+                    break;
+
+                case UPDATE_ALL:
+
+                    rowBufferComparer.compareRowForUpdateAllOperation(select, updateAllRows, bitOffset, commitedRows, addedRowIdsDst, removedRowIdsDst);
+                    break;
+
+                case DELETE: {
+
+                    long deleteRowsBitOffset = bitOffset;
+
+                    final long numRowIds = deleteRows.getUnsignedLong(deleteRowsBitOffset);
+
+                    deleteRowsBitOffset += Long.SIZE;
+
+                    for (long i = 0; i < numRowIds; ++ i) {
+
+                        final long rowId = deleteRows.getUnsignedLong(deleteRowsBitOffset);
+
+                        deleteRowsBitOffset += Long.SIZE;
+
+                        addedRowIdsDst.remove(rowId);
+                        removedRowIdsDst.add(rowId);
+                    }
+                    break;
+                }
+
+                case DELETE_ALL:
+
+                    removeAll = true;
+
+                    done = true;
+                    break;
+
+                default:
+                    throw new UnsupportedOperationException();
+                }
+            }
+        }
+
+        if (DEBUG) {
+
+            exit(removeAll);
+        }
+
+        return removeAll;
+    }
+
+    @Override
+    public OperationResult insertRows(MVCCTransactionState mvccSharedState, Table table, int statementId, LargeLongArray rowIds, DMLInsertRows rows) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("mvccSharedState", mvccSharedState).add("table", table).add("statementId", statementId).add("rowIds", rowIds).add("rows", rows));
+        }
+
+        addInsertUpdateRows(table.getId(), DMLOperation.INSERT, insertRows, rowIds, rows);
+
+        final OperationResult result = OperationResult.SUCCESS;
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
+    @Override
+    public OperationResult updateRows(MVCCTransactionState mvccSharedState, Table table, int statementId, LargeLongArray rowIds, DMLUpdateRows rows) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("mvccSharedState", mvccSharedState).add("table", table).add("statementId", statementId).add("rowIds", rowIds).add("rows", rows));
+        }
+
+        final int tableId = table.getId();
+
+        hasUpdates[tableId] = true;
+
+        addInsertUpdateRows(tableId, DMLOperation.UPDATE, updateRows, rowIds, rows);
+
+        final OperationResult result = OperationResult.SUCCESS;
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
+    @Override
+    public OperationResult updateAllRows(MVCCTransactionState mvccSharedState, Table table, int statementId, DMLUpdateRows row) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("mvccSharedState", mvccSharedState).add("table", table).add("statementId", statementId).add("rows", row));
+        }
+
+        final int tableId = table.getId();
+
+        hasUpdates[tableId] = true;
+
+        addUpdateAllRows(tableId, DMLOperation.UPDATE_ALL, updateRows, row);
+
+        final OperationResult result = OperationResult.SUCCESS;
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
+    @Override
+    public OperationResult deleteRows(MVCCTransactionState mvccSharedState, Table table, int statementId, LargeLongArray rowIds) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("mvccSharedState", mvccSharedState).add("table", table).add("statementId", statementId).add("rowIds", rowIds));
+        }
+
+        final long deleteRowBitOffset = deleteRows.getBitOffset();
+
+        addRowOperation(table.getId(), DMLOperation.DELETE, deleteRowBitOffset);
+
+        final long numRowIds = rowIds.getNumElements();
+
+        deleteRows.addUnsignedLong(numRowIds);
+
+        for (long i = 0L; i < numRowIds; ++ i) {
+
+            deleteRows.addUnsignedLong(rowIds.get(i));
+        }
+
+        final OperationResult result = OperationResult.SUCCESS;
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
+    @Override
+    public OperationResult deleteAllRows(MVCCTransactionState mvccSharedState, Table table, int statementId) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("mvccSharedState", mvccSharedState).add("table", table).add("statementId", statementId));
+        }
+
+        final int tableId = table.getId();
+
+        addRowOperation(tableId, DMLOperation.DELETE_ALL, -1L);
+
+        deleteAllRows.add(tableId);
+
+        final OperationResult result = OperationResult.SUCCESS;
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
+    @Override
+    public void commit(MVCCTransactionState mvccSharedState) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("mvccSharedState", mvccSharedState));
+        }
+
+        releaseTransaction();
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public void rollback(MVCCTransactionState mvccSharedState) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("mvccSharedState", mvccSharedState));
+        }
+
+        releaseTransaction();
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    void prepare(int numTables) {
+
+        Checks.isNotNegative(numTables);
+
+        if (hasUpdates == null || numTables != hasUpdates.length) {
+
+            this.hasUpdates = new boolean[numTables];
+        }
+    }
+
+    void initialize(int transactionDecriptor, long originatingTransactionId, DBIsolationLevel isolationLevel) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("transactionDecriptor", transactionDecriptor).add("originatingTransactionId", originatingTransactionId).add("isolationLevel", isolationLevel));
+        }
+
+        this.transactionDesciptor = Checks.isTransactionDescriptor(transactionDecriptor);
+        this.originatingTransactionId = originatingTransactionId != DBConstants.NO_TRANSACTION_ID
+                ? Checks.isTransactionId(originatingTransactionId)
+                : originatingTransactionId;
+        this.isolationLevel = Objects.requireNonNull(isolationLevel);
+
+        Arrays.fill(hasUpdates, false);
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    long getTransactionId() {
+        return transactionId;
+    }
+
+    void setTransactionId(long transactionId) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("transactionId", transactionId));
+        }
 
         this.transactionId = Checks.isTransactionId(transactionId);
 
-        this.indexByRow = new LongToLongMap(0);
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    @Override
-    public OperationResult insertRows(Object sharedState, Table table, int statementId, DMLInsertRows rows) {
-        // TODO Auto-generated method stub
-        return null;
+    long getOriginatingTransactionId() {
+        return originatingTransactionId;
     }
 
-    @Override
-    public OperationResult updateRows(Object sharedState, Table table, int statementId, LargeLongArray rowIds,
-            DMLUpdateRows rows) {
-        // TODO Auto-generated method stub
-        return null;
+    DBIsolationLevel getIsolationLevel() {
+        return isolationLevel;
     }
 
-    @Override
-    public OperationResult updateAllRows(Object sharedState, Table table, int statementId) {
-        // TODO Auto-generated method stub
-        return null;
+    private void releaseTransaction() {
+
+        if (DEBUG) {
+
+            enter();
+        }
+
+        clear();
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    @Override
-    public OperationResult deleteRows(Object sharedState, Table table, int statementId, LargeLongArray rowIds) {
-        // TODO Auto-generated method stub
-        return null;
+    private void clear() {
+
+        if (DEBUG) {
+
+            enter();
+        }
+
+        this.transactionId = DBConstants.NO_TRANSACTION_ID;
+        this.originatingTransactionId = DBConstants.NO_TRANSACTION_ID;
+
+        rowOperationBySequenceNo.clear();
+
+        final LongNodeSetter<MVCCTransaction> noop = (i, n) -> { };
+
+        operationListsHeadNodesByTableId.forEachKeyAndValue(this, (k, v, t) -> t.tableOperationsLists.clear(t, v, noop, noop));
+
+        operationListsHeadNodesByTableId.clear();
+        operationListsTailNodesByTableId.clear();
+
+        insertRows.clear();
+        updateRows.clear();
+        updateAllRows.clear();
+/*
+        private final MVCCBitBuffer updateToExistingRows;
+        private final MVCCBitBuffer updateToInsertRows;
+        private final MVCCBitBuffer updateToUpdatedRows;
+*/
+        deleteRows.clear();
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    @Override
-    public OperationResult deleteAllRows(Object sharedState, Table table, int statementId) {
-        // TODO Auto-generated method stub
-        return null;
+    private long addRowOperation(int tableId, DMLOperation dmlOperation, long value) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("tableId", tableId).add("dmlOperation", dmlOperation).add("value", value));
+        }
+
+        final int operationSequenceNo = allocateOperationSequenceNo();
+
+        final long result = addRowOperation(this, tableId, dmlOperation, operationSequenceNo, rowOperationBySequenceNo, operationListsHeadNodesByTableId,
+                operationListsTailNodesByTableId, tableOperationsLists, value);
+
+        if (DEBUG) {
+
+            exitWithBinary(result);
+        }
+
+        return result;
     }
 
-    @Override
-    public void commit(Object sharedState) {
-        // TODO Auto-generated method stub
+    private int allocateOperationSequenceNo() {
 
+        return operationSequenceNoAllocator ++;
     }
 
-    @Override
-    public void rollback(Object sharedState) {
-        // TODO Auto-generated method stub
+    private void addUpdateAllRows(int tableId, DMLOperation dmlOperation, BitBuffer mvccBitBuffer, DMLInsertUpdateRows<?> rows) {
 
+        if (DEBUG) {
+
+            enter(b -> b.add("tableId", tableId).add("dmlOperation", dmlOperation).add("mvccBitBuffer", mvccBitBuffer).add("rows", rows));
+        }
+
+        addInsertUpdateRowsImpl(tableId, dmlOperation, mvccBitBuffer, null, rows, rows.getNumElements());
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    private void insertRow(int tableId, long rowId, byte[] outputBuffer, long outputBufferStartBitOffset, int[] columnIndices, RowDataNumBitsGetter outputRowDataNumBitsGetter) {
+    private void addInsertUpdateRows(int tableId, DMLOperation dmlOperation, BitBuffer mvccBitBuffer, LargeLongArray rowIds, DMLInsertUpdateRows<?> rows) {
 
-//        checkParameters(tableId, rowId, columnIndices, outputRowDataNumBitsGetter);
-        Objects.requireNonNull(columnIndices);
+        if (DEBUG) {
 
-        final long key = makeHashKey(tableId, rowId);
+            enter(b -> b.add("tableId", tableId).add("dmlOperation", dmlOperation).add("mvccBitBuffer", mvccBitBuffer).add("rowIds", rowIds).add("rows", rows));
+        }
 
-        indexByRow.put(key, key);
+        final long numRowIds = rowIds.getNumElements();
+
+        Checks.areEqual(numRowIds, rows.getNumElements());
+
+        addInsertUpdateRowsImpl(tableId, dmlOperation, mvccBitBuffer, rowIds, rows, numRowIds);
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    void updateRow(int tableId, long rowId, byte[] outputBuffer, long outputBufferStartBitOffset, int[] columnIndices, RowDataNumBitsGetter outputRowDataNumBitsGetter) {
+    private void addInsertUpdateRowsImpl(int tableId, DMLOperation dmlOperation, BitBuffer mvccBitBuffer, LargeLongArray rowIds, DMLInsertUpdateRows<?> rows, long numRows) {
 
-//        checkParameters(tableId, rowId, columnIndices, outputRowDataNumBitsGetter);
-        Objects.requireNonNull(columnIndices);
+        if (DEBUG) {
 
-        final long key = makeHashKey(tableId, rowId);
+            enter(b -> b.add("tableId", tableId).add("dmlOperation", dmlOperation).add("mvccBitBuffer", mvccBitBuffer).add("rowIds", rowIds).add("rows", rows)
+                    .add("numRows", numRows));
+        }
 
-        indexByRow.put(key, key);
+        final long bitBufferEncoded = addRowOperation(tableId, dmlOperation, mvccBitBuffer.getBitOffset());
+
+        if (DEBUG) {
+
+            debug("add encoded row operation", b -> b.add("tableId", tableId).add("dmlOperation", dmlOperation).add("numRows", numRows)
+                    .binary("bitBufferEncoded", bitBufferEncoded));
+        }
+
+        addInsertUpdateRowsImpl(mvccBitBuffer, rowIds, rows, numRows);
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    private void deleteRow(int tableId, long rowId) {
+    private static void addInsertUpdateRowsImpl(BitBuffer mvccBitBuffer, LargeLongArray rowIds, DMLInsertUpdateRows<?> rows, long numRows) {
 
-        Checks.isTableId(tableId);
-        Checks.isRowId(rowId);
+        if (DEBUG) {
 
+            PrintDebug.enter(debugClass, b -> b.add("mvccBitBuffer", mvccBitBuffer).add("rowIds", rowIds).add("rows", rows).add("numRows", numRows));
+        }
+
+        final int numTableColumns = rows.getNumTableColumns();
+
+        if (DEBUG) {
+
+            PrintDebug.debug(debugClass, "add columns", b -> b.add("numTableColumns", numTableColumns));
+        }
+
+        mvccBitBuffer.addUnsignedShort(numTableColumns);
+
+        final RowDataNumBits rowDataNumBits = rows.getRowDataNumBits();
+
+        for (int i = 0; i < numTableColumns; ++ i) {
+
+            final int closureI = i;
+
+            final int tableColumn = rows.getTableColumn(i);
+            final int numBits = rowDataNumBits.getNumBits(i);
+
+            if (DEBUG) {
+
+                PrintDebug.debug(debugClass, "add column", b -> b.add("i", closureI).add("tableColumn", tableColumn).add("numBits", numBits));
+            }
+
+            mvccBitBuffer.addUnsignedShort(tableColumn);
+            mvccBitBuffer.addUnsignedShort(numBits);
+        }
+
+        if (DEBUG) {
+
+            PrintDebug.debug(debugClass, "add rows", b -> b.add("numRows", numRows));
+        }
+
+        mvccBitBuffer.addUnsignedLong(numRows);
+
+        for (int i = 0; i < numRows; ++ i) {
+
+            final int closureI = i;
+
+            if (rowIds != null) {
+
+                final long rowId = rowIds.get(i);
+
+                if (DEBUG) {
+
+                    PrintDebug.debug(debugClass, "add rowId", b -> b.add("i", closureI).add("rowId", rowId));
+                }
+
+                mvccBitBuffer.addUnsignedLong(rowId);
+            }
+
+            final byte[] rowBuffer = rows.getRowBuffer(i);
+            final long rowBufferBitOffset = rows.getRowBufferBitOffset(i);
+
+            for (int j = 0; j < numTableColumns; ++ j) {
+
+                if (DEBUG) {
+
+                    final int closureJ = j;
+
+                    PrintDebug.debug(debugClass, "add row column", b -> b.add("i", closureI).add("j", closureJ).add("rowBuffer", Arrays.toString(rowBuffer))
+                            .add("rowBufferBitOffset", rowBufferBitOffset));
+                }
+
+                mvccBitBuffer.addBytes(rowBuffer, rowBufferBitOffset, rowDataNumBits.getNumBits(j));
+            }
+        }
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass);
+        }
+    }
+
+    private static long addRowOperation(MVCCTransaction mvccTransaction, int tableId, DMLOperation dmlOperation, int operationSequenceNo, LongArray rowOperationBySequenceNo,
+            IntToLongMap operationsHeadNodeByTableId, IntToLongMap operationsTailNodeByTableId, LargeLongMultiHeadDoublyLinkedList<MVCCTransaction> operationsLists,
+            long value) {
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("mvccTransaction", mvccTransaction).add("tableId", tableId).add("dmlOperation", dmlOperation)
+                    .add("operationSequenceNo", operationSequenceNo).add("rowOperationBySequenceNo", rowOperationBySequenceNo).add("value", value));
+        }
+
+        if (ASSERT) {
+
+            Assertions.areEqual(operationSequenceNo, rowOperationBySequenceNo.getNumElements());
+        }
+
+        final long encoded = encodeOperation(dmlOperation, value);
+
+        rowOperationBySequenceNo.add(encoded);
+
+        final long headNode = operationsHeadNodeByTableId.get(tableId);
+        final long tailNode = headNode != NO_NODE
+                ? operationsTailNodeByTableId.get(tableId)
+                : NO_NODE;
+
+        operationsLists.addTail(mvccTransaction, encoded, headNode, tailNode, (t, n) -> t.scratcHeadNode = n, (t, n) -> t.scratcTailNode = n);
+
+        operationsHeadNodeByTableId.put(tableId, mvccTransaction.scratcHeadNode);
+        operationsTailNodeByTableId.put(tableId, mvccTransaction.scratcTailNode);
+
+        if (DEBUG) {
+
+            PrintDebug.exitWithBinary(debugClass, encoded);
+        }
+
+        return encoded;
+    }
+
+    private static long encodeOperation(DMLOperation dmlOperation, long byteBufferBitOffset) {
+
+        Checks.isWithinRangeInclusive(byteBufferBitOffset, 0L, MAX_BIT_OFFSET);
+
+        return (((long)dmlOperation.ordinal()) << DML_OPERATION_SHIFT) | byteBufferBitOffset;
+    }
+/*
+    private static int decodeOperationSequenceNo(long value) {
+
+        return Integers.checkUnsignedLongToUnsignedInt(value & OPERATION_SEQUENCE_NO_MASK);
+    }
+*/
+
+    private static long decodeOperationByteBufferBitOffset(long value) {
+
+        return Integers.checkUnsignedLongToUnsignedInt(value & BIT_OFFSET_MASK);
+    }
+
+    private static DMLOperation decodeOperation(long value) {
+
+        return DMLOperation.ofOrdinal(Integers.checkUnsignedLongToUnsignedInt((value & DML_OPERATION_MASK) >> DML_OPERATION_SHIFT));
     }
 }

@@ -2,9 +2,9 @@ package dev.jdata.db.schema;
 
 import java.util.Objects;
 
-@Deprecated
 public enum DBType {
 
+    BOOLEAN(DBCategory.BOOLEAN),
     INTEGER(DBCategory.NUMERIC),
     FLOATING_POINT(DBCategory.NUMERIC),
     DECIMAL(DBCategory.NUMERIC),
@@ -16,6 +16,7 @@ public enum DBType {
 
     public enum DBCategory {
 
+        BOOLEAN,
         NUMERIC,
         STRING,
         TIME,

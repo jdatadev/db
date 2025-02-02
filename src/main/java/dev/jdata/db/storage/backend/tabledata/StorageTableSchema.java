@@ -20,7 +20,7 @@ public final class StorageTableSchema {
         private final int maxBits;
         private final boolean isNullable;
 
-        private StorageSchemaColumn(SchemaDataType schemaDataType, NumStorageBitsGetter numStorageBitsGetter) {
+        private StorageSchemaColumn(SchemaDataType schemaDataType, boolean isNullable, NumStorageBitsGetter numStorageBitsGetter) {
 
             Objects.requireNonNull(schemaDataType);
             Objects.requireNonNull(numStorageBitsGetter);
@@ -29,7 +29,7 @@ public final class StorageTableSchema {
 
             this.minBits = numStorageBitsGetter.getMinNumBits(schemaDataType);
             this.maxBits = numStorageBitsGetter.getMaxNumBits(schemaDataType);
-            this.isNullable = schemaDataType.isNullable();
+            this.isNullable = isNullable;
         }
 
         public SchemaDataType getSchemaDataType() {
@@ -153,6 +153,6 @@ public final class StorageTableSchema {
 
     private static StorageSchemaColumn toStorageSchemaColumn(Column tableColumn, NumStorageBitsGetter numStorageBitsGetter) {
 
-        return new StorageSchemaColumn(tableColumn.getSchemaType(), numStorageBitsGetter);
+        return new StorageSchemaColumn(tableColumn.getSchemaType(), tableColumn.isNullable(), numStorageBitsGetter);
     }
 }

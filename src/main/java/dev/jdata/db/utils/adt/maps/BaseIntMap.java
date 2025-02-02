@@ -96,12 +96,41 @@ public abstract class BaseIntMap<T> extends BaseExponentMap<int[]> implements In
         return result;
     }
 
-    final void keys(int[] dst) {
+    public final int keys(int[] dst) {
 
-        keysAndValues(dst, null, null, null);
+        return keysAndValues(dst, null, null, null);
     }
 
-    protected final <S, D> void keysAndValues(int[] keysDst, S src, D dst, ValueSetter<S, D> valueSetter) {
+    protected final <P1, P2> void forEachKeyAndValue(P1 parameter1, P2 parameter2, ForEachKeyAndValue<int[], T, P1, P2> forEachKeyAndValue) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("parameter1", parameter1).add("parameter2", parameter2).add("forEachKeyAndValue", forEachKeyAndValue));
+        }
+
+        final int[] keyMap = getHashed();
+
+        final int keyMapLength = keyMap.length;
+
+        final T values = getValues();
+
+        for (int i = 0; i < keyMapLength; ++ i) {
+
+            final int mapKey = keyMap[i];
+
+            if (mapKey != NO_KEY) {
+
+                forEachKeyAndValue.each(keyMap, i, values, i, parameter1, parameter2);
+            }
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    protected final <S, D> int keysAndValues(int[] keysDst, S src, D dst, ValueSetter<S, D> valueSetter) {
 
         if (DEBUG) {
 
@@ -133,8 +162,10 @@ public abstract class BaseIntMap<T> extends BaseExponentMap<int[]> implements In
 
         if (DEBUG) {
 
-            exit();
+            exit(dstIndex);
         }
+
+        return dstIndex;
     }
 
     protected final int getIndex(int key) {
@@ -204,7 +235,7 @@ public abstract class BaseIntMap<T> extends BaseExponentMap<int[]> implements In
 
         if (newAdded) {
 
-            increaseNumElements();
+            incrementNumElements();
         }
 
         if (DEBUG) {
@@ -311,7 +342,7 @@ public abstract class BaseIntMap<T> extends BaseExponentMap<int[]> implements In
 
         if (removed) {
 
-            decreaseNumElements();
+            decrementNumElements();
         }
 
         if (DEBUG) {

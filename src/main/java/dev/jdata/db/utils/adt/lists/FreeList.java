@@ -6,9 +6,10 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.elements.BaseNumElements;
+import dev.jdata.db.utils.adt.elements.Elements;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class FreeList<T> extends BaseNumElements implements Freeing<T> {
+public final class FreeList<T> extends BaseNumElements implements Freeing<T>, Elements {
 
     private T[] list;
 
@@ -28,7 +29,7 @@ public final class FreeList<T> extends BaseNumElements implements Freeing<T> {
             throw new IllegalStateException();
         }
 
-        decreaseNumElements();
+        decrementNumElements();
 
         return list[numElements - 1];
     }
@@ -54,6 +55,6 @@ public final class FreeList<T> extends BaseNumElements implements Freeing<T> {
 
         list[numElements] = instance;
 
-        increaseNumElements();
+        incrementNumElements();
     }
 }

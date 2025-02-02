@@ -2,6 +2,8 @@ package dev.jdata.db.utils.adt.arrays;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.IntPredicate;
+import java.util.function.LongPredicate;
 import java.util.function.LongToIntFunction;
 import java.util.function.Predicate;
 
@@ -173,5 +175,59 @@ public class Array {
         }
 
         return result;
+    }
+
+    public static String toString(byte[] array, int startIndex, int numElements) {
+
+        Objects.requireNonNull(array);
+        Objects.checkFromToIndex(startIndex, numElements, array.length);
+
+        return ByIndex.toString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[i]));
+    }
+
+    public static String toString(int[] array, int startIndex, int numElements) {
+
+        Objects.requireNonNull(array);
+        Objects.checkFromToIndex(startIndex, numElements, array.length);
+
+        return ByIndex.toString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[i]));
+    }
+
+    public static String toString(int[] array, int startIndex, int numElements, IntPredicate predicate) {
+
+        Objects.requireNonNull(array);
+        Objects.checkFromToIndex(startIndex, numElements, array.length);
+        Objects.requireNonNull(predicate);
+
+        return ByIndex.toString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
+    }
+
+    public static void toString(int[] array, int startIndex, int numElements, StringBuilder sb, IntPredicate predicate) {
+
+        Objects.requireNonNull(array);
+        Objects.checkFromToIndex(startIndex, numElements, array.length);
+        Objects.requireNonNull(sb);
+        Objects.requireNonNull(predicate);
+
+        ByIndex.toString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
+    }
+
+    public static String toString(long[] array, int startIndex, int numElements, LongPredicate predicate) {
+
+        Objects.requireNonNull(array);
+        Objects.checkFromToIndex(startIndex, numElements, array.length);
+        Objects.requireNonNull(predicate);
+
+        return ByIndex.toString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
+    }
+
+    public static void toString(long[] array, int startIndex, int numElements, StringBuilder sb, LongPredicate predicate) {
+
+        Objects.requireNonNull(array);
+        Objects.checkFromToIndex(startIndex, numElements, array.length);
+        Objects.requireNonNull(sb);
+        Objects.requireNonNull(predicate);
+
+        ByIndex.toString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
     }
 }

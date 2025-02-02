@@ -1,23 +1,24 @@
 package dev.jdata.db.dml;
 
+import java.util.Arrays;
 import java.util.Objects;
 
+import dev.jdata.db.DBConstants;
 import dev.jdata.db.data.RowDataNumBits;
+import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.checks.Checks;
 
 public abstract class DMLInsertUpdateRows<T extends DMLInsertUpdateRows.InsertUpdateRow> extends DMLRows<T> {
 
-    static abstract class InsertUpdateRow extends DMLRow {
+    public static abstract class InsertUpdateRow extends DMLRow {
 
         private byte[] rowBuffer;
         private long rowBufferBitOffset;
-        private RowDataNumBits rowDataNumBits;
 
-        final void initialize(byte[] rowBuffer, long rowBufferBitOffset, RowDataNumBits rowDataNumBits) {
+        public final void initialize(byte[] rowBuffer, long rowBufferBitOffset) {
 
             this.rowBuffer = Objects.requireNonNull(rowBuffer);
             this.rowBufferBitOffset = Checks.isOffset(rowBufferBitOffset);
-            this.rowDataNumBits = Objects.requireNonNull(rowDataNumBits);
         }
 
         final byte[] getRowBuffer() {
@@ -28,23 +29,70 @@ public abstract class DMLInsertUpdateRows<T extends DMLInsertUpdateRows.InsertUp
             return rowBufferBitOffset;
         }
 
-        final RowDataNumBits getRowDataNumBits() {
-            return rowDataNumBits;
+        @Override
+        public String toString() {
+
+            return getClass().getSimpleName() + " [rowBuffer=" + Arrays.toString(rowBuffer) + ", rowBufferBitOffset=" + rowBufferBitOffset + "]";
         }
     }
 
-    public final byte[] getRowBuffer(int index) {
+    private final int[] tableColumns;
+    private RowDataNumBits rowDataNumBits;
 
-        return getRows()[index].getRowBuffer();
+    private int numColumns;
+
+    DMLInsertUpdateRows() {
+
+        this.tableColumns = new int[DBConstants.MAX_COLUMNS];
     }
 
-    public final long getRowBufferBitOffset(int index) {
+    public final void initialize(T[] rows, int numRows, int numColumns, RowDataNumBits rowDataNumBits) {
 
-        return getRows()[index].getRowBufferBitOffset();
+        initialize(rows, numRows);
+
+        this.numColumns = Checks.isNumColumns(numColumns);
+        this.rowDataNumBits = Objects.requireNonNull(rowDataNumBits);
     }
 
-    public final RowDataNumBits getRowDataNumBits(int index) {
+    @Deprecated
+    public final void setColumnMapping(int index, int tableColumn) {
 
-        return getRows()[index].getRowDataNumBits();
+        Objects.checkIndex(index, numColumns);
+        Checks.isColumnIndex(tableColumn);
+
+        tableColumns[index] = tableColumn;
+    }
+
+    public final RowDataNumBits getRowDataNumBits() {
+
+        return rowDataNumBits;
+    }
+
+    public final int getNumTableColumns() {
+        return numColumns;
+    }
+
+    public int getTableColumn(int index) {
+
+        Objects.checkIndex(index, numColumns);
+
+        return tableColumns[index];
+    }
+
+    public final byte[] getRowBuffer(int rowIndex) {
+
+        return getRows()[rowIndex].getRowBuffer();
+    }
+
+    public final long getRowBufferBitOffset(int rowIndex) {
+
+        return getRows()[rowIndex].getRowBufferBitOffset();
+    }
+
+    @Override
+    public String toString() {
+
+        return getClass().getSimpleName() + " [tableColumns=" + Array.toString(tableColumns, 0, numColumns) + ", rowDataNumBits=" + rowDataNumBits +
+                ", numColumns=" + numColumns + ", getRows()=" + Arrays.toString(getRows()) + "]";
     }
 }

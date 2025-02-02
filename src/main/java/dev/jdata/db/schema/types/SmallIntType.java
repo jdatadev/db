@@ -2,6 +2,9 @@ package dev.jdata.db.schema.types;
 
 public final class SmallIntType extends BaseIntegerType {
 
+    public static final SmallIntType INSTANCE = new SmallIntType();
+
+/*
     public static final SmallIntType NULLABLE = new SmallIntType(true);
     public static final SmallIntType NON_NULLABLE = new SmallIntType(false);
 
@@ -12,6 +15,11 @@ public final class SmallIntType extends BaseIntegerType {
 
     private SmallIntType(boolean nullable) {
         super(nullable);
+    }
+*/
+
+    private SmallIntType() {
+
     }
 
     @Override

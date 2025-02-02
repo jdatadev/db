@@ -3,11 +3,13 @@ package dev.jdata.db.utils.adt.sets;
 import java.util.Arrays;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.elements.IntElements;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.scalars.Integers;
 
 public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
 
@@ -101,7 +103,7 @@ public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
 
         if (newAdded) {
 
-            increaseNumElements();
+            incrementNumElements();
         }
 
         if (DEBUG) {
@@ -198,7 +200,7 @@ public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
 
         if (removed) {
 
-            decreaseNumElements();
+            decrementNumElements();
         }
 
         if (DEBUG) {
@@ -353,5 +355,21 @@ public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
     private static void clearSet(int[] set) {
 
         Arrays.fill(set, NO_ELEMENT);
+    }
+
+    @Override
+    public String toString() {
+
+        final StringBuilder sb = new StringBuilder(Integers.checkUnsignedLongToUnsignedInt(getNumElements() * 10));
+
+        sb.append(getClass().getSimpleName()).append(" [elements=");
+
+        final int[] set = getHashed();
+
+        Array.toString(set, 0, set.length, sb, e -> e != NO_ELEMENT);
+
+        sb.append(']');
+
+        return sb.toString();
     }
 }

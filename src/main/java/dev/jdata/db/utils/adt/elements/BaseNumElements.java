@@ -2,19 +2,17 @@ package dev.jdata.db.utils.adt.elements;
 
 import dev.jdata.db.utils.debug.PrintDebug;
 
-public abstract class BaseNumElements extends BaseElements implements Elements, PrintDebug {
+public abstract class BaseNumElements extends BaseElements implements PrintDebug {
 
     private static final boolean DEBUG = Boolean.FALSE;
 
     private long numElements;
 
-    @Override
     public final boolean isEmpty() {
 
         return numElements == 0;
     }
 
-    @Override
     public final long getNumElements() {
         return numElements;
     }
@@ -34,7 +32,7 @@ public abstract class BaseNumElements extends BaseElements implements Elements, 
         }
     }
 
-    protected final void increaseNumElements() {
+    protected final void incrementNumElements() {
 
         if (DEBUG) {
 
@@ -49,7 +47,7 @@ public abstract class BaseNumElements extends BaseElements implements Elements, 
         }
     }
 
-    protected final void decreaseNumElements() {
+    protected final void decrementNumElements() {
 
         if (DEBUG) {
 

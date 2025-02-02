@@ -7,6 +7,7 @@ import java.util.function.IntFunction;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.scalars.Integers;
 
 public final class IntToObjectMap<T> extends BaseIntArrayMap<T[]> {
 
@@ -50,6 +51,19 @@ public final class IntToObjectMap<T> extends BaseIntArrayMap<T[]> {
         }
 
         return result;
+    }
+
+    @FunctionalInterface
+    public interface ForEachKeyAndValue<T, U> {
+
+        void each(int key, T value, U parameter);
+    }
+
+    public <I> void forEachKeyAndValue(I parameter, ForEachKeyAndValue<T, I> forEachKeyAndValue) {
+
+        Objects.requireNonNull(forEachKeyAndValue);
+
+        forEachKeyAndValue(parameter, forEachKeyAndValue, (keys, keyIndex, values, valueIndex, p1, p2) -> p2.each(keys[keyIndex], values[valueIndex], p1));
     }
 
     public void keysAndValues(int[] keysDst, T[] valuesDst) {
@@ -97,5 +111,29 @@ public final class IntToObjectMap<T> extends BaseIntArrayMap<T[]> {
     protected void clearValues(T[] values) {
 
         Arrays.fill(values, null);
+    }
+
+    @Override
+    public String toString() {
+
+        final StringBuilder sb = new StringBuilder(Integers.checkUnsignedLongToUnsignedInt(getNumElements() * 100));
+
+        sb.append(getClass().getSimpleName()).append(" {");
+
+        final int prefixLength = sb.length();
+
+        forEachKeyAndValue(sb, (k, v, b) -> {
+
+            if (b.length() > prefixLength) {
+
+                b.append(',');
+            }
+
+            b.append(k).append('=').append(v);
+        });
+
+        sb.append('}');
+
+        return sb.toString();
     }
 }

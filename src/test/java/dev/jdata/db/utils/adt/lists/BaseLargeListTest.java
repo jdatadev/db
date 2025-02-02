@@ -26,9 +26,20 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?> & LargeList & Ele
     abstract long removeTailNode(T list, long newTailNode);
     abstract void removeNode(T list, long node, long previousNode);
 
+    abstract void clear(T list);
+
     long removeTail(T list) {
 
         throw new UnsupportedOperationException();
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public final void testLengthOne() {
+
+        final T list = createLargeList(1, 1);
+
+        addHead(list, 123L);
     }
 
     @Test
@@ -37,8 +48,7 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?> & LargeList & Ele
 
         final T list = createLargeList(10, 100);
 
-        assertThat(list).isEmpty();
-        assertThat(list).hasNumElements(0);
+        checkNoElements(list);
 
         addHead(list, 123L);
         checkElements(list, 123L);
@@ -56,8 +66,7 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?> & LargeList & Ele
 
         final T list = createLargeList(10, 100);
 
-        assertThat(list).isEmpty();
-        assertThat(list).hasNumElements(0);
+        checkNoElements(list);
 
         addTail(list, 123L);
         checkElements(list, 123L);
@@ -113,8 +122,7 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?> & LargeList & Ele
 
         removeNode(list, node1, BaseLargeList.NO_NODE);
 
-        assertThat(list).isEmpty();
-        assertThat(list).hasNumElements(0);
+        checkNoElements(list);
     }
 
     @Test
@@ -281,6 +289,36 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?> & LargeList & Ele
 
     @Test
     @Category(UnitTest.class)
+    public final void testClear() {
+
+        final T list = createLargeList(10, 100);
+
+        checkNoElements(list);
+
+        addHead(list, 123L);
+        checkElements(list, 123L);
+
+        clear(list);
+        checkNoElements(list);
+
+        addHead(list, 123L);
+        addHead(list, 234L);
+        checkElements(list, 234L, 123L);
+
+        clear(list);
+        checkNoElements(list);
+
+        addHead(list, 123L);
+        addHead(list, 234L);
+        addHead(list, 345L);
+        checkElements(list, 345L, 234L, 123L);
+
+        clear(list);
+        checkNoElements(list);
+    }
+
+    @Test
+    @Category(UnitTest.class)
     public final void testFreeListRemoveHead() {
 
         final T list = createLargeList(10, 100);
@@ -425,6 +463,12 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?> & LargeList & Ele
         assertThat(list).hasNumElements(elements.length);
 
         assertThat(toArray(list)).isEqualTo(elements);
+    }
+
+    final void checkNoElements(T list) {
+
+        assertThat(list).isEmpty();
+        assertThat(list).hasNumElements(0L);
     }
 
     private static <T extends BaseLargeList<?, ?> & Elements> void checkElements(long headNode, T list, long ... elements) {

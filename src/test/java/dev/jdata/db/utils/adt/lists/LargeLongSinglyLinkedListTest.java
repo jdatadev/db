@@ -23,6 +23,12 @@ public final class LargeLongSinglyLinkedListTest extends BaseLargeLongListTest<L
         list.removeNode(node, previousNode);
     }
 
+    @Override
+    void clear(LargeLongSinglyLinkedList list) {
+
+        list.clear();
+    }
+
     @Category(UnitTest.class)
     public void testRemoveHeadNode() {
 

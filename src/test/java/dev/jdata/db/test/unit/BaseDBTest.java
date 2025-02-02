@@ -26,29 +26,24 @@ public abstract class BaseDBTest extends BaseTest {
 
     protected static final long TEST_TRANSACTION_ID = 0L;
 
-    private static List<SchemaDataType> createNullableSchemaDataTypes() {
-
-        return createSchemaDataTypes(true);
-    }
-
-    private static List<SchemaDataType> createSchemaDataTypes(boolean nullable) {
+    private static List<SchemaDataType> createSchemaDataTypes() {
 
         return Lists.unmodifiableOf(
 
-                BooleanType.of(nullable),
-                SmallIntType.of(nullable),
-                IntegerType.of(nullable),
-                BigIntType.of(nullable),
-                FloatType.of(nullable),
-                DoubleType.of(nullable),
-                DecimalType.of(nullable, 1, 2),
-                CharType.of(nullable, 3),
-                VarCharType.of(nullable, 4, 5),
-                DateType.of(nullable),
-                TimeType.of(nullable),
-                TimestampType.of(nullable),
-                BlobType.of(nullable),
-                TextObjectType.of(nullable));
+                BooleanType.INSTANCE,
+                SmallIntType.INSTANCE,
+                IntegerType.INSTANCE,
+                BigIntType.INSTANCE,
+                FloatType.INSTANCE,
+                DoubleType.INSTANCE,
+                DecimalType.of(1, 2),
+                CharType.of(3),
+                VarCharType.of(4, 5),
+                DateType.INSTANCE,
+                TimeType.INSTANCE,
+                TimestampType.INSTANCE,
+                BlobType.INSTANCE,
+                TextObjectType.INSTANCE);
     }
 
     protected static Table createTestTable(int tableId) {
@@ -61,7 +56,7 @@ public abstract class BaseDBTest extends BaseTest {
         Checks.isTableId(tableId);
         Checks.isTableName(tableName);
 
-        final List<Column> columns = Lists.unmodifiableOf(Lists.map(createNullableSchemaDataTypes(), t -> new Column(t, t.isNullable())));
+        final List<Column> columns = Lists.unmodifiableOf(Lists.map(createSchemaDataTypes(), t -> new Column(t, false)));
 
         return new Table(tableName, tableId, columns);
     }

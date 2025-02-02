@@ -76,9 +76,9 @@ public final class Transaction extends BaseDescriptorable<Transaction.Transactio
     }
 
     @Override
-    public OperationResult insertRows(TransactionSharedState sharedState, Table table, int statementId, DMLInsertRows rows) {
+    public OperationResult insertRows(TransactionSharedState sharedState, Table table, int statementId, LargeLongArray rowIds, DMLInsertRows rows) {
 
-        return executeTransactionMechanisms(sharedState, table, statementId, rows, null, (m, s, t, i, p1, p2) -> m.insertRows(s, t, i, p1));
+        return executeTransactionMechanisms(sharedState, table, statementId, rowIds, rows, (m, s, t, i, p1, p2) -> m.insertRows(s, t, i, p1, p2));
     }
 
     @Override
@@ -88,9 +88,9 @@ public final class Transaction extends BaseDescriptorable<Transaction.Transactio
     }
 
     @Override
-    public OperationResult updateAllRows(TransactionSharedState sharedState, Table table, int statementId) {
+    public OperationResult updateAllRows(TransactionSharedState sharedState, Table table, int statementId, DMLUpdateRows row) {
 
-        return executeTransactionMechanisms(sharedState, table, statementId, null, null, (m, s, t, i, p1, p2) -> m.updateAllRows(s, t, i));
+        return executeTransactionMechanisms(sharedState, table, statementId, row, null, (m, s, t, i, p1, p2) -> m.updateAllRows(s, t, i, p1));
     }
 
     @Override

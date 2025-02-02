@@ -73,7 +73,7 @@ public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends B
 
         descriptorables[descriptor] = result;
 
-        increaseNumElements();
+        incrementNumElements();
 
         return result;
     }
@@ -86,6 +86,6 @@ public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends B
 
         freeList.free(descriptorable);
 
-        decreaseNumElements();
+        decrementNumElements();
     }
 }

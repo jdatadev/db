@@ -93,7 +93,7 @@ public class RowBitsUtil {
 
                 isNull = rowDataNumBitsGetter.isNull(columnIndex);
 
-                BitBufferUtil.setBitValue(outputRowBuffer, nullValueBitMapBitOffset + nullValueBitmapIndex, isNull);
+                BitBufferUtil.setBitValue(outputRowBuffer, isNull, nullValueBitMapBitOffset + nullValueBitmapIndex);
             }
             else {
                 isNull = false;

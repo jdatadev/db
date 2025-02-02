@@ -3,13 +3,14 @@ package dev.jdata.db.utils.adt.sets;
 import java.util.Arrays;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.elements.LongElements;
+import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.scalars.Integers;
 
-public final class LongSet extends BaseIntegerSet<long[]> implements LongElements {
+public final class LongSet extends BaseIntegerSet<long[]> implements ILongSet {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_LONG_SET;
 
@@ -20,6 +21,10 @@ public final class LongSet extends BaseIntegerSet<long[]> implements LongElement
     public static LongSet of(long ... values) {
 
         return new LongSet(values);
+    }
+
+    public LongSet() {
+        this(3);
     }
 
     public LongSet(int initialCapacityExponent) {
@@ -101,7 +106,7 @@ public final class LongSet extends BaseIntegerSet<long[]> implements LongElement
 
         if (newAdded) {
 
-            increaseNumElements();
+            incrementNumElements();
         }
 
         if (DEBUG) {
@@ -198,7 +203,7 @@ public final class LongSet extends BaseIntegerSet<long[]> implements LongElement
 
         if (removed) {
 
-            decreaseNumElements();
+            decrementNumElements();
         }
 
         if (DEBUG) {
@@ -353,5 +358,21 @@ public final class LongSet extends BaseIntegerSet<long[]> implements LongElement
     private static void clearSet(long[] set) {
 
         Arrays.fill(set, NO_ELEMENT);
+    }
+
+    @Override
+    public String toString() {
+
+        final StringBuilder sb = new StringBuilder(Integers.checkUnsignedLongToUnsignedInt(getNumElements() * 10));
+
+        sb.append(getClass().getSimpleName()).append(" [elements=");
+
+        final long[] set = getHashed();
+
+        Array.toString(set, 0, set.length, sb, e -> e != NO_ELEMENT);
+
+        sb.append(']');
+
+        return sb.toString();
     }
 }

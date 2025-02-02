@@ -8,9 +8,15 @@ import dev.jdata.db.utils.adt.hashed.BaseExponentHashed;
 public abstract class BaseExponentMap<T> extends BaseExponentHashed<T> {
 
     @FunctionalInterface
-    protected interface ValueSetter<S, T> {
+    protected interface ValueSetter<T, U> {
 
-        void setValue(S src, int srcIndex, T dst, int dstIndex);
+        void setValue(T src, int srcIndex, U dst, int dstIndex);
+    }
+
+    @FunctionalInterface
+    public interface ForEachKeyAndValue<K, V, P1, P2> {
+
+        void each(K key, int keyIndex, V values, int valueIndex, P1 parameter1, P2 parameter2);
     }
 
     BaseExponentMap(int initialCapacityExponent, float loadFactor, IntFunction<T> createHashed, Consumer<T> clearHashed) {

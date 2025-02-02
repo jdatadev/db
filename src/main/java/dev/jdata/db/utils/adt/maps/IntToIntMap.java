@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.maps;
 
+import java.util.Objects;
+
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.checks.Checks;
@@ -47,6 +49,19 @@ public final class IntToIntMap extends BaseIntArrayMap<int[]> {
         }
 
         return result;
+    }
+
+    @FunctionalInterface
+    public interface ForEachKeyAndValue<T> {
+
+        void each(int key, int value, T parameter);
+    }
+
+    public <T> void forEachKeyAndValue(T parameter, ForEachKeyAndValue<T> forEachKeyAndValue) {
+
+        Objects.requireNonNull(forEachKeyAndValue);
+
+        forEachKeyAndValue(parameter, forEachKeyAndValue, (keys, keyIndex, values, valueIndex, p1, p2) -> p2.each(keys[keyIndex], values[valueIndex], p1));
     }
 
     public void keysAndValues(int[] keysDst, int[] valuesDst) {

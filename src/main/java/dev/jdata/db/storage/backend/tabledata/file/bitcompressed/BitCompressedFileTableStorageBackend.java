@@ -94,6 +94,6 @@ final class BitCompressedFileTableStorageBackend extends BaseFileTableDataStorag
     @Override
     protected void setDeleteMarker(byte[] outputRowBuffer, long outputRowBufferBitOffset) {
 
-        BitBufferUtil.setBitValue(outputRowBuffer, outputRowBufferBitOffset, true);
+        BitBufferUtil.setBitValue(outputRowBuffer, true, outputRowBufferBitOffset);
     }
 }

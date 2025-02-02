@@ -9,7 +9,6 @@ public final class Column {
     private final SchemaDataType schemaType;
     private final boolean nullable;
 
-    @Deprecated // nullable from schemaType?
     public Column(SchemaDataType schemaType, boolean nullable) {
 
         this.schemaType = Objects.requireNonNull(schemaType);

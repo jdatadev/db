@@ -3,18 +3,14 @@ package dev.jdata.db.utils.adt.arrays;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.Clearable;
-import dev.jdata.db.utils.adt.elements.Elements;
+import dev.jdata.db.utils.adt.MutableElements;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class LargeArray<O, I> implements Elements, Clearable {
+public abstract class LargeArray<O, I> extends LargeExponentArray implements MutableElements {
 
-    private final int innerCapacity;
+    private final IntFunction<O> createOuterArray;
 
     private O array;
-    private int numOuterEntries;
-
-    private long numElements;
 
     abstract O copyOuterArray(O outerArray, int capacity);
     abstract int getOuterArrayLength(O outerArray);
@@ -24,60 +20,28 @@ public abstract class LargeArray<O, I> implements Elements, Clearable {
     abstract int getNumInnerElements(I innerArray);
     abstract I setInnerArray(O outerArray, int outerIndex, int innerArrayLength);
 
-    protected LargeArray(int initialOuterCapacity, int innerCapacity, IntFunction<O> createOuterArray) {
+    protected LargeArray(int initialOuterCapacity, int innerCapacityExponent, int innerArrayLengthNumElements, IntFunction<O> createOuterArray) {
+        super(innerCapacityExponent, 0, innerArrayLengthNumElements);
 
         Checks.isCapacity(initialOuterCapacity);
-        Checks.isCapacity(innerCapacity);
         Objects.requireNonNull(createOuterArray);
 
-        this.innerCapacity = innerCapacity;
+        this.createOuterArray = createOuterArray;
 
-        this.array = createOuterArray.apply(initialOuterCapacity);
-
-        this.numElements = 0L;
-    }
-
-    @Override
-    public final boolean isEmpty() {
-
-        return numElements == 0;
-    }
-
-    @Override
-    public final long getNumElements() {
-
-        return numElements;
+        this.array = initialOuterCapacity != 0 ? createOuterArray.apply(initialOuterCapacity) : null;
     }
 
     @Override
     public final void clear() {
 
-        final int numOuter = numOuterEntries;
+        final int numOuter = getNumOuterEntries();
 
         for (int i = 0; i < numOuter; ++ i) {
 
             setInnerArrayLength(getInnerArray(array, i), 0);
         }
 
-        this.numElements = 0L;
-    }
-
-    final int getInnerCapacity() {
-        return innerCapacity;
-    }
-
-    final void increaseNumElements() {
-
-        ++ numElements;
-    }
-
-    final int getNumOuterEntries() {
-        return numOuterEntries;
-    }
-
-    final void increaseNumOuterEntries() {
-
-        ++ numOuterEntries;
+        super.clear();
     }
 
     final O getArray() {
@@ -91,18 +55,30 @@ public abstract class LargeArray<O, I> implements Elements, Clearable {
 
     final I checkCapacity() {
 
-        final int numOuterEntries = getNumOuterEntries();
+        final int numOuterAllocatedEntries = getNumOuterAllocatedEntries();
+        final int numOuterUtilizedEntries = getNumOuterEntries();
 
         final I result;
 
-        if (numOuterEntries == 0) {
+        if (numOuterAllocatedEntries == 0) {
 
-            increaseNumElements();
+            incrementNumOuterAllocatedEntries();
+            incrementNumOuterEntries();
+
+            this.array = createOuterArray.apply(1);
 
             result = setInnerArray(array, 0, getInnerCapacity() + 1);
         }
+        else if (numOuterUtilizedEntries == 0) {
+
+            incrementNumOuterEntries();
+
+            result = getInnerArray(array, 0);
+
+            setInnerArrayLength(result, 0);
+        }
         else {
-            final I innerArray = getInnerArray(array, numOuterEntries - 1);
+            final I innerArray = getInnerArray(array, numOuterUtilizedEntries - 1);
 
             final int numInnerElements = getNumInnerElements(innerArray);
 
@@ -110,21 +86,26 @@ public abstract class LargeArray<O, I> implements Elements, Clearable {
 
                 final int outerArrayLength = getOuterArrayLength(array);
 
-                if (numOuterEntries == outerArrayLength) {
+                if (numOuterUtilizedEntries < numOuterAllocatedEntries) {
 
-                    array = copyOuterArray(array, outerArrayLength * 4);
-
-                    setArray(array);
-
-                    result = getInnerArray(array, numOuterEntries);
-
-                    setInnerArrayLength(result, 0);
-
-                    increaseNumOuterEntries();
+                    result = getInnerArray(array, numOuterUtilizedEntries);
                 }
                 else {
-                    result = innerArray;
+                    if (numOuterUtilizedEntries == outerArrayLength) {
+
+                        this.array = copyOuterArray(array, outerArrayLength << 2);
+
+                        setArray(array);
+                    }
+
+                    incrementNumOuterAllocatedEntries();
+
+                    result = setInnerArray(array, numOuterUtilizedEntries, getInnerNumAllocateElements());
+
+                    setInnerArrayLength(result, 0);
                 }
+
+                incrementNumOuterEntries();
             }
             else {
                 result = innerArray;
@@ -132,15 +113,5 @@ public abstract class LargeArray<O, I> implements Elements, Clearable {
         }
 
         return result;
-    }
-
-    static int getOuterIndex(long index) {
-
-        return (int)(index >>> 32);
-    }
-
-    static int getInnerIndex(long index) {
-
-        return (int)(index & 0xFFFFFFFFFL);
     }
 }

@@ -21,6 +21,11 @@ public final class LargeIntMultiHeadDoublyLinkedList<T> extends BaseLargeIntDoub
         return addHeadValue(instance, value, headNode, tailNode, headNodeSetter, tailNodeSetter);
     }
 
+    public long addTail(T instance, int value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+
+        return addTailValue(instance, value, headNode, tailNode, headNodeSetter, tailNodeSetter);
+    }
+
     public int removeNode(T instance, long node, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
 
         return getValue(removeListNodeAndReturnNode(instance, node, headNode, tailNode, headNodeSetter, tailNodeSetter));

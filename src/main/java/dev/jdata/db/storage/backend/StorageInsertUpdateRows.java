@@ -16,7 +16,7 @@ public abstract class StorageInsertUpdateRows<T extends StorageInsertUpdateRows.
         private long rowBufferBitOffset;
         private RowDataNumBits rowDataNumBits;
 
-        final void initialize(DatabaseSchemaVersion databaseSchemaVersion, long rowId, long transactionId, byte[] rowBuffer, long rowBufferBitOffset,
+        public final void initialize(DatabaseSchemaVersion databaseSchemaVersion, long rowId, long transactionId, byte[] rowBuffer, long rowBufferBitOffset,
                 RowDataNumBits rowDataNumBits) {
 
             initializeDMLRow(databaseSchemaVersion, rowId, transactionId);
@@ -41,9 +41,10 @@ public abstract class StorageInsertUpdateRows<T extends StorageInsertUpdateRows.
 
     private int maxTotalNumRowBytes;
 
-    final void initialize(T[] rows, int numRows) {
+    @Override
+    protected final void initialize(T[] rows, int numRows) {
 
-        super.init(rows, numRows);
+        super.initialize(rows, numRows);
 
         Checks.atMost(rows, numRows);
 

@@ -1,6 +1,7 @@
 package dev.jdata.db;
 
 import dev.jdata.db.utils.bits.BitsUtil;
+import dev.jdata.db.utils.checks.Assertions;
 
 public class DBBitEncoding {
 
@@ -10,10 +11,7 @@ public class DBBitEncoding {
 
         LOCK_TYPE_NUM_BITS = BitsUtil.getNumEnumBits(LockType.class);
 
-        if (LOCK_TYPE_NUM_BITS > 1) {
-
-            throw new IllegalStateException();
-        }
+        Assertions.areEqual(LOCK_TYPE_NUM_BITS, 1);
     }
 
     private static final int NUM_ENCODED_ROW_BITS = Long.SIZE;

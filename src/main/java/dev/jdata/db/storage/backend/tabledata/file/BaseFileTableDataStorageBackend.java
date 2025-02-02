@@ -6,9 +6,9 @@ import java.util.Objects;
 import dev.jdata.db.data.RowDataNumBits;
 import dev.jdata.db.data.tables.TableByIdMap;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
+import dev.jdata.db.storage.backend.ReadRows;
 import dev.jdata.db.storage.backend.StorageDeleteRows;
 import dev.jdata.db.storage.backend.StorageInsertRows;
-import dev.jdata.db.storage.backend.ReadRows;
 import dev.jdata.db.storage.backend.StorageUpdateRows;
 import dev.jdata.db.storage.backend.tabledata.BaseTableDataStorageBackend;
 import dev.jdata.db.storage.backend.tabledata.NumStorageBitsGetter;
@@ -310,12 +310,12 @@ public abstract class BaseFileTableDataStorageBackend extends BaseTableDataStora
 
             final byte existingFileEndByte = fileTableStorageFile.readByteAtRowBitOffset(outputRowBufferEndBitOffset);
 
-            final int outputBufferEndByteOffset = Integers.checkUnsignedLongToUnsignedInt(outputRowBufferEndBitOffset / 8);
+            final int outputBufferEndByteOffset = Integers.checkUnsignedLongToUnsignedInt(outputRowBufferEndBitOffset >>> 3);
 
             outputRowBuffer[outputBufferEndByteOffset] = BitsUtil.merge(outputRowBuffer[outputBufferEndByteOffset], existingFileEndByte, numLeftoverEndBits);
         }
 
-        final long fileByteOffset = Integers.checkUnsignedLongToUnsignedInt(outputRowBufferStartBitOffset / 8);
+        final long fileByteOffset = Integers.checkUnsignedLongToUnsignedInt(outputRowBufferStartBitOffset >>> 3);
 
         final int numBytes = BitBufferUtil.numBytes(outputRowBufferStartBitOffset, outputRowBufferEndBitOffset);
 

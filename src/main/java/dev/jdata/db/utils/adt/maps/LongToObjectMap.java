@@ -55,6 +55,19 @@ public final class LongToObjectMap<T> extends BaseLongArrayMap<T[]> {
         return result;
     }
 
+    @FunctionalInterface
+    public interface ForEachKeyAndValue<T, U> {
+
+        void each(long key, T value, U parameter);
+    }
+
+    public <I> void forEachKeyAndValue(I parameter, ForEachKeyAndValue<T, I> forEachKeyAndValue) {
+
+        Objects.requireNonNull(forEachKeyAndValue);
+
+        forEachKeyAndValue(parameter, forEachKeyAndValue, (keys, keyIndex, values, valueIndex, p1, p2) -> p2.each(keys[keyIndex], values[valueIndex], p1));
+    }
+
     public void keysAndValues(long[] keysDst, T[] valuesDst) {
 
         final long numElements = getNumElements();

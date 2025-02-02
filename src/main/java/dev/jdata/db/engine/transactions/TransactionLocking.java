@@ -47,7 +47,7 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
     }
 
     @Override
-    public OperationResult insertRows(LockTable lockTable, Table table, int statementId, DMLInsertRows rows) {
+    public OperationResult insertRows(LockTable lockTable, Table table, int statementId, LargeLongArray rowIds, DMLInsertRows rows) {
 
         throw new UnsupportedOperationException();
     }
@@ -66,9 +66,9 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
     }
 
     @Override
-    public OperationResult updateAllRows(LockTable lockTable, Table table, int statementId) {
+    public OperationResult updateAllRows(LockTable lockTable, Table table, int statementId, DMLUpdateRows row) {
 
-        checkParameters(lockTable, table, statementId);
+        checkParameters(lockTable, table, statementId, row);
 
         return lockTable(lockTable, table, statementId);
     }
@@ -128,31 +128,28 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
 
         Objects.requireNonNull(lockTable);
 
-        synchronized (this) {
+        final long numLockedRows = lockedTableRows.getNumElements();
 
-            final long numLockedRows = lockedTableRows.getNumElements();
+        for (long i = 0; i <  numLockedRows; ++ i) {
 
-            for (long i = 0; i <  numLockedRows; ++ i) {
+            final long encodedRowLock = lockedTableRows.get(i);
 
-                final long encodedRowLock = lockedTableRows.get(i);
+            final int tableId = DBBitEncoding.decodeLockTableId(encodedRowLock);
+            final long rowId = DBBitEncoding.decodeLockRowId(encodedRowLock);
+            final LockType lockType = DBBitEncoding.decodeLockType(encodedRowLock);
 
-                final int tableId = DBBitEncoding.decodeLockTableId(encodedRowLock);
-                final long rowId = DBBitEncoding.decodeLockRowId(encodedRowLock);
-                final LockType lockType = DBBitEncoding.decodeLockType(encodedRowLock);
+            final int statementId = lockStatements.get(i);
 
-                final int statementId = lockStatements.get(i);
-
-                try {
-                    lockTable.unlockRow(tableId, rowId, transactionDescriptor, statementId, lockType);
-                }
-                catch (NotLockedException ex) {
-
-                    throw new IllegalStateException();
-                }
+            try {
+                lockTable.unlockRow(tableId, rowId, transactionDescriptor, statementId, lockType);
             }
+            catch (NotLockedException ex) {
 
-            lockedTableRows.clear();
-            lockStatements.clear();
+                throw new IllegalStateException();
+            }
         }
+
+        lockedTableRows.clear();
+        lockStatements.clear();
     }
 }

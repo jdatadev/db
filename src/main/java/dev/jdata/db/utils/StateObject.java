@@ -7,6 +7,10 @@ import dev.jdata.db.utils.debug.PrintDebug;
 
 public abstract class StateObject<T extends Enum<T> & State> implements PrintDebug {
 
+    public static enum NoStatesEnum {
+
+    }
+
     private final boolean debug;
 
     private T state;

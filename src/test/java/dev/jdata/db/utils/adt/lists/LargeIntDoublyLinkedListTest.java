@@ -29,6 +29,12 @@ public final class LargeIntDoublyLinkedListTest extends BaseLargeIntListTest<Lar
         return list.removeTail();
     }
 
+    @Override
+    void clear(LargeIntDoublyLinkedList list) {
+
+        list.clear();
+    }
+
     @Test
     @Category(UnitTest.class)
     public void testAddTailLongDoublyLinkedList() {

@@ -1,19 +1,42 @@
 package dev.jdata.db.utils.adt.arrays;
 
 import java.util.Arrays;
+import java.util.Objects;
 
-public final class LongLargeArray extends LargeArray<long[][], long[]> {
+public final class LongLargeArray extends LargeArray<long[][], long[]> implements LargeLongArray {
 
-    public LongLargeArray(int initialOuterCapacity, int innerCapacity) {
-        super(initialOuterCapacity, innerCapacity, long[][]::new);
+    public LongLargeArray(int initialOuterCapacity, int innerCapacityExponent) {
+        super(initialOuterCapacity, innerCapacityExponent, 1, long[][]::new);
     }
 
+    @Override
+    protected void toString(long index, StringBuilder sb) {
+
+        sb.append(get(index));
+    }
+
+    @Override
     public long get(long index) {
 
-        return getArray()[getOuterIndex(index)][getInnerIndex(index)];
+        return getArray()[getOuterIndex(index)][getInnerIndexNotCountingNumElements(index) + 1];
+    }
+
+    public void add(long value) {
+
+        final long[] array = checkCapacity();
+
+        incrementNumElements();
+
+        final int innerIndex = (int)array[0];
+
+        ++ array[0];
+
+        array[innerIndex + 1] = value;
     }
 
     public void set(long index, long value) {
+
+        Objects.checkIndex(index, getNumElements());
 
         final int outerIndex = getOuterIndex(index);
 
@@ -24,29 +47,9 @@ public final class LongLargeArray extends LargeArray<long[][], long[]> {
 
         final long[] array = getArray()[outerIndex];
 
-        final int numInnerElements = (int)array[0];
+        final int numInnerElements = getNumInnerElements(array);
 
-        final int innerIndex = getInnerIndex(index);
-
-        if (innerIndex >= numInnerElements) {
-
-            throw new IllegalArgumentException();
-        }
-
-        array[innerIndex + 1] = value;
-    }
-
-    public void add(long value) {
-
-        final long[] array = checkCapacity();
-
-        increaseNumElements();
-
-        final int numInnerElements = (int)array[0];
-
-        final int innerIndex = (int)array[0];
-
-        ++ array[0];
+        final int innerIndex = getInnerIndexNotCountingNumElements(index);
 
         if (innerIndex >= numInnerElements) {
 

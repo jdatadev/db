@@ -1,5 +1,9 @@
 package dev.jdata.db.utils.adt.maps;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -19,6 +23,8 @@ abstract class BaseIntegerToIntegerOrObjectTest<K, V, M extends KeyMap<K>> exten
     abstract boolean contains(M map, int key);
     abstract int get(M map, int key);
     abstract int[] getKeys(M map);
+    abstract <T> void forEachKeysAndValues(M map, T parameter);
+    abstract <T> void forEachKeysAndValues(M map, T parameter, List<Integer> keysDst, List<Integer> valuesDst, List<T> parameters);
     abstract void keysAndValues(M map, K keysDst, V valuesDst);
     abstract void put(M map, int key, int value);
     abstract boolean remove(M map, int key);
@@ -184,6 +190,75 @@ abstract class BaseIntegerToIntegerOrObjectTest<K, V, M extends KeyMap<K>> exten
         put(map, 345);
 
         assertThat(getKeys(map)).containsExactlyInAnyOrder(123, 234, 345);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public final void testForEachKeysAndValues() {
+
+        checkForEachKeysAndValues(false);
+        checkForEachKeysAndValues(true);
+    }
+
+    private void checkForEachKeysAndValues(boolean passParameter) {
+
+        final M map = createMap(0);
+
+        assertThat(map).isEmpty();
+
+        put(map, 123, 234);
+        put(map, 345, 456);
+        put(map, 567, 678);
+
+        final int numElements = 3;
+
+        final BigDecimal parameter = passParameter ? new BigDecimal("789.01") : null;
+
+        assertThatThrownBy(() -> forEachKeysAndValues(map, parameter)).isInstanceOf(NullPointerException.class);
+
+        final List<Integer> keysDst = new ArrayList<>(numElements);
+        final List<Integer> valuesDst = new ArrayList<>(numElements);
+        final List<BigDecimal> parametersDst = new ArrayList<>(numElements);
+
+        forEachKeysAndValues(map, parameter, keysDst, valuesDst, parametersDst);
+
+        for (int i = 0; i < numElements; ++ i) {
+
+            final long expectedValue;
+
+            switch (keysDst.get(i)) {
+
+            case 123:
+
+                expectedValue = 234L;
+                break;
+
+            case 345:
+
+                expectedValue = 456L;
+                break;
+
+            case 567:
+
+                expectedValue = 678L;
+                break;
+
+            default:
+                throw new UnsupportedOperationException();
+            }
+
+            assertThat(valuesDst.get(i)).isEqualTo(expectedValue);
+
+            final BigDecimal listAddedParameter = parametersDst.get(i);
+
+            if (passParameter) {
+
+                assertThat(listAddedParameter).isSameAs(parameter);
+            }
+            else {
+                assertThat(listAddedParameter).isNull();
+            }
+        }
     }
 
     @Test

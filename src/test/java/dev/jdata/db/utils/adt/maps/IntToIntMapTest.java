@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.maps;
 
+import java.util.List;
+
 public final class IntToIntMapTest extends BaseIntToIntegerOrObjectTest<int[], IntToIntMap> {
 
     @Override
@@ -18,6 +20,23 @@ public final class IntToIntMapTest extends BaseIntToIntegerOrObjectTest<int[], I
     int getValue(int[] values, int index) {
 
         return values[index];
+    }
+
+    @Override
+    <T> void forEachKeysAndValues(IntToIntMap map, T parameter) {
+
+        map.forEachKeyAndValue(parameter, null);
+    }
+
+    @Override
+    <T> void forEachKeysAndValues(IntToIntMap map, T parameter, List<Integer> keysDst, List<Integer> valuesDst, List<T> parameters) {
+
+        map.forEachKeyAndValue(parameter, (k, v, p) -> {
+
+            keysDst.add(k);
+            valuesDst.add(v);
+            parameters.add(p);
+        });
     }
 
     @Override

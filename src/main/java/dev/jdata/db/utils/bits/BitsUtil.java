@@ -22,6 +22,11 @@ public class BitsUtil {
         return ((1 << numBits) - 1) << shift;
     }
 
+    public static long maskLong(int numBits) {
+
+        return (1L << numBits) - 1;
+    }
+
     public static long maskLong(int numBits, int shift) {
 
         return ((1L << numBits) - 1) << shift;
@@ -42,6 +47,13 @@ public class BitsUtil {
         final byte mask = mask(8 - numBitsFromByte1);
 
         return (byte)((byte1 & (~mask)) | (byte2 & mask));
+    }
+
+    public static long getMaxLong(int numBits) {
+
+        Checks.isWithinRangeUpperExclusive(numBits, 1, Long.SIZE);
+
+        return (1L << numBits) - 1L;
     }
 
     public static int getNumEnumBits(Class<? extends Enum<?>> enumClass) {

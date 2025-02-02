@@ -6,15 +6,14 @@ public final class CharType extends StringType {
 
     private final int length;
 
-    public static CharType of(boolean nullable, int length) {
+    public static CharType of(int length) {
 
         Checks.isLengthAboveZero(length);
 
-        return new CharType(nullable, length);
+        return new CharType(length);
     }
 
-    private CharType(boolean nullable, int length) {
-        super(nullable);
+    private CharType(int length) {
 
         this.length = Checks.isLengthAboveZero(length);
     }

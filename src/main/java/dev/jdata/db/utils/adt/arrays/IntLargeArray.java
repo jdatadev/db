@@ -1,19 +1,41 @@
 package dev.jdata.db.utils.adt.arrays;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public final class IntLargeArray extends LargeArray<int[][], int[]> {
 
-    public IntLargeArray(int initialOuterCapacity, int innerCapacity) {
-        super(initialOuterCapacity, innerCapacity, int[][]::new);
+    public IntLargeArray(int initialOuterCapacity, int innerCapacityExponent) {
+        super(initialOuterCapacity, innerCapacityExponent, 1, int[][]::new);
+    }
+
+    @Override
+    protected void toString(long index, StringBuilder sb) {
+
+        sb.append(get(index));
     }
 
     public int get(long index) {
 
-        return getArray()[getOuterIndex(index)][getInnerIndex(index)];
+        return getArray()[getOuterIndex(index)][getInnerIndexNotCountingNumElements(index) + 1];
+    }
+
+    public void add(int value) {
+
+        final int[] array = checkCapacity();
+
+        incrementNumElements();
+
+        final int numInnerElements = getNumInnerElements(array);
+
+        ++ array[0];
+
+        array[numInnerElements + 1] = value;
     }
 
     public void set(long index, int value) {
+
+        Objects.checkIndex(index, getNumElements());
 
         final int outerIndex = getOuterIndex(index);
 
@@ -26,27 +48,7 @@ public final class IntLargeArray extends LargeArray<int[][], int[]> {
 
         final int numInnerElements = array[0];
 
-        final int innerIndex = getInnerIndex(index);
-
-        if (innerIndex >= numInnerElements) {
-
-            throw new IllegalArgumentException();
-        }
-
-        array[innerIndex + 1] = value;
-    }
-
-    public void add(int value) {
-
-        final int[] array = checkCapacity();
-
-        increaseNumElements();
-
-        final int numInnerElements = array[0];
-
-        final int innerIndex = array[0];
-
-        ++ array[0];
+        final int innerIndex = getInnerIndexNotCountingNumElements(index);
 
         if (innerIndex >= numInnerElements) {
 

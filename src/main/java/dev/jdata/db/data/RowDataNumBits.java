@@ -1,47 +1,72 @@
 package dev.jdata.db.data;
 
 import java.util.Arrays;
+import java.util.Objects;
 
+import dev.jdata.db.utils.adt.Clearable;
+import dev.jdata.db.utils.adt.Contains;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class RowDataNumBits implements RowDataNumBitsGetter {
+public class RowDataNumBits implements RowDataNumBitsGetter, Contains, Clearable {
 
     private final int[] rowDataNumBits;
 
+    private int numColumns;
+
     private int totalNumRowDataBits;
 
-    RowDataNumBits(int numColumns) {
+    public RowDataNumBits(int capacity) {
 
-        Checks.isNumColumnBits(numColumns);
+        Checks.isNumColumns(capacity);
 
-        this.rowDataNumBits = new int[numColumns];
+        this.rowDataNumBits = new int[capacity];
     }
 
     @Override
-    public int getNumColumns() {
+    public final boolean isEmpty() {
 
-        return rowDataNumBits.length;
+        return numColumns == 0;
     }
 
     @Override
-    public boolean isNull(int columnIndex) {
+    public final int getNumColumns() {
+
+        return numColumns;
+    }
+
+    @Override
+    public final boolean isNull(int columnIndex) {
+
+        Objects.checkIndex(columnIndex, numColumns);
 
         return rowDataNumBits[columnIndex] == 0;
     }
 
     @Override
-    public int getNumBits(int columnIndex) {
+    public final int getNumBits(int columnIndex) {
+
+        Objects.checkIndex(columnIndex, numColumns);
 
         return rowDataNumBits[columnIndex];
     }
 
     @Override
-    public int getTotalNumRowDataBits() {
+    public final int getTotalNumRowDataBits() {
         return totalNumRowDataBits;
     }
 
-    public void setNumBits(int columnIndex, int numBits) {
+    public final int addNumBits(int numBits) {
 
+        final int columnIndex = numColumns ++;
+
+        setNumBits(columnIndex, numBits);
+
+        return columnIndex;
+    }
+
+    private void setNumBits(int columnIndex, int numBits) {
+
+        Objects.checkIndex(columnIndex, numColumns);
         Checks.isColumnIndex(columnIndex);
         Checks.isNumBits(numBits);
 
@@ -55,10 +80,17 @@ public final class RowDataNumBits implements RowDataNumBitsGetter {
         this.totalNumRowDataBits += numBits;
     }
 
-    public void reset() {
+    @Override
+    public void clear() {
 
-        Arrays.fill(rowDataNumBits, 0);
-
+        this.numColumns = 0;
         this.totalNumRowDataBits = 0;
+    }
+
+    @Override
+    public String toString() {
+
+        return getClass().getSimpleName() + " [rowDataNumBits=" + Arrays.toString(rowDataNumBits) + ", numColumns=" + numColumns +
+                ", totalNumRowDataBits=" + totalNumRowDataBits + "]";
     }
 }

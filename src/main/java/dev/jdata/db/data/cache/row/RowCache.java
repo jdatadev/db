@@ -20,7 +20,7 @@ public final class RowCache extends BaseRows implements DataCache {
     private final LongToLongMap indexByRow;
     private final LongToLongMap insertionOrderNodeByRow;
 
-    private final LargeByteArray cache;
+    private final RowLargeByteArray cache;
     private final long[] numBits;
 
     private final LargeLongDoublyLinkedList insertionOrderList;
@@ -35,7 +35,7 @@ public final class RowCache extends BaseRows implements DataCache {
 
         final int initialCapacity = 1000;
 
-        this.cache = new LargeByteArray(initialCapacity);
+        this.cache = new RowLargeByteArray(initialCapacity);
         this.numBits = new long[initialCapacity];
 
         final int initialInsertionOrderListCapacity = 1000;

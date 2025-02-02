@@ -35,6 +35,11 @@ public final class LargeLongMultiHeadDoublyLinkedList<T> extends BaseLargeLongDo
         return addHeadValue(instance, value, headNode, tailNode, headNodeSetter, tailNodeSetter);
     }
 
+    public long addTail(T instance, long value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+
+        return addTailValue(instance, value, headNode, tailNode, headNodeSetter, tailNodeSetter);
+    }
+
     private long removeTail(T instance, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
 
         return getValue(removeTailNodeAndReturnNode(instance, tailNode, headNodeSetter, tailNodeSetter));
@@ -50,5 +55,10 @@ public final class LargeLongMultiHeadDoublyLinkedList<T> extends BaseLargeLongDo
     public long[] toArray(long headNode) {
 
         return toListArrayValues(headNode);
+    }
+
+    public void clear(T instance, long headNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+
+        clearNodes(instance, headNode, headNodeSetter, tailNodeSetter, null);
     }
 }

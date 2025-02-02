@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 
 import dev.jdata.db.utils.adt.strings.Strings;
 import dev.jdata.db.utils.bits.BitsUtil;
+import dev.jdata.db.utils.checks.Checks;
 
 public interface PrintDebug {
 
@@ -15,9 +16,13 @@ public interface PrintDebug {
         private final String name;
         private final Object value;
 
+        NameValue(String name) {
+            this(name, "<null>");
+        }
+
         NameValue(String name, Object parameterValue) {
 
-            this.name = Objects.requireNonNull(name);
+            this.name = Checks.isJavaVariable(name);
             this.value = Objects.requireNonNull(parameterValue);
         }
     }
@@ -33,7 +38,7 @@ public interface PrintDebug {
 
         public NameValueBuilder add(String name, Object value) {
 
-            nameValues.add(new NameValue(name, value));
+            nameValues.add(value != null ? new NameValue(name, value) : new NameValue(name));
 
             return this;
         }

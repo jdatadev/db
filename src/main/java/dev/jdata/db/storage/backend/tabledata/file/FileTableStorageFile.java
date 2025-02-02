@@ -362,7 +362,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
             enter(b -> b.add("rowBitOffset", rowBitOffset).add("this.fileOffset", fileOffset));
         }
 
-        final long byteOffset = numHeaderBytes + (rowBitOffset / 8);
+        final long byteOffset = numHeaderBytes + (rowBitOffset >>> 3);
 
         if (byteOffset >= fileLength) {
 
@@ -606,7 +606,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
                 outputByteBufferBitOffset += numOutputRowDataBits;
             }
 
-            final int numBytes = Integers.checkUnsignedLongToUnsignedInt(outputByteBufferBitOffset / 8);
+            final int numBytes = Integers.checkUnsignedLongToUnsignedInt(outputByteBufferBitOffset >>> 3);
 
             dataOutput.write(outputTempByteBuffer, 0, numBytes);
 

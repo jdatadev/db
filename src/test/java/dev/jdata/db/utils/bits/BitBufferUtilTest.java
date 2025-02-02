@@ -7,6 +7,7 @@ import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.test.unit.BaseTest;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.scalars.Integers;
 
 public final class BitBufferUtilTest extends BaseTest {
 
@@ -193,6 +194,209 @@ public final class BitBufferUtilTest extends BaseTest {
         assertThat(BitBufferUtil.numLeftoverBits(31)).isEqualTo(1);
         assertThat(BitBufferUtil.numLeftoverBits(32)).isEqualTo(0);
         assertThat(BitBufferUtil.numLeftoverBits(33)).isEqualTo(7);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testGetShort() {
+
+/*
+        final byte testByte = (byte)0b11100110;
+        final byte testByte = (byte)0b11010101;
+*/
+        final byte[] testBytes = new byte[] {
+
+                (byte)0b11100011,
+                (byte)0b00101110,
+                (byte)0b00110010,
+                (byte)0b11100011,
+                (byte)0b00101110,
+                (byte)0b00110010,
+                (byte)0b11100011,
+                (byte)0b00101110
+        };
+
+        assertThatThrownBy(() -> BitBufferUtil.getShortValue(testBytes, false, 0, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> BitBufferUtil.getShortValue(testBytes, true, 0, 1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> BitBufferUtil.getShortValue(testBytes, true, 0, (testBytes.length * 8) + 1)).isInstanceOf(IllegalArgumentException.class);
+
+        checkGetShort(testBytes, false, 0, 1, 0b1);
+        checkGetShort(testBytes, false, 0, 2, 0b11);
+        checkGetShort(testBytes, false, 0, 3, 0b111);
+        checkGetShort(testBytes, false, 0, 4, 0b1110);
+        checkGetShort(testBytes, false, 0, 5, 0b11100);
+        checkGetShort(testBytes, false, 0, 6, 0b111000);
+        checkGetShort(testBytes, false, 0, 7, 0b1110001);
+        checkGetShort(testBytes, false, 0, 8, 0b11100011);
+        checkGetShort(testBytes, false, 0, 9, 0b111000110);
+        checkGetShort(testBytes, false, 0, 10, 0b1110001100);
+        checkGetShort(testBytes, false, 0, 11, 0b11100011001);
+        checkGetShort(testBytes, false, 0, 12, 0b111000110010);
+        checkGetShort(testBytes, false, 0, 13, 0b1110001100101);
+        checkGetShort(testBytes, false, 0, 14, 0b11100011001011);
+        checkGetShort(testBytes, false, 0, 15, 0b111000110010111);
+        checkGetShort(testBytes, false, 0, 16, 0b1110001100101110);
+
+        checkGetShort(testBytes, true, 0, 2, - 0b1);
+        checkGetShort(testBytes, true, 0, 3, - 0b11);
+        checkGetShort(testBytes, true, 0, 4, - 0b110);
+        checkGetShort(testBytes, true, 0, 5, - 0b1100);
+        checkGetShort(testBytes, true, 0, 6, - 0b11000);
+        checkGetShort(testBytes, true, 0, 7, - 0b110001);
+        checkGetShort(testBytes, true, 0, 8, - 0b1100011);
+        checkGetShort(testBytes, true, 0, 9, - 0b11000110);
+        checkGetShort(testBytes, true, 0, 10, - 0b110001100);
+        checkGetShort(testBytes, true, 0, 11, - 0b1100011001);
+        checkGetShort(testBytes, true, 0, 12, - 0b11000110010);
+        checkGetShort(testBytes, true, 0, 13, - 0b110001100101);
+        checkGetShort(testBytes, true, 0, 14, - 0b1100011001011);
+        checkGetShort(testBytes, true, 0, 15, - 0b11000110010111);
+        checkGetShort(testBytes, true, 0, 16, - 0b110001100101110);
+
+        checkGetShort(testBytes, false, 3, 1, 0b0);
+        checkGetShort(testBytes, false, 3, 2, 0b00);
+        checkGetShort(testBytes, false, 3, 3, 0b000);
+        checkGetShort(testBytes, false, 3, 4, 0b0001);
+        checkGetShort(testBytes, false, 3, 5, 0b00011);
+        checkGetShort(testBytes, false, 3, 6, 0b000110);
+        checkGetShort(testBytes, false, 3, 7, 0b0001100);
+        checkGetShort(testBytes, false, 3, 8, 0b00011001);
+        checkGetShort(testBytes, false, 3, 9, 0b000110010);
+        checkGetShort(testBytes, false, 3, 10, 0b0001100101);
+        checkGetShort(testBytes, false, 3, 11, 0b00011001011);
+        checkGetShort(testBytes, false, 3, 12, 0b000110010111);
+        checkGetShort(testBytes, false, 3, 13, 0b0001100101110);
+        checkGetShort(testBytes, false, 3, 14, 0b00011001011100);
+        checkGetShort(testBytes, false, 3, 15, 0b000110010111000);
+        checkGetShort(testBytes, false, 3, 16, 0b0001100101110001);
+
+        checkGetShort(testBytes, true, 3, 2, 0b0);
+        checkGetShort(testBytes, true, 3, 3, 0b00);
+        checkGetShort(testBytes, true, 3, 4, 0b001);
+        checkGetShort(testBytes, true, 3, 5, 0b0011);
+        checkGetShort(testBytes, true, 3, 6, 0b00110);
+        checkGetShort(testBytes, true, 3, 7, 0b001100);
+        checkGetShort(testBytes, true, 3, 8, 0b0011001);
+        checkGetShort(testBytes, true, 3, 9, 0b00110010);
+        checkGetShort(testBytes, true, 3, 10, 0b001100101);
+        checkGetShort(testBytes, true, 3, 11, 0b0011001011);
+        checkGetShort(testBytes, true, 3, 12, 0b00110010111);
+        checkGetShort(testBytes, true, 3, 13, 0b001100101110);
+        checkGetShort(testBytes, true, 3, 14, 0b0011001011100);
+        checkGetShort(testBytes, true, 3, 15, 0b00110010111000);
+        checkGetShort(testBytes, true, 3, 16, 0b001100101110001);
+    }
+
+    private void checkGetShort(byte[] buffer, boolean signed, int bitOffset, int numBits, int expectedValue) {
+
+        assertThat(BitBufferUtil.getShortValue(buffer, signed, bitOffset, numBits)).isEqualTo(expectedValue);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testSetShortArguments() {
+
+        assertThatThrownBy(() -> BitBufferUtil.setShortValue(new byte[1], (short)0, false, 0, 9)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testSetShortOneByte() {
+
+        checkSetShortOneByte(0b10101010, 0b0101, 0, 4, 0b01011010);
+        checkSetShortOneByte(0b10101010, 0b1010, 1, 4, 0b11010010);
+        checkSetShortOneByte(0b10101010, 0b0101, 2, 4, 0b10010110);
+        checkSetShortOneByte(0b10101010, 0b1010, 3, 4, 0b10110100);
+        checkSetShortOneByte(0b10101010, 0b0101, 4, 4, 0b10100101);
+    }
+
+    private void checkSetShortOneByte(int existingByte, int value, int bitOffset, int numBits, int expectedByte) {
+
+        final byte[] buffer = new byte[1];
+
+        buffer[0] = (byte)existingByte;
+
+        BitBufferUtil.setShortValue(buffer, Integers.checkUnsignedIntToUnsignedShort(value), false, bitOffset, numBits);
+
+        assertThat(buffer[0]).isEqualTo((byte)expectedByte);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testSetShortOffset() {
+
+        final byte[] buffer = new byte[4];
+
+        final int value = 0b111000110010;
+
+        final int offset = 0;
+
+//        BitBufferUtil.setIntValue(buffer, value, false, 0, 32);
+
+        checkSetShortStartsAtMSB(value, offset, 12, 0b11100011, 0b00100000, 0b00000000, 0b00000000);
+        checkSetShortStartsAtMSB(value, offset, 13, 0b01110001, 0b10010000, 0b00000000, 0b00000000);
+        checkSetShortStartsAtMSB(value, offset, 14, 0b00111000, 0b11001000, 0b00000000, 0b00000000);
+        checkSetShortStartsAtMSB(value, offset, 15, 0b00011100, 0b01100100, 0b00000000, 0b00000000);
+        checkSetShortStartsAtMSB(value, offset, 16, 0b00001110, 0b00110010, 0b00000000, 0b00000000);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testSetShortNumBits() {
+
+        final byte[] buffer = new byte[4];
+
+        final int value = 0b111000110010;
+
+        final int numBits = 12;
+
+//        BitBufferUtil.setIntValue(buffer, value, false, 0, 32);
+
+        checkSetShortStartsAtMSB(value, 0,  numBits, 0b11100011, 0b00100000, 0b00000000, 0b00000000);
+        checkSetShortStartsAtMSB(value, 1,  numBits, 0b01110001, 0b10010000, 0b00000000, 0b00000000);
+        checkSetShortStartsAtMSB(value, 2,  numBits, 0b00111000, 0b11001000, 0b00000000, 0b00000000);
+        checkSetShortStartsAtMSB(value, 3,  numBits, 0b00011100, 0b01100100, 0b00000000, 0b00000000);
+        checkSetShortStartsAtMSB(value, 4,  numBits, 0b00001110, 0b00110010, 0b00000000, 0b00000000);
+        checkSetShortStartsAtMSB(value, 5,  numBits, 0b00000111, 0b00011001, 0b00000000, 0b00000000);
+        checkSetShortStartsAtMSB(value, 6,  numBits, 0b00000011, 0b10001100, 0b10000000, 0b00000000);
+        checkSetShortStartsAtMSB(value, 7,  numBits, 0b00000001, 0b11000110, 0b01000000, 0b00000000);
+        checkSetShortStartsAtMSB(value, 8,  numBits, 0b00000000, 0b11100011, 0b00100000, 0b00000000);
+        checkSetShortStartsAtMSB(value, 9,  numBits, 0b00000000, 0b01110001, 0b10010000, 0b00000000);
+        checkSetShortStartsAtMSB(value, 10, numBits, 0b00000000, 0b00111000, 0b11001000, 0b00000000);
+        checkSetShortStartsAtMSB(value, 11, numBits, 0b00000000, 0b00011100, 0b01100100, 0b00000000);
+        checkSetShortStartsAtMSB(value, 12, numBits, 0b00000000, 0b00001110, 0b00110010, 0b00000000);
+        checkSetShortStartsAtMSB(value, 13, numBits, 0b00000000, 0b00000111, 0b00011001, 0b00000000);
+        checkSetShortStartsAtMSB(value, 14, numBits, 0b00000000, 0b00000011, 0b10001100, 0b10000000);
+        checkSetShortStartsAtMSB(value, 15, numBits, 0b00000000, 0b00000001, 0b11000110, 0b01000000);
+        checkSetShortStartsAtMSB(value, 16, numBits, 0b00000000, 0b00000000, 0b11100011, 0b00100000);
+        checkSetShortStartsAtMSB(value, 17, numBits, 0b00000000, 0b00000000, 0b01110001, 0b10010000);
+        checkSetShortStartsAtMSB(value, 18, numBits, 0b00000000, 0b00000000, 0b00111000, 0b11001000);
+        checkSetShortStartsAtMSB(value, 19, numBits, 0b00000000, 0b00000000, 0b00011100, 0b01100100);
+        checkSetShortStartsAtMSB(value, 20, numBits, 0b00000000, 0b00000000, 0b00001110, 0b00110010);
+    }
+
+    private void checkSetShortStartsAtMSB(int value, int bitOffset, int numBits, int expectedByte1, int expectedByte2, int expectedByte3, int expectedByte4) {
+
+        final byte[] buffer = new byte[4];
+
+        final int maxBit = BitsUtil.getIndexOfHighestSetBit(value);
+
+        if (maxBit >= numBits) {
+
+            throw new IllegalArgumentException();
+        }
+
+        for (int i = maxBit + 1; i <= numBits; ++ i) {
+
+            BitBufferUtil.setShortValue(buffer, (short)value, false, bitOffset, numBits);
+
+            assertThat(buffer[0]).isEqualTo((byte)expectedByte1);
+            assertThat(buffer[1]).isEqualTo((byte)expectedByte2);
+            assertThat(buffer[2]).isEqualTo((byte)expectedByte3);
+            assertThat(buffer[3]).isEqualTo((byte)expectedByte4);
+
+            Arrays.fill(buffer, (byte)0);
+        }
     }
 
     @Test
@@ -394,7 +598,7 @@ public final class BitBufferUtilTest extends BaseTest {
 
         final int offset = 0;
 
-        BitBufferUtil.setIntValue(buffer, value, false, 0, 32);
+//        BitBufferUtil.setIntValue(buffer, value, false, 0, 32);
 
         checkSetIntStartsAtMSB(value, offset, 12, 0b11100011, 0b00100000, 0b00000000, 0b00000000);
         checkSetIntStartsAtMSB(value, offset, 13, 0b01110001, 0b10010000, 0b00000000, 0b00000000);
@@ -429,7 +633,7 @@ public final class BitBufferUtilTest extends BaseTest {
 
         final int numBits = 12;
 
-        BitBufferUtil.setIntValue(buffer, value, false, 0, 32);
+//        BitBufferUtil.setIntValue(buffer, value, false, 0, 32);
 
         checkSetIntStartsAtMSB(value, 0,  numBits, 0b11100011, 0b00100000, 0b00000000, 0b00000000);
         checkSetIntStartsAtMSB(value, 1,  numBits, 0b01110001, 0b10010000, 0b00000000, 0b00000000);
@@ -809,7 +1013,7 @@ public final class BitBufferUtilTest extends BaseTest {
 
         final int offset = 0;
 
-        BitBufferUtil.setIntValue(buffer, value, false, 0, 64);
+//        BitBufferUtil.setIntValue(buffer, value, false, 0, 64);
 
         checkSetLongStartsAtMSB(value, offset, 12, 0b11100011, 0b00100000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000);
         checkSetLongStartsAtMSB(value, offset, 13, 0b01110001, 0b10010000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000);
@@ -864,7 +1068,7 @@ public final class BitBufferUtilTest extends BaseTest {
 
         final int numBits = 12;
 
-        BitBufferUtil.setIntValue(buffer, value, false, 0, 64);
+//        BitBufferUtil.setIntValue(buffer, value, false, 0, 64);
 
         checkSetLongStartsAtMSB(value, 0,  numBits, 0b11100011, 0b00100000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000);
         checkSetLongStartsAtMSB(value, 1,  numBits, 0b01110001, 0b10010000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000);
@@ -935,7 +1139,7 @@ public final class BitBufferUtilTest extends BaseTest {
 
         for (int i = maxBit + 1; i <= numBits; ++ i) {
 
-            BitBufferUtil.setIntValue(buffer, value, false, bitOffset, numBits);
+            BitBufferUtil.setLongValue(buffer, value, false, bitOffset, numBits);
 
             assertThat(buffer[0]).isEqualTo((byte)expectedByte1);
             assertThat(buffer[1]).isEqualTo((byte)expectedByte2);
@@ -1023,7 +1227,7 @@ public final class BitBufferUtilTest extends BaseTest {
 
             final byte[] buffer = Arrays.copyOf(initialBuffer, initialBuffer.length);
 
-            BitBufferUtil.setBitValue(buffer, i, set);
+            BitBufferUtil.setBitValue(buffer, set, i);
 
             for (int j = 0; j < 32; ++ j) {
 
@@ -1269,18 +1473,18 @@ public final class BitBufferUtilTest extends BaseTest {
     @Category(UnitTest.class)
     public void testCopyBits() {
 
-        checkCopyBits((byte)0);
-        checkCopyBits((byte)0b10101010);
-        checkCopyBits((byte)1);
+        checkCopyBits(new byte[] { (byte)0 });
+        checkCopyBits(new byte[] { (byte)0b10101010, (byte)0b11001100 });
+        checkCopyBits(new byte[] { (byte)1 });
     }
 
-    private void checkCopyBits(byte inputByte) {
+    private void checkCopyBits(byte[] inputBytes) {
 
-        checkCopyBits(inputByte, false);
-        checkCopyBits(inputByte, true);
+        checkCopyBits(inputBytes, false);
+        checkCopyBits(inputBytes, true);
     }
 
-    private void checkCopyBits(byte inputByte, boolean defaultIsOutputBitSet) {
+    private void checkCopyBits(byte[] inputBytes, boolean defaultIsOutputBitSet) {
 
         final int maxNumInputBytes = 4;
         final int maxOutputBitPaddingBytes = 2;
@@ -1289,7 +1493,7 @@ public final class BitBufferUtilTest extends BaseTest {
 
         final byte[] inputBuffer = new byte[maxNumInputBytes];
 
-        Arrays.fill(inputBuffer, inputByte);
+        fill(inputBuffer, inputBytes);
 
         final byte[] outputBuffer = new byte[maxNumOutputBytes];
 
@@ -1366,5 +1570,18 @@ finally {
         assertThat(BitBufferUtil.toBinaryString(new byte[0])).isEqualTo("[]");
         assertThat(BitBufferUtil.toBinaryString(byteArray(0b10101010))).isEqualTo("[10101010]");
         assertThat(BitBufferUtil.toBinaryString(byteArray(0b00000000, 0b10101010, 0b11111111))).isEqualTo("[00000000,10101010,11111111]");
+    }
+
+    private static void fill(byte[] dst, byte[] src) {
+
+        final int dstLength = dst.length;
+        final int srcLength = src.length;
+
+        Checks.isGreaterThanOrEqualTo(dstLength, srcLength);
+
+        for (int i = 0; i < dstLength; i += srcLength) {
+
+            System.arraycopy(src, 0, dst, i, Math.min(dstLength - i, srcLength));
+        }
     }
 }

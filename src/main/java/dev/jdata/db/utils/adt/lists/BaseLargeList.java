@@ -1,6 +1,7 @@
 package dev.jdata.db.utils.adt.lists;
 
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
@@ -69,6 +70,22 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
         return getNode(next, node);
     }
 
+    <I> void clearNodes(I instance, long headNode, LongNodeSetter<I> headNodeSetter, LongNodeSetter<I> tailNodeSetter, Consumer<I> clearNumElements) {
+
+        for (long node = headNode; node != NO_NODE; node = getNextNode(node)) {
+
+            addNodeToFreeList(node);
+        }
+
+        headNodeSetter.setNode(instance, NO_NODE);
+        tailNodeSetter.setNode(instance, NO_NODE);
+
+        if (clearNumElements != null) {
+
+            clearNumElements.accept(instance);
+        }
+    }
+
     final void addNodeToFreeList(long node) {
 
         addNodeToFreeList(next, node);
@@ -104,11 +121,6 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
 
     final long allocateNextNode() {
 
-        return allocateNode(next);
-    }
-
-    private long allocateNode(long[][] next) {
-
         final long result;
 
         if (freeListHead != NO_NODE) {
@@ -139,18 +151,20 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
                     this.next = Arrays.copyOf(next, newOuterLength);
                 }
 
-                array = next[numOuterEntries] = allocateListNodes(numNodes);
+                final int innerToAllocate = innerCapacity;
 
-                allocateInner(numOuterEntries, innerCapacity);
+                array = next[numOuterEntries] = allocateListNodes(innerToAllocate);
 
-                values.allocateInner(numOuterEntries ++,  innerCapacity);
+                allocateInner(numOuterEntries, innerToAllocate);
+
+                values.allocateInner(numOuterEntries ++,  innerToAllocate);
 
                 numNodes = 0;
             }
 
             ++ array[0];
 
-            result = ((numOuterEntries - 1) << 32) | (numNodes + 1);
+            result = ((numOuterEntries - 1) << 32) | numNodes;
         }
 
         return result;
@@ -176,11 +190,6 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
         return tailNode;
     }
 
-    final long allocateNode() {
-
-        return allocateNode(next);
-    }
-
     final void setNextNode(long node, long value) {
 
         setNode(next, node, value);
@@ -188,7 +197,9 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
 
     static long[] allocateListNodes(int capacity) {
 
-        final long[] nodes = new long[capacity];
+        Checks.isCapacity(capacity);
+
+        final long[] nodes = new long[capacity + 1];
 
         Arrays.fill(nodes, NO_NODE);
 

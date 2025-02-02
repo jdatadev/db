@@ -29,7 +29,7 @@ public class Assertions {
         }
     }
 
-    public static void isLessThan(int value1, int value2) {
+    public static void isLessThan(long value1, long value2) {
 
         if (value1 >= value2) {
 
@@ -37,9 +37,17 @@ public class Assertions {
         }
     }
 
-    public static void isLessThanOrEqualTo(int value1, int value2) {
+    public static void isLessThanOrEqualTo(long value1, long value2) {
 
         if (value1 > value2) {
+
+            throwAssertion();
+        }
+    }
+
+    public static void isGreaterThan(long value1, long value2) {
+
+        if (value1 <= value2) {
 
             throwAssertion();
         }

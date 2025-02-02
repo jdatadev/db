@@ -1,5 +1,6 @@
 package dev.jdata.db.utils.bits;
 
+import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.math.Sign;
@@ -7,7 +8,7 @@ import dev.jdata.db.utils.scalars.Integers;
 
 public class BitBufferUtil {
 
-    private static final boolean DEBUG = Boolean.TRUE;
+    private static final boolean DEBUG = DebugConstants.DEBUG_BIT_BUFFER_UTIL;
 
     private static final Class<?> debugClass = BitBufferUtil.class;
 
@@ -31,12 +32,12 @@ public class BitBufferUtil {
             throw new IllegalArgumentException();
         }
 
-        return Integers.checkUnsignedLongToUnsignedInt((((endBitOffset + 1) & 0x7L) - (startBitOffset & 0x7L)) / 8) + 1;
+        return Integers.checkUnsignedLongToUnsignedInt((((endBitOffset + 1) & 0x7L) - (startBitOffset & 0x7L)) >>> 3) + 1;
     }
 
     public static int numBytes(long numBits) {
 
-        long numBytes = (numBits / 8);
+        long numBytes = (numBits >>> 3);
 
         if ((numBits & 0x7L) != 0) {
 
@@ -58,7 +59,7 @@ public class BitBufferUtil {
             throw new IllegalArgumentException();
         }
 
-        return numBits / 8;
+        return numBits >>> 3;
     }
 
     public static int numLeftoverBits(long bitOffset) {
@@ -66,6 +67,41 @@ public class BitBufferUtil {
         final int masked = (int)(bitOffset & 0x7L);
 
         return masked != 0 ? 8 - masked : 0;
+    }
+
+    public static int getShortValue(byte[] buffer, boolean signed, long bufferBitOffset, int numBits) {
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("buffer.length", buffer.length).add("signed", signed).add("bufferBitOffset", bufferBitOffset).add("numBits", numBits));
+        }
+
+        final int result = (int)getLongValue(buffer, signed, bufferBitOffset, numBits, 16);
+
+        if (DEBUG) {
+
+            PrintDebug.exitWithBinary(debugClass, result);
+        }
+
+        return result;
+    }
+
+    public static int setShortValue(byte[] buffer, short value, boolean signed, long bufferBitOffset, int numBits) {
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("buffer.length", buffer.length).binary("value", value).add("signed", signed).add("bufferBitOffset", bufferBitOffset)
+                    .add("numBits", numBits));
+        }
+
+        final int result = setLongValue(buffer, value, signed, bufferBitOffset, numBits, 16);
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result);
+        }
+
+        return result;
     }
 
     public static int getIntValue(byte[] buffer, boolean signed, long bufferBitOffset, int numBits) {
@@ -147,7 +183,7 @@ public class BitBufferUtil {
             sign = Sign.PLUS;
         }
 
-        int bufferByteOffset = (int)(bitOffset / 8);
+        int bufferByteOffset = (int)(bitOffset >>> 3);
 
         int remainingBitsOfInputByte = 8 - (int)(bitOffset & 0x7L);
 
@@ -260,7 +296,7 @@ public class BitBufferUtil {
 
         int remainingBits = numBits;
 
-        int bufferByteOffset = (int)(bufferBitOffset / 8);
+        int bufferByteOffset = (int)(bufferBitOffset >>> 3);
 
         int remainingBitsOfOutputByte = 8 - (int)(bufferBitOffset & 0x7L);
 
@@ -340,16 +376,16 @@ public class BitBufferUtil {
 
     public static boolean isBitSet(byte[] buffer, long bufferBitOffset) {
 
-        final int byteOffset = Integers.checkUnsignedLongToUnsignedInt(bufferBitOffset / 8);
+        final int byteOffset = Integers.checkUnsignedLongToUnsignedInt(bufferBitOffset >>> 3);
 
         final int bitOffsetWithinByte = 7 - (int)(bufferBitOffset & 0x7L);
 
         return (buffer[byteOffset] & (1 << bitOffsetWithinByte)) != 0;
     }
 
-    public static void setBitValue(byte[] buffer, long bufferBitOffset, boolean set) {
+    public static void setBitValue(byte[] buffer, boolean set, long bufferBitOffset) {
 
-        final int bufferByteOffset = Integers.checkUnsignedLongToUnsignedInt(bufferBitOffset / 8);
+        final int bufferByteOffset = Integers.checkUnsignedLongToUnsignedInt(bufferBitOffset >>> 3);
         final int bitOffsetWithinByte = 7 - (int)(bufferBitOffset & 0x7L);
 
         final byte bit = (byte)(1 << bitOffsetWithinByte);
@@ -370,7 +406,7 @@ public class BitBufferUtil {
 
         long remaining = numBits;
 
-        int bufferByteOffset = (int)(bufferBitOffset / 8);
+        int bufferByteOffset = (int)(bufferBitOffset >>> 3);
 
         int bitOffsetIntoByte = (int)(bufferBitOffset & 0x7L);
 
@@ -444,7 +480,7 @@ public class BitBufferUtil {
 
         long remaining = numBits;
 
-        int bufferByteOffset = (int)(bufferBitOffset / 8);
+        int bufferByteOffset = (int)(bufferBitOffset >>> 3);
 
         int bitOffsetIntoByte = (int)(bufferBitOffset & 0x7L);
 
@@ -550,8 +586,8 @@ public class BitBufferUtil {
                     .add("outputBuffer.length", outputBuffer.length).add("outputBitOffset", outputBitOffset).add("totalNumBits", totalNumBits));
         }
 
-        final int inputBufferByteOffset = (int)(inputBitOffset / 8);
-        final int outputBufferByteOffset = (int)(outputBitOffset / 8);
+        final int inputBufferByteOffset = (int)(inputBitOffset >>> 3);
+        final int outputBufferByteOffset = (int)(outputBitOffset >>> 3);
 
         final int numInputBits1 = 8 - (int)(inputBitOffset & 0x7L);
         final int numOutputBits1 = 8 - (int)(outputBitOffset & 0x7L);
@@ -641,8 +677,8 @@ public class BitBufferUtil {
 
         long remainingBits = totalNumBits;
 
-        int inputBufferByteOffset = (int)(inputBitOffset / 8);
-        int outputBufferByteOffset = (int)(outputBitOffset / 8);
+        int inputBufferByteOffset = (int)(inputBitOffset >>> 3);
+        int outputBufferByteOffset = (int)(outputBitOffset >>> 3);
 
         int remainingBitsOfInputByte = 8 - (int)(inputBitOffset & 0x7L);
         int remainingBitsOfOutputByte = 8 - (int)(outputBitOffset & 0x7L);
@@ -778,6 +814,8 @@ public class BitBufferUtil {
                     outputBuffer[outputBufferByteOffset] = updatedByte;
 
                     remainingBitsOfInputByte = 8;
+                    ++ inputBufferByteOffset;
+
                     remainingBitsOfOutputByte = 8;
                     ++ outputBufferByteOffset;
                     remainingBits -= bitsToCopy;

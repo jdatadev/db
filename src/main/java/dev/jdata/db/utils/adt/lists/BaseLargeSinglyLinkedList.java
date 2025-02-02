@@ -13,7 +13,7 @@ abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInner
 
     final long addHeadNodeAndReturnNode(long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
 
-        final long node = allocateNode();
+        final long node = allocateNextNode();
 
         setNextNode(node, headNode);
 
@@ -31,7 +31,7 @@ abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInner
 
     final long addTailNodeAndReturnNode(long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
 
-        final long node = allocateNode();
+        final long node = allocateNextNode();
 
         if (tailNode != NO_NODE) {
 

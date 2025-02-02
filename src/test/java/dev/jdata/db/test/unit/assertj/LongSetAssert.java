@@ -20,6 +20,23 @@ public final class LongSetAssert extends BaseElementsAssert<LongSetAssert, LongS
         return this;
     }
 
+    public final LongSetAssert containsExactlyInAnyOrder(long ... values) {
+
+        isNotNull();
+
+        hasNumElements(values.length);
+
+        for (long value : values) {
+
+            if (!actual.contains(value)) {
+
+                failWithContains(value);
+            }
+        }
+
+        return this;
+    }
+
     public final LongSetAssert doesNotContain(long value) {
 
         isNotNull();

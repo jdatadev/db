@@ -125,6 +125,12 @@ public final class LargeIntDoublyLinkedList extends BaseLargeIntDoublyLinkedList
         return result;
     }
 
+    @Override
+    public void clear() {
+
+        clearNodes(this, headNode, LargeIntDoublyLinkedList::setHeadNode, LargeIntDoublyLinkedList::setTailNode, l -> l.numElements = 0L);
+    }
+
     private void setHeadNode(long headNode) {
 
         this.headNode = headNode;

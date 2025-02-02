@@ -101,6 +101,35 @@ public abstract class BaseLongMap<T> extends BaseExponentMap<long[]> implements 
         keysAndValues(dst, null, null, null);
     }
 
+    protected final <P1, P2> void forEachKeyAndValue(P1 parameter1, P2 parameter2, ForEachKeyAndValue<long[], T, P1, P2> forEachKeyAndValue) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("parameter1", parameter1).add("parameter2", parameter2).add("forEachKeyAndValue", forEachKeyAndValue));
+        }
+
+        final long[] keyMap = getHashed();
+
+        final int keyMapLength = keyMap.length;
+
+        final T values = getValues();
+
+        for (int i = 0; i < keyMapLength; ++ i) {
+
+            final long mapKey = keyMap[i];
+
+            if (mapKey != NO_KEY) {
+
+                forEachKeyAndValue.each(keyMap, i, values, i, parameter1, parameter2);
+            }
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
     protected final <S, D> void keysAndValues(long[] keysDst, S src, D dst, ValueSetter<S, D> valueSetter) {
 
         if (DEBUG) {
@@ -204,7 +233,7 @@ public abstract class BaseLongMap<T> extends BaseExponentMap<long[]> implements 
 
         if (newAdded) {
 
-            increaseNumElements();
+            incrementNumElements();
         }
 
         if (DEBUG) {
@@ -311,7 +340,7 @@ public abstract class BaseLongMap<T> extends BaseExponentMap<long[]> implements 
 
         if (removed) {
 
-            decreaseNumElements();
+            decrementNumElements();
         }
 
         if (DEBUG) {

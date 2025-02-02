@@ -23,7 +23,7 @@ public final class BitsUtilTest extends BaseTest {
 
     @Test
     @Category(UnitTest.class)
-    public void testMaskInt() {
+    public void testMaskIntWithShift() {
 
         assertThat(BitsUtil.maskInt(1, 0)).isEqualTo(0x01);
         assertThat(BitsUtil.maskInt(2, 0)).isEqualTo(0x03);
@@ -47,6 +47,20 @@ public final class BitsUtilTest extends BaseTest {
     @Test
     @Category(UnitTest.class)
     public void testMaskLong() {
+
+        assertThat(BitsUtil.maskLong(1)).isEqualTo(0x01L);
+        assertThat(BitsUtil.maskLong(2)).isEqualTo(0x03L);
+        assertThat(BitsUtil.maskLong(3)).isEqualTo(0x07L);
+        assertThat(BitsUtil.maskLong(4)).isEqualTo(0x0FL);
+        assertThat(BitsUtil.maskLong(5)).isEqualTo(0x1FL);
+        assertThat(BitsUtil.maskLong(6)).isEqualTo(0x3FL);
+        assertThat(BitsUtil.maskLong(7)).isEqualTo(0x7FL);
+        assertThat(BitsUtil.maskLong(8)).isEqualTo(0xFFL);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testMaskLongWithShift() {
 
         assertThat(BitsUtil.maskLong(1, 0)).isEqualTo(0x01L);
         assertThat(BitsUtil.maskLong(2, 0)).isEqualTo(0x03L);
@@ -118,6 +132,21 @@ public final class BitsUtilTest extends BaseTest {
         assertThat(BitsUtil.merge((byte)0b10101010, (byte)0b01010101, 6)).isEqualTo((byte)0b10101001);
         assertThat(BitsUtil.merge((byte)0b10101010, (byte)0b01010101, 7)).isEqualTo((byte)0b10101011);
         assertThat(BitsUtil.merge((byte)0b10101010, (byte)0b01010101, 8)).isEqualTo((byte)0b10101010);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testGetMaxLong() {
+
+        assertThatThrownBy(()-> BitsUtil.getMaxLong(-1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(()-> BitsUtil.getMaxLong(0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(()-> BitsUtil.getMaxLong(64)).isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(BitsUtil.getMaxLong(1)).isEqualTo(1);
+        assertThat(BitsUtil.getMaxLong(2)).isEqualTo(3);
+        assertThat(BitsUtil.getMaxLong(3)).isEqualTo(7);
+        assertThat(BitsUtil.getMaxLong(31)).isEqualTo(Integer.MAX_VALUE);
+        assertThat(BitsUtil.getMaxLong(63)).isEqualTo(Long.MAX_VALUE);
     }
 
     private static enum TestEnum1 {

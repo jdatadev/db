@@ -1,14 +1,36 @@
 package dev.jdata.db.utils.checks;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import dev.jdata.db.DBConstants;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
+import dev.jdata.db.utils.adt.Contains;
 import dev.jdata.db.utils.adt.elements.Elements;
 import dev.jdata.db.utils.function.CharPredicate;
 
 public class Checks {
+
+    public static <T> T isNull(T value, boolean expectNonNull) {
+
+        if (expectNonNull) {
+
+            if (value == null) {
+
+                throw new NullPointerException();
+            }
+        }
+        else {
+            if (value != null) {
+
+                throw new IllegalArgumentException();
+            }
+        }
+
+        return value;
+    }
 
     public static int isNotNegative(int value) {
 
@@ -23,6 +45,16 @@ public class Checks {
     public static long isNotNegative(long value) {
 
         if (value < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return value;
+    }
+
+    public static BigDecimal isNotNegative(BigDecimal value) {
+
+        if (value.signum() < 0) {
 
             throw new IllegalArgumentException();
         }
@@ -48,6 +80,76 @@ public class Checks {
         }
 
         return value;
+    }
+
+    public static long isExactlyOne(long value) {
+
+        if (value != 1L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return value;
+    }
+
+    public static long isWithinRangeInclusive(long value, long lower, long upper) {
+
+        if (lower >= upper) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (value < lower) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (value > upper) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return value;
+    }
+
+    public static long isWithinRangeUpperExclusive(long value, long lower, long upper) {
+
+        if (lower >= upper) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (value < lower) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (value >= upper) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return value;
+    }
+
+    public static void isLessThan(long value1, long value2) {
+
+        if (value1 >= value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void isLessThanOrEqualTo(long value1, long value2) {
+
+        if (value1 > value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void isGreaterThanOrEqualTo(long value1, long value2) {
+
+        if (value1 <= value2) {
+
+            throw new IllegalArgumentException();
+        }
     }
 
     public static void areEqual(int value1, int value2) {
@@ -141,7 +243,7 @@ public class Checks {
             throw new IllegalArgumentException();
         }
 
-        if (!isASCIIAlphaNumeric(dbName, c -> c == '_')) {
+        if (!hasFirstCharacterAndRemaining(dbName, Character::isAlphabetic, c -> isASCIIAlphaNumeric(c) || c == '_')) {
 
             throw new IllegalArgumentException();
         }
@@ -157,6 +259,36 @@ public class Checks {
         }
 
         if (!string.startsWith(prefix)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return string;
+    }
+
+    public static String isAlphabetic(String string) {
+
+        if (!stringContainsOnly(string, Character::isAlphabetic)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return string;
+    }
+
+    public static String isJavaIdentifier(String string) {
+
+        if (!hasFirstCharacterAndRemaining(string, Character::isJavaIdentifierStart, Character::isJavaIdentifierPart)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return string;
+    }
+
+    public static String isJavaVariable(String string) {
+
+        if (!hasFirstCharacterAndRemaining(string, Character::isJavaIdentifierStart, c -> Character.isJavaIdentifierPart(c) || c == '.')) {
 
             throw new IllegalArgumentException();
         }
@@ -182,10 +314,16 @@ public class Checks {
     private static boolean isASCIIAlphaNumeric(String string, CharPredicate additionalPredicate) {
 
         return stringContainsOnly(string, c ->
+                   isASCIIAlphaNumeric(c)
+                || additionalPredicate.test(c));
+    }
+
+    private static boolean isASCIIAlphaNumeric(char c) {
+
+        return
                    (c >= '0' && c <= '9')
                 || (c >= 'A' && c <= 'Z')
-                || (c >= 'a' && c <= 'z')
-                || additionalPredicate.test(c));
+                || (c >= 'a' && c <= 'z');
     }
 
     private static boolean stringContainsOnly(String string, CharPredicate predicate) {
@@ -207,6 +345,41 @@ public class Checks {
         }
 
         return containsOnly;
+    }
+
+    private static boolean hasFirstCharacterAndRemaining(String string, CharPredicate firstCharacterPredicate, CharPredicate remainingCharacterspredicate) {
+
+        final int length = string.length();
+
+        final boolean result;
+
+        if (length == 0) {
+
+            result = false;
+        }
+        else {
+            if (!firstCharacterPredicate.test(string.charAt(0))) {
+
+                result = false;
+            }
+            else {
+                result = length > 1
+                        ? stringContainsOnly(string, 0, length - 1, remainingCharacterspredicate)
+                        : true;
+            }
+        }
+
+        return result;
+    }
+
+    public static <T, C extends Collection<T>> C isEmpty(C collection) {
+
+        if (!collection.isEmpty()) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return collection;
     }
 
     public static <T, C extends Collection<T>> C isNotEmpty(C collection) {
@@ -237,6 +410,16 @@ public class Checks {
         }
 
         return array;
+    }
+
+    public static <T extends Contains> T isNotEmpty(T contains) {
+
+        if (contains.isEmpty()) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return contains;
     }
 
     public static <T> T[] checkElements(T[] array, Consumer<T> check) {
@@ -272,9 +455,29 @@ public class Checks {
         return index;
     }
 
+    public static long isIndex(long index) {
+
+        if (index < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return index;
+    }
+
     public static int isNumElements(int numElements) {
 
         if (numElements < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return numElements;
+    }
+
+    public static long isNumElements(long numElements) {
+
+        if (numElements < 0L) {
 
             throw new IllegalArgumentException();
         }
@@ -386,6 +589,16 @@ public class Checks {
         return array;
     }
 
+    public static long isString(long string) {
+
+        if (string < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return string;
+    }
+
     public static int isSequenceNo(int sequenceNo) {
 
         if (sequenceNo < 0) {
@@ -439,6 +652,42 @@ public class Checks {
     public static Integer isNumBits(Integer numBits) {
 
         isNumBits(numBits.intValue());
+
+        return numBits;
+    }
+
+    public static int isShortNumBits(int numBits, boolean signed) {
+
+        return isNumBits(numBits, signed, 16);
+    }
+
+    public static int isIntNumBits(int numBits, boolean signed) {
+
+        return isNumBits(numBits, signed, 32);
+    }
+
+    public static int isLongNumBits(int numBits, boolean signed) {
+
+        return isNumBits(numBits, signed, 64);
+    }
+
+    private static int isNumBits(int numBits, boolean signed, int maxBits) {
+
+        if (numBits < 1) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (numBits >= maxBits) {
+
+            if (signed) {
+
+                throw new IllegalArgumentException();
+            }
+            else if (numBits > maxBits) {
+
+                throw new IllegalArgumentException();
+            }
+        }
 
         return numBits;
     }
@@ -575,6 +824,10 @@ public class Checks {
 
             throw new IllegalArgumentException();
         }
+        else if (numColumns > DBConstants.MAX_COLUMNS) {
+
+            throw new IllegalArgumentException();
+        }
 
         return numColumns;
     }
@@ -582,6 +835,10 @@ public class Checks {
     public static int isColumnIndex(int index) {
 
         if (index < 0) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (index >= DBConstants.MAX_COLUMN_INDEX) {
 
             throw new IllegalArgumentException();
         }

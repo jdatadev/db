@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
@@ -70,6 +71,17 @@ public class Lists extends BaseCollections {
         return ByIndex.containsInstance(list, list.size(), startIndex, numElements, instance, (b, i) -> b.get(i), IndexOutOfBoundsException::new);
     }
 
+    public static <T, U> boolean containsWithoutClosure(List<T> list, U instance, BiPredicate<U, T> predicate) {
+
+        return containsWithoutClosure(list, instance, 0, list.size(), predicate);
+    }
+
+    public static <T, U> boolean containsWithoutClosure(List<T> list, U instance, int startIndex, int numElements, BiPredicate<U, T> predicate) {
+
+        return ByIndex.containsWithoutClosure(list, instance, list.size(), startIndex, numElements, (byIndex, i, index) -> predicate.test(i, byIndex.get(index)),
+                IndexOutOfBoundsException::new);
+    }
+
     public static <T> int findIndex(List<T> list, Predicate<T> predicate) {
 
         return ByIndex.findIndex(list, list.size(), (b, i) -> predicate.test(b.get(i)), IndexOutOfBoundsException::new);
@@ -78,5 +90,39 @@ public class Lists extends BaseCollections {
     public static <T> int findIndex(List<T> list, int startIndex, int numElements, Predicate<T> predicate) {
 
         return ByIndex.findIndex(list, list.size(), startIndex, numElements, (b, i) -> predicate.test(b.get(i)), IndexOutOfBoundsException::new);
+    }
+
+    public static <T, U> int findIndexWithoutClosure(List<T> list, U instance, BiPredicate<U, T> predicate) {
+
+        final int numElements = list.size();
+
+        return ByIndex.findIndexWithoutClosure(list, instance, numElements, 0, numElements, (b, i, index) -> predicate.test(i, b.get(index)), IndexOutOfBoundsException::new);
+    }
+
+    public static <T, U> int findIndexWithoutClosure(List<T> list, U instance, int byIndexLength, int startIndex, int numElements, BiPredicate<U, T> predicate) {
+
+        return ByIndex.findIndexWithoutClosure(list, instance, byIndexLength, startIndex, numElements, (b, i, index) -> predicate.test(i, b.get(index)),
+                IndexOutOfBoundsException::new);
+    }
+
+    public static <T, U> int removeWithoutClosure(T instance, ArrayList<U> list, BiPredicate<T, U> predicate) {
+
+        Objects.requireNonNull(instance);
+        Objects.requireNonNull(list);
+        Objects.requireNonNull(predicate);
+
+        final int numElements = list.size();
+
+        int numRemoved = 0;
+
+        for (int i = 0; i < numElements; ++ i) {
+
+            if (predicate.test(instance, list.get(i))) {
+
+                list.remove(i);
+            }
+        }
+
+        return numRemoved;
     }
 }

@@ -15,7 +15,7 @@ import dev.jdata.db.engine.transactions.Transactions;
 import dev.jdata.db.engine.transactions.Transactions.TransactionFactory;
 import dev.jdata.db.schema.DatabaseSchema;
 import dev.jdata.db.schema.Table;
-import dev.jdata.db.utils.adt.arrays.IntArray;
+import dev.jdata.db.utils.adt.arrays.IIntArray;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class Database<T extends Transaction> implements DataOperations {
@@ -101,7 +101,7 @@ public final class Database<T extends Transaction> implements DataOperations {
 
         final Table table = schema.getTable(tableId);
 
-        final IntArray columns = insertStatement.getColumns();
+        final IIntArray columns = insertStatement.getColumns();
 
         final int numRows = rows.getNumRows();
 
