@@ -14,10 +14,35 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<utilGroupId>org.jutils</utilGroupId>
+		<utilVersion>0.0.1-SNAPSHOT</utilVersion>
     </properties>
 
     <dependencies>
-            <dependency>
+        <dependency>
+            <groupId>${utilGroupId}</groupId>
+            <artifactId>util-io-buffers</artifactId>
+            <version>${utilVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>${utilGroupId}</groupId>
+            <artifactId>util-parse</artifactId>
+            <version>${utilVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>${utilGroupId}</groupId>
+            <artifactId>util-ast</artifactId>
+            <version>${utilVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>${utilGroupId}</groupId>
+            <artifactId>util-servers</artifactId>
+            <version>${utilVersion}</version>
+        </dependency>
+
+        <!-- test dependencies -->
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.13.2</version>

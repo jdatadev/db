@@ -1,8 +1,6 @@
 package dev.jdata.db.utils.adt.arrays;
 
-import dev.jdata.db.utils.adt.elements.Elements;
-
-public final class LongArray implements Elements {
+public final class LongArray implements LongArrayGetters {
 
     private final LongLargeArray delegate;
 
@@ -23,6 +21,7 @@ public final class LongArray implements Elements {
         return delegate.getNumElements();
     }
 
+    @Override
     public long get(int index) {
 
         return delegate.get(index);

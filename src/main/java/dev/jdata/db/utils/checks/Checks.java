@@ -238,17 +238,31 @@ public class Checks {
 
     public static String isDBName(String dbName) {
 
-        if (dbName.isEmpty()) {
-
-            throw new IllegalArgumentException();
-        }
-
-        if (!hasFirstCharacterAndRemaining(dbName, Character::isAlphabetic, c -> isASCIIAlphaNumeric(c) || c == '_')) {
+        if (!checkIsDBName(dbName)) {
 
             throw new IllegalArgumentException();
         }
 
         return dbName;
+    }
+
+    public static boolean checkIsDBName(CharSequence dbName) {
+
+        final boolean result;
+
+        if (dbName.isEmpty()) {
+
+            result = false;
+        }
+        else if (!hasFirstCharacterAndRemaining(dbName, Character::isAlphabetic, c -> isASCIIAlphaNumeric(c) || c == '_')) {
+
+            result = false;
+        }
+        else {
+            result = true;
+        }
+
+        return result;
     }
 
     public static String startsWith(String string, String prefix) {
@@ -333,11 +347,16 @@ public class Checks {
 
     private static boolean stringContainsOnly(String string, int startIndex, int numCharacters, CharPredicate predicate) {
 
+        return charSequenceContainsOnly(string, startIndex, numCharacters, predicate);
+    }
+
+    private static boolean charSequenceContainsOnly(CharSequence charSequence, int startIndex, int numCharacters, CharPredicate predicate) {
+
         boolean containsOnly = true;
 
         for (int i = 0; i < numCharacters; ++ i) {
 
-            if (!predicate.test(string.charAt(startIndex + i))) {
+            if (!predicate.test(charSequence.charAt(startIndex + i))) {
 
                 containsOnly = false;
                 break;
@@ -347,9 +366,9 @@ public class Checks {
         return containsOnly;
     }
 
-    private static boolean hasFirstCharacterAndRemaining(String string, CharPredicate firstCharacterPredicate, CharPredicate remainingCharacterspredicate) {
+    private static boolean hasFirstCharacterAndRemaining(CharSequence charSequence, CharPredicate firstCharacterPredicate, CharPredicate remainingCharacterspredicate) {
 
-        final int length = string.length();
+        final int length = charSequence.length();
 
         final boolean result;
 
@@ -358,13 +377,13 @@ public class Checks {
             result = false;
         }
         else {
-            if (!firstCharacterPredicate.test(string.charAt(0))) {
+            if (!firstCharacterPredicate.test(charSequence.charAt(0))) {
 
                 result = false;
             }
             else {
                 result = length > 1
-                        ? stringContainsOnly(string, 0, length - 1, remainingCharacterspredicate)
+                        ? charSequenceContainsOnly(charSequence, 0, length - 1, remainingCharacterspredicate)
                         : true;
             }
         }

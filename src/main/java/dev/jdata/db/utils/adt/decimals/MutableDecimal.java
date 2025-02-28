@@ -10,7 +10,7 @@ import dev.jdata.db.utils.adt.buffers.BitBuffer;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class MutableDecimal implements Comparable<MutableDecimal>, Clearable {
+public final class MutableDecimal implements Decimal, Comparable<MutableDecimal>, Clearable {
 
     private byte[] bits;
     private int precision;
