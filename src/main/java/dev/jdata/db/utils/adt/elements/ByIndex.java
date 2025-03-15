@@ -2,6 +2,8 @@ package dev.jdata.db.utils.adt.elements;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import dev.jdata.db.utils.checks.Checks;
@@ -16,20 +18,15 @@ public class ByIndex {
     }
 
     @FunctionalInterface
-    public interface ByIndexPredicate<T> {
+    public interface ByIndexSetter<T, U> {
 
-        boolean test(T byIndex, int index);
+       void set(U byIndex, int index, T element);
     }
 
-    @FunctionalInterface
-    public interface ByIndexAndInstancePredicate<T, U> {
+    public static <T, U> boolean containsInstance(U byIndex, int byIndexLength, T instance, ByIndexGetter<T, U> getter,
+            Supplier<IndexOutOfBoundsException> exceptionSupplier) {
 
-        boolean test(T byIndex, U instance, int index);
-    }
-
-    public static <T, U> boolean containsInstance(U byIndex, int byIndexLength, T instance, ByIndexGetter<T, U> getter, Supplier<IndexOutOfBoundsException> exceptionSupplier) {
-
-        return containsInstance(byIndex, byIndexLength, 0, byIndexLength, instance, getter, exceptionSupplier);
+        return findIndex(byIndex, byIndexLength, 0, byIndexLength, instance, getter, (e, p) -> e == p, exceptionSupplier) != -1;
     }
 
     public static <T, U> boolean containsInstance(U byIndex, int byIndexLength, int startIndex, int numElements, T instance, ByIndexGetter<T, U> getter,
@@ -37,27 +34,28 @@ public class ByIndex {
 
         Objects.requireNonNull(instance);
 
-        return findIndex(byIndex, byIndexLength, startIndex, numElements, (b, i) -> getter.get(b, i) == instance, exceptionSupplier) != -1;
+        return findIndex(byIndex, byIndexLength, startIndex, numElements, instance, (b, i) -> getter.get(b, i), (e, p) -> e == p, exceptionSupplier) != -1;
     }
 
-    public static <T, U> boolean containsWithoutClosure(U byIndex, T instance, int byIndexLength, int startIndex, int numElements, ByIndexAndInstancePredicate<U, T> predicate,
+    public static <T, U, P> boolean contains(U byIndex, int byIndexLength, P parameter, ByIndexGetter<T, U> getter, BiPredicate<T, P> predicate,
             Supplier<IndexOutOfBoundsException> exceptionSupplier) {
 
-        return findIndexWithoutClosure(byIndex, instance, byIndexLength, startIndex, numElements, predicate, exceptionSupplier) != -1;
+        return findIndex(byIndex, byIndexLength, 0, byIndexLength, parameter, getter, predicate, exceptionSupplier) != -1;
     }
 
-    public static <T, U> int findIndex(U byIndex, int byIndexLength, ByIndexPredicate<U> predicate, Supplier<IndexOutOfBoundsException> exceptionSupplier) {
-
-        return byIndexLength != 0 ? findIndex(byIndex, byIndexLength, 0, byIndexLength, predicate, exceptionSupplier) : -1;
-    }
-
-    public static <T, U> int findIndex(U byIndex, int byIndexLength, int startIndex, int numElements, ByIndexPredicate<U> predicate,
+    public static <T, U, P> boolean contains(U byIndex, int byIndexLength, int startIndex, int numElements, P parameter, ByIndexGetter<T, U> getter, BiPredicate<T, P> predicate,
             Supplier<IndexOutOfBoundsException> exceptionSupplier) {
 
-        return findIndexWithoutClosure(byIndex, null, byIndexLength, startIndex, numElements, (b, instance, index) -> predicate.test(b, startIndex), exceptionSupplier);
+        return findIndex(byIndex, byIndexLength, startIndex, numElements, parameter, getter, predicate, exceptionSupplier) != -1;
     }
 
-    public static <T, U> int findIndexWithoutClosure(U byIndex, T instance, int byIndexLength, int startIndex, int numElements, ByIndexAndInstancePredicate<U, T> predicate,
+    public static <T, U, P> int findIndex(U byIndex, int byIndexLength, P parameter, ByIndexGetter<T, U> getter, BiPredicate<T, P> predicate,
+            Supplier<IndexOutOfBoundsException> exceptionSupplier) {
+
+        return findIndex(byIndex, byIndexLength, 0, byIndexLength, parameter, getter, predicate, exceptionSupplier);
+    }
+
+    public static <T, U, P> int findIndex(U byIndex, int byIndexLength, int startIndex, int numElements, P parameter, ByIndexGetter<T, U> getter, BiPredicate<T, P> predicate,
             Supplier<IndexOutOfBoundsException> exceptionSupplier) {
 
         Objects.requireNonNull(byIndex);
@@ -92,7 +90,9 @@ public class ByIndex {
 
         for (int i = startIndex; i < endIndex; ++ i) {
 
-            if (predicate.test(byIndex, instance, i)) {
+            final T element = getter.get(byIndex, i);
+
+            if (predicate.test(element, parameter)) {
 
                 foundIndex = i;
                 break;
@@ -106,6 +106,18 @@ public class ByIndex {
     public interface ByIndexStringAdderPredicate<T> {
 
         boolean test(T instance, int index);
+    }
+
+    public static <T, U, V, R> void map(U byIndex, int numElements, ByIndexGetter<T, U> getter, Function<T, R> mapper, ByIndexSetter<R, V> setter, V dst) {
+
+        for (int i = 0; i < numElements; ++ i) {
+
+            final T value = getter.get(byIndex, i);
+
+            final R mapped = mapper.apply(value);
+
+            setter.set(dst, i, mapped);
+        }
     }
 
     @FunctionalInterface

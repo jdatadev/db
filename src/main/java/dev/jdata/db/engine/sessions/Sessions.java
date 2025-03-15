@@ -1,27 +1,41 @@
 package dev.jdata.db.engine.sessions;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import dev.jdata.db.engine.descriptorables.BaseMultiTypeDescriptorables;
-import dev.jdata.db.network.NetworkClientSocket;
+import dev.jdata.db.engine.descriptorables.BaseSingleTypeDescriptorables;
+import dev.jdata.db.engine.sessions.DBSession.LargeObjectStorer;
 import dev.jdata.db.utils.adt.lists.Lists;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class Sessions extends BaseMultiTypeDescriptorables<BaseSession.SessionState, BaseSession> {
+public final class Sessions extends BaseSingleTypeDescriptorables<DBSession.SessionState, DBSession> {
 
-    private final List<BaseSession> sessions;
+    private final LargeObjectStorer<IOException> largeObjectStorer;
 
-    public Sessions() {
-        super(BaseSession[]::new, NetworkSession.class);
+    private final List<DBSession> sessions;
+
+    public Sessions(LargeObjectStorer<IOException> largeObjectStorer) {
+        super(DBSession[]::new);
+
+        this.largeObjectStorer = Objects.requireNonNull(largeObjectStorer);
 
         this.sessions = new ArrayList<>();
     }
 
-    public Session addSession(NetworkClientSocket clientSocket) {
+    public Session addSession(Charset charset) {
 
-        return addSession(NetworkSession.class, clientSocket, NetworkSession::new);
+        Objects.requireNonNull(charset);
+
+        final DBSession session = addDescriptorable(null, p -> new DBSession());
+
+        session.initialize(charset, largeObjectStorer);
+
+        addSessionToList(session);
+
+        return session;
     }
 
     public Session getSession(int sessionId) {
@@ -31,16 +45,18 @@ public final class Sessions extends BaseMultiTypeDescriptorables<BaseSession.Ses
         return getDescriptorable(sessionId);
     }
 
-    private <T> BaseSession addSession(Class<? extends BaseSession> typeToAllocate, T factoryParameter, DescriptorableFactory<T, BaseSession> descriptorableFactory) {
+    public void removeSession(int sessionId) {
 
-        final BaseSession session = addDescriptorable(typeToAllocate, factoryParameter, descriptorableFactory);
+        Checks.isSessionDescriptor(sessionId);
 
-        addSessionToList(session);
+        final DBSession session = getDescriptorable(sessionId);
 
-        return session;
+        session.clear();
+
+        removeDescriptorable(session);
     }
 
-    private void addSessionToList(BaseSession session) {
+    private void addSessionToList(DBSession session) {
 
         Objects.requireNonNull(session);
 

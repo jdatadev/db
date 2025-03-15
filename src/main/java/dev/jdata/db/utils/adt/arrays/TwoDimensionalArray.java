@@ -11,11 +11,11 @@ import java.util.function.Predicate;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.ForEachSequenceElement;
-import dev.jdata.db.utils.adt.MutableElements;
+import dev.jdata.db.utils.adt.elements.IMutableElements;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 
-public final class TwoDimensionalArray<T> implements MutableElements, PrintDebug {
+public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_TWO_DIMENSIONAL_ARRAY;
 

@@ -31,6 +31,20 @@ import dev.jdata.db.utils.checks.Checks;
 
 public abstract class SQLParser extends BaseSQLParser {
 
+    public interface SQLString {
+
+        void append(Appendable appendable);
+
+        default String asString() {
+
+            final StringBuilder sb = new StringBuilder(10000);
+
+            append(sb);
+
+            return sb.toString();
+        }
+    }
+
     private final SQLToken[] statementTokens;
     private final SQLToken[] createOrDropTokens;
     private final SQLToken[] alterTokens;
@@ -84,15 +98,26 @@ public abstract class SQLParser extends BaseSQLParser {
         this.dropTriggerParser = parserFactory.createDropTriggerParser();
     }
 
-    public List<BaseSQLStatement> parse(LoadStream loadStream, SQLAllocator allocator, SQLScratchExpressionValues scratchExpressionValues) throws ParserException, IOException {
+    private List<BaseSQLStatement> parse(LoadStream loadStream, SQLAllocator allocator, SQLScratchExpressionValues scratchExpressionValues) throws ParserException, IOException {
+
+        final List<BaseSQLStatement> result = allocator.allocateList(1);
+
+        parse(loadStream, allocator, scratchExpressionValues, result, null);
+
+        return result;
+    }
+
+    public void parse(LoadStream loadStream, SQLAllocator allocator, SQLScratchExpressionValues scratchExpressionValues, List<BaseSQLStatement> sqlStatementDst,
+            List<SQLString> sqlStringsDst) throws ParserException, IOException {
 
         Objects.requireNonNull(loadStream);
+        Objects.requireNonNull(scratchExpressionValues);
+        Objects.requireNonNull(sqlStatementDst);
+        Objects.requireNonNull(sqlStringsDst);
 
         final StringBuffers buffer = new StringBuffers(loadStream);
 
         final SQLExpressionLexer lexer = new SQLExpressionLexer(buffer, allocator, buffer, scratchExpressionValues);
-
-        final List<BaseSQLStatement> result = allocator.allocateList(1);
 
         if (!skipEmptyStatements(lexer)) {
 
@@ -100,7 +125,7 @@ public abstract class SQLParser extends BaseSQLParser {
 
                 final BaseSQLStatement sqlStatement = parseStatement(lexer);
 
-                result.add(sqlStatement);
+                sqlStatementDst.add(sqlStatement);
 
                 if (skipEmptyStatements(lexer)) {
 
@@ -108,8 +133,6 @@ public abstract class SQLParser extends BaseSQLParser {
                 }
             }
         }
-
-        return result;
     }
 
     private static final SQLToken[] SEMI_COLON_OR_EOF = new SQLToken[] {
@@ -145,11 +168,21 @@ public abstract class SQLParser extends BaseSQLParser {
 
     private BaseSQLStatement parseStatement(SQLExpressionLexer lexer) throws ParserException, IOException {
 
+        final BaseSQLStatement result;
+
         final SQLToken statementToken = lexer.lex(statementTokens);
 
-        final long statementKeyword = lexer.getStringRef();
+        if (statementToken != SQLToken.NONE) {
 
-        return processStatement(lexer, statementToken, statementKeyword);
+            final long statementKeyword = lexer.getStringRef();
+
+            result = processStatement(lexer, statementToken, statementKeyword);
+        }
+        else {
+            result = null;
+        }
+
+        return result;
     }
 
     BaseSQLStatement processStatement(SQLExpressionLexer lexer, SQLToken statementToken, long statementKeyword) throws ParserException, IOException {

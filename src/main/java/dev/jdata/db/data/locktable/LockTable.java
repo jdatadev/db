@@ -7,9 +7,9 @@ import dev.jdata.db.DBException;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.LockType;
 import dev.jdata.db.data.BaseRows;
+import dev.jdata.db.utils.adt.arrays.ILongArrayGetters;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
-import dev.jdata.db.utils.adt.arrays.LongLargeArray;
-import dev.jdata.db.utils.adt.elements.Elements;
+import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.adt.lists.BaseList;
 import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadDoublyLinkedList;
 import dev.jdata.db.utils.adt.lists.LongMultiList;
@@ -101,7 +101,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
 
     private final LockSetter rowLockSetter;
 
-    private final LongLargeArray scratchLockIndices;
+    private final LargeLongArray scratchLockIndices;
 
     private long scratchHeadNode;
     private long scratchTailNode;
@@ -152,7 +152,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
 
         this.rowLockSetter = new RowLockSetter();
 
-        this.scratchLockIndices = new LongLargeArray(initialOuterCapacity, innerCapacity);
+        this.scratchLockIndices = new LargeLongArray(initialOuterCapacity, innerCapacity);
     }
 
     public boolean tryReadLockTable(int tableId, int transactionDescriptor, int statementId) {
@@ -307,7 +307,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
         unlockRow(tableId, rowId, transactionDescriptor, statementId, LockType.WRITE);
     }
 
-    public synchronized boolean tryLockRows(int tableId, LargeLongArray rowIds, int transactionDescriptor, int statementId, LockType lockType) {
+    public synchronized boolean tryLockRows(int tableId, ILongArrayGetters rowIds, int transactionDescriptor, int statementId, LockType lockType) {
 
         checkParameters(tableId, transactionDescriptor, statementId, lockType);
         Objects.requireNonNull(rowIds);
@@ -876,13 +876,13 @@ public final class LockTable extends BaseRows implements PrintDebug {
         @Override
         public long getNumReadLocks(LockTable lockTable, long lockIndex) {
 
-            return lockTable.tableNumReadLocks[Elements.intIndex(lockIndex)];
+            return lockTable.tableNumReadLocks[IElements.intIndex(lockIndex)];
         }
 
         @Override
         public long getNumWriteLocks(LockTable lockTable, long lockIndex) {
 
-            return lockTable.tableNumWriteLocks[Elements.intIndex(lockIndex)];
+            return lockTable.tableNumWriteLocks[IElements.intIndex(lockIndex)];
         }
     }
 
@@ -891,13 +891,13 @@ public final class LockTable extends BaseRows implements PrintDebug {
         @Override
         public long getLockInfoListsHeadNode(LockTable lockTable, long lockIndex) {
 
-            return lockTable.tableLockInfoListsHeadNodes[Elements.intIndex(lockIndex)];
+            return lockTable.tableLockInfoListsHeadNodes[IElements.intIndex(lockIndex)];
         }
 
         @Override
         public long getLockInfoListsTailNode(LockTable lockTable, long lockIndex) {
 
-            return lockTable.tableLockInfoListsTailNodes[Elements.intIndex(lockIndex)];
+            return lockTable.tableLockInfoListsTailNodes[IElements.intIndex(lockIndex)];
         }
 
         @Override

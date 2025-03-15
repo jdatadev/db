@@ -19,7 +19,7 @@ public final class MutableDecimalTest extends BaseTest {
 
     private void checkConstructor(BigDecimal bigDecimal) {
 
-        final MutableDecimal decimal = new MutableDecimal(bigDecimal);
+        final MutableDecimal decimal = MutableDecimal.valueOf(bigDecimal);
 
         assertThat(decimal.getValue()).isEqualTo(bigDecimal);
     }
@@ -44,8 +44,8 @@ public final class MutableDecimalTest extends BaseTest {
 
     private void checkCompare(BigDecimal bigDecimal1, BigDecimal bigDecimal2, int expectedResult) {
 
-        final MutableDecimal decimal1 = new MutableDecimal(bigDecimal1);
-        final MutableDecimal decimal2 = new MutableDecimal(bigDecimal2);
+        final MutableDecimal decimal1 = MutableDecimal.valueOf(bigDecimal1);
+        final MutableDecimal decimal2 = MutableDecimal.valueOf(bigDecimal2);
 
         assertThat(decimal1.compareTo(decimal2)).isEqualTo(expectedResult);
     }

@@ -8,26 +8,31 @@ import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.SQLAllocator;
 import dev.jdata.db.sql.ast.SQLFreeable;
-import dev.jdata.db.sql.parse.expression.LargeInteger;
+import dev.jdata.db.utils.adt.integers.ILargeInteger;
+import dev.jdata.db.utils.adt.integers.MutableLargeInteger;
 
 public final class SQLLargeIntegerLiteral extends SQLLiteral implements SQLFreeable {
 
-    private final LargeInteger integer;
+    private final MutableLargeInteger largeInteger;
 
-    public SQLLargeIntegerLiteral(Context context, LargeInteger integer) {
+    public SQLLargeIntegerLiteral(Context context, MutableLargeInteger largeInteger) {
         super(context);
 
-        this.integer = Objects.requireNonNull(integer);
+        this.largeInteger = Objects.requireNonNull(largeInteger);
+    }
+
+    public ILargeInteger getLargeInteger() {
+        return largeInteger;
     }
 
     @Override
     public void free(SQLAllocator allocator) {
 
-        allocator.freeLargeInteger(integer);
+        allocator.freeLargeInteger(largeInteger);
     }
 
     @Override
-    public <P, R> R visit(SQLExpressionVisitor<P, R> visitor, P parameter) {
+    public <P, R, E extends Exception> R visitSQLExpression(SQLExpressionVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onLargeIntegerLiteral(this, parameter);
     }

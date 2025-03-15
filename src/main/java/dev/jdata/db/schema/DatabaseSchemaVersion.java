@@ -18,14 +18,19 @@ public final class DatabaseSchemaVersion implements Comparable<DatabaseSchemaVer
         this.versionNumber = Checks.isDatabaseSchemaVersionNumber(versionNumber);
     }
 
-    public int getVersionNumber() {
-        return versionNumber;
-    }
-
     @Override
     public int compareTo(DatabaseSchemaVersion other) {
 
         return Integer.compare(versionNumber, other.versionNumber);
+    }
+
+    public int getVersionNumber() {
+        return versionNumber;
+    }
+
+    public boolean isInitialVersion() {
+
+        return versionNumber == INITIAL_VERSION;
     }
 
     @Override

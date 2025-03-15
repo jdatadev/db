@@ -13,7 +13,7 @@ import dev.jdata.db.storage.backend.StorageUpdateRows;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema.StorageSchemaColumn;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
-import dev.jdata.db.storage.backend.tabledata.file.ByteBufferAllocator;
+import dev.jdata.db.utils.allocators.IByteArrayAllocator;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -65,7 +65,7 @@ public abstract class BaseFilesTransactionLogBackend extends BaseFileTransaction
     }
 
     @Override
-    public final void insertRows(int tableId, StorageInsertRows rows, ByteBufferAllocator byteBufferAllocator) throws IOException {
+    public final void insertRows(int tableId, StorageInsertRows rows, IByteArrayAllocator byteBufferAllocator) throws IOException {
 
         Checks.isTableId(tableId);
         Objects.requireNonNull(rows);
@@ -75,7 +75,7 @@ public abstract class BaseFilesTransactionLogBackend extends BaseFileTransaction
     }
 
     @Override
-    public final void updateRows(int tableId, StorageUpdateRows rows, ByteBufferAllocator byteBufferAllocator) throws IOException {
+    public final void updateRows(int tableId, StorageUpdateRows rows, IByteArrayAllocator byteBufferAllocator) throws IOException {
 
         Checks.isTableId(tableId);
         Objects.requireNonNull(rows);
@@ -84,9 +84,9 @@ public abstract class BaseFilesTransactionLogBackend extends BaseFileTransaction
         insertOrUpdateRows(tableId, TransactionOperationCode.UPDATE, rows, byteBufferAllocator);
     }
 
-    private void insertOrUpdateRows(int tableId, TransactionOperationCode operationCode, StorageInsertUpdateRows<?> rows, ByteBufferAllocator byteBufferAllocator) throws IOException {
+    private void insertOrUpdateRows(int tableId, TransactionOperationCode operationCode, StorageInsertUpdateRows<?> rows, IByteArrayAllocator byteBufferAllocator) throws IOException {
 
-        final byte[] outputBuffer = byteBufferAllocator.allocate(BUFFER_SIZE);
+        final byte[] outputBuffer = byteBufferAllocator.allocateByteArray(BUFFER_SIZE);
 
         try {
             final int numRows = rows.getNumRows();
@@ -145,18 +145,18 @@ public abstract class BaseFilesTransactionLogBackend extends BaseFileTransaction
         }
         finally {
 
-            byteBufferAllocator.free(outputBuffer);
+            byteBufferAllocator.freeByteArray(outputBuffer);
         }
     }
 
     @Override
-    public final void deleteRows(int tableId, StorageDeleteRows rows, ByteBufferAllocator byteBufferAllocator) throws IOException {
+    public final void deleteRows(int tableId, StorageDeleteRows rows, IByteArrayAllocator byteBufferAllocator) throws IOException {
 
         Checks.isTableId(tableId);
         Objects.requireNonNull(rows);
         Objects.requireNonNull(byteBufferAllocator);
 
-        final byte[] outputBuffer = byteBufferAllocator.allocate(BUFFER_SIZE);
+        final byte[] outputBuffer = byteBufferAllocator.allocateByteArray(BUFFER_SIZE);
 
         try {
             final int numRows = rows.getNumRows();
@@ -189,7 +189,7 @@ public abstract class BaseFilesTransactionLogBackend extends BaseFileTransaction
         }
         finally {
 
-            byteBufferAllocator.free(outputBuffer);
+            byteBufferAllocator.freeByteArray(outputBuffer);
         }
     }
 }

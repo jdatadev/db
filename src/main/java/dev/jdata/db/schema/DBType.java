@@ -6,6 +6,7 @@ public enum DBType {
 
     BOOLEAN(DBCategory.BOOLEAN),
     INTEGER(DBCategory.NUMERIC),
+    LARGE_INTEGER(DBCategory.NUMERIC),
     FLOATING_POINT(DBCategory.NUMERIC),
     DECIMAL(DBCategory.NUMERIC),
     STRING(DBCategory.STRING),

@@ -12,7 +12,7 @@ import dev.jdata.db.utils.adt.sets.IntSet;
 
 abstract class BaseIntegerToIntegerOrObjectTest<K, V, M extends KeyMap<K>> extends BaseHashedTest {
 
-    abstract M createMap(int initialCapacity);
+    abstract M createMap(int initialCapacityExponent);
 
     abstract K createKeysArray(int length);
     abstract V createValuesArray(int length);

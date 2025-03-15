@@ -3,16 +3,23 @@ package dev.jdata.db.schema;
 import java.util.Objects;
 
 import dev.jdata.db.schema.types.SchemaDataType;
+import dev.jdata.db.utils.checks.Checks;
 
 public final class Column {
 
+    private final String name;
     private final SchemaDataType schemaType;
     private final boolean nullable;
 
-    public Column(SchemaDataType schemaType, boolean nullable) {
+    public Column(String name, SchemaDataType schemaType, boolean nullable) {
 
+        this.name = Checks.isColumnName(name);
         this.schemaType = Objects.requireNonNull(schemaType);
         this.nullable = nullable;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public SchemaDataType getSchemaType() {
@@ -27,6 +34,6 @@ public final class Column {
     @Override
     public String toString() {
 
-        return getClass().getSimpleName() + " [schemaType=" + schemaType + ", nullable=" + nullable + "]";
+        return getClass().getSimpleName() + " [name=" + name + ", schemaType=" + schemaType + ", nullable=" + nullable + "]";
     }
 }

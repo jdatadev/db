@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import dev.jdata.db.LockType;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.elements.Elements;
+import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class LockedTables extends LockedTableElements {
@@ -39,7 +39,7 @@ public final class LockedTables extends LockedTableElements {
 
         final int result;
 
-        final int tableId = Elements.intIndex(index);
+        final int tableId = IElements.intIndex(index);
 
         switch (lockType) {
 

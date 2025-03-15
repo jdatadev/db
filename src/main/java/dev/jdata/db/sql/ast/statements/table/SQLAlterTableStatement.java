@@ -18,7 +18,7 @@ public final class SQLAlterTableStatement extends SQLTableStatement {
     }
 
     @Override
-    public <T, R> R visit(SQLStatementVisitor<T, R> visitor, T parameter) {
+    public <P, R, E extends Exception> R visit(SQLStatementVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onAlterTable(this, parameter);
     }

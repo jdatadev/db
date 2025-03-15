@@ -63,53 +63,55 @@ public class Lists extends BaseCollections {
 
     public static <T> boolean containsInstance(List<T> list, T instance) {
 
-        return ByIndex.containsInstance(list, list.size(), instance, (b, i) -> b.get(i), IndexOutOfBoundsException::new);
+        final int listSize = list.size();
+
+        return listSize != 0 ? ByIndex.contains(list, list.size(), instance, List::get, (e, p) -> e == p, IndexOutOfBoundsException::new) : false;
     }
 
     public static <T> boolean containsInstance(List<T> list, int startIndex, int numElements, T instance) {
 
-        return ByIndex.containsInstance(list, list.size(), startIndex, numElements, instance, (b, i) -> b.get(i), IndexOutOfBoundsException::new);
+        return ByIndex.contains(list, list.size(), startIndex, numElements, instance, List::get, (e, p) -> e == p, IndexOutOfBoundsException::new);
     }
 
-    public static <T, U> boolean containsWithoutClosure(List<T> list, U instance, BiPredicate<U, T> predicate) {
+    public static <T, P> boolean contains(List<T> list, P parameter, BiPredicate<T, P> predicate) {
 
-        return containsWithoutClosure(list, instance, 0, list.size(), predicate);
+        return contains(list, 0, list.size(), parameter, predicate);
     }
 
-    public static <T, U> boolean containsWithoutClosure(List<T> list, U instance, int startIndex, int numElements, BiPredicate<U, T> predicate) {
+    public static <T, P> boolean contains(List<T> list, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
 
-        return ByIndex.containsWithoutClosure(list, instance, list.size(), startIndex, numElements, (byIndex, i, index) -> predicate.test(i, byIndex.get(index)),
-                IndexOutOfBoundsException::new);
+        return ByIndex.contains(list, list.size(), startIndex, numElements, parameter, List::get, predicate, IndexOutOfBoundsException::new);
     }
 
-    public static <T> int findIndex(List<T> list, Predicate<T> predicate) {
+    @Deprecated
+    public static <T> int findIndexWithClosureAllocation(List<T> list, Predicate<T> predicate) {
 
-        return ByIndex.findIndex(list, list.size(), (b, i) -> predicate.test(b.get(i)), IndexOutOfBoundsException::new);
+        return ByIndex.findIndex(list, list.size(), predicate, List::get, (e, p) -> p.test(e), IndexOutOfBoundsException::new);
     }
 
-    public static <T> int findIndex(List<T> list, int startIndex, int numElements, Predicate<T> predicate) {
+    @Deprecated
+    public static <T> int findIndexWithClosureAllocation(List<T> list, int startIndex, int numElements, Predicate<T> predicate) {
 
-        return ByIndex.findIndex(list, list.size(), startIndex, numElements, (b, i) -> predicate.test(b.get(i)), IndexOutOfBoundsException::new);
+        return ByIndex.findIndex(list, list.size(), startIndex, numElements, predicate, List::get, (e, p) -> p.test(e), IndexOutOfBoundsException::new);
     }
 
-    public static <T, U> int findIndexWithoutClosure(List<T> list, U instance, BiPredicate<U, T> predicate) {
+    public static <T, P> int findIndex(List<T> list, P parameter, BiPredicate<T, P> predicate) {
 
         final int numElements = list.size();
 
-        return ByIndex.findIndexWithoutClosure(list, instance, numElements, 0, numElements, (b, i, index) -> predicate.test(i, b.get(index)), IndexOutOfBoundsException::new);
+        return ByIndex.findIndex(list, numElements, parameter, List::get, predicate, IndexOutOfBoundsException::new);
     }
 
-    public static <T, U> int findIndexWithoutClosure(List<T> list, U instance, int byIndexLength, int startIndex, int numElements, BiPredicate<U, T> predicate) {
+    public static <T, P> int findIndex(List<T> list, int byIndexLength, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
 
-        return ByIndex.findIndexWithoutClosure(list, instance, byIndexLength, startIndex, numElements, (b, i, index) -> predicate.test(i, b.get(index)),
-                IndexOutOfBoundsException::new);
+        return ByIndex.findIndex(list, byIndexLength, startIndex, numElements, parameter, List::get, predicate, IndexOutOfBoundsException::new);
     }
 
-    public static <T, U> int removeWithoutClosure(T instance, ArrayList<U> list, BiPredicate<T, U> predicate) {
+    public static <T, P> int remove(ArrayList<T> list, P parameter, BiPredicate<T, P> predicate) {
 
-        Objects.requireNonNull(instance);
         Objects.requireNonNull(list);
         Objects.requireNonNull(predicate);
+        Objects.requireNonNull(parameter);
 
         final int numElements = list.size();
 
@@ -117,7 +119,7 @@ public class Lists extends BaseCollections {
 
         for (int i = 0; i < numElements; ++ i) {
 
-            if (predicate.test(instance, list.get(i))) {
+            if (predicate.test(list.get(i), parameter)) {
 
                 list.remove(i);
             }

@@ -2,13 +2,14 @@ package dev.jdata.db.engine.transactions;
 
 import java.util.Objects;
 
-import dev.jdata.db.utils.adt.Clearable;
+import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.arrays.IObjectArray;
 import dev.jdata.db.utils.adt.maps.IntToObjectMap;
 import dev.jdata.db.utils.adt.sets.ILongSet;
+import dev.jdata.db.utils.adt.sets.ILongSetGetters;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class TransactionSelect implements Clearable {
+public final class TransactionSelect implements IClearable {
 
     public enum ConditionOperator {
 
@@ -16,10 +17,17 @@ public final class TransactionSelect implements Clearable {
         OR;
     }
 
+    public interface TransactionSelectAllocator {
+
+        TransactionSelect allocateTransactionSelect();
+
+        void freeTransactionSelect(TransactionSelect transactionSelect);
+    }
+
     private int tableId;
     private ConditionOperator conditionOperator;
     private IObjectArray<SelectColumn> selectColumns;
-    private ILongSet rowIdsToFilter;
+    private ILongSetGetters rowIdsToFilter;
     private StringLookup stringLookup;
     private final IntToObjectMap<SelectColumn> selectColumnsMap;
 
@@ -93,7 +101,7 @@ public final class TransactionSelect implements Clearable {
         return (int)selectColumns.getNumElements();
     }
 
-    public ILongSet getRowIdsToFilter() {
+    public ILongSetGetters getRowIdsToFilter() {
         return rowIdsToFilter;
     }
 

@@ -1,9 +1,9 @@
 package dev.jdata.db.utils.adt.maps;
 
-import dev.jdata.db.utils.adt.Clearable;
-import dev.jdata.db.utils.adt.elements.Elements;
+import dev.jdata.db.utils.adt.IClearable;
+import dev.jdata.db.utils.adt.elements.IElements;
 
-public interface KeyMap<T> extends Elements, Clearable {
+public interface KeyMap<T> extends IElements, IClearable {
 
     T keys();
 }

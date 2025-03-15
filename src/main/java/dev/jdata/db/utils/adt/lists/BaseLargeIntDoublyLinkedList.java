@@ -53,9 +53,9 @@ abstract class BaseLargeIntDoublyLinkedList<T> extends BaseLargeDoublyLinkedList
 
     final int removeHead(T instance, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
 
-        final long reovedHeadNode = removeHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
+        final long removedHeadNode = removeHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
-        return getValue(reovedHeadNode);
+        return getValue(removedHeadNode);
     }
 
     final int removeListNode(T instance, long node, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {

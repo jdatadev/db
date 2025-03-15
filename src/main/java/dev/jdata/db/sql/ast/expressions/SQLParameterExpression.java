@@ -19,7 +19,7 @@ public final class SQLParameterExpression extends BaseSQLExpression {
     }
 
     @Override
-    public <T, R> R visit(SQLExpressionVisitor<T, R> visitor, T parameter) {
+    public <P, R, E extends Exception> R visitSQLExpression(SQLExpressionVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onParameter(this, parameter);
     }

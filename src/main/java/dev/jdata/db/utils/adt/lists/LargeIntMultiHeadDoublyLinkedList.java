@@ -36,4 +36,9 @@ public final class LargeIntMultiHeadDoublyLinkedList<T> extends BaseLargeIntDoub
 
         return toListArrayValues(headNode);
     }
+
+    @Override
+    void clearNumElements() {
+
+    }
 }

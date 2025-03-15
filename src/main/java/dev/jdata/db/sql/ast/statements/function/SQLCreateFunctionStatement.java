@@ -13,7 +13,7 @@ public final class SQLCreateFunctionStatement extends SQLFunctionStatement {
     }
 
     @Override
-    public <T, R> R visit(SQLStatementVisitor<T, R> visitor, T parameter) {
+    public <P, R, E extends Exception> R visit(SQLStatementVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onCreateFunction(this, parameter);
     }

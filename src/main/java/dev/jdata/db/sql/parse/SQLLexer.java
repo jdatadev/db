@@ -19,7 +19,7 @@ public class SQLLexer extends BaseLexer<SQLToken> {
 
     private static Lexer<SQLToken, CharInput> createLexer(CharInput data) {
 
-        final Lexer<SQLToken, CharInput> lexer = new Lexer<SQLToken, CharInput>(
+        final Lexer<SQLToken, CharInput> lexer = new Lexer<>(
                 data,
                 SQLToken.class,
                 SQLToken.NONE,

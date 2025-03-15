@@ -8,6 +8,7 @@ import java.util.Objects;
 import dev.jdata.db.data.RowDataNumBitsGetter;
 import dev.jdata.db.storage.backend.file.BaseStorageFile;
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;
+import dev.jdata.db.utils.allocators.IByteArrayAllocator;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
@@ -443,7 +444,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
     }
 
     void expandTo(RelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath, StorageTableFileSchema updatedStorageTableFileSchema,
-            ByteBufferAllocator byteBufferAllocator) throws IOException {
+            IByteArrayAllocator byteBufferAllocator) throws IOException {
 
         Objects.requireNonNull(fileSystemAccess);
         Objects.requireNonNull(filePath);
@@ -480,10 +481,10 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
 
                 final int inputRowByteBufferCapacity = outputRowByteBufferCapacity;
 
-                final byte[] inputTempByteBuffer = byteBufferAllocator.allocate(inputRowByteBufferCapacity);
+                final byte[] inputTempByteBuffer = byteBufferAllocator.allocateByteArray(inputRowByteBufferCapacity);
 
                 try {
-                    final byte[] outputTempByteBuffer = byteBufferAllocator.allocate(outputRowByteBufferCapacity);
+                    final byte[] outputTempByteBuffer = byteBufferAllocator.allocateByteArray(outputRowByteBufferCapacity);
 
                     try {
                         copyFileContents(numRows, maxBatchRows, storageTableFileSchema, randomFileAccess, inputTempByteBuffer, updatedStorageTableFileSchema, dataOutputStream,
@@ -491,12 +492,12 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
                     }
                     finally {
 
-                        byteBufferAllocator.free(outputTempByteBuffer);
+                        byteBufferAllocator.freeByteArray(outputTempByteBuffer);
                     }
                 }
                 finally {
 
-                    byteBufferAllocator.free(inputTempByteBuffer);
+                    byteBufferAllocator.freeByteArray(inputTempByteBuffer);
                 }
             }
         }

@@ -2,7 +2,9 @@ package dev.jdata.db.engine.descriptorables;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.State;
@@ -10,6 +12,7 @@ import dev.jdata.db.utils.adt.Contains;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.elements.BaseNumElements;
 import dev.jdata.db.utils.adt.lists.Freeing;
+import dev.jdata.db.utils.checks.Checks;
 
 public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends BaseDescriptorable<T>, V extends Freeing<U> & Contains> extends BaseNumElements {
 
@@ -43,11 +46,35 @@ public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends B
         return descriptorables[descriptor];
     }
 
+    protected final <P> void forEach(Consumer<U> consumer) {
+
+        Objects.requireNonNull(consumer);
+
+        forEach(consumer, (d, c) -> c.accept(d));
+    }
+
+    private <P> void forEach(P parameter, BiConsumer<U, P> consumer) {
+
+        Objects.requireNonNull(consumer);
+
+        final int numElements = numArrayElements;
+
+        for (int i = 0; i < numElements; ++ i) {
+
+            final U descriptorable = descriptorables[i];
+
+            if (descriptorable != null) {
+
+                consumer.accept(descriptorable, parameter);
+            }
+        }
+    }
+
     final <F, A> U addDescriptorable(F factoryParameter, A allocateParameter, DescriptorableFactory<F, U> descriptorableFactory, BiFunction<V, A, U> freeListAllocator) {
 
         Objects.requireNonNull(descriptorableFactory);
 
-        int descriptor = Array.findIndex(descriptorables, 0, numArrayElements, e -> e == null);
+        int descriptor = Array.findIndexWithClosureAllocation(descriptorables, 0, numArrayElements, e -> e == null);
 
         if (descriptor == -1) {
 
@@ -66,7 +93,7 @@ public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends B
             result = freeListAllocator.apply(freeList, allocateParameter);
         }
         else {
-            result = descriptorableFactory.create(/* descriptor,*/ factoryParameter);
+            result = descriptorableFactory.create(factoryParameter);
         }
 
         Objects.requireNonNull(result);
@@ -87,5 +114,16 @@ public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends B
         freeList.free(descriptorable);
 
         decrementNumElements();
+    }
+
+    protected final U removeDescriptorable(int descriptor) {
+
+        Checks.isDescriptor(descriptor);
+
+        final U descriptorable = getDescriptorable(descriptor);
+
+        removeDescriptorable(descriptorable);
+
+        return descriptorable;
     }
 }

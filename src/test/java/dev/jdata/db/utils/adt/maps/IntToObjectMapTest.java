@@ -5,9 +5,9 @@ import java.util.List;
 public final class IntToObjectMapTest extends BaseIntToIntegerOrObjectTest<String[], IntToObjectMap<String>> {
 
     @Override
-    IntToObjectMap<String> createMap(int initialCapacity) {
+    IntToObjectMap<String> createMap(int initialCapacityExponent) {
 
-        return new IntToObjectMap<>(initialCapacity, String[]::new);
+        return new IntToObjectMap<>(initialCapacityExponent, String[]::new);
     }
 
     @Override

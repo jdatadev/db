@@ -1,5 +1,6 @@
 package dev.jdata.db.engine.transactions.mvcc;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -13,15 +14,16 @@ import dev.jdata.db.engine.transactions.TransactionMechanism;
 import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.schema.Table;
 import dev.jdata.db.utils.adt.CapacityExponents;
+import dev.jdata.db.utils.adt.arrays.ILongArrayGetters;
 import dev.jdata.db.utils.adt.arrays.IntArray;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.adt.arrays.LongArray;
 import dev.jdata.db.utils.adt.buffers.BitBuffer;
+import dev.jdata.db.utils.adt.buffers.BufferUtil;
 import dev.jdata.db.utils.adt.lists.BaseList;
 import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadDoublyLinkedList;
 import dev.jdata.db.utils.adt.lists.LongNodeSetter;
 import dev.jdata.db.utils.adt.maps.IntToLongMap;
-import dev.jdata.db.utils.adt.sets.LongSet;
+import dev.jdata.db.utils.adt.sets.ILongSet;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
@@ -29,7 +31,7 @@ import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.scalars.Integers;
 
-final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTransactionState> implements PrintDebug {
+public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTransactionState> implements PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MVCC_TRANSACTION;
 
@@ -108,8 +110,8 @@ final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTra
     private final BitBuffer updateRows;
     private final BitBuffer updateAllRows;
 /*
-    private final MVCCBitBuffer updateToExistingRows;
-    private final MVCCBitBuffer updateToInsertRows;
+    private final BitBuffer updateToExistingRows;
+    private final BitBuffer updateToInsertRows;
 */
     private final BitBuffer deleteRows;
     private final IntArray deleteAllRows;
@@ -121,7 +123,7 @@ final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTra
 
     private int operationSequenceNoAllocator;
 
-    MVCCTransaction() {
+    public MVCCTransaction() {
         this(20);
     }
 
@@ -170,7 +172,7 @@ final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTra
         return hasUpdates[tableId];
     }
 
-    public boolean select(TransactionSelect select, BufferedRows commitedRows, LongSet addedRowIdsDst, LongSet removedRowIdsDst) {
+    public boolean select(TransactionSelect select, BufferedRows commitedRows, ILongSet addedRowIdsDst, ILongSet removedRowIdsDst) {
 
         Objects.requireNonNull(select);
         Checks.isNull(commitedRows, hasUpdates(select.getTableId()));
@@ -261,7 +263,7 @@ final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTra
     }
 
     @Override
-    public OperationResult insertRows(MVCCTransactionState mvccSharedState, Table table, int statementId, LargeLongArray rowIds, DMLInsertRows rows) {
+    public OperationResult insertRows(MVCCTransactionState mvccSharedState, Table table, int statementId, ILongArrayGetters rowIds, DMLInsertRows rows) {
 
         if (DEBUG) {
 
@@ -281,7 +283,7 @@ final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTra
     }
 
     @Override
-    public OperationResult updateRows(MVCCTransactionState mvccSharedState, Table table, int statementId, LargeLongArray rowIds, DMLUpdateRows rows) {
+    public OperationResult updateRows(MVCCTransactionState mvccSharedState, Table table, int statementId, ILongArrayGetters rowIds, DMLUpdateRows rows) {
 
         if (DEBUG) {
 
@@ -329,7 +331,7 @@ final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTra
     }
 
     @Override
-    public OperationResult deleteRows(MVCCTransactionState mvccSharedState, Table table, int statementId, LargeLongArray rowIds) {
+    public OperationResult deleteRows(MVCCTransactionState mvccSharedState, Table table, int statementId, ILongArrayGetters rowIds) {
 
         if (DEBUG) {
 
@@ -563,7 +565,7 @@ final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTra
         }
     }
 
-    private void addInsertUpdateRows(int tableId, DMLOperation dmlOperation, BitBuffer mvccBitBuffer, LargeLongArray rowIds, DMLInsertUpdateRows<?> rows) {
+    private void addInsertUpdateRows(int tableId, DMLOperation dmlOperation, BitBuffer mvccBitBuffer, ILongArrayGetters rowIds, DMLInsertUpdateRows<?> rows) {
 
         if (DEBUG) {
 
@@ -582,7 +584,7 @@ final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTra
         }
     }
 
-    private void addInsertUpdateRowsImpl(int tableId, DMLOperation dmlOperation, BitBuffer mvccBitBuffer, LargeLongArray rowIds, DMLInsertUpdateRows<?> rows, long numRows) {
+    private void addInsertUpdateRowsImpl(int tableId, DMLOperation dmlOperation, BitBuffer mvccBitBuffer, ILongArrayGetters rowIds, DMLInsertUpdateRows<?> rows, long numRows) {
 
         if (DEBUG) {
 
@@ -606,7 +608,7 @@ final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTra
         }
     }
 
-    private static void addInsertUpdateRowsImpl(BitBuffer mvccBitBuffer, LargeLongArray rowIds, DMLInsertUpdateRows<?> rows, long numRows) {
+    private static void addInsertUpdateRowsImpl(BitBuffer mvccBitBuffer, ILongArrayGetters rowIds, DMLInsertUpdateRows<?> rows, long numRows) {
 
         if (DEBUG) {
 
@@ -663,7 +665,7 @@ final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTra
                 mvccBitBuffer.addUnsignedLong(rowId);
             }
 
-            final byte[] rowBuffer = rows.getRowBuffer(i);
+            final ByteBuffer rowBuffer = rows.getRowBuffer(i);
             final long rowBufferBitOffset = rows.getRowBufferBitOffset(i);
 
             for (int j = 0; j < numTableColumns; ++ j) {
@@ -672,7 +674,7 @@ final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTra
 
                     final int closureJ = j;
 
-                    PrintDebug.debug(debugClass, "add row column", b -> b.add("i", closureI).add("j", closureJ).add("rowBuffer", Arrays.toString(rowBuffer))
+                    PrintDebug.debug(debugClass, "add row column", b -> b.add("i", closureI).add("j", closureJ).add("rowBuffer", BufferUtil.toString(rowBuffer))
                             .add("rowBufferBitOffset", rowBufferBitOffset));
                 }
 

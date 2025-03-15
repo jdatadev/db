@@ -18,8 +18,6 @@ public abstract class BaseIntMap<T> extends BaseExponentMap<int[]> implements In
 
     private static final int NO_KEY = -1;
 
-    protected static final int NO_INDEX= -1;
-
     private final IntFunction<T> createValues;
 
     private T values;
@@ -278,13 +276,13 @@ public abstract class BaseIntMap<T> extends BaseExponentMap<int[]> implements In
 
         for (int i = hashTableIndex; i < keyMapLength; ++ i) {
 
-            final long mapKey = keyMap[i];
+            final int mapKey = keyMap[i];
 
             if (mapKey == key) {
 
                 if (DEBUG) {
 
-                    debug("add to map foundIndex=" + i);
+                    debug("remove from map foundIndex=" + i);
                 }
 
                 keyMap[i] = NO_KEY;
@@ -304,13 +302,13 @@ public abstract class BaseIntMap<T> extends BaseExponentMap<int[]> implements In
 
             for (int i = 0; i < hashTableIndex; ++ i) {
 
-                final long mapKey = keyMap[i];
+                final int mapKey = keyMap[i];
 
                 if (mapKey == key) {
 
                     if (DEBUG) {
 
-                        debug("add to map foundIndex=" + i);
+                        debug("remove from map foundIndex=" + i);
                     }
 
                     keyMap[i] = NO_KEY;
@@ -397,11 +395,13 @@ public abstract class BaseIntMap<T> extends BaseExponentMap<int[]> implements In
         return values;
     }
 
+    @Deprecated // move to base class?
     static boolean getPutNewAdded(long putResult) {
 
         return putResult >>> 32 != 0L;
     }
 
+    @Deprecated // move to base class?
     protected static int getPutIndex(long putResult) {
 
         return (int)(putResult & 0xFFFFFFFFL);
@@ -429,7 +429,7 @@ public abstract class BaseIntMap<T> extends BaseExponentMap<int[]> implements In
 
         for (int i = hashTableIndex; i < keyMapLength; ++ i) {
 
-            final long mapKey = keyMap[i];
+            final int mapKey = keyMap[i];
 
             if (mapKey == NO_KEY) {
 
@@ -463,7 +463,7 @@ public abstract class BaseIntMap<T> extends BaseExponentMap<int[]> implements In
 
             for (int i = 0; i < hashTableIndex; ++ i) {
 
-                final long mapKey = keyMap[i];
+                final int mapKey = keyMap[i];
 
                 if (mapKey == NO_KEY) {
 

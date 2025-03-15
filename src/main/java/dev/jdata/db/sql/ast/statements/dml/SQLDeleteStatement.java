@@ -9,7 +9,7 @@ import dev.jdata.db.sql.ast.clauses.SQLWhereClause;
 import dev.jdata.db.sql.ast.statements.SQLStatementVisitor;
 import dev.jdata.db.sql.ast.statements.trigger.SQLTriggeredStatement;
 
-public final class SQLDeleteStatement extends SQLDMLStatement implements SQLTriggeredStatement {
+public final class SQLDeleteStatement extends SQLDMLUpdatingStatement implements SQLTriggeredStatement {
 
     private final long deleteKeyword;
     private final long fromKeyword;
@@ -62,7 +62,7 @@ public final class SQLDeleteStatement extends SQLDMLStatement implements SQLTrig
     }
 
     @Override
-    public <T, R> R visit(SQLStatementVisitor<T, R> visitor, T parameter) {
+    public <P, R, E extends Exception> R visit(SQLStatementVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onDelete(this, parameter);
     }

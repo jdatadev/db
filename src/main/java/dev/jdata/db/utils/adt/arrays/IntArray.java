@@ -1,14 +1,14 @@
 package dev.jdata.db.utils.adt.arrays;
 
-import dev.jdata.db.utils.adt.Clearable;
+import dev.jdata.db.utils.adt.IClearable;
 
-public final class IntArray implements IIntArray, Clearable {
+public final class IntArray implements IIntArray, IClearable {
 
-    private final IntLargeArray delegate;
+    private final LargeIntArray delegate;
 
     public IntArray(int initialOuterCapacity, int innerCapacityExponent) {
 
-        this.delegate = new IntLargeArray(initialOuterCapacity, innerCapacityExponent);
+        this.delegate = new LargeIntArray(initialOuterCapacity, innerCapacityExponent);
     }
 
     @Override

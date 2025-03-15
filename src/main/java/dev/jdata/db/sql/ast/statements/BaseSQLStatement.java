@@ -6,7 +6,7 @@ import dev.jdata.db.sql.ast.BaseSQLElement;
 
 public abstract class BaseSQLStatement extends BaseSQLElement {
 
-    public abstract <T, R> R visit(SQLStatementVisitor<T, R> visitor, T parameter);
+    public abstract <P, R, E extends Exception> R visit(SQLStatementVisitor<P, R, E> visitor, P parameter) throws E;
 
     protected BaseSQLStatement(Context context) {
         super(context);

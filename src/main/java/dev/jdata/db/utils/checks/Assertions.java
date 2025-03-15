@@ -1,7 +1,7 @@
 package dev.jdata.db.utils.checks;
 
 import dev.jdata.db.utils.adt.Contains;
-import dev.jdata.db.utils.adt.elements.Elements;
+import dev.jdata.db.utils.adt.elements.IElements;
 
 public class Assertions {
 
@@ -85,7 +85,7 @@ public class Assertions {
         }
     }
 
-    public static void areSameNumElements(Elements elements1, Elements elements2) {
+    public static void areSameNumElements(IElements elements1, IElements elements2) {
 
         if (elements1.getNumElements() != elements2.getNumElements()) {
 

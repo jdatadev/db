@@ -3,9 +3,13 @@ package dev.jdata.db.utils.adt.sets;
 import java.util.Arrays;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.CapacityExponents;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
+import dev.jdata.db.utils.adt.lists.BaseList;
+import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadSinglyLinkedList;
+import dev.jdata.db.utils.adt.lists.LongNodeSetter;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
@@ -18,10 +22,20 @@ public final class LongSet extends BaseIntegerSet<long[]> implements ILongSet {
 
     private static final long NO_ELEMENT = -1L;
 
+    private static final LongNodeSetter<LongSet> headSetter = (i, h) -> i.scratchSet[i.scratcHashSetIndex] = h;
+    private static final LongNodeSetter<LongSet> tailSetter = (i, t) -> { };
+
     public static LongSet of(long ... values) {
 
         return new LongSet(values);
     }
+
+    private final int bucketsInnerCapacity;
+
+    private LargeLongMultiHeadSinglyLinkedList<LongSet> buckets;
+
+    private int scratcHashSetIndex;
+    private long[] scratchSet;
 
     public LongSet() {
         this(3);
@@ -32,7 +46,19 @@ public final class LongSet extends BaseIntegerSet<long[]> implements ILongSet {
     }
 
     public LongSet(int initialCapacityExponent, float loadFactor) {
+        this(initialCapacityExponent, loadFactor, BUCKETS_INNER_CAPACITY_EXPONENT);
+    }
+
+    private LongSet(int initialCapacityExponent, float loadFactor, int bucketsInnerCapacityExponent) {
         super(initialCapacityExponent, loadFactor, long[]::new, LongSet::clearSet);
+
+        Checks.isCapacityExponent(bucketsInnerCapacityExponent);
+
+        final int bucketsInnerCapacity = CapacityExponents.computeCapacity(bucketsInnerCapacityExponent);
+
+        this.bucketsInnerCapacity = bucketsInnerCapacity;
+
+        this.buckets = new LargeLongMultiHeadSinglyLinkedList<>(BUCKETS_OUTER_INITIAL_CAPACITY, bucketsInnerCapacity);
     }
 
     private LongSet(long[] values) {
@@ -42,6 +68,14 @@ public final class LongSet extends BaseIntegerSet<long[]> implements ILongSet {
 
             add(value);
         }
+    }
+
+    @Override
+    public void clear() {
+
+        super.clear();
+
+        buckets.clear();
     }
 
     @Override
@@ -58,30 +92,9 @@ public final class LongSet extends BaseIntegerSet<long[]> implements ILongSet {
 
         final long[] set = getHashed();
 
-        final int setLength = set.length;
+        final long bucketHeadNode = set[hashSetIndex];
 
-        boolean found = false;
-
-        for (int i = hashSetIndex; i < setLength; ++ i) {
-
-            if (set[i] == element) {
-
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-
-            for (int i = 0; i < hashSetIndex; ++ i) {
-
-                if (set[i] == element) {
-
-                    found = true;
-                    break;
-                }
-            }
-        }
+        final boolean found = bucketHeadNode != BaseList.NO_NODE && buckets.contains(element, bucketHeadNode);
 
         if (DEBUG) {
 
@@ -91,6 +104,7 @@ public final class LongSet extends BaseIntegerSet<long[]> implements ILongSet {
         return found;
     }
 
+    @Override
     public void add(long value) {
 
         Checks.isNotNegative(value);
@@ -115,6 +129,7 @@ public final class LongSet extends BaseIntegerSet<long[]> implements ILongSet {
         }
     }
 
+    @Override
     public boolean remove(long element) {
 
         Checks.isNotNegative(element);
@@ -131,74 +146,18 @@ public final class LongSet extends BaseIntegerSet<long[]> implements ILongSet {
             debugFormatln("lookup hashTableIndex=%d key=%d keyMask=0x%08x", hashSetIndex, element, getKeyMask());
         }
 
-        final long[] set = getHashed();
+        final long bucketHeadNode = getHashed()[hashSetIndex];
 
-        final int setLength = set.length;
+        final boolean removed;
 
-        boolean removed = false;
+        if (bucketHeadNode == BaseList.NO_NODE) {
 
-        boolean done = false;
-
-        for (int i = hashSetIndex; i < setLength; ++ i) {
-
-            final long setElement = set[i];
-
-            if (setElement == element) {
-
-                if (DEBUG) {
-
-                    debug("add to set foundIndex=" + i);
-                }
-
-                set[i] = NO_ELEMENT;
-
-                removed = true;
-                break;
-            }
-            else if (setElement == NO_ELEMENT) {
-
-                done = true;
-
-                break;
-            }
+            removed = false;
         }
+        else {
+            this.scratcHashSetIndex = hashSetIndex;
 
-        if (!removed && !done) {
-
-            for (int i = 0; i < hashSetIndex; ++ i) {
-
-                final long setElement = set[i];
-
-                if (setElement == element) {
-
-                    if (DEBUG) {
-
-                        debug("add to set foundIndex=" + i);
-                    }
-
-                    set[i] = NO_ELEMENT;
-
-                    removed = true;
-                    break;
-                }
-                else if (setElement == NO_ELEMENT) {
-
-                    if (ASSERT) {
-
-                        done = true;
-                    }
-
-                    break;
-                }
-            }
-        }
-
-        if (ASSERT) {
-
-            if (!removed && !done) {
-
-                throw new IllegalStateException();
-            }
+            removed = buckets.removeNodeByValue(this, element, bucketHeadNode, BaseList.NO_NODE, headSetter, tailSetter);
         }
 
         if (removed) {
@@ -226,6 +185,14 @@ public final class LongSet extends BaseIntegerSet<long[]> implements ILongSet {
 
         clearSet(newSet);
 
+        final LargeLongMultiHeadSinglyLinkedList<LongSet> oldBuckets = buckets;
+
+        final int newBucketsOuterCapacity = oldBuckets.getNumOuterAllocatedEntries();
+
+        final LargeLongMultiHeadSinglyLinkedList<LongSet> newBuckets = new LargeLongMultiHeadSinglyLinkedList<>(newBucketsOuterCapacity, bucketsInnerCapacity);
+
+        this.buckets = newBuckets;
+
         final int setLength = set.length;
 
         for (int i = 0; i < setLength; ++ i) {
@@ -234,7 +201,10 @@ public final class LongSet extends BaseIntegerSet<long[]> implements ILongSet {
 
             if (element != NO_ELEMENT) {
 
-                add(newSet, element);
+                for (long node = element; node != BaseList.NO_NODE; node = oldBuckets.getNextNode(node)) {
+
+                    add(newSet, oldBuckets.getValue(node));
+                }
             }
         }
 
@@ -255,96 +225,21 @@ public final class LongSet extends BaseIntegerSet<long[]> implements ILongSet {
 
         final int hashSetIndex = HashFunctions.hashIndex(value, getKeyMask());
 
+        final long bucketHeadNode = set[hashSetIndex];
+
         if (DEBUG) {
 
-            debugFormatln("lookup hashSetIndex=%d value=%d keyMask=0x%08x", hashSetIndex, value, getKeyMask());
+            debugFormatln("lookup hashSetIndex=%d value=%d keyMask=0x%08x bucketHeadNode=0x%016x", hashSetIndex, value, getKeyMask(), bucketHeadNode);
         }
 
-        final int setLength = set.length;
+        final boolean newAdded = bucketHeadNode == BaseList.NO_NODE || !buckets.contains(value, bucketHeadNode);
 
-        boolean found = false;
+        if (newAdded) {
 
-        boolean newAdded = false;
+            this.scratcHashSetIndex = hashSetIndex;
+            this.scratchSet = set;
 
-        for (int i = hashSetIndex; i < setLength; ++ i) {
-
-            final long setElement = set[i];
-
-            if (setElement == NO_ELEMENT) {
-
-                if (DEBUG) {
-
-                    debug("add to set foundIndex=" + i);
-                }
-
-                set[i] = value;
-
-                found = true;
-
-                newAdded = true;
-                break;
-            }
-            else if (setElement == value) {
-
-                if (DEBUG) {
-
-                    debug("add to set foundIndex=" + i);
-                }
-
-                set[i] = value;
-
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-
-            for (int i = 0; i < hashSetIndex; ++ i) {
-
-                final long setElement = set[i];
-
-                if (setElement == NO_ELEMENT) {
-
-                    if (DEBUG) {
-
-                        debug("add to set foundIndex=" + i);
-                    }
-
-                    set[i] = value;
-
-                    if (ASSERT) {
-
-                        found = true;
-                    }
-
-                    newAdded = true;
-                    break;
-                }
-                else if (setElement == value) {
-
-                    if (DEBUG) {
-
-                        debug("add to set foundIndex=" + i);
-                    }
-
-                    set[i] = value;
-
-                    if (ASSERT) {
-
-                        found = true;
-                    }
-                    break;
-                }
-            }
-        }
-
-        if (ASSERT) {
-
-            if (!found) {
-
-                throw new IllegalStateException();
-            }
+            buckets.addHead(this, value, bucketHeadNode, BaseList.NO_NODE, headSetter, tailSetter);
         }
 
         if (DEBUG) {

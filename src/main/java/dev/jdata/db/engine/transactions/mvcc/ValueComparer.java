@@ -6,12 +6,12 @@ import dev.jdata.db.engine.transactions.RowValue;
 import dev.jdata.db.engine.transactions.RowValueType;
 import dev.jdata.db.engine.transactions.SelectColumn;
 import dev.jdata.db.engine.transactions.TransactionSelect;
-import dev.jdata.db.utils.adt.Clearable;
+import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.buffers.BitBuffer;
 import dev.jdata.db.utils.adt.decimals.MutableDecimal;
 import dev.jdata.db.utils.checks.Checks;
 
-final class ValueComparer implements Clearable {
+final class ValueComparer implements IClearable {
 
     private final MutableDecimal scratchMutableDecimal;
 

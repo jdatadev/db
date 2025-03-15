@@ -18,8 +18,6 @@ public abstract class BaseLongMap<T> extends BaseExponentMap<long[]> implements 
 
     private static final long NO_KEY = -1L;
 
-    protected static final int NO_INDEX= -1;
-
     private final IntFunction<T> createValues;
 
     private T values;
@@ -282,7 +280,7 @@ public abstract class BaseLongMap<T> extends BaseExponentMap<long[]> implements 
 
                 if (DEBUG) {
 
-                    debug("add to map foundIndex=" + i);
+                    debug("remove from map foundIndex=" + i);
                 }
 
                 keyMap[i] = NO_KEY;
@@ -308,7 +306,7 @@ public abstract class BaseLongMap<T> extends BaseExponentMap<long[]> implements 
 
                     if (DEBUG) {
 
-                        debug("add to map foundIndex=" + i);
+                        debug("remove from map foundIndex=" + i);
                     }
 
                     keyMap[i] = NO_KEY;

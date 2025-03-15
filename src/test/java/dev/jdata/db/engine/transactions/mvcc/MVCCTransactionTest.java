@@ -1,5 +1,6 @@
 package dev.jdata.db.engine.transactions.mvcc;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.function.IntFunction;
 
@@ -23,7 +24,7 @@ import dev.jdata.db.schema.Column;
 import dev.jdata.db.schema.Table;
 import dev.jdata.db.schema.types.IntegerType;
 import dev.jdata.db.test.unit.BaseTest;
-import dev.jdata.db.utils.adt.arrays.LongLargeArray;
+import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.adt.arrays.ObjectArray;
 import dev.jdata.db.utils.adt.sets.LongSet;
 
@@ -60,12 +61,12 @@ public final class MVCCTransactionTest extends BaseTest {
         final long rowId = 345L;
         final int intValue = 56;
 
-        final Column tableColumn = new Column(IntegerType.INSTANCE, false);
+        final Column tableColumn = new Column("testcolumn" , IntegerType.INSTANCE, false);
         final Table table = new Table(tableName, tableId, Arrays.asList(tableColumn));
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LongLargeArray rowIds = new LongLargeArray(1, 10);
+        final LargeLongArray rowIds = new LargeLongArray(1, 10);
 
         final DMLInsertRows rows = makeInsertRows(rowId, rowIds, intValue);
 
@@ -122,12 +123,12 @@ public final class MVCCTransactionTest extends BaseTest {
         final long rowId = 345L;
         final int intValue = 56;
 
-        final Column tableColumn = new Column(IntegerType.INSTANCE, false);
+        final Column tableColumn = new Column("testcolumn", IntegerType.INSTANCE, false);
         final Table table = new Table(tableName, tableId, Arrays.asList(tableColumn));
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LongLargeArray rowIds = new LongLargeArray(1, 10);
+        final LargeLongArray rowIds = new LargeLongArray(1, 10);
 
         final DMLUpdateRows rows = makeUpdateRows(rowId, rowIds, intValue);
 
@@ -224,12 +225,12 @@ public final class MVCCTransactionTest extends BaseTest {
         final long rowId = 345L;
         final int intValue = 56;
 
-        final Column tableColumn = new Column(IntegerType.INSTANCE, false);
+        final Column tableColumn = new Column("testcolumn", IntegerType.INSTANCE, false);
         final Table table = new Table(tableName, tableId, Arrays.asList(tableColumn));
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LongLargeArray rowIds = new LongLargeArray(1, 10);
+        final LargeLongArray rowIds = new LargeLongArray(1, 10);
 
         rowIds.add(rowId);
 
@@ -277,12 +278,12 @@ public final class MVCCTransactionTest extends BaseTest {
         final long rowId = 345L;
         final int intValue = 56;
 
-        final Column tableColumn = new Column(IntegerType.INSTANCE, false);
+        final Column tableColumn = new Column("testcolumn", IntegerType.INSTANCE, false);
         final Table table = new Table(tableName, tableId, Arrays.asList(tableColumn));
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LongLargeArray rowIds = new LongLargeArray(1, 10);
+        final LargeLongArray rowIds = new LargeLongArray(1, 10);
 
         final DMLInsertRows rows = makeInsertRows(rowId, rowIds, intValue);
 
@@ -358,12 +359,12 @@ public final class MVCCTransactionTest extends BaseTest {
 */
     }
 
-    private static DMLInsertRows makeInsertRows(long rowId, LongLargeArray rowIds, int intValue) {
+    private static DMLInsertRows makeInsertRows(long rowId, LargeLongArray rowIds, int intValue) {
 
         return makeInsertUpdateRows(rowId, rowIds, new DMLInsertRows(), new InsertRow(), intValue, InsertRow[]::new);
     }
 
-    private static DMLUpdateRows makeUpdateRows(long rowId, LongLargeArray rowIds, int intValue) {
+    private static DMLUpdateRows makeUpdateRows(long rowId, LargeLongArray rowIds, int intValue) {
 
         return makeInsertUpdateRows(rowId, rowIds, new DMLUpdateRows(), new UpdateRow(), intValue, UpdateRow[]::new);
     }
@@ -373,7 +374,7 @@ public final class MVCCTransactionTest extends BaseTest {
         return makeInsertUpdateRows(new DMLUpdateRows(), new UpdateRow(), intValue, UpdateRow[]::new);
     }
 
-    private static <T extends InsertUpdateRow, U extends DMLInsertUpdateRows<T>> U makeInsertUpdateRows(long rowId, LongLargeArray rowIds, U rows, T row, int intValue,
+    private static <T extends InsertUpdateRow, U extends DMLInsertUpdateRows<T>> U makeInsertUpdateRows(long rowId, LargeLongArray rowIds, U rows, T row, int intValue,
             IntFunction<T[]> createRowArray) {
 
         rowIds.add(rowId);
@@ -391,7 +392,7 @@ public final class MVCCTransactionTest extends BaseTest {
 
         final byte[] rowBuffer = new byte[] { 0, 0, 0, (byte)intValue };
 
-        row.initialize(rowBuffer, 0L);
+        row.initialize(ByteBuffer.wrap(rowBuffer), 0L);
 
         final T[] rowArray = createRowArray.apply(1);
 

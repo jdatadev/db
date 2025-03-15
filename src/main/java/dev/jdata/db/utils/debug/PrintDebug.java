@@ -22,7 +22,7 @@ public interface PrintDebug {
 
         NameValue(String name, Object parameterValue) {
 
-            this.name = Checks.isJavaVariable(name);
+            this.name = Checks.isJavaVariableOrMethodWithoutParameters(name);
             this.value = Objects.requireNonNull(parameterValue);
         }
     }
@@ -74,6 +74,13 @@ public interface PrintDebug {
         public NameValueBuilder binary(String name, long value) {
 
             nameValues.add(new NameValue(name, binaryString(value)));
+
+            return this;
+        }
+
+        public NameValueBuilder hex(String name, long value) {
+
+            nameValues.add(new NameValue(name, hexString(value)));
 
             return this;
         }
@@ -405,5 +412,10 @@ public interface PrintDebug {
     public static String binaryString(long value) {
 
         return BitsUtil.BINARY_PREFIX + Long.toBinaryString(value);
+    }
+
+    public static String hexString(long value) {
+
+        return "0x" + Long.toHexString(value);
     }
 }

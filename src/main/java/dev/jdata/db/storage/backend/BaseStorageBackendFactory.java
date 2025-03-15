@@ -3,7 +3,8 @@ package dev.jdata.db.storage.backend;
 import java.io.IOException;
 import java.util.Objects;
 
-import dev.jdata.db.storage.backend.tabledata.NumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.ParameterizedNumStorageBitsGetter;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 
 public abstract class BaseStorageBackendFactory<C extends StorageBackendConfiguration, T extends StorageBackend> implements StorageBackendFactory<C, T> {

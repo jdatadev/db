@@ -1,8 +1,11 @@
 package dev.jdata.db.utils.bits;
 
+import java.util.function.ToIntFunction;
+
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
+import dev.jdata.db.utils.function.ByteGetter;
 import dev.jdata.db.utils.math.Sign;
 import dev.jdata.db.utils.scalars.Integers;
 
@@ -533,10 +536,17 @@ public class BitBufferUtil {
 
     public static void copyBits(byte[] inputBuffer, long inputBufferBitOffset, long numInputBits, byte[] outputBuffer, long outputBufferBitOffset, long numOutputBits) {
 
+        copyBits(inputBuffer, inputBufferBitOffset, numInputBits, outputBuffer, outputBufferBitOffset, numOutputBits, (b, i) -> b[i], b -> b.length);
+    }
+
+    public static <T> void copyBits(T inputBuffer, long inputBufferBitOffset, long numInputBits, byte[] outputBuffer, long outputBufferBitOffset, long numOutputBits,
+            ByteGetter<T> byteGetter, ToIntFunction<T> lengthGetter) {
+
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("inputBuffer.length", inputBuffer.length).add("inputBufferBitOffset", inputBufferBitOffset).add("numInputBits", numInputBits)
-                    .add("outputBuffer.length", outputBuffer.length).add("outputBufferBitOffset", outputBufferBitOffset).add("numOutputBits", numOutputBits));
+            PrintDebug.enter(debugClass, b -> b.add("inputBuffer.length", lengthGetter.applyAsInt(inputBuffer)).add("inputBufferBitOffset", inputBufferBitOffset)
+                    .add("numInputBits", numInputBits).add("outputBuffer.length", outputBuffer.length).add("outputBufferBitOffset", outputBufferBitOffset)
+                    .add("numOutputBits", numOutputBits));
         }
 
         final long inputBitOffset;
@@ -566,10 +576,10 @@ public class BitBufferUtil {
 
         if (totalNumBits <= 8) {
 
-            copyLessOrEqualToEightBits(inputBuffer, inputBitOffset, outputBuffer, outputBitOffset, (int)totalNumBits);
+            copyLessOrEqualToEightBits(inputBuffer, inputBitOffset, outputBuffer, outputBitOffset, (int)totalNumBits, byteGetter, lengthGetter);
         }
         else {
-            copyMoreThanEightBits(inputBuffer, inputBitOffset, outputBuffer, outputBitOffset, totalNumBits);
+            copyMoreThanEightBits(inputBuffer, inputBitOffset, outputBuffer, outputBitOffset, totalNumBits, byteGetter, lengthGetter);
         }
 
         if (DEBUG) {
@@ -578,11 +588,12 @@ public class BitBufferUtil {
         }
     }
 
-    private static void copyLessOrEqualToEightBits(byte[] inputBuffer, long inputBitOffset, byte[] outputBuffer, long outputBitOffset, int totalNumBits) {
+    private static <T> void copyLessOrEqualToEightBits(T inputBuffer, long inputBitOffset, byte[] outputBuffer, long outputBitOffset, int totalNumBits, ByteGetter<T> byteGetter,
+            ToIntFunction<T> lengthGetter) {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("inputBuffer.length", inputBuffer.length).add("inputBitOffset", inputBitOffset)
+            PrintDebug.enter(debugClass, b -> b.add("inputBuffer.length", lengthGetter.applyAsInt(inputBuffer)).add("inputBitOffset", inputBitOffset)
                     .add("outputBuffer.length", outputBuffer.length).add("outputBitOffset", outputBitOffset).add("totalNumBits", totalNumBits));
         }
 
@@ -598,14 +609,14 @@ public class BitBufferUtil {
 
             final int shift = numInputBits1 - totalNumBits;
 
-            inputBits = retrieve(inputBuffer[inputBufferByteOffset], shift, totalNumBits);
+            inputBits = retrieve(byteGetter.get(inputBuffer, inputBufferByteOffset), shift, totalNumBits);
         }
         else {
             final int numInputBits2 = totalNumBits - numInputBits1;
 
             inputBits = (byte)(
-                     (retrieve(inputBuffer[inputBufferByteOffset], numInputBits1) << numInputBits2)
-                    | retrieve(inputBuffer[inputBufferByteOffset + 1], 8 - numInputBits2, numInputBits2));
+                     (retrieve(byteGetter.get(inputBuffer, inputBufferByteOffset), numInputBits1) << numInputBits2)
+                    | retrieve(byteGetter.get(inputBuffer, inputBufferByteOffset + 1), 8 - numInputBits2, numInputBits2));
         }
 
         if (DEBUG) {
@@ -664,11 +675,12 @@ public class BitBufferUtil {
         }
     }
 
-    private static void copyMoreThanEightBits(byte[] inputBuffer, long startInputBitOffset, byte[] outputBuffer, long startOutputBitOffset, long totalNumBits) {
+    private static <T> void copyMoreThanEightBits(T inputBuffer, long startInputBitOffset, byte[] outputBuffer, long startOutputBitOffset, long totalNumBits,
+            ByteGetter<T> byteGetter, ToIntFunction<T> lengthGetter) {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("inputBuffer.length", inputBuffer.length).add("startInputBitOffset", startInputBitOffset)
+            PrintDebug.enter(debugClass, b -> b.add("inputBuffer.length", lengthGetter.applyAsInt(inputBuffer)).add("startInputBitOffset", startInputBitOffset)
                     .add("outputBuffer.length", outputBuffer.length).add("startInputBitOffset", startInputBitOffset).add("totalNumBits", totalNumBits));
         }
 
@@ -714,7 +726,7 @@ public class BitBufferUtil {
                     final int bitsToCopy = intRemainingBits;
 
                     final int inputRightShift = 8 - bitsToCopy;
-                    final byte inputBits = retrieve(inputBuffer[inputBufferByteOffset], inputRightShift, bitsToCopy);
+                    final byte inputBits = retrieve(byteGetter.get(inputBuffer, inputBufferByteOffset), inputRightShift, bitsToCopy);
 
                     final int inputLeftShift = remainingBitsOfOutputByte - bitsToCopy;
                     final byte mask = (byte)(BitsUtil.mask(bitsToCopy) << inputLeftShift);
@@ -733,7 +745,7 @@ public class BitBufferUtil {
                     final int bitsToCopy1 = remainingBitsOfOutputByte;
 
                     final int inputRightShift1 = remainingBitsOfInputByte - bitsToCopy1;
-                    final byte inputByte = inputBuffer[inputBufferByteOffset];
+                    final byte inputByte = byteGetter.get(inputBuffer, inputBufferByteOffset);
 
                     final byte inputBits1 = retrieve(inputByte, inputRightShift1, bitsToCopy1);
 
@@ -779,7 +791,7 @@ public class BitBufferUtil {
 
                     final int bitsToCopy = remainingBitsOfInputByte;
 
-                    final byte inputBits = retrieve(inputBuffer[inputBufferByteOffset], bitsToCopy);
+                    final byte inputBits = retrieve(byteGetter.get(inputBuffer, inputBufferByteOffset), bitsToCopy);
 
                     final int inputLeftShift = remainingBitsOfOutputByte - bitsToCopy;
                     final byte mask = (byte)(BitsUtil.mask(bitsToCopy) << inputLeftShift);
@@ -804,7 +816,7 @@ public class BitBufferUtil {
 
                     final int bitsToCopy = remainingBitsOfInputByte;
 
-                    final byte inputBits = retrieve(inputBuffer[inputBufferByteOffset], bitsToCopy);
+                    final byte inputBits = retrieve(byteGetter.get(inputBuffer, inputBufferByteOffset), bitsToCopy);
 
                     final int inputLeftShift = remainingBitsOfOutputByte - bitsToCopy;
                     final byte mask = (byte)(BitsUtil.mask(bitsToCopy) << inputLeftShift);
@@ -831,7 +843,7 @@ public class BitBufferUtil {
 
                     final int inputRightShift = remainingBitsOfInputByte - bitsToCopy;
 
-                    final byte inputBits = retrieve(inputBuffer[inputBufferByteOffset], inputRightShift, bitsToCopy);
+                    final byte inputBits = retrieve(byteGetter.get(inputBuffer, inputBufferByteOffset), inputRightShift, bitsToCopy);
 
                     final byte mask = BitsUtil.mask(bitsToCopy);
 

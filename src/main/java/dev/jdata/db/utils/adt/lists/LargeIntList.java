@@ -1,8 +1,8 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.Clearable;
+import dev.jdata.db.utils.adt.IClearable;
 
-public interface LargeIntList extends IntList, LargeList, Clearable {
+public interface LargeIntList extends IntList, LargeList, IClearable {
 
     int getValue(long node);
 

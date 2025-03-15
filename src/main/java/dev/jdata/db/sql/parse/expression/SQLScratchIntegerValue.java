@@ -2,6 +2,8 @@ package dev.jdata.db.sql.parse.expression;
 
 import java.util.Objects;
 
+import dev.jdata.db.utils.adt.integers.MutableLargeInteger;
+
 public final class SQLScratchIntegerValue {
 
     private long longInteger;
@@ -13,7 +15,7 @@ public final class SQLScratchIntegerValue {
 
     SQLScratchIntegerValue() {
 
-        this.largeInteger = new MutableLargeInteger();
+        this.largeInteger = MutableLargeInteger.newInstance();
 
         this.largeIntegerStringBuilder = new StringBuilder(100);
     }
@@ -43,7 +45,7 @@ public final class SQLScratchIntegerValue {
         return isLongIntegerSet;
     }
 
-    LargeInteger getLargeInteger() {
+    MutableLargeInteger getLargeInteger() {
         return largeInteger;
     }
 

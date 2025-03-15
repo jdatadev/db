@@ -28,12 +28,6 @@ public final class LargeLongSinglyLinkedList extends BaseLargeLongSinglyLinkedLi
     }
 
     @Override
-    public long getValue(long node) {
-
-        return getValues().getValue(this, node);
-    }
-
-    @Override
     public long[] toArray() {
 
         return toListArrayValues(headNode, intNumElements(numElements));
@@ -72,7 +66,7 @@ public final class LargeLongSinglyLinkedList extends BaseLargeLongSinglyLinkedLi
     @Override
     public long addHead(long value) {
 
-        final long result = addHead(value, headNode, tailNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode);
+        final long result = addHeadValue(this, value, headNode, tailNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode);
 
         increaseNumElements();
 
@@ -82,7 +76,7 @@ public final class LargeLongSinglyLinkedList extends BaseLargeLongSinglyLinkedLi
     @Override
     public long addTail(long value) {
 
-        final long result = addTail(value, headNode, tailNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode);
+        final long result = addTailValue(this, value, headNode, tailNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode);
 
         increaseNumElements();
 
@@ -92,7 +86,7 @@ public final class LargeLongSinglyLinkedList extends BaseLargeLongSinglyLinkedLi
     @Override
     public long removeHead() {
 
-        final long result = removeHead(headNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode);
+        final long result = removeHeadAndReturnValue(this, headNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode);
 
         decreaseNumElements();
 
@@ -101,7 +95,7 @@ public final class LargeLongSinglyLinkedList extends BaseLargeLongSinglyLinkedLi
 
     long removeHeadNode() {
 
-        final long result = getValue(removeHeadNodeAndReturnNode(headNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode));
+        final long result = getValue(removeHeadNodeAndReturnNode(this, headNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode));
 
         decreaseNumElements();
 
@@ -110,7 +104,7 @@ public final class LargeLongSinglyLinkedList extends BaseLargeLongSinglyLinkedLi
 
     long removeTailNodeAndReturnNode(long newTailNode) {
 
-        final long result = removeTailNodeAndReturnNode(newTailNode, tailNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode);
+        final long result = removeTailNodeAndReturnNode(this, newTailNode, tailNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode);
 
         decreaseNumElements();
 
@@ -119,15 +113,18 @@ public final class LargeLongSinglyLinkedList extends BaseLargeLongSinglyLinkedLi
 
     void removeNode(long node, long previousNode) {
 
-        removeNode(node, previousNode, headNode, tailNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode);
+        removeNode(this, node, previousNode, headNode, tailNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode);
 
         decreaseNumElements();
     }
 
     @Override
-    public void clear() {
+    void clearNumElements() {
 
-        clearNodes(this, headNode, LargeLongSinglyLinkedList::setHeadNode, LargeLongSinglyLinkedList::setTailNode, l -> l.numElements = 0L);
+        this.headNode = NO_NODE;
+        this.tailNode = NO_NODE;
+
+        this.numElements = 0L;
     }
 
     private void setHeadNode(long headNode) {

@@ -1,8 +1,8 @@
 package dev.jdata.db.sql.ast.statements;
 
+import dev.jdata.db.sql.ast.statements.dml.BaseSQLSelectStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLDeleteStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLInsertStatement;
-import dev.jdata.db.sql.ast.statements.dml.BaseSQLSelectStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateStatement;
 import dev.jdata.db.sql.ast.statements.function.SQLCreateFunctionStatement;
 import dev.jdata.db.sql.ast.statements.function.SQLDropFunctionStatement;
@@ -16,26 +16,26 @@ import dev.jdata.db.sql.ast.statements.table.SQLDropTableStatement;
 import dev.jdata.db.sql.ast.statements.trigger.SQLCreateTriggerStatement;
 import dev.jdata.db.sql.ast.statements.trigger.SQLDropTriggerStatement;
 
-public interface SQLStatementVisitor<T, R> {
+public interface SQLStatementVisitor<P, R, E extends Exception> {
 
-    R onSelect(BaseSQLSelectStatement selectStatement, T parameter);
-    R onInsert(SQLInsertStatement insertStatement, T parameter);
-    R onUpdate(SQLUpdateStatement updateStatement, T parameter);
-    R onDelete(SQLDeleteStatement deleteStatement, T parameter);
+    R onSelect(BaseSQLSelectStatement selectStatement, P parameter) throws E;
+    R onInsert(SQLInsertStatement insertStatement, P parameter) throws E;
+    R onUpdate(SQLUpdateStatement updateStatement, P parameter) throws E;
+    R onDelete(SQLDeleteStatement deleteStatement, P parameter) throws E;
 
-    R onCreateTable(SQLCreateTableStatement createTableStatement, T parameter);
-    R onAlterTable(SQLAlterTableStatement alterTableStatement, T parameter);
-    R onDropTable(SQLDropTableStatement dropTableStatement, T parameter);
+    R onCreateTable(SQLCreateTableStatement createTableStatement, P parameter) throws E;
+    R onAlterTable(SQLAlterTableStatement alterTableStatement, P parameter) throws E;
+    R onDropTable(SQLDropTableStatement dropTableStatement, P parameter) throws E;
 
-    R onCreateIndex(SQLCreateIndexStatement createIndexStatement, T parameter);
-    R onDropIndex(SQLDropIndexStatement dropIndexStatement, T parameter);
+    R onCreateIndex(SQLCreateIndexStatement createIndexStatement, P parameter) throws E;
+    R onDropIndex(SQLDropIndexStatement dropIndexStatement, P parameter) throws E;
 
-    R onCreateTrigger(SQLCreateTriggerStatement createTriggerStatement, T parameter);
-    R onDropTrigger(SQLDropTriggerStatement dropTriggerStatement, T parameter);
+    R onCreateTrigger(SQLCreateTriggerStatement createTriggerStatement, P parameter) throws E;
+    R onDropTrigger(SQLDropTriggerStatement dropTriggerStatement, P parameter) throws E;
 
-    R onCreateProcedure(SQLCreateProcedureStatement createProcedureStatement, T parameter);
-    R onDropProcedure(SQLDropProcedureStatement dropProcedureStatement, T parameter);
+    R onCreateProcedure(SQLCreateProcedureStatement createProcedureStatement, P parameter) throws E;
+    R onDropProcedure(SQLDropProcedureStatement dropProcedureStatement, P parameter) throws E;
 
-    R onCreateFunction(SQLCreateFunctionStatement createFunctionStatement, T parameter);
-    R onDropFunction(SQLDropFunctionStatement dropFunctionStatement, T parameter);
+    R onCreateFunction(SQLCreateFunctionStatement createFunctionStatement, P parameter) throws E;
+    R onDropFunction(SQLDropFunctionStatement dropFunctionStatement, P parameter) throws E;
 }

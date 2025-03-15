@@ -54,7 +54,7 @@ public final class MVCCTransactions {
 
                 this.scratchTransactionId = mvccTransaction.getOriginatingTransactionId();
 
-                final int index = Lists.findIndexWithoutClosure(ongoingOriginatingFromTransactions, this, (t, o) -> t.scratchTransactionId == o.getOriginatingTransactionId());
+                final int index = Lists.findIndex(ongoingOriginatingFromTransactions, this, (o, t) -> o.getOriginatingTransactionId() == t.scratchTransactionId);
 
                 if (index == -1) {
 
@@ -199,7 +199,7 @@ public final class MVCCTransactions {
 
         this.scratchTransactionId = transactionId;
 
-        return Lists.containsWithoutClosure(ongoingTransactions, this, (t, o) -> t.scratchTransactionId == o.getTransactionId());
+        return Lists.contains(ongoingTransactions, this, (o, t) -> o.getTransactionId() == t.scratchTransactionId);
     }
 
     private boolean nonThreadSafeHasOriginatingTransactionId(long transactionId) {
@@ -208,7 +208,7 @@ public final class MVCCTransactions {
 
         this.scratchTransactionId = transactionId;
 
-        return Lists.containsWithoutClosure(ongoingOriginatingFromTransactions, this, (t, o) -> t.scratchTransactionId == o.getTransactionId());
+        return Lists.contains(ongoingOriginatingFromTransactions, this, (o, t) -> o.getTransactionId() == t.scratchTransactionId);
     }
 
     private void releaseTransaction(MVCCTransaction mvccTransaction) {

@@ -5,16 +5,16 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
 
+import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.NumStorageBitsParameters;
+import dev.jdata.db.common.storagebits.ParameterizedNumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.StorageMode;
 import dev.jdata.db.schema.DatabaseSchema;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.SchemaMap;
 import dev.jdata.db.schema.Table;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
 import dev.jdata.db.schema.View;
-import dev.jdata.db.storage.backend.NumStorageBitsParameters;
-import dev.jdata.db.storage.backend.ParameterizedNumStorageBitsGetter;
-import dev.jdata.db.storage.backend.StorageMode;
-import dev.jdata.db.storage.backend.tabledata.NumStorageBitsGetter;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.file.BaseFileTableStorageFileTest.TestData;
@@ -401,7 +401,7 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
         final SchemaMap<Table> tablesSchemaMap = SchemaMap.of(Lists.unmodifiableOf(tables));
         final SchemaMap<View> viewsSchemaMap = SchemaMap.of(Lists.empty());
 
-        final DatabaseSchema databaseSchema = new DatabaseSchema(databaseSchemaVersion, tablesSchemaMap, viewsSchemaMap);
+        final DatabaseSchema databaseSchema = new DatabaseSchema("testdb", databaseSchemaVersion, tablesSchemaMap, viewsSchemaMap);
 
         final VersionedDatabaseSchemas versionedDatabaseSchemas = VersionedDatabaseSchemas.of(Lists.unmodifiableOf(databaseSchema));
 

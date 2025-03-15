@@ -7,9 +7,9 @@ import dev.jdata.db.utils.scalars.Integers;
 public final class LongToObjectMapTest extends BaseLongToIntegerOrObjectTest<String[], LongToObjectMap<String>> {
 
     @Override
-    LongToObjectMap<String> createMap(int initialCapacity) {
+    LongToObjectMap<String> createMap(int initialCapacityExponent) {
 
-        return new LongToObjectMap<>(initialCapacity, String[]::new);
+        return new LongToObjectMap<>(initialCapacityExponent, String[]::new);
     }
 
     @Override

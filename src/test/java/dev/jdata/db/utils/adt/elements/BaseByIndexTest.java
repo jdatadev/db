@@ -1,13 +1,15 @@
 package dev.jdata.db.utils.adt.elements;
-
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public abstract class BaseByIndexTest extends BaseElementsTest {
+
+    protected abstract <T, R> R[] map(T[] array, IntFunction<R[]> createMappedArray, Function<T, R> mapper);
 
     protected abstract <T> boolean containsInstance(T[] array, T instance);
     protected abstract <T> boolean containsInstanceRange(T[] array, int startIndex, int numElements, T instance);
@@ -19,6 +21,20 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
     protected BaseByIndexTest(Class<? extends IndexOutOfBoundsException> indexOutOfBoundsExceptionClass) {
 
         this.indexOutOfBoundsExceptionClass = Objects.requireNonNull(indexOutOfBoundsExceptionClass);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public final void testMap() {
+
+        assertThatThrownBy(() -> map(null, String[]::new, e -> null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> map(create(1), String[]::new, null)).isInstanceOf(NullPointerException.class);
+
+        final String[] oneMapped = map(create(1), String[]::new, String::valueOf);
+        assertThat(oneMapped).containsExactly("1");
+
+        final String[] threeMapped = map(create(1, 2, 3), String[]::new, String::valueOf);
+        assertThat(threeMapped).containsExactly("1", "2", "3");
     }
 
     @Test
@@ -191,16 +207,33 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
     protected static <T, U, E> void checkCopyElements(Function<int[], T> create, Function<T, U> copy, ElementGetter<U, E> elementGetter,
             NumElementsGetter<U> numElementsGetter) {
 
-        checkCopyElements(create, copy, elementGetter, numElementsGetter, (e, i) -> e.equals(i));
+        checkCopyOfElementsByIndex(create, copy, elementGetter, numElementsGetter, (e, i) -> e.equals(i));
     }
 
-    protected static <T, U, E> void checkCopyElements(Function<int[], T> create, Function<T, U> copy, ElementGetter<U, E> elementGetter,
+    protected static <T, U, E> void checkCopyOfElementsByIndex(Function<int[], T> create, Function<T, U> copy, ElementGetter<U, E> elementGetter,
             NumElementsGetter<U> numElementsGetter, ElementComparator<E> elementComparator) {
 
         Objects.requireNonNull(create);
         Objects.requireNonNull(copy);
 
         assertThatThrownBy(() -> copy.apply(null)).isInstanceOf(NullPointerException.class);
+
+        checkCopyOfElementsByIndexNonNull(create, copy, elementGetter, numElementsGetter, elementComparator);
+    }
+
+    protected static <T, U, E> void checkSafeCopyOfElementsByIndex(Function<int[], T> create, Function<T, U> copy, ElementGetter<U, E> elementGetter,
+            NumElementsGetter<U> numElementsGetter, ElementComparator<E> elementComparator) {
+
+        Objects.requireNonNull(create);
+        Objects.requireNonNull(copy);
+
+        assertThat(copy.apply(null)).isNull();
+
+        checkCopyOfElementsByIndexNonNull(create, copy, elementGetter, numElementsGetter, elementComparator);
+    }
+
+    private static <T, U, E> void checkCopyOfElementsByIndexNonNull(Function<int[], T> create, Function<T, U> copy, ElementGetter<U, E> elementGetter,
+            NumElementsGetter<U> numElementsGetter, ElementComparator<E> elementComparator) {
 
         checkCopyIntElements(create, copy, elementGetter, numElementsGetter, elementComparator);
         checkCopyIntElements(create, copy, elementGetter, numElementsGetter, elementComparator, 123);
@@ -225,5 +258,10 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
 
             assertThat(elementComparator.areEqual(elementGetter.getElement(c, i), elements[i])).isTrue();
         }
+    }
+
+    private static Integer[] create(Integer ... values) {
+
+        return values;
     }
 }

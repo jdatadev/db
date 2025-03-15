@@ -10,9 +10,9 @@ import dev.jdata.db.sql.ast.BaseSQLElement;
 import dev.jdata.db.sql.ast.SQLAllocator;
 import dev.jdata.db.sql.ast.SQLFreeable;
 import dev.jdata.db.utils.adt.arrays.LongArray;
-import dev.jdata.db.utils.adt.elements.Elements;
+import dev.jdata.db.utils.adt.elements.IElements;
 
-public final class SQLColumnNames extends BaseSQLElement implements Elements, SQLFreeable {
+public final class SQLColumnNames extends BaseSQLElement implements IElements, SQLFreeable {
 
     private final LongArray names;
 

@@ -3,10 +3,10 @@ package dev.jdata.db.utils.adt.arrays;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.MutableElements;
+import dev.jdata.db.utils.adt.elements.IMutableElements;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class LargeArray<O, I> extends LargeExponentArray implements MutableElements {
+public abstract class LargeArray<O, I> extends LargeExponentArray implements IMutableElements {
 
     private final IntFunction<O> createOuterArray;
 

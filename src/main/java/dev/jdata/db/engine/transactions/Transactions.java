@@ -1,38 +1,48 @@
 package dev.jdata.db.engine.transactions;
 
 import java.util.Objects;
+import java.util.function.IntFunction;
 
+import dev.jdata.db.DBConstants;
 import dev.jdata.db.engine.descriptorables.BaseSingleTypeDescriptorables;
 import dev.jdata.db.utils.adt.maps.LongToObjectMap;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class Transactions<T extends Transaction> extends BaseSingleTypeDescriptorables<Transaction.TransactionState, T> {
+public final class Transactions extends BaseSingleTypeDescriptorables<Transaction.TransactionState, Transaction> {
 
-    public interface TransactionFactory<T extends Transaction> {
+    @FunctionalInterface
+    public interface TransactionFactory {
 
-        T[] createTransactionArray(int length);
-
-        T createTransaction(long globalTransactionId, int transactionDescriptor);
+        Transaction createTransaction();
     }
 
-    private final TransactionFactory<T> transactionFactory;
+    private static final IntFunction<Transaction[]> createTransactionArray = Transaction[]::new;
+
+    private final TransactionFactory transactionFactory;
 
     private long transactionIdAllocator;
 
-    private final LongToObjectMap<T> transactionByGlobalTransactionId;
+    private final LongToObjectMap<Transaction> transactionByGlobalTransactionId;
 
-    public Transactions(long initialTransactionId, TransactionFactory<T> transactionFactory) {
-        super(transactionFactory::createTransactionArray);
+    public Transactions(long initialTransactionId, TransactionFactory transactionFactory) {
+        super(createTransactionArray);
 
-        this.transactionIdAllocator = Checks.isTransactionId(initialTransactionId);
+        this.transactionIdAllocator = initialTransactionId != DBConstants.NO_TRANSACTION_ID ? Checks.isTransactionId(initialTransactionId) : DBConstants.INITIAL_TRANSACTION_ID;
         this.transactionFactory = Objects.requireNonNull(transactionFactory);
 
-        this.transactionByGlobalTransactionId = new LongToObjectMap<>(0, transactionFactory::createTransactionArray);
+        this.transactionByGlobalTransactionId = new LongToObjectMap<>(0, createTransactionArray);
+    }
+
+    public synchronized Transaction getTransaction(int transactionDescriptor) {
+
+        Checks.isTransactionDescriptor(transactionDescriptor);
+
+        return getDescriptorable(transactionDescriptor);
     }
 
     public synchronized int addTransaction() {
 
-        final T transaction = null; // addDescriptorable(this, (d, t) -> t.transactionFactory.createTransaction(t.transactionIdAllocator ++, d));
+        final Transaction transaction = addDescriptorable(this, t -> t.transactionFactory.createTransaction());
 
         Objects.requireNonNull(transaction);
 
@@ -41,7 +51,7 @@ public final class Transactions<T extends Transaction> extends BaseSingleTypeDes
         return transaction.getTransactionDescriptor();
     }
 
-    public synchronized void removeTransaction(T transaction) {
+    public synchronized void removeTransaction(Transaction transaction) {
 
         Objects.requireNonNull(transaction);
 

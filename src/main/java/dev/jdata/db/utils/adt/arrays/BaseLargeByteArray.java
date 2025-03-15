@@ -2,10 +2,10 @@ package dev.jdata.db.utils.adt.arrays;
 
 import java.util.Arrays;
 
-import dev.jdata.db.utils.adt.Clearable;
+import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseLargeByteArray extends LargeExponentArray implements Clearable {
+public abstract class BaseLargeByteArray extends LargeExponentArray implements IClearable {
 
     protected static final int NUM_INNER_ELEMENTS_NUM_BYTES = 4;
 

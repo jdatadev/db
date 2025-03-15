@@ -24,8 +24,8 @@ public final class SQLColumnValueUpdateValue extends BaseSQLElement {
         return columnName;
     }
 
-    public ASTSingle<Expression> getValue() {
-        return value;
+    public Expression getValue() {
+        return value.get();
     }
 
     @Override

@@ -2,9 +2,9 @@ package dev.jdata.db.storage.backend.tabledata.file;
 
 import java.util.Objects;
 
+import dev.jdata.db.common.storagebits.NumStorageBitsParameters;
 import dev.jdata.db.schema.DatabaseSchema;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
-import dev.jdata.db.storage.backend.NumStorageBitsParameters;
 import dev.jdata.db.utils.file.access.AbsoluteDirectoryPath;
 import dev.jdata.db.utils.file.access.AbsoluteFileSystemAccess;
 

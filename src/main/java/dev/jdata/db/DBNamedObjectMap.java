@@ -61,6 +61,13 @@ public abstract class DBNamedObjectMap<T extends DBNamedObject, M extends DBName
         return map.values().stream();
     }
 
+    protected final boolean containsNamedObject(String name) {
+
+        Checks.isDBName(name);
+
+        return map.containsKey(makeKey(name));
+    }
+
     protected final T getNamedObject(String name) {
 
         Checks.isDBName(name);
@@ -78,6 +85,7 @@ public abstract class DBNamedObjectMap<T extends DBNamedObject, M extends DBName
         return map.values();
     }
 
+    @Deprecated // object allocation
     private static String makeKey(String schemaName) {
 
         return schemaName.toLowerCase();

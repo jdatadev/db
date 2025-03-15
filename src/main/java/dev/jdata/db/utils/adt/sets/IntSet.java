@@ -3,33 +3,83 @@ package dev.jdata.db.utils.adt.sets;
 import java.util.Arrays;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.CapacityExponents;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.elements.IntElements;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
+import dev.jdata.db.utils.adt.lists.BaseList;
+import dev.jdata.db.utils.adt.lists.LargeIntMultiHeadSinglyLinkedList;
+import dev.jdata.db.utils.adt.lists.LongNodeSetter;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
+public final class IntSet extends BaseIntegerSet<int[]> implements IIntSet {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_INT_SET;
 
     private static final boolean ASSERT = AssertionContants.ASSERT_INT_SET;
 
+    private static final Class<?> debugClass = IntSet.class;
+
     private static final int NO_ELEMENT = -1;
+
+//    private static final LongNodeSetter<IntSet> headSetter = (i, h) -> i.scratchSet[i.scratcHashSetIndex] = nodeToInt(h);
+
+    private static final LongNodeSetter<IntSet> headSetter = (i, h) -> {
+
+        final int integer = nodeToInt(h);
+
+        i.scratchSet[i.scratchHashSetIndex] = integer;
+
+        if (DEBUG) {
+
+            printNode(h, i, integer);
+        }
+    };
+
+    private static final LongNodeSetter<IntSet> tailSetter = (i, t) -> { };
+
+    private static void printNode(long headNode, IntSet intSet, int integer) {
+
+        final StringBuilder sb = new StringBuilder();
+
+        Array.toString(intSet.scratchSet, 0, intSet.scratchSet.length, sb, i -> true, (a, i, b) -> b.append("0x").append(Integer.toHexString(a[i])));
+
+        PrintDebug.formatln(debugClass, "set headnode=0x%016x integer=0x%08x scratchHashSetIndex=%d %s", headNode, integer, intSet.scratchHashSetIndex, sb.toString());
+    }
 
     public static IntSet of(int ... values) {
 
         return new IntSet(values);
     }
 
+    private final int bucketsInnerCapacity;
+
+    private LargeIntMultiHeadSinglyLinkedList<IntSet> buckets;
+
+    private int scratchHashSetIndex;
+    private int[] scratchSet;
+
     public IntSet(int initialCapacityExponent) {
         this(initialCapacityExponent, HashedConstants.DEFAULT_LOAD_FACTOR);
     }
 
     public IntSet(int initialCapacityExponent, float loadFactor) {
+        this(initialCapacityExponent, loadFactor, BUCKETS_INNER_CAPACITY_EXPONENT);
+    }
+
+    private IntSet(int initialCapacityExponent, float loadFactor, int bucketsInnerCapacityExponent) {
         super(initialCapacityExponent, loadFactor, int[]::new, IntSet::clearSet);
+
+        Checks.isCapacityExponent(bucketsInnerCapacityExponent);
+
+        final int bucketsInnerCapacity = CapacityExponents.computeCapacity(bucketsInnerCapacityExponent);
+
+        this.bucketsInnerCapacity = bucketsInnerCapacity;
+
+        this.buckets = new LargeIntMultiHeadSinglyLinkedList<>(BUCKETS_OUTER_INITIAL_CAPACITY, bucketsInnerCapacity);
     }
 
     private IntSet(int[] values) {
@@ -39,6 +89,14 @@ public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
 
             add(value);
         }
+    }
+
+    @Override
+    public void clear() {
+
+        super.clear();
+
+        buckets.clear();
     }
 
     @Override
@@ -55,30 +113,9 @@ public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
 
         final int[] set = getHashed();
 
-        final int setLength = set.length;
+        final long bucketHeadNode = intToNode(set[hashSetIndex]);
 
-        boolean found = false;
-
-        for (int i = hashSetIndex; i < setLength; ++ i) {
-
-            if (set[i] == element) {
-
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-
-            for (int i = 0; i < hashSetIndex; ++ i) {
-
-                if (set[i] == element) {
-
-                    found = true;
-                    break;
-                }
-            }
-        }
+        final boolean found = bucketHeadNode != BaseList.NO_NODE && buckets.contains(element, bucketHeadNode);
 
         if (DEBUG) {
 
@@ -88,6 +125,7 @@ public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
         return found;
     }
 
+    @Override
     public void add(int value) {
 
         Checks.isNotNegative(value);
@@ -130,72 +168,19 @@ public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
 
         final int[] set = getHashed();
 
-        final int setLength = set.length;
+        final long bucketHeadNode = intToNode(set[hashSetIndex]);
 
-        boolean removed = false;
+        final boolean removed;
 
-        boolean done = false;
+        if (bucketHeadNode == BaseList.NO_NODE) {
 
-        for (int i = hashSetIndex; i < setLength; ++ i) {
-
-            final int setElement = set[i];
-
-            if (setElement == element) {
-
-                if (DEBUG) {
-
-                    debug("add to set foundIndex=" + i);
-                }
-
-                set[i] = NO_ELEMENT;
-
-                removed = true;
-                break;
-            }
-            else if (setElement == NO_ELEMENT) {
-
-                done = true;
-
-                break;
-            }
+            removed = false;
         }
+        else {
+            this.scratchHashSetIndex = hashSetIndex;
+            this.scratchSet = set;
 
-        if (!removed && !done) {
-
-            for (int i = 0; i < hashSetIndex; ++ i) {
-
-                final int setElement = set[i];
-
-                if (setElement == element) {
-
-                    if (DEBUG) {
-
-                        debug("add to set foundIndex=" + i);
-                    }
-
-                    set[i] = NO_ELEMENT;
-
-                    removed = true;
-                    break;
-                }
-                else if (setElement == NO_ELEMENT) {
-
-                    if (ASSERT) {
-
-                        done = true;
-                    }
-
-                    break;
-                }
-            }
-        }
-
-        if (ASSERT) {
-
-            if (!removed && !done) {
-
-                throw new IllegalStateException();
-            }
+            removed = buckets.removeNodeByValue(this, element, bucketHeadNode, BaseList.NO_NODE, headSetter, tailSetter);
         }
 
         if (removed) {
@@ -223,6 +208,14 @@ public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
 
         clearSet(newSet);
 
+        final LargeIntMultiHeadSinglyLinkedList<IntSet> oldBuckets = buckets;
+
+        final int newBucketsOuterCapacity = oldBuckets.getNumOuterAllocatedEntries();
+
+        final LargeIntMultiHeadSinglyLinkedList<IntSet> newBuckets = new LargeIntMultiHeadSinglyLinkedList<>(newBucketsOuterCapacity, bucketsInnerCapacity);
+
+        this.buckets = newBuckets;
+
         final int setLength = set.length;
 
         for (int i = 0; i < setLength; ++ i) {
@@ -231,7 +224,10 @@ public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
 
             if (element != NO_ELEMENT) {
 
-                add(newSet, element);
+                for (long node = intToNode(element); node != BaseList.NO_NODE; node = oldBuckets.getNextNode(node)) {
+
+                    add(newSet, oldBuckets.getValue(node));
+                }
             }
         }
 
@@ -252,101 +248,31 @@ public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
 
         final int hashSetIndex = HashFunctions.hashIndex(value, getKeyMask());
 
+        final long bucketHeadNode = intToNode(set[hashSetIndex]);
+
         if (DEBUG) {
 
-            debugFormatln("lookup hashSetIndex=%d value=%d keyMask=0x%08x", hashSetIndex, value, getKeyMask());
+            debugFormatln("lookup hashSetIndex=%d value=%d keyMask=0x%08x bucketHeadNode=0x%016x", hashSetIndex, value, getKeyMask(), bucketHeadNode);
         }
 
-        final int setLength = set.length;
+        final boolean newAdded = bucketHeadNode == BaseList.NO_NODE || !buckets.contains(value, bucketHeadNode);
 
-        boolean found = false;
+        final long newBucketHeadNode;
 
-        boolean newAdded = false;
+        if (newAdded) {
 
-        for (int i = hashSetIndex; i < setLength; ++ i) {
+            this.scratchHashSetIndex = hashSetIndex;
+            this.scratchSet = set;
 
-            final long setElement = set[i];
-
-            if (setElement == NO_ELEMENT) {
-
-                if (DEBUG) {
-
-                    debug("add to set foundIndex=" + i);
-                }
-
-                set[i] = value;
-
-                found = true;
-
-                newAdded = true;
-                break;
-            }
-            else if (setElement == value) {
-
-                if (DEBUG) {
-
-                    debug("add to set foundIndex=" + i);
-                }
-
-                set[i] = value;
-
-                found = true;
-                break;
-            }
+            newBucketHeadNode = buckets.addHead(this, value, bucketHeadNode, BaseList.NO_NODE, headSetter, tailSetter);
         }
-
-        if (!found) {
-
-            for (int i = 0; i < hashSetIndex; ++ i) {
-
-                final int setElement = set[i];
-
-                if (setElement == NO_ELEMENT) {
-
-                    if (DEBUG) {
-
-                        debug("add to set foundIndex=" + i);
-                    }
-
-                    set[i] = value;
-
-                    if (ASSERT) {
-
-                        found = true;
-                    }
-
-                    newAdded = true;
-                    break;
-                }
-                else if (setElement == value) {
-
-                    if (DEBUG) {
-
-                        debug("add to set foundIndex=" + i);
-                    }
-
-                    set[i] = value;
-
-                    if (ASSERT) {
-
-                        found = true;
-                    }
-                    break;
-                }
-            }
-        }
-
-        if (ASSERT) {
-
-            if (!found) {
-
-                throw new IllegalStateException();
-            }
+        else {
+            newBucketHeadNode = BaseList.NO_NODE;
         }
 
         if (DEBUG) {
 
-            exit(newAdded, b -> b.add("set", set).add("value", value));
+            exit(newAdded, b -> b.add("set", set).add("value", value).hex("newBucketHeadNode", newBucketHeadNode));
         }
 
         return newAdded;
@@ -371,5 +297,21 @@ public final class IntSet extends BaseIntegerSet<int[]> implements IntElements {
         sb.append(']');
 
         return sb.toString();
+    }
+
+    @Deprecated
+    private static int nodeToInt(long node) {
+
+        return node != BaseList.NO_NODE
+                ? (Integers.checkUnsignedLongToUnsignedShort(node >>> 32) << 16) | Integers.checkUnsignedLongToUnsignedShort(node & 0xFFFFFFFFL)
+                : (int)BaseList.NO_NODE;
+    }
+
+    @Deprecated
+    private static long intToNode(int integer) {
+
+        return integer != BaseList.NO_NODE
+                ? (((long)integer & 0xFFFF0000) << 16) | (integer & 0x0000FFFF)
+                : BaseList.NO_NODE;
     }
 }

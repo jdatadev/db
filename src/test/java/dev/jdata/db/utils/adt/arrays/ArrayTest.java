@@ -1,6 +1,7 @@
 package dev.jdata.db.utils.adt.arrays;
 
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
 
 import org.junit.Test;
@@ -70,23 +71,44 @@ public final class ArrayTest extends BaseByIndexTest {
 
     @Test
     @Category(UnitTest.class)
-    public final void testCopyIntArray() {
+    public final void testCopyOfIntArray() {
 
         checkCopyElements(Function.identity(), Array::copyOf, (a, i) -> a[i], a -> a.length);
     }
 
     @Test
     @Category(UnitTest.class)
-    public void testCopyLongArray() {
+    public void testCopyOfLongArray() {
 
-        checkCopyElements(a -> Array.toLongArray(a), Array::copyOf, (a, i) -> a[i], a -> a.length, (e, i) -> e == i);
+        checkCopyOfElementsByIndex(a -> Array.toLongArray(a), Array::copyOf, (a, i) -> a[i], a -> a.length, (e, i) -> e == i);
     }
 
     @Test
     @Category(UnitTest.class)
-    public void testCopyElements() {
+    public void testSafeCopyOfLongArray() {
 
-        checkCopyElements(Array::boxed, Array::copyOf, (a, i) -> a[i], a -> a.length, (e, i) -> e == i);
+        checkSafeCopyOfElementsByIndex(a -> Array.toLongArray(a), Array::safeCopyOf, (a, i) -> a[i], a -> a.length, (e, i) -> e == i);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testCopyOfElementsArray() {
+
+        checkCopyOfElementsByIndex(Array::boxed, Array::copyOf, (a, i) -> a[i], a -> a.length, (e, i) -> e == i);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public final void testMapToInt() {
+
+        assertThatThrownBy(() -> Array.mapToInt(null, e -> 0)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Array.mapToInt(create("abc"), null)).isInstanceOf(NullPointerException.class);
+
+        final int[] oneMapped = Array.mapToInt(create("1"), Integer::parseInt);
+        assertThat(oneMapped).containsExactly(1);
+
+        final int[] threeMapped = Array.mapToInt(create("1", "2", "3"), Integer::parseInt);
+        assertThat(threeMapped).containsExactly(1, 2, 3);
     }
 
     @Test
@@ -125,6 +147,12 @@ public final class ArrayTest extends BaseByIndexTest {
     }
 
     @Override
+    protected <T, R> R[] map(T[] array, IntFunction<R[]> createMappedArray, Function<T, R> mapper) {
+
+        return Array.map(array, createMappedArray, mapper);
+    }
+
+    @Override
     protected <T> boolean containsInstance(T[] array, T instance) {
 
         return Array.containsInstance(array, instance);
@@ -139,12 +167,17 @@ public final class ArrayTest extends BaseByIndexTest {
     @Override
     protected <T> int findIndex(T[] array, Predicate<T> predicate) {
 
-        return Array.findIndex(array, predicate);
+        return Array.findIndexWithClosureAllocation(array, predicate);
     }
 
     @Override
     protected <T> int findIndexRange(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
 
-        return Array.findIndex(array, startIndex, numElements, predicate);
+        return Array.findIndexWithClosureAllocation(array, startIndex, numElements, predicate);
+    }
+
+    private static String[] create(String ... values) {
+
+        return values;
     }
 }

@@ -11,16 +11,16 @@ import dev.jdata.db.engine.transactions.SelectColumn.Nulledness;
 import dev.jdata.db.engine.transactions.SelectColumn.SelectColumnOperatorType;
 import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.engine.transactions.TransactionSelect.ConditionOperator;
-import dev.jdata.db.utils.adt.Clearable;
+import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.buffers.BitBuffer;
 import dev.jdata.db.utils.adt.maps.IntToIntMap;
-import dev.jdata.db.utils.adt.sets.LongSet;
+import dev.jdata.db.utils.adt.sets.ILongSet;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 
-final class RowBufferComparer implements Clearable, PrintDebug {
+final class RowBufferComparer implements IClearable, PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MVCC_ROW_BUFFER_COMPARER;
 
@@ -69,7 +69,7 @@ final class RowBufferComparer implements Clearable, PrintDebug {
         }
     }
 
-    long compareRowForInsertOperation(TransactionSelect select, BitBuffer mvccBitBuffer, long startBufferBitOffset, LongSet addedRowIdsDst) {
+    long compareRowForInsertOperation(TransactionSelect select, BitBuffer mvccBitBuffer, long startBufferBitOffset, ILongSet addedRowIdsDst) {
 
         Objects.requireNonNull(select);
         Objects.requireNonNull(mvccBitBuffer);
@@ -81,7 +81,7 @@ final class RowBufferComparer implements Clearable, PrintDebug {
             enter(b -> b.add("select", select).add("mvccBitBuffer", mvccBitBuffer).add("startBufferBitOffset", startBufferBitOffset).add("addedRowIdsDst", addedRowIdsDst));
         }
 
-        final long result = compareRowsForInsertOperation(select, mvccBitBuffer, startBufferBitOffset, addedRowIdsDst, LongSet::add);
+        final long result = compareRowsForInsertOperation(select, mvccBitBuffer, startBufferBitOffset, addedRowIdsDst, ILongSet::add);
 
         if (DEBUG) {
 
@@ -91,8 +91,8 @@ final class RowBufferComparer implements Clearable, PrintDebug {
         return result;
     }
 
-    long compareRowForUpdateOperation(TransactionSelect select, BitBuffer mvccBitBuffer, long startBufferBitOffset, BufferedRows commitedRows, LongSet addedRowIdsDst,
-            LongSet removedRowIdsDst) {
+    long compareRowForUpdateOperation(TransactionSelect select, BitBuffer mvccBitBuffer, long startBufferBitOffset, BufferedRows commitedRows, ILongSet addedRowIdsDst,
+            ILongSet removedRowIdsDst) {
 
         Objects.requireNonNull(select);
         Objects.requireNonNull(mvccBitBuffer);
@@ -107,8 +107,8 @@ final class RowBufferComparer implements Clearable, PrintDebug {
                     .add("addedRowIdsDst", addedRowIdsDst).add("removedRowIdsDst", removedRowIdsDst));
         }
 
-        final long result = compareRowsForUpdateOperation(select, mvccBitBuffer, startBufferBitOffset, commitedRows, addedRowIdsDst, LongSet::add, removedRowIdsDst,
-                LongSet::add);
+        final long result = compareRowsForUpdateOperation(select, mvccBitBuffer, startBufferBitOffset, commitedRows, addedRowIdsDst, ILongSet::add, removedRowIdsDst,
+                ILongSet::add);
 
         if (DEBUG) {
 
@@ -456,8 +456,8 @@ final class RowBufferComparer implements Clearable, PrintDebug {
         return matchesValue;
     }
 
-    long compareRowForUpdateAllOperation(TransactionSelect select, BitBuffer mvccBitBuffer, long startBufferBitOffset, BufferedRows commitedRows, LongSet addedRowIdsDst,
-            LongSet removedRowIdsDst) {
+    long compareRowForUpdateAllOperation(TransactionSelect select, BitBuffer mvccBitBuffer, long startBufferBitOffset, BufferedRows commitedRows, ILongSet addedRowIdsDst,
+            ILongSet removedRowIdsDst) {
 
         Objects.requireNonNull(select);
         Objects.requireNonNull(mvccBitBuffer);

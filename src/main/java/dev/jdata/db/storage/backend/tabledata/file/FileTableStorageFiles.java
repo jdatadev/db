@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import dev.jdata.db.storage.backend.file.BaseStorageFiles;
 import dev.jdata.db.utils.adt.collections.Coll;
+import dev.jdata.db.utils.allocators.IByteArrayAllocator;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.file.access.RandomFileAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
@@ -46,7 +47,7 @@ public final class FileTableStorageFiles extends BaseStorageFiles<RandomFileAcce
         return result;
     }
 
-    FileTableStorageFile updateFile(FileTableStorageFile currentFile, StorageTableFileSchema storageTableFileSchema, ByteBufferAllocator byteBufferAllocator) throws IOException {
+    FileTableStorageFile updateFile(FileTableStorageFile currentFile, StorageTableFileSchema storageTableFileSchema, IByteArrayAllocator byteBufferAllocator) throws IOException {
 
         Objects.requireNonNull(currentFile);
         Objects.requireNonNull(storageTableFileSchema);

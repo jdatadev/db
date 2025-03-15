@@ -1,14 +1,18 @@
 package dev.jdata.db.utils.checks;
 
 import java.math.BigDecimal;
+import java.nio.Buffer;
 import java.util.Collection;
+import java.util.Objects;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.utils.adt.Contains;
-import dev.jdata.db.utils.adt.elements.Elements;
+import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.function.CharPredicate;
 
 public class Checks {
@@ -55,6 +59,16 @@ public class Checks {
     public static BigDecimal isNotNegative(BigDecimal value) {
 
         if (value.signum() < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return value;
+    }
+
+    public static long isExactlyZero(long value) {
+
+        if (value != 0L) {
 
             throw new IllegalArgumentException();
         }
@@ -144,9 +158,17 @@ public class Checks {
         }
     }
 
-    public static void isGreaterThanOrEqualTo(long value1, long value2) {
+    public static void isGreaterThan(long value1, long value2) {
 
         if (value1 <= value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void isGreaterThanOrEqualTo(long value1, long value2) {
+
+        if (value1 < value2) {
 
             throw new IllegalArgumentException();
         }
@@ -176,6 +198,10 @@ public class Checks {
         }
     }
 
+    public static int isIntegerPrecision(int value) {
+
+        return isAboveZero(value);
+    }
 
     public static int isDecimalPrecision(int value) {
 
@@ -236,7 +262,12 @@ public class Checks {
         return isDBName(schemaName);
     }
 
-    public static String isDBName(String dbName) {
+    public static String isDatabaseName(String databaseName) {
+
+        return isDBName(databaseName);
+    }
+
+    public static <T extends CharSequence> T isDBName(T dbName) {
 
         if (!checkIsDBName(dbName)) {
 
@@ -292,7 +323,12 @@ public class Checks {
 
     public static String isJavaIdentifier(String string) {
 
-        if (!hasFirstCharacterAndRemaining(string, Character::isJavaIdentifierStart, Character::isJavaIdentifierPart)) {
+        return isJavaIdentifier(string, string.length());
+    }
+
+    private static String isJavaIdentifier(String string, int numCharacters) {
+
+        if (!hasFirstCharacterAndRemaining(string, numCharacters, Character::isJavaIdentifierStart, Character::isJavaIdentifierPart)) {
 
             throw new IllegalArgumentException();
         }
@@ -300,9 +336,31 @@ public class Checks {
         return string;
     }
 
+    public static String isJavaVariableOrMethodWithoutParameters(String string) {
+
+        final String noParameters = "()";
+
+        final String result;
+
+        if (string.endsWith(noParameters)) {
+
+            result = isJavaIdentifier(string, string.length() - noParameters.length());
+        }
+        else {
+            result = isJavaVariable(string);
+        }
+
+        return result;
+    }
+
     public static String isJavaVariable(String string) {
 
-        if (!hasFirstCharacterAndRemaining(string, Character::isJavaIdentifierStart, c -> Character.isJavaIdentifierPart(c) || c == '.')) {
+        return isJavaVariable(string, string.length());
+    }
+
+    private static String isJavaVariable(String string, int numCharacters) {
+
+        if (!hasFirstCharacterAndRemaining(string, numCharacters, Character::isJavaIdentifierStart, c -> Character.isJavaIdentifierPart(c) || c == '.')) {
 
             throw new IllegalArgumentException();
         }
@@ -368,11 +426,15 @@ public class Checks {
 
     private static boolean hasFirstCharacterAndRemaining(CharSequence charSequence, CharPredicate firstCharacterPredicate, CharPredicate remainingCharacterspredicate) {
 
-        final int length = charSequence.length();
+        return hasFirstCharacterAndRemaining(charSequence, charSequence.length(), firstCharacterPredicate, remainingCharacterspredicate);
+    }
+
+    private static boolean hasFirstCharacterAndRemaining(CharSequence charSequence, int numCharacters, CharPredicate firstCharacterPredicate,
+            CharPredicate remainingCharacterspredicate) {
 
         final boolean result;
 
-        if (length == 0) {
+        if (numCharacters == 0) {
 
             result = false;
         }
@@ -382,8 +444,8 @@ public class Checks {
                 result = false;
             }
             else {
-                result = length > 1
-                        ? charSequenceContainsOnly(charSequence, 0, length - 1, remainingCharacterspredicate)
+                result = numCharacters > 1
+                        ? charSequenceContainsOnly(charSequence, 0, numCharacters - 1, remainingCharacterspredicate)
                         : true;
             }
         }
@@ -431,6 +493,16 @@ public class Checks {
         return array;
     }
 
+    public static <T extends Contains> T isEmpty(T contains) {
+
+        if (contains.isEmpty()) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return contains;
+    }
+
     public static <T extends Contains> T isNotEmpty(T contains) {
 
         if (contains.isEmpty()) {
@@ -439,6 +511,18 @@ public class Checks {
         }
 
         return contains;
+    }
+
+    public static <T> void checkNumElements(T[] array, int numElements) {
+
+        if (numElements < 0) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (numElements > array.length) {
+
+            throw new IllegalArgumentException();
+        }
     }
 
     public static <T> T[] checkElements(T[] array, Consumer<T> check) {
@@ -462,6 +546,21 @@ public class Checks {
         }
 
         return array;
+    }
+
+    public static <T, U extends IIndexList<T>, P> U areElements(U list, P parameter, BiPredicate<T, P> predicate) {
+
+        final long numElements = list.getNumElements();
+
+        for (long i = 0; i < numElements; ++ i) {
+
+            if (!predicate.test(list.get(i), parameter)) {
+
+                throw new IllegalArgumentException();
+            }
+        }
+
+        return list;
     }
 
     public static int isIndex(int index) {
@@ -504,7 +603,7 @@ public class Checks {
         return numElements;
     }
 
-    public static void areSameNumElements(Elements elements1, Elements elements2) {
+    public static void areSameNumElements(IElements elements1, IElements elements2) {
 
         if (elements1.getNumElements() != elements2.getNumElements()) {
 
@@ -523,6 +622,16 @@ public class Checks {
     public static int isInitialCapacity(int initialCapacity) {
 
         if (initialCapacity < 1) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return initialCapacity;
+    }
+
+    public static long isInitialCapacity(long initialCapacity) {
+
+        if (initialCapacity < 1L) {
 
             throw new IllegalArgumentException();
         }
@@ -589,6 +698,16 @@ public class Checks {
     public static int isLengthAboveZero(int length) {
 
         if (length < 1) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return length;
+    }
+
+    public static long isLengthAboveZero(long length) {
+
+        if (length < 1L) {
 
             throw new IllegalArgumentException();
         }
@@ -736,6 +855,16 @@ public class Checks {
         return numBytes;
     }
 
+    public static long isNumBytes(long numBytes) {
+
+        if (numBytes < 1) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return numBytes;
+    }
+
     public static int isNumColumnBits(int numColumnBits) {
 
         if (numColumnBits < 1) {
@@ -760,6 +889,21 @@ public class Checks {
 
             throw new IllegalArgumentException();
         }
+    }
+
+    public static void checkBuffer(Buffer buffer, int offset, int length) {
+
+        Objects.checkFromIndexSize(offset, length, buffer.remaining());
+    }
+
+    public static <T extends Buffer> T isEmpty(T buffer) {
+
+        if (buffer.position() != 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return buffer;
     }
 
     public static int isTableId(int tableId) {
@@ -799,7 +943,7 @@ public class Checks {
 
     public static int isDescriptor(int descriptor) {
 
-        if (descriptor < 0) {
+        if (!checkIsDescriptor(descriptor)) {
 
             throw new IllegalArgumentException();
         }
@@ -807,14 +951,34 @@ public class Checks {
         return descriptor;
     }
 
+    public static boolean checkIsDescriptor(int descriptor) {
+
+        return descriptor >= 0;
+    }
+
+    public static int isDatabaseId(int databaseId) {
+
+        return isDescriptor(databaseId);
+    }
+
+    public static boolean checkIsDatabaseId(int databaseId) {
+
+        return checkIsDescriptor(databaseId);
+    }
+
     public static int isSessionDescriptor(int sessionDescriptor) {
 
-        return Checks.isDescriptor(sessionDescriptor);
+        return isDescriptor(sessionDescriptor);
+    }
+
+    public static int isPreparedStatementId(int preparedStatementId) {
+
+        return isDescriptor(preparedStatementId);
     }
 
     public static int isTransactionDescriptor(int transactionDescriptor) {
 
-        return Checks.isDescriptor(transactionDescriptor);
+        return isDescriptor(transactionDescriptor);
     }
 
     public static int isStatementId(int statementId) {
@@ -825,6 +989,16 @@ public class Checks {
         }
 
         return statementId;
+    }
+
+    public static long isLargeObjectRef(long largeObjectRed) {
+
+        if (largeObjectRed < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return largeObjectRed;
     }
 
     public static int isDatabaseSchemaVersionNumber(int versionNumber) {

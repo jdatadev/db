@@ -8,16 +8,20 @@ import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.SQLAllocator;
 import dev.jdata.db.sql.ast.SQLFreeable;
-import dev.jdata.db.utils.adt.decimals.Decimal;
+import dev.jdata.db.utils.adt.decimals.MutableDecimal;
 
 public final class SQLDecimalLiteral extends SQLLiteral implements SQLFreeable {
 
-    private final Decimal decimal;
+    private final MutableDecimal decimal;
 
-    public SQLDecimalLiteral(Context context, Decimal decimal) {
+    public SQLDecimalLiteral(Context context, MutableDecimal decimal) {
         super(context);
 
         this.decimal = Objects.requireNonNull(decimal);
+    }
+
+    public MutableDecimal getDecimal() {
+        return decimal;
     }
 
     @Override
@@ -27,7 +31,7 @@ public final class SQLDecimalLiteral extends SQLLiteral implements SQLFreeable {
     }
 
     @Override
-    public <P, R> R visit(SQLExpressionVisitor<P, R> visitor, P parameter) {
+    public <P, R, E extends Exception> R visitSQLExpression(SQLExpressionVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onDecimalLiteral(this, parameter);
     }

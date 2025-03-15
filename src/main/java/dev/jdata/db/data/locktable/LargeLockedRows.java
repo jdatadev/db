@@ -4,15 +4,15 @@ import java.util.Objects;
 
 import dev.jdata.db.LockType;
 import dev.jdata.db.data.BaseRowMap;
-import dev.jdata.db.utils.adt.arrays.LongLargeArray;
+import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.checks.Checks;
 
 final class LargeLockedRows extends LockedRows {
 
-    private final LongLargeArray lockedRows;
-    private final LongLargeArray values;
+    private final LargeLongArray lockedRows;
+    private final LargeLongArray values;
 
-    LargeLockedRows(LongLargeArray lockedRows, LongLargeArray values) {
+    LargeLockedRows(LargeLongArray lockedRows, LargeLongArray values) {
 
         Objects.requireNonNull(lockedRows);
         Objects.requireNonNull(values);

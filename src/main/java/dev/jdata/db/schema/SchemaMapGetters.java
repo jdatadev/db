@@ -8,7 +8,9 @@ public interface SchemaMapGetters<T extends DBNamedObject> {
 
     Iterable<String> getSchemaNames();
 
-    T getSchemaObjectByName(String schemaName);
+    boolean containsSchemaObjectName(String schemaObjectName);
+
+    T getSchemaObjectByName(String schemaObjectName);
 
     T getSchemaObjectById(int id);
 

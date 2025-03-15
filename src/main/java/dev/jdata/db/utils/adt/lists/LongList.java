@@ -1,8 +1,8 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.elements.LongElements;
+import dev.jdata.db.utils.adt.elements.ILongElements;
 
-public interface LongList extends LongElements {
+public interface LongList extends ILongElements {
 
     boolean containsOnly(long value);
 

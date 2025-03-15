@@ -42,4 +42,12 @@ public abstract class StateObject<T extends Enum<T> & State> implements PrintDeb
             exit();
         }
     }
+
+    protected final void checkIsInitializable() {
+
+        if (!getState().isInitializable()) {
+
+            throw new IllegalStateException();
+        }
+    }
 }

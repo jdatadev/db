@@ -4,10 +4,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.test.unit.BaseTest;
-import dev.jdata.db.utils.adt.elements.Elements;
+import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.adt.lists.LongList.ContainsOnlyPredicate;
 
-abstract class BaseLargeListTest<T extends BaseLargeList<?, ?> & LargeList & Elements> extends BaseTest {
+abstract class BaseLargeListTest<T extends BaseLargeList<?, ?> & LargeList & IElements> extends BaseTest {
 
     abstract T createLargeList(int initialOuterCapacity, int innerCapacity);
 
@@ -471,7 +471,7 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?> & LargeList & Ele
         assertThat(list).hasNumElements(0L);
     }
 
-    private static <T extends BaseLargeList<?, ?> & Elements> void checkElements(long headNode, T list, long ... elements) {
+    private static <T extends BaseLargeList<?, ?> & IElements> void checkElements(long headNode, T list, long ... elements) {
 
         assertThat(list).isNotEmpty();
         assertThat(list).hasNumElements(elements.length);

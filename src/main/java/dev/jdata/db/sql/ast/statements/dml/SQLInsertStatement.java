@@ -13,7 +13,7 @@ import dev.jdata.db.sql.ast.statements.SQLStatementVisitor;
 import dev.jdata.db.sql.ast.statements.table.SQLColumnNames;
 import dev.jdata.db.sql.ast.statements.trigger.SQLTriggeredStatement;
 
-public final class SQLInsertStatement extends SQLDMLStatement implements SQLTriggeredStatement {
+public final class SQLInsertStatement extends SQLDMLUpdatingStatement implements SQLTriggeredStatement {
 
     private final long insertKeyword;
     private final long intoKeyword;
@@ -58,7 +58,7 @@ public final class SQLInsertStatement extends SQLDMLStatement implements SQLTrig
     }
 
     @Override
-    public <T, R> R visit(SQLStatementVisitor<T, R> visitor, T parameter) {
+    public <P, R, E extends Exception> R visit(SQLStatementVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onInsert(this, parameter);
     }

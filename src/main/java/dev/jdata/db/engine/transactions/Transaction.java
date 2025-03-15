@@ -7,14 +7,17 @@ import dev.jdata.db.dml.DMLInsertRows;
 import dev.jdata.db.dml.DMLUpdateRows;
 import dev.jdata.db.engine.descriptorables.BaseDescriptorable;
 import dev.jdata.db.engine.descriptorables.BaseDescriptorables;
+import dev.jdata.db.engine.transactions.Transaction.TransactionState;
+import dev.jdata.db.engine.transactions.TransactionDMLOperations.OperationResult;
 import dev.jdata.db.schema.Table;
 import dev.jdata.db.utils.State;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
+import dev.jdata.db.utils.adt.arrays.ILongArrayGetters;
+import dev.jdata.db.utils.adt.sets.LargeLongSet;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class Transaction extends BaseDescriptorable<Transaction.TransactionState> implements TransactionOperations<Transaction.TransactionSharedState> {
+public final class Transaction extends BaseDescriptorable<TransactionState> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_TRANSACTION;
 
@@ -59,7 +62,7 @@ public final class Transaction extends BaseDescriptorable<Transaction.Transactio
 
     private final TransactionMechanism<?>[] transactionMechanisms;
 
-    Transaction(TransactionMechanism<?> ... transactionMechanisms) {
+    public Transaction(TransactionMechanism<?> ... transactionMechanisms) {
         super(TransactionState.CREATED, DEBUG);
 
         this.transactionMechanisms = Array.copyOf(transactionMechanisms);
@@ -75,38 +78,49 @@ public final class Transaction extends BaseDescriptorable<Transaction.Transactio
         this.globalTransactionId = globalTransactionId;
     }
 
-    @Override
-    public OperationResult insertRows(TransactionSharedState sharedState, Table table, int statementId, LargeLongArray rowIds, DMLInsertRows rows) {
+    public boolean select(TransactionSelect select, LargeLongSet addedRowIdsDst, LargeLongSet removedRowIdsDst) {
 
-        return executeTransactionMechanisms(sharedState, table, statementId, rowIds, rows, (m, s, t, i, p1, p2) -> m.insertRows(s, t, i, p1, p2));
+        throw new UnsupportedOperationException();
     }
 
-    @Override
-    public OperationResult updateRows(TransactionSharedState sharedState, Table table, int statementId, LargeLongArray rowIds, DMLUpdateRows rows) {
+    private TransactionSharedState getSharedState() {
 
-        return executeTransactionMechanisms(sharedState, table, statementId, rowIds, rows, (m, s, t, i, p1, p2) -> m.updateRows(s, t, i, p1, p2));
+        throw new UnsupportedOperationException();
     }
 
-    @Override
-    public OperationResult updateAllRows(TransactionSharedState sharedState, Table table, int statementId, DMLUpdateRows row) {
+    private int generateStatementId() {
 
-        return executeTransactionMechanisms(sharedState, table, statementId, row, null, (m, s, t, i, p1, p2) -> m.updateAllRows(s, t, i, p1));
+        throw new UnsupportedOperationException();
     }
 
-    @Override
-    public OperationResult deleteRows(TransactionSharedState sharedState, Table table, int statementId, LargeLongArray rowIds) {
+    public OperationResult insertRows(Table table, ILongArrayGetters rowIds, DMLInsertRows rows) {
 
-        return executeTransactionMechanisms(sharedState, table, statementId, rowIds, null, (m, s, t, i, p1, p2) -> m.deleteRows(s, t, i, p1));
+        return executeTransactionMechanisms(getSharedState(), table, generateStatementId(), rowIds, rows, (m, s, t, i, p1, p2) -> m.insertRows(s, t, i, p1, p2));
     }
 
-    @Override
-    public OperationResult deleteAllRows(TransactionSharedState sharedState, Table table, int statementId) {
+    public OperationResult updateRows(Table table, ILongArrayGetters rowIds, DMLUpdateRows rows) {
 
-        return executeTransactionMechanisms(sharedState, table, statementId, null, null, (m, s, t, i, p1, p2) -> m.deleteAllRows(s, t, i));
+        return executeTransactionMechanisms(getSharedState(), table, generateStatementId(), rowIds, rows, (m, s, t, i, p1, p2) -> m.updateRows(s, t, i, p1, p2));
     }
 
-    @Override
-    public final void commit(TransactionSharedState sharedState) {
+    public OperationResult updateAllRows(Table table, DMLUpdateRows row) {
+
+        return executeTransactionMechanisms(getSharedState(), table, generateStatementId(), row, null, (m, s, t, i, p1, p2) -> m.updateAllRows(s, t, i, p1));
+    }
+
+    public OperationResult deleteRows(Table table, ILongArrayGetters rowIds) {
+
+        return executeTransactionMechanisms(getSharedState(), table, generateStatementId(), rowIds, null, (m, s, t, i, p1, p2) -> m.deleteRows(s, t, i, p1));
+    }
+
+    public OperationResult deleteAllRows(Table table) {
+
+        return executeTransactionMechanisms(getSharedState(), table, generateStatementId(), null, null, (m, s, t, i, p1, p2) -> m.deleteAllRows(s, t, i));
+    }
+
+    public final void commit() {
+
+        final TransactionSharedState sharedState = getSharedState();
 
         try {
             executeTransactionMechanisms(sharedState, null, -1, null, null, (m, s, t, i, p1, p2) -> {
@@ -124,8 +138,9 @@ public final class Transaction extends BaseDescriptorable<Transaction.Transactio
         }
     }
 
-    @Override
-    public final void rollback(TransactionSharedState sharedState) {
+    public final void rollback() {
+
+        final TransactionSharedState sharedState = getSharedState();
 
         try {
             executeTransactionMechanisms(sharedState, null, -1, null, null, (m, s, t, i, p1, p2) -> {

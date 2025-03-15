@@ -32,8 +32,16 @@ public final class SQLCreateTableStatement extends SQLTableStatement {
         this.primaryKey = safeMakeSingle(primaryKey);
     }
 
+    public ASTList<SQLTableColumnDefinition> getColumns() {
+        return columns;
+    }
+
+    public SQLPrimaryKey getPrimaryKey() {
+        return primaryKey.get();
+    }
+
     @Override
-    public <T, R> R visit(SQLStatementVisitor<T, R> visitor, T parameter) {
+    public <P, R, E extends Exception> R visit(SQLStatementVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onCreateTable(this, parameter);
     }

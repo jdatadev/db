@@ -22,7 +22,7 @@ public final class SQLCreateTriggerStatement extends SQLTriggerStatement {
     }
 
     @Override
-    public <T, R> R visit(SQLStatementVisitor<T, R> visitor, T parameter) {
+    public <P, R, E extends Exception> R visit(SQLStatementVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onCreateTrigger(this, parameter);
     }

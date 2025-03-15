@@ -24,7 +24,8 @@ public abstract class BaseSQLParser extends BaseParser {
 
     protected static Context makeContext() {
 
-        throw new UnsupportedOperationException();
+        return null;
+//        throw new UnsupportedOperationException();
     }
 
     protected static SQLObjectName parseObjectName(SQLLexer lexer) throws ParserException, IOException {

@@ -3,11 +3,18 @@ package dev.jdata.db.data;
 import java.util.Arrays;
 import java.util.Objects;
 
-import dev.jdata.db.utils.adt.Clearable;
+import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.Contains;
 import dev.jdata.db.utils.checks.Checks;
 
-public class RowDataNumBits implements RowDataNumBitsGetter, Contains, Clearable {
+public class RowDataNumBits implements RowDataNumBitsGetter, Contains, IClearable {
+
+    public interface RowDataNumBitsAllocator {
+
+        RowDataNumBits allocateRowDataNumBits();
+
+        void freeRowDataNumBits(RowDataNumBits rowDataNumBits);
+    }
 
     private final int[] rowDataNumBits;
 

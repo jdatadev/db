@@ -16,10 +16,11 @@ import dev.jdata.db.sql.parse.expression.SQLSubSelectParser;
 import dev.jdata.db.sql.parse.trigger.SQLCreateTriggerParser;
 import dev.jdata.db.sql.parse.trigger.SQLDropTriggerParser;
 import dev.jdata.db.sql.parse.where.SQLWhereClauseParser;
+import dev.jdata.db.utils.adt.arrays.Array;
 
 public abstract class SQLParserFactory {
 
-    private static final SQLToken sqlStatementTokens[] = new SQLToken[] {
+    private static final SQLToken STATEMENT_TOKENS[] = new SQLToken[] {
 
             SQLToken.CREATE,
             SQLToken.SELECT,
@@ -28,7 +29,14 @@ public abstract class SQLParserFactory {
             SQLToken.DELETE
     };
 
-    private static final SQLToken sqlCreateTokens[] = new SQLToken[] {
+    private static final SQLToken CREATE_OR_DROP_TOKENS[] = new SQLToken[] {
+
+            SQLToken.TABLE,
+            SQLToken.INDEX,
+            SQLToken.TRIGGER
+    };
+
+    private static final SQLToken ALTER_TOKENS[] = new SQLToken[] {
 
             SQLToken.TABLE
     };
@@ -51,14 +59,28 @@ public abstract class SQLParserFactory {
             SQLToken.UNIUQE,
             SQLToken.NOT,
             SQLToken.NULL,
-//            SQLToken.REFERENCES,
             SQLToken.DISTINCT,
             SQLToken.PRIMARY,
             SQLToken.FOREIGN,
             SQLToken.CHECK
     };
 
-    public abstract SQLParser createParser(SQLParserFactory parserFactory);
+    public static SQLToken[] getSQLstatementTokens() {
+
+        return Array.copyOf(STATEMENT_TOKENS);
+    }
+
+    public static SQLToken[] getSQLCreateOrDropTokens() {
+
+        return Array.copyOf(CREATE_OR_DROP_TOKENS);
+    }
+
+    public static SQLToken[] getSQLAlterTokens() {
+
+        return Array.copyOf(ALTER_TOKENS);
+    }
+
+    public abstract SQLParser createParser();
 
     public SQLExpressionParser createExpressionParser() {
 

@@ -195,7 +195,7 @@ public enum SQLToken implements IToken {
     @Override
     public char getCharacter() {
 
-        throw new UnsupportedOperationException();
+        return fromCharacter;
     }
 
     @Override

@@ -5,12 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
 import dev.jdata.db.data.tables.TableByIdMap;
 import dev.jdata.db.schema.DatabaseSchema;
 import dev.jdata.db.schema.SchemaMapGetters;
 import dev.jdata.db.schema.Table;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
-import dev.jdata.db.storage.backend.tabledata.NumStorageBitsGetter;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.TableDataStorageBackend;
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;

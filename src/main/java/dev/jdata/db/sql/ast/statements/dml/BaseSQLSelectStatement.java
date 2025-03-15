@@ -30,22 +30,22 @@ public abstract class BaseSQLSelectStatement extends SQLDMLStatement {
         this.unions = makeList(unions);
     }
 
-    public ASTList<SQLSelectStatementPart> getParts() {
+    public final ASTList<SQLSelectStatementPart> getParts() {
         return parts;
     }
 
-    public ASTList<SQLUnion> getUnions() {
+    public final ASTList<SQLUnion> getUnions() {
         return unions;
     }
 
     @Override
-    public <T, R> R visit(SQLStatementVisitor<T, R> visitor, T parameter) {
+    public final <P, R, E extends Exception> R visit(SQLStatementVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onSelect(this, parameter);
     }
 
     @Override
-    protected void doRecurse(ASTRecurseMode recurseMode, ASTIterator iterator) {
+    protected final void doRecurse(ASTRecurseMode recurseMode, ASTIterator iterator) {
 
         doIterate(parts, recurseMode, iterator);
         doIterate(unions, recurseMode, iterator);

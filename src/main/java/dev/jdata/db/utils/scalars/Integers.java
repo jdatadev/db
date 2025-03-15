@@ -56,6 +56,18 @@ public class Integers {
         return (int)value;
     }
 
+    public static short checkUnsignedLongToUnsignedShort(long value) {
+
+        Checks.isNotNegative(value);
+
+        if (value > Short.MAX_VALUE) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return (short)value;
+    }
+
     public static int checkUnsignedLongToUnsignedInt(long value) {
 
         Checks.isNotNegative(value);

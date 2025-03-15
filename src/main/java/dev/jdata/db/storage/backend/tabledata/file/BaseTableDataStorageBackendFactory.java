@@ -3,8 +3,8 @@ package dev.jdata.db.storage.backend.tabledata.file;
 import java.io.IOException;
 import java.util.Objects;
 
+import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
 import dev.jdata.db.storage.backend.BaseStorageBackendFactory;
-import dev.jdata.db.storage.backend.tabledata.NumStorageBitsGetter;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.TableDataStorageBackend;
 import dev.jdata.db.storage.backend.tabledata.TableDataStorageBackendFactory;

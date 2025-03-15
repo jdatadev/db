@@ -8,7 +8,7 @@ import dev.jdata.db.utils.adt.CapacityExponents;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 
-public abstract class BaseExponentHashed<T> extends BaseHashed<T> {
+public abstract class BaseExponentHashed<T> extends BaseArrayHashed<T> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_EXPONENT_HASHED;
 
@@ -87,7 +87,7 @@ public abstract class BaseExponentHashed<T> extends BaseHashed<T> {
 
     private static int makeKeyMask(int capacityExponent) {
 
-        return (1 << capacityExponent) - 1;
+        return CapacityExponents.makeIntKeyMask(capacityExponent);
     }
 
     protected static int computeCapacityExponent(int numElements, float loadFactor) {

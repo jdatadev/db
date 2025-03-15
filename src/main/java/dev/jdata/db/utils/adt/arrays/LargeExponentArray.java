@@ -1,13 +1,14 @@
 package dev.jdata.db.utils.adt.arrays;
 
 import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.MutableElements;
 import dev.jdata.db.utils.adt.elements.BaseByIndexElements;
+import dev.jdata.db.utils.adt.elements.ICapacity;
+import dev.jdata.db.utils.adt.elements.IMutableElements;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-public abstract class LargeExponentArray extends BaseByIndexElements implements MutableElements {
+public abstract class LargeExponentArray extends BaseByIndexElements implements IMutableElements, ICapacity {
 
     private final int outerIndexShift;
     private final long innerIndexMask;
@@ -45,6 +46,12 @@ public abstract class LargeExponentArray extends BaseByIndexElements implements 
         super.clearNumElements();
 
         this.numOuterEntries = 0;
+    }
+
+    @Override
+    public final long getCapacity() {
+
+        return numOuterAllocatedEntries * innerCapacity;
     }
 
     protected final int getInnerNumAllocateElements() {

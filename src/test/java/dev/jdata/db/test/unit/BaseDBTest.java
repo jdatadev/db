@@ -56,7 +56,7 @@ public abstract class BaseDBTest extends BaseTest {
         Checks.isTableId(tableId);
         Checks.isTableName(tableName);
 
-        final List<Column> columns = Lists.unmodifiableOf(Lists.map(createSchemaDataTypes(), t -> new Column(t, false)));
+        final List<Column> columns = Lists.unmodifiableOf(Lists.map(createSchemaDataTypes(), t -> new Column(t.getClass().getSimpleName().toLowerCase() + "_column", t, false)));
 
         return new Table(tableName, tableId, columns);
     }

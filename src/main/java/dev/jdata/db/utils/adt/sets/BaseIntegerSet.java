@@ -3,9 +3,7 @@ package dev.jdata.db.utils.adt.sets;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.hashed.BaseExponentHashed;
-
-abstract class BaseIntegerSet<T> extends BaseExponentHashed<T> {
+abstract class BaseIntegerSet<T> extends BaseExponentSet<T> {
 
     BaseIntegerSet(int initialCapacityExponent, float loadFactor, IntFunction<T> createHashed, Consumer<T> clearHashed) {
         super(initialCapacityExponent, loadFactor, createHashed, clearHashed);

@@ -57,8 +57,13 @@ public final class LargeLongMultiHeadDoublyLinkedList<T> extends BaseLargeLongDo
         return toListArrayValues(headNode);
     }
 
+    @Override
+    void clearNumElements() {
+
+    }
+
     public void clear(T instance, long headNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
 
-        clearNodes(instance, headNode, headNodeSetter, tailNodeSetter, null);
+        clearNodes(instance, headNode, headNodeSetter, tailNodeSetter);
     }
 }

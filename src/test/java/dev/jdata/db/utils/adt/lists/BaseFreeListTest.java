@@ -4,12 +4,12 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import dev.jdata.db.test.unit.BaseTest;
-import dev.jdata.db.utils.adt.elements.Elements;
+import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.checks.Checks;
 
 abstract class BaseFreeListTest extends BaseTest {
 
-    static <T, U extends Freeing<T> & Elements> void checkAllocateAndFree(U freeList, T object1, T object2, T object3, Function<U, T> allocator) {
+    static <T, U extends Freeing<T> & IElements> void checkAllocateAndFree(U freeList, T object1, T object2, T object3, Function<U, T> allocator) {
 
         assertThatThrownBy(() -> freeList.free(null)).isInstanceOf(NullPointerException.class);
 
@@ -42,7 +42,7 @@ abstract class BaseFreeListTest extends BaseTest {
         checkIsEmpty(freeList, allocator);
     }
 
-    static <T, U extends Freeing<T> & Elements> void checkIsEmpty(U freeList, Function<U, T> allocator) {
+    static <T, U extends Freeing<T> & IElements> void checkIsEmpty(U freeList, Function<U, T> allocator) {
 
         Objects.requireNonNull(freeList);
         Objects.requireNonNull(allocator);
@@ -53,7 +53,7 @@ abstract class BaseFreeListTest extends BaseTest {
     }
 
     @SafeVarargs
-    static <T, U extends Freeing<T> & Elements> void checkHasElements(U freeList, T ... expectedObjects) {
+    static <T, U extends Freeing<T> & IElements> void checkHasElements(U freeList, T ... expectedObjects) {
 
         Objects.requireNonNull(freeList);
         Checks.isNotEmpty(expectedObjects);

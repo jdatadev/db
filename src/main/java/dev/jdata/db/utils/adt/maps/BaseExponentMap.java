@@ -7,6 +7,8 @@ import dev.jdata.db.utils.adt.hashed.BaseExponentHashed;
 
 public abstract class BaseExponentMap<T> extends BaseExponentHashed<T> {
 
+    protected static final int NO_INDEX = -1;
+
     @FunctionalInterface
     protected interface ValueSetter<T, U> {
 

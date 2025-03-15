@@ -1,274 +1,221 @@
 package dev.jdata.db.utils.adt.decimals;
-
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.util.Objects;
 
-import dev.jdata.db.utils.adt.Clearable;
+import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.buffers.BitBuffer;
-import dev.jdata.db.utils.bits.BitBufferUtil;
-import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.adt.integers.ILargeInteger;
 
-public final class MutableDecimal implements Decimal, Comparable<MutableDecimal>, Clearable {
+public final class MutableDecimal extends BaseDecimal<MutableDecimal> implements IMutableDecimal, Comparable<MutableDecimal>, IClearable {
 
-    private byte[] bits;
-    private int precision;
-    private int scale;
-    private int numBitsBeforeDecimalPoint;
-    private int totalNumBits;
+    public static MutableDecimal ofPrecision(int precision) {
+
+        return new MutableDecimal(precision, 0);
+    }
+
+    public static MutableDecimal valueOf(BigDecimal value) {
+
+        return new MutableDecimal(value);
+    }
 
     public MutableDecimal() {
-
+        this(16, 0);
     }
 
-    MutableDecimal(BigDecimal bigDecimal) {
+    private MutableDecimal(BigDecimal value) {
 
-        Objects.requireNonNull(bigDecimal);
-
-        final int scale = bigDecimal.scale();
-
-        Checks.isNotNegative(scale);
-
-        this.precision = bigDecimal.precision();
-        this.scale = scale;
-
-        final boolean isNegative = bigDecimal.signum() == -1;
-
-        final BigDecimal bigDecimalValue = isNegative ? bigDecimal.negate() : bigDecimal;
-
-
-        final BigInteger integer = bigDecimalValue.toBigInteger();
-
-        final BigDecimal decimals = bigDecimalValue.subtract(bigDecimalValue.setScale(0, RoundingMode.DOWN));
-        final BigInteger decimalsUnscaled = decimals.unscaledValue();
-
-        final int integerNumBits = integer.bitLength();
-        final int decimalsNumBits = decimalsUnscaled.bitLength();
-
-        this.numBitsBeforeDecimalPoint = integerNumBits;
-        this.totalNumBits = integerNumBits + decimalsNumBits;
-
-        final int numBytes = BitBufferUtil.numBytes(1 + totalNumBits);
-
-        this.bits = new byte[numBytes];
-
-        BitBufferUtil.setBitValue(bits, isNegative, 0L);
-
-        int dstBitOffset = 1;
-
-System.out.println("constructor " + integer + ' ' + integerNumBits + ' ' + decimalsUnscaled + ' ' + decimalsNumBits);
-
-        for (int i = integerNumBits - 1; i >= 0; -- i) {
-
-            BitBufferUtil.setBitValue(bits, integer.testBit(i), dstBitOffset ++);
-        }
-
-        for (int i = decimalsNumBits - 1; i >= 0; -- i) {
-
-            BitBufferUtil.setBitValue(bits, decimalsUnscaled.testBit(i), dstBitOffset ++);
-        }
+        initialize(value);
     }
 
-    public void initialize(BitBuffer buffer, long bufferBitOffset, int precision, int scale) {
-
-        Objects.requireNonNull(buffer);
-        Checks.isBufferBitsOffset(bufferBitOffset);
-        Checks.isAboveZero(precision);
-        Checks.isNotNegative(scale);
-
-        this.precision = precision;
-        this.scale = scale;
-
-        throw new UnsupportedOperationException();
+    private MutableDecimal(int precision, int scale) {
+        super(precision, scale);
     }
 
-    BigDecimal getValue() {
+    final void initialize(BitBuffer buffer, long bufferBitOffset, int precision, int scale) {
 
-        final boolean isNegative = BitBufferUtil.isBitSet(bits, 0L);
-
-        final BigInteger integerPart = getBits(1, numBitsBeforeDecimalPoint);
-
-        final int numBitsAfterDecimalPoint = totalNumBits - numBitsBeforeDecimalPoint;
-
-        final BigInteger decimalPart = getBits(1 + numBitsBeforeDecimalPoint, numBitsAfterDecimalPoint);
-
-System.out.println("get value " + integerPart + ' ' + numBitsBeforeDecimalPoint + ' ' + decimalPart + ' ' + numBitsAfterDecimalPoint);
-
-        final BigDecimal integerDecimal = new BigDecimal(integerPart);
-
-        final BigDecimal bigDecimal = numBitsAfterDecimalPoint != 0
-                ? integerDecimal.add(new BigDecimal(decimalPart).movePointLeft(scale))
-                : integerDecimal;
-
-        return isNegative ? bigDecimal.negate() : bigDecimal;
-    }
-
-    private BigInteger getBits(int startBitOffset, int numBits) {
-
-        Checks.isBufferBitsOffset(startBitOffset);
-        Checks.isNumBits(numBits);
-
-System.out.println("get bits " + startBitOffset + ' ' + numBits);
-
-        final int numBytes = BitBufferUtil.numBytes(numBits);
-
-        final byte[] byteArray = new byte[numBytes];
-
-        int dstBitOffset = (numBytes << 3) - numBits;
-
-        for (int i = 0; i < numBits; ++ i) {
-
-            final boolean isSet = BitBufferUtil.isBitSet(bits, startBitOffset + i);
-
-System.out.println("num bytes " + numBytes + ' ' + i + ' ' + (startBitOffset + i) + ' ' + isSet + ' ' + dstBitOffset);
-
-            BitBufferUtil.setBitValue(byteArray, isSet, dstBitOffset ++);
-        }
-
-        return new BigInteger(byteArray);
-    }
-
-    private boolean isNegative() {
-
-        return BitBufferUtil.isBitSet(bits, 0L);
-    }
-
-    @Override
-    public void clear() {
-
-        this.numBitsBeforeDecimalPoint = -1;
-        this.totalNumBits = -1;
+        initializeDecimal(buffer, bufferBitOffset, precision, scale);
     }
 
     @Override
     public int compareTo(MutableDecimal other) {
 
-        final int result;
-
-        if (numBitsBeforeDecimalPoint < other.numBitsBeforeDecimalPoint) {
-
-            result = -1;
-        }
-        else if (numBitsBeforeDecimalPoint == other.numBitsBeforeDecimalPoint) {
-
-            final boolean isNegative = isNegative();
-            final boolean isOtherNegative = other.isNegative();
-
-            if (isNegative == isOtherNegative) {
-
-                int compareResult = compareBits(bits, other.bits, 1, numBitsBeforeDecimalPoint);
-
-                if (compareResult == 0) {
-
-                    result = compareAfterDecimalPoint(other, numBitsBeforeDecimalPoint);
-                }
-                else {
-                    result = compareResult;
-                }
-            }
-            else if (isNegative && !isOtherNegative) {
-
-                result = -1;
-            }
-            else if (!isNegative && isOtherNegative) {
-
-                result = 1;
-            }
-            else {
-                throw new IllegalStateException();
-            }
-        }
-        else {
-            result = 1;
-        }
-
-        return result;
+        return compareToOther(other);
     }
 
-    private int compareAfterDecimalPoint(MutableDecimal other, int numBitsBeforeDecimalPoint) {
+    @Override
+    public void setValue(IDecimal decimal) {
 
-        final int numBitsAfterDecimalPoint = totalNumBits - numBitsBeforeDecimalPoint;
-        final int otherNumBitsAfterDecimalPoint = other.totalNumBits - numBitsBeforeDecimalPoint;
+        Objects.requireNonNull(decimal);
 
-        final int numCommonBitsAfterDecimalPoint = Math.min(numBitsAfterDecimalPoint, otherNumBitsAfterDecimalPoint);
-
-        final int signAndNumBitsBeforeDecimalPoint = 1 + numBitsBeforeDecimalPoint;
-
-        int compareResult = compareBits(bits, other.bits, signAndNumBitsBeforeDecimalPoint, numCommonBitsAfterDecimalPoint);
-
-        final int result;
-
-        if (compareResult == 0) {
-
-            if (numBitsAfterDecimalPoint < otherNumBitsAfterDecimalPoint) {
-
-                final int otherNumAdditionalBits = otherNumBitsAfterDecimalPoint - numBitsAfterDecimalPoint;
-
-                final int startBitOffset = signAndNumBitsBeforeDecimalPoint + numCommonBitsAfterDecimalPoint;
-
-                for (int i = 0; i < otherNumAdditionalBits; ++ i) {
-
-                    if (BitBufferUtil.isBitSet(other.bits, startBitOffset + i)) {
-
-                        compareResult = -1;
-                        break;
-                    }
-                }
-
-                result = compareResult;
-            }
-            else if (numBitsAfterDecimalPoint == otherNumBitsAfterDecimalPoint) {
-
-                result = 0;
-            }
-            else {
-                final int otherNumAdditionalBits = otherNumBitsAfterDecimalPoint - numBitsAfterDecimalPoint;
-
-                final int startBitOffset = signAndNumBitsBeforeDecimalPoint + numCommonBitsAfterDecimalPoint;
-
-                for (int i = 0; i < otherNumAdditionalBits; ++ i) {
-
-                    if (BitBufferUtil.isBitSet(other.bits, startBitOffset + i)) {
-
-                        compareResult = -1;
-                        break;
-                    }
-                }
-
-                result = compareResult;
-            }
-        }
-        else {
-            result = compareResult;
-        }
-
-        return result;
+        throw new UnsupportedOperationException();
     }
 
-    private static int compareBits(byte[] bits, byte[] otherBits, int startOffset, int numBits) {
+    @Override
+    public void setValue(ILargeInteger largeInteger) {
 
-        int compareResult = 0;
+        Objects.requireNonNull(largeInteger);
 
-        for (int i = 0; i < numBits; ++ i) {
+        throw new UnsupportedOperationException();
+    }
 
-            final int bitOffset = startOffset + i;
+    @Override
+    public void setValue(long integer) {
 
-            final boolean isSet = BitBufferUtil.isBitSet(bits, bitOffset);
-            final boolean isOtherSet = BitBufferUtil.isBitSet(otherBits, bitOffset);
+    }
 
-            if (!isSet && isOtherSet) {
+    @Override
+    public void setValue(double d) {
 
-                compareResult = -1;
-                break;
-            }
-            else if (isSet && !isOtherSet) {
+    }
 
-                compareResult = 1;
-                break;
-            }
-        }
+    @Override
+    public void add(IDecimal decimal) {
 
-        return compareResult;
+        Objects.requireNonNull(decimal);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void add(ILargeInteger largeInteger) {
+
+        Objects.requireNonNull(largeInteger);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void add(long l) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    @Deprecated
+    public void add(double d) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void subtract(IDecimal decimal) {
+
+        Objects.requireNonNull(decimal);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void subtract(ILargeInteger largeInteger) {
+
+        Objects.requireNonNull(largeInteger);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void subtract(long l) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    @Deprecated
+    public void subtract(double d) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void multiply(IDecimal decimal) {
+
+        Objects.requireNonNull(decimal);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void multiply(ILargeInteger largeInteger) {
+
+        Objects.requireNonNull(largeInteger);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void multiply(long l) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    @Deprecated
+    public void multiply(double d) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void divide(IDecimal decimal) {
+
+        Objects.requireNonNull(decimal);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void divide(ILargeInteger largeInteger) {
+
+        Objects.requireNonNull(largeInteger);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void divide(long l) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    @Deprecated
+    public void divide(double d) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void modulus(IDecimal decimal) {
+
+        Objects.requireNonNull(decimal);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void modulus(ILargeInteger largeInteger) {
+
+        Objects.requireNonNull(largeInteger);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void modulus(long l) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    @Deprecated
+    public void modulus(double d) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clear() {
+
+        clearImpl();
     }
 }

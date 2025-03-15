@@ -28,7 +28,7 @@ public final class SQLColumnExpression extends BaseSQLExpression {
     }
 
     @Override
-    public <P, R> R visit(SQLExpressionVisitor<P, R> visitor, P parameter) {
+    public <P, R, E extends Exception> R visitSQLExpression(SQLExpressionVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onColumn(this, parameter);
     }

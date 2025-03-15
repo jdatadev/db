@@ -1,12 +1,10 @@
 package dev.jdata.db.utils.adt.sets;
 
-import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.utils.adt.hashed.BaseHashedTest;
-
 abstract class BaseSetTest<T extends BaseIntegerSet<?>> extends BaseHashedTest {
 
     abstract T createSet(int initialCapacityExponent);
@@ -18,12 +16,12 @@ abstract class BaseSetTest<T extends BaseIntegerSet<?>> extends BaseHashedTest {
     @Category(UnitTest.class)
     public final void testAddAndContainsWithOverwrite() {
 
-        final T set = createSet(0);
-
-        assertThat(set.isEmpty()).isTrue();
-        assertThat(set.getNumElements()).isEqualTo(0);
-
         for (int numElements = 1; numElements <= MAX_ELEMENTS; numElements *= 10) {
+
+            final T set = createSet(0);
+
+            assertThat(set.isEmpty()).isTrue();
+            assertThat(set.getNumElements()).isEqualTo(0);
 
             for (int i = 0; i < numElements; ++ i) {
 

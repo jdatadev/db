@@ -5,41 +5,52 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.elements.BaseNumElements;
-import dev.jdata.db.utils.adt.elements.Elements;
-import dev.jdata.db.utils.scalars.Integers;
+import dev.jdata.db.utils.adt.elements.IElements;
 
-public final class FreeList<T> extends BaseNumElements implements Freeing<T>, Elements {
+public final class FreeList<T> implements Freeing<T>, IElements {
 
     private T[] list;
+    private int numElements;
 
     public FreeList(IntFunction<T[]> createArray) {
 
         Objects.requireNonNull(createArray);
 
         this.list = createArray.apply(10);
+        this.numElements = 0;
+    }
+
+    @Override
+    public boolean isEmpty() {
+
+        return numElements == 0;
+    }
+
+    @Override
+    public long getNumElements() {
+
+        return numElements;
     }
 
     public T allocate() {
 
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(getNumElements());
+        final T result;
 
-        if (numElements == 0) {
+        if (numElements != 0) {
 
-            throw new IllegalStateException();
+            result = list[-- numElements];
+        }
+        else {
+            result = null;
         }
 
-        decrementNumElements();
-
-        return list[numElements - 1];
+        return result;
     }
 
     @Override
     public void free(T instance) {
 
         Objects.requireNonNull(instance);
-
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(getNumElements());
 
         if (Array.containsInstance(list, 0, numElements, instance)) {
 
@@ -53,8 +64,6 @@ public final class FreeList<T> extends BaseNumElements implements Freeing<T>, El
             this.list = Arrays.copyOf(list, listLength * 2);
         }
 
-        list[numElements] = instance;
-
-        incrementNumElements();
+        list[numElements ++] = instance;
     }
 }

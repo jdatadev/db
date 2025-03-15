@@ -2,10 +2,10 @@ package dev.jdata.db.storage.backend.tabledata.file.bitcompressed;
 
 import java.io.IOException;
 
+import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
 import dev.jdata.db.data.RowDataNumBits;
 import dev.jdata.db.data.tables.TableByIdMap;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
-import dev.jdata.db.storage.backend.tabledata.NumStorageBitsGetter;
 import dev.jdata.db.storage.backend.tabledata.file.BaseFileTableDataStorageBackend;
 import dev.jdata.db.storage.backend.tabledata.file.FileTableStorageFile;
 import dev.jdata.db.storage.backend.tabledata.file.FileTableStorageFiles;

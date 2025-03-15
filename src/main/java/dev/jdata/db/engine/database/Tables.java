@@ -2,6 +2,7 @@ package dev.jdata.db.engine.database;
 
 import java.util.Objects;
 
+import dev.jdata.db.DBConstants;
 import dev.jdata.db.schema.DatabaseSchema;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -12,17 +13,19 @@ public final class Tables {
     Tables(DatabaseSchema databaseSchema, long[] initialRowIds) {
 
         Objects.requireNonNull(databaseSchema);
-        Objects.requireNonNull(initialRowIds);
 
         final int numTables = databaseSchema.getMaxTableId() + 1;
 
-        Checks.areEqual(numTables, initialRowIds.length);
+        if (initialRowIds != null) {
+
+            Checks.areEqual(numTables, initialRowIds.length);
+        }
 
         this.tables = new TableState[numTables];
 
         for (int tableId = 0; tableId < numTables; ++ tableId) {
 
-            tables[tableId] = new TableState(initialRowIds[tableId]);
+            tables[tableId] = new TableState(initialRowIds != null ?initialRowIds[tableId] : DBConstants.INITIAL_ROW_ID);
         }
     }
 

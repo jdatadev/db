@@ -21,4 +21,19 @@ public class HashFunctions {
 
         return hashKey(key) & keyMask;
     }
+
+    public static int objectHashIndex(Object object, int keyMask) {
+
+        return object.hashCode() & keyMask;
+    }
+
+    public static long longHashKey(long key) {
+
+        return key;
+    }
+
+    public static long longHashIndex(long key, long keyMask) {
+
+        return longHashKey(key) & keyMask;
+    }
 }

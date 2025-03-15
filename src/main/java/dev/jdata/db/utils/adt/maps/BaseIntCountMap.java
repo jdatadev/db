@@ -3,9 +3,9 @@ package dev.jdata.db.utils.adt.maps;
 import java.util.Map;
 import java.util.Objects;
 
-import dev.jdata.db.utils.adt.MutableElements;
+import dev.jdata.db.utils.adt.elements.IMutableElements;
 
-public abstract class BaseIntCountMap<M extends Map<Integer, Integer>, C extends BaseCountMap<Integer, M>> implements MutableElements {
+public abstract class BaseIntCountMap<M extends Map<Integer, Integer>, C extends BaseCountMap<Integer, M>> implements IMutableElements {
 
     @FunctionalInterface
     public interface ForEachElement<E extends Exception> {

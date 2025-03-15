@@ -5,6 +5,7 @@ import java.util.function.IntFunction;
 import dev.jdata.db.utils.State;
 import dev.jdata.db.utils.adt.lists.MultiTypeFreeList;
 
+@Deprecated // currently not in use
 public abstract class BaseMultiTypeDescriptorables<T extends Enum<T> & State, U extends BaseDescriptorable<T>> extends BaseDescriptorables<T, U, MultiTypeFreeList<U>> {
 
     @SafeVarargs

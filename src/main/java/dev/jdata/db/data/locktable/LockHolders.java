@@ -1,9 +1,9 @@
 package dev.jdata.db.data.locktable;
 
 import dev.jdata.db.LockType;
-import dev.jdata.db.utils.adt.elements.Elements;
+import dev.jdata.db.utils.adt.elements.IElements;
 
-public final class LockHolders implements Elements {
+public final class LockHolders implements IElements {
 
     private final long[] lockInfoValues;
 

@@ -1,5 +1,8 @@
 package dev.jdata.db.utils.adt.buffers;
 
+import java.nio.ByteBuffer;
+import java.util.function.ToIntFunction;
+
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.arrays.BaseLargeByteArray;
@@ -7,6 +10,7 @@ import dev.jdata.db.utils.adt.decimals.MutableDecimal;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.function.ByteGetter;
 import dev.jdata.db.utils.scalars.Integers;
 
 public final class BitBuffer extends BaseLargeByteArray {
@@ -330,11 +334,21 @@ public final class BitBuffer extends BaseLargeByteArray {
 
     public void addBytes(byte[] byteBuffer, long byteBufferBitOffset, int numBits) {
 
+        addBytes(byteBuffer, byteBufferBitOffset, numBits, (b, i) -> b[i], b -> b.length);
+    }
+
+    public void addBytes(ByteBuffer byteBuffer, long byteBufferBitOffset, int numBits) {
+
+        addBytes(byteBuffer, byteBufferBitOffset, numBits, ByteBuffer::get, ByteBuffer::remaining);
+    }
+
+    private <T> void addBytes(T byteBuffer, long byteBufferBitOffset, int numBits, ByteGetter<T> byteGetter, ToIntFunction<T> lengthGetter) {
+
         Checks.isLessThanOrEqualTo(numBits, innerBitsCapacity);
 
         if (DEBUG) {
 
-            enter(b -> b.add("byteBuffer.length", byteBuffer.length).add("byteBufferBitOffset", byteBufferBitOffset).add("numBits", numBits));
+            enter(b -> b.add("byteBuffer.length", lengthGetter.applyAsInt(byteBuffer)).add("byteBufferBitOffset", byteBufferBitOffset).add("numBits", numBits));
         }
 
         final byte[] byteArray = getLastBufferOrAllocate();
@@ -349,7 +363,7 @@ public final class BitBuffer extends BaseLargeByteArray {
 
         if (numBits < numValueBitsRemaining) {
 
-            BitBufferUtil.copyBits(byteBuffer, srcBitOffset, numBits, byteArray, dstBitOffset, numBits);
+            BitBufferUtil.copyBits(byteBuffer, srcBitOffset, numBits, byteArray, dstBitOffset, numBits, byteGetter, lengthGetter);
 
             final int updatedNumByteArrayStoredBits = numByteArrayStoredBits + numBits;
 
@@ -363,7 +377,7 @@ public final class BitBuffer extends BaseLargeByteArray {
         else {
             final int numNextByteArrayBitsToStore = numBits - numValueBitsRemaining;
 
-            BitBufferUtil.copyBits(byteBuffer, srcBitOffset, numValueBitsRemaining, byteArray, dstBitOffset, numValueBitsRemaining);
+            BitBufferUtil.copyBits(byteBuffer, srcBitOffset, numValueBitsRemaining, byteArray, dstBitOffset, numValueBitsRemaining, byteGetter, lengthGetter);
 
             final int updatedNumByteArrayStoredBits = numByteArrayStoredBits + numValueBitsRemaining;
 
@@ -377,7 +391,7 @@ public final class BitBuffer extends BaseLargeByteArray {
             final byte[] nextByteArray = allocate();
 
             BitBufferUtil.copyBits(byteBuffer, srcBitOffset + numValueBitsRemaining, numNextByteArrayBitsToStore, nextByteArray, NUM_INNER_ELEMENTS_NUM_BITS,
-                    numNextByteArrayBitsToStore);
+                    numNextByteArrayBitsToStore, byteGetter, lengthGetter);
 
             if (DEBUG) {
 

@@ -3,6 +3,7 @@ package dev.jdata.db.storage.backend.tabledata.file;
 import java.io.IOException;
 import java.util.Objects;
 
+import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
 import dev.jdata.db.data.RowDataNumBits;
 import dev.jdata.db.data.tables.TableByIdMap;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
@@ -11,9 +12,9 @@ import dev.jdata.db.storage.backend.StorageDeleteRows;
 import dev.jdata.db.storage.backend.StorageInsertRows;
 import dev.jdata.db.storage.backend.StorageUpdateRows;
 import dev.jdata.db.storage.backend.tabledata.BaseTableDataStorageBackend;
-import dev.jdata.db.storage.backend.tabledata.NumStorageBitsGetter;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema;
 import dev.jdata.db.storage.backend.tabledata.TableDataStorageBackend;
+import dev.jdata.db.utils.allocators.IByteArrayAllocator;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
@@ -41,7 +42,7 @@ public abstract class BaseFileTableDataStorageBackend extends BaseTableDataStora
     }
 
     @Override
-    public final void insertRows(int tableId, StorageInsertRows rows, ByteBufferAllocator byteBufferAllocator) throws IOException {
+    public final void insertRows(int tableId, StorageInsertRows rows, IByteArrayAllocator byteBufferAllocator) throws IOException {
 
         Checks.isTableId(tableId);
         Objects.requireNonNull(rows);
@@ -58,13 +59,13 @@ public abstract class BaseFileTableDataStorageBackend extends BaseTableDataStora
 
             final int outputRowBufferCapacity = (totalNumRowBytes * rows.getNumRows()) + getMaxLeftOverBytes();
 
-            final byte[] outputRowBuffer = byteBufferAllocator.allocate(outputRowBufferCapacity);
+            final byte[] outputRowBuffer = byteBufferAllocator.allocateByteArray(outputRowBufferCapacity);
 
             try {
                 append(currentFileTableStorageFile, rows, outputRowBuffer);
             }
             finally {
-                byteBufferAllocator.free(outputRowBuffer);
+                byteBufferAllocator.freeByteArray(outputRowBuffer);
             }
         }
     }
@@ -155,7 +156,7 @@ public abstract class BaseFileTableDataStorageBackend extends BaseTableDataStora
     }
 
     @Override
-    public final void updateRows(int tableId, StorageUpdateRows rows, ByteBufferAllocator byteBufferAllocator) throws IOException {
+    public final void updateRows(int tableId, StorageUpdateRows rows, IByteArrayAllocator byteBufferAllocator) throws IOException {
 
         Checks.isTableId(tableId);
         Objects.requireNonNull(rows);
@@ -167,18 +168,18 @@ public abstract class BaseFileTableDataStorageBackend extends BaseTableDataStora
 
             final int outputRowBufferCapacity = rows.getMaxTotalNumRowBytes() + getMaxLeftOverBytes();
 
-            final byte[] outputRowBuffer = byteBufferAllocator.allocate(outputRowBufferCapacity);
+            final byte[] outputRowBuffer = byteBufferAllocator.allocateByteArray(outputRowBufferCapacity);
 
             try {
                 updateRows(fileTableStorageFiles, rows, outputRowBuffer, byteBufferAllocator);
             }
             finally {
-                byteBufferAllocator.free(outputRowBuffer);
+                byteBufferAllocator.freeByteArray(outputRowBuffer);
             }
         }
     }
 
-    private void updateRows(FileTableStorageFiles fileTableStorageFiles, StorageUpdateRows rows, byte[] outputRowBuffer, ByteBufferAllocator byteBufferAllocator) throws IOException {
+    private void updateRows(FileTableStorageFiles fileTableStorageFiles, StorageUpdateRows rows, byte[] outputRowBuffer, IByteArrayAllocator byteBufferAllocator) throws IOException {
 
         final int numRows = rows.getNumRows();
 
@@ -233,7 +234,7 @@ public abstract class BaseFileTableDataStorageBackend extends BaseTableDataStora
     }
 
     @Override
-    public final void deleteRows(int tableId, StorageDeleteRows rows, ByteBufferAllocator byteBufferAllocator) throws IOException {
+    public final void deleteRows(int tableId, StorageDeleteRows rows, IByteArrayAllocator byteBufferAllocator) throws IOException {
 
         Checks.isTableId(tableId);
         Objects.requireNonNull(rows);
@@ -245,18 +246,18 @@ public abstract class BaseFileTableDataStorageBackend extends BaseTableDataStora
 
             final int outputRowBufferCapacity = 100;
 
-            final byte[] outputRowBuffer = byteBufferAllocator.allocate(outputRowBufferCapacity);
+            final byte[] outputRowBuffer = byteBufferAllocator.allocateByteArray(outputRowBufferCapacity);
 
             try {
                 deleteRows(fileTableStorageFiles, rows, outputRowBuffer, byteBufferAllocator);
             }
             finally {
-                byteBufferAllocator.free(outputRowBuffer);
+                byteBufferAllocator.freeByteArray(outputRowBuffer);
             }
         }
     }
 
-    private void deleteRows(FileTableStorageFiles fileTableStorageFiles, StorageDeleteRows rows, byte[] outputRowBuffer, ByteBufferAllocator byteBufferAllocator) throws IOException {
+    private void deleteRows(FileTableStorageFiles fileTableStorageFiles, StorageDeleteRows rows, byte[] outputRowBuffer, IByteArrayAllocator byteBufferAllocator) throws IOException {
 
         final int numRows = rows.getNumRows();
 

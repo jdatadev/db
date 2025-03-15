@@ -1,12 +1,12 @@
 package dev.jdata.db.utils.adt.lists;
 
 import java.util.Arrays;
-import java.util.function.Consumer;
 
+import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterList<T, U>, U>> extends BaseInnerOuterList<T, U> {
+public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterList<T, U>, U>> extends BaseInnerOuterList<T, U> implements IClearable {
 
     public static boolean isEmpty(long headNode, long tailNode) {
 
@@ -45,6 +45,8 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
     abstract void reallocateOuter(int newOuterLength);
     abstract void allocateInner(int outerIndex, int innerCapacity);
 
+    abstract void clearNumElements();
+
     BaseLargeList(int initialOuterCapacity, int innerCapacity, BaseValuesFactory<T, U> valuesFactory) {
         super(valuesFactory.create(initialOuterCapacity), 32, BitsUtil.maskLong(32, 0));
 
@@ -65,12 +67,32 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
     }
 
     @Override
+    public final void clear() {
+
+        clearNumElements();
+
+        final int numOuter = numOuterEntries;
+
+        for (int i = 0; i < numOuter; ++ i) {
+
+            next[i][0] = 0;
+        }
+
+        this.freeListHead = NO_NODE;
+    }
+
+    @Override
     public final long getNextNode(long node) {
 
         return getNode(next, node);
     }
 
-    <I> void clearNodes(I instance, long headNode, LongNodeSetter<I> headNodeSetter, LongNodeSetter<I> tailNodeSetter, Consumer<I> clearNumElements) {
+    public final int getNumOuterAllocatedEntries() {
+
+        return next.length;
+    }
+
+    final <I> void clearNodes(I instance, long headNode, LongNodeSetter<I> headNodeSetter, LongNodeSetter<I> tailNodeSetter) {
 
         for (long node = headNode; node != NO_NODE; node = getNextNode(node)) {
 
@@ -79,11 +101,6 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
 
         headNodeSetter.setNode(instance, NO_NODE);
         tailNodeSetter.setNode(instance, NO_NODE);
-
-        if (clearNumElements != null) {
-
-            clearNumElements.accept(instance);
-        }
     }
 
     final void addNodeToFreeList(long node) {
@@ -142,7 +159,7 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
 
                 if (numOuterEntries == currentOuterLength) {
 
-                    final int newOuterLength = currentOuterLength * 4;
+                    final int newOuterLength = currentOuterLength << 2;
 
                     reallocateOuter(newOuterLength);
 
@@ -157,14 +174,14 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
 
                 allocateInner(numOuterEntries, innerToAllocate);
 
-                values.allocateInner(numOuterEntries ++,  innerToAllocate);
+                values.allocateInner(numOuterEntries ++, innerToAllocate);
 
                 numNodes = 0;
             }
 
             ++ array[0];
 
-            result = ((numOuterEntries - 1) << 32) | numNodes;
+            result = (((long)numOuterEntries - 1) << 32) | numNodes;
         }
 
         return result;
@@ -190,9 +207,9 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
         return tailNode;
     }
 
-    final void setNextNode(long node, long value) {
+    final void setNextNode(long node, long nextNode) {
 
-        setNode(next, node, value);
+        setNode(next, node, nextNode);
     }
 
     static long[] allocateListNodes(int capacity) {

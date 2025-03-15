@@ -1,5 +1,6 @@
 package dev.jdata.db.dml;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -12,16 +13,16 @@ public abstract class DMLInsertUpdateRows<T extends DMLInsertUpdateRows.InsertUp
 
     public static abstract class InsertUpdateRow extends DMLRow {
 
-        private byte[] rowBuffer;
+        private ByteBuffer rowBuffer;
         private long rowBufferBitOffset;
 
-        public final void initialize(byte[] rowBuffer, long rowBufferBitOffset) {
+        public final void initialize(ByteBuffer rowBuffer, long rowBufferBitOffset) {
 
             this.rowBuffer = Objects.requireNonNull(rowBuffer);
             this.rowBufferBitOffset = Checks.isOffset(rowBufferBitOffset);
         }
 
-        final byte[] getRowBuffer() {
+        final ByteBuffer getRowBuffer() {
             return rowBuffer;
         }
 
@@ -32,7 +33,7 @@ public abstract class DMLInsertUpdateRows<T extends DMLInsertUpdateRows.InsertUp
         @Override
         public String toString() {
 
-            return getClass().getSimpleName() + " [rowBuffer=" + Arrays.toString(rowBuffer) + ", rowBufferBitOffset=" + rowBufferBitOffset + "]";
+            return getClass().getSimpleName() + " [rowBuffer=" + rowBuffer + ", rowBufferBitOffset=" + rowBufferBitOffset + "]";
         }
     }
 
@@ -48,13 +49,17 @@ public abstract class DMLInsertUpdateRows<T extends DMLInsertUpdateRows.InsertUp
 
     public final void initialize(T[] rows, int numRows, int numColumns, RowDataNumBits rowDataNumBits) {
 
+        Objects.checkFromIndexSize(0, numRows, rows.length);
+        Checks.isNumColumns(numColumns);
+        Objects.requireNonNull(rowDataNumBits);
+        Checks.areEqual(numColumns, rowDataNumBits.getNumColumns());
+
         initialize(rows, numRows);
 
-        this.numColumns = Checks.isNumColumns(numColumns);
-        this.rowDataNumBits = Objects.requireNonNull(rowDataNumBits);
+        this.numColumns = numColumns;
+        this.rowDataNumBits = rowDataNumBits;
     }
 
-    @Deprecated
     public final void setColumnMapping(int index, int tableColumn) {
 
         Objects.checkIndex(index, numColumns);
@@ -72,14 +77,14 @@ public abstract class DMLInsertUpdateRows<T extends DMLInsertUpdateRows.InsertUp
         return numColumns;
     }
 
-    public int getTableColumn(int index) {
+    public final int getTableColumn(int index) {
 
         Objects.checkIndex(index, numColumns);
 
         return tableColumns[index];
     }
 
-    public final byte[] getRowBuffer(int rowIndex) {
+    public final ByteBuffer getRowBuffer(int rowIndex) {
 
         return getRows()[rowIndex].getRowBuffer();
     }

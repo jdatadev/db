@@ -41,6 +41,13 @@ public final class ListsTest extends BaseCollectionsTest<List<Integer>, List<Str
         assertThatThrownBy(() -> unmodifiableCopy.add(123)).isInstanceOf(UnsupportedOperationException.class);
     }
 
+    @Test
+    @Category(UnitTest.class)
+    public void testRemove() {
+
+        throw new UnsupportedOperationException();
+    }
+
     @Override
     protected List<Integer> createCollection(Integer[] values) {
 

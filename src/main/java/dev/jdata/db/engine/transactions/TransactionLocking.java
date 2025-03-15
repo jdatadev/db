@@ -10,9 +10,9 @@ import dev.jdata.db.data.locktable.LockTable.NotLockedException;
 import dev.jdata.db.dml.DMLInsertRows;
 import dev.jdata.db.dml.DMLUpdateRows;
 import dev.jdata.db.schema.Table;
-import dev.jdata.db.utils.adt.arrays.IntLargeArray;
+import dev.jdata.db.utils.adt.arrays.ILongArrayGetters;
+import dev.jdata.db.utils.adt.arrays.LargeIntArray;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
-import dev.jdata.db.utils.adt.arrays.LongLargeArray;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
@@ -23,8 +23,8 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
 
     private static final boolean ASSERT = AssertionContants.ASSERT_TRANSACTION_LOCKING;
 
-    private final LongLargeArray lockedTableRows;
-    private final IntLargeArray lockStatements;
+    private final LargeLongArray lockedTableRows;
+    private final LargeIntArray lockStatements;
 
     private int transactionDescriptor;
 
@@ -35,8 +35,8 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
         final int initialOuterCapacity = 1;
         final int innerCapacity = 10000;
 
-        this.lockedTableRows = new LongLargeArray(initialOuterCapacity, innerCapacity);
-        this.lockStatements = new IntLargeArray(initialOuterCapacity, innerCapacity);
+        this.lockedTableRows = new LargeLongArray(initialOuterCapacity, innerCapacity);
+        this.lockStatements = new LargeIntArray(initialOuterCapacity, innerCapacity);
 
         init(transactionDescriptor);
     }
@@ -47,13 +47,13 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
     }
 
     @Override
-    public OperationResult insertRows(LockTable lockTable, Table table, int statementId, LargeLongArray rowIds, DMLInsertRows rows) {
+    public OperationResult insertRows(LockTable lockTable, Table table, int statementId, ILongArrayGetters rowIds, DMLInsertRows rows) {
 
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public OperationResult updateRows(LockTable lockTable, Table table, int statementId, LargeLongArray rowIds, DMLUpdateRows rows) {
+    public OperationResult updateRows(LockTable lockTable, Table table, int statementId, ILongArrayGetters rowIds, DMLUpdateRows rows) {
 
         Objects.requireNonNull(lockTable);
         Objects.requireNonNull(table);
@@ -74,7 +74,7 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
     }
 
     @Override
-    public OperationResult deleteRows(LockTable lockTable, Table table, int statementId, LargeLongArray rowIds) {
+    public OperationResult deleteRows(LockTable lockTable, Table table, int statementId, ILongArrayGetters rowIds) {
 
         Objects.requireNonNull(lockTable);
         Objects.requireNonNull(table);

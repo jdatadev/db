@@ -11,25 +11,23 @@ abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInner
 
     }
 
-    final long addHeadNodeAndReturnNode(long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long addHeadNodeAndReturnNode(T instance, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
 
         final long node = allocateNextNode();
 
         setNextNode(node, headNode);
 
-        final T thisList = getThis();
-
-        headNodeSetter.setNode(thisList, node);
+        headNodeSetter.setNode(instance, node);
 
         if (tailNode == NO_NODE) {
 
-            tailNodeSetter.setNode(thisList, node);
+            tailNodeSetter.setNode(instance, node);
         }
 
         return node;
     }
 
-    final long addTailNodeAndReturnNode(long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long addTailNodeAndReturnNode(T instance, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
 
         final long node = allocateNextNode();
 
@@ -38,15 +36,13 @@ abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInner
             setNextNode(tailNode, node);
         }
 
-        final T thisList = getThis();
-
-        tailNodeSetter.setNode(thisList, node);
+        tailNodeSetter.setNode(instance, node);
 
         if (headNode == NO_NODE) {
 
             setNextNode(node, headNode);
 
-            headNodeSetter.setNode(thisList, node);
+            headNodeSetter.setNode(instance, node);
         }
 
         setNextNode(node, NO_NODE);
@@ -54,30 +50,28 @@ abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInner
         return node;
     }
 
-    final long removeHeadNodeAndReturnNode(long headNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long removeHeadNodeAndReturnNode(T instance, long headNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
 
         if (headNode == NO_NODE) {
 
             throw new IllegalStateException();
         }
 
-        final T listThis = getThis();
-
         final long newHeadNode = getNextNode(headNode);
 
-        headNodeSetter.setNode(listThis, newHeadNode);
+        headNodeSetter.setNode(instance, newHeadNode);
 
         addNodeToFreeList(headNode);
 
         if (newHeadNode == NO_NODE) {
 
-            tailNodeSetter.setNode(listThis, NO_NODE);
+            tailNodeSetter.setNode(instance, NO_NODE);
         }
 
         return headNode;
     }
 
-    final long removeTailNodeAndReturnNode(long newTailNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long removeTailNodeAndReturnNode(T instance, long newTailNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
 
         if (tailNode == NO_NODE) {
 
@@ -86,23 +80,33 @@ abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInner
 
         addNodeToFreeList(tailNode);
 
-        final T listThis = getThis();
-
         if (newTailNode != NO_NODE) {
 
             setNextNode(newTailNode, NO_NODE);
 
-            tailNodeSetter.setNode(listThis, newTailNode);
+            tailNodeSetter.setNode(instance, newTailNode);
         }
         else {
-            headNodeSetter.setNode(listThis, NO_NODE);
-            tailNodeSetter.setNode(listThis, NO_NODE);
+            headNodeSetter.setNode(instance, NO_NODE);
+            tailNodeSetter.setNode(instance, NO_NODE);
         }
 
         return tailNode;
     }
 
-    final void removeNode(long node, long previousNode, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final void removeNodeByFindingPreviousNode(T instance, long node, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+
+        long previousNode = NO_NODE;
+
+        for (long n = headNode; n != node; n = getNextNode(n)) {
+
+            previousNode = n;
+        }
+
+        removeNode(instance, node, previousNode, headNode, tailNode, headNodeSetter, tailNodeSetter);
+    }
+
+    final void removeNode(T instance, long node, long previousNode, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
 
         if (isEmpty(headNode, tailNode)) {
 
@@ -111,11 +115,11 @@ abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInner
 
         if (node == headNode) {
 
-            removeHeadNodeAndReturnNode(headNode, headNodeSetter, tailNodeSetter);
+            removeHeadNodeAndReturnNode(instance, headNode, headNodeSetter, tailNodeSetter);
         }
         else if (node == tailNode) {
 
-            removeTailNodeAndReturnNode(previousNode, tailNode, headNodeSetter, tailNodeSetter);
+            removeTailNodeAndReturnNode(instance, previousNode, tailNode, headNodeSetter, tailNodeSetter);
         }
         else {
             if (previousNode != NO_NODE) {
@@ -127,11 +131,5 @@ abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInner
 
             addNodeToFreeList(node);
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private T getThis() {
-
-        return (T)this;
     }
 }

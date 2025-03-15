@@ -4,7 +4,7 @@ public class AssertionContants {
 
     private static final boolean ASSERT_SESSION = Boolean.TRUE;
 
-    public static final boolean ASSERT_BASE_SESSION = ASSERT_SESSION;
+    public static final boolean ASSERT_DB_SESSION = ASSERT_SESSION;
 
     private static final boolean ASSERT_TRANSACTION_MANAGEMENT = Boolean.TRUE;
 
@@ -37,6 +37,8 @@ public class AssertionContants {
 
     public static final boolean ASSERT_INT_SET = ASSERT_SETS;
     public static final boolean ASSERT_LONG_SET = ASSERT_SETS;
+
+    public static final boolean ASSERT_BASE_OBJECT_MAP = ASSERT_MAPS;
 
 //    public static final boolean ASSERT_BIT_BUFFER_SET_VALUE = ASSERT_BIT_BUFFERS;
 

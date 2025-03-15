@@ -3,6 +3,7 @@ package dev.jdata.db.storage.backend.tabledata;
 import java.util.Arrays;
 import java.util.Objects;
 
+import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
 import dev.jdata.db.schema.Column;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.Table;

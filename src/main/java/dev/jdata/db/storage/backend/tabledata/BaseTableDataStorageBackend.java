@@ -2,6 +2,7 @@ package dev.jdata.db.storage.backend.tabledata;
 
 import java.util.Objects;
 
+import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
 
 public abstract class BaseTableDataStorageBackend implements TableDataStorageBackend {

@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import dev.jdata.db.utils.adt.KeyElements;
 import dev.jdata.db.utils.adt.KeySetElements;
-import dev.jdata.db.utils.adt.elements.Elements;
+import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.adt.maps.IMapOfCollection;
 import dev.jdata.db.utils.adt.maps.LongKeyMap;
 import dev.jdata.db.utils.adt.sets.IntSet;
@@ -12,7 +12,7 @@ import dev.jdata.db.utils.adt.sets.LongSet;
 
 public class CustomAssertJAssertions extends org.assertj.core.api.Assertions {
 
-    public static ElementsAssert assertThat(Elements actual) {
+    public static ElementsAssert assertThat(IElements actual) {
 
         return new ElementsAssert(actual);
     }

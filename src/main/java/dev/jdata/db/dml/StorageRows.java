@@ -2,10 +2,10 @@ package dev.jdata.db.dml;
 
 import java.util.Objects;
 
-import dev.jdata.db.utils.adt.elements.Elements;
+import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class StorageRows<T> implements Elements {
+public abstract class StorageRows<T> implements IElements {
 
     private T rows;
     private int numRows;
