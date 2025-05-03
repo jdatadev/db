@@ -1,7 +1,6 @@
 package dev.jdata.db.sql.ast.statements.trigger;
 
-import java.util.List;
-
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.context.Context;
 
 public final class SQLForEachRowTriggeredActions extends SQLTriggeredActions {
@@ -10,7 +9,7 @@ public final class SQLForEachRowTriggeredActions extends SQLTriggeredActions {
     private final long eachKeyword;
     private final long rowKeyword;
 
-    public SQLForEachRowTriggeredActions(Context context, long forKeyword, long eachKeyword, long rowKeyword, List<SQLTriggeredAction> actions) {
+    public SQLForEachRowTriggeredActions(Context context, long forKeyword, long eachKeyword, long rowKeyword, IListGetters<SQLTriggeredAction> actions) {
         super(context, actions);
 
         this.forKeyword = checkIsKeyword(forKeyword);

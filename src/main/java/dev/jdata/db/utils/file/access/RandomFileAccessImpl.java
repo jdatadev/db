@@ -6,15 +6,15 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.util.Objects;
 
-import dev.jdata.db.utils.file.access.FileSystemAccess.OpenMode;
+import dev.jdata.db.utils.file.access.IFileSystemAccess.OpenMode;
 
 final class RandomFileAccessImpl extends BaseDataInputOutputFileAccess<RandomAccessFile> implements RandomFileAccess {
 
-    RandomFileAccessImpl(AbsoluteFileSystemAccess fileSystemAccess, AbsoluteFilePath filePath, OpenMode openMode) throws FileNotFoundException {
+    RandomFileAccessImpl(IAbsoluteFileSystemAccess fileSystemAccess, AbsoluteFilePath filePath, OpenMode openMode) throws FileNotFoundException {
         super(createRandomAccessFile(fileSystemAccess, filePath, openMode));
     }
 
-    private static RandomAccessFile createRandomAccessFile(AbsoluteFileSystemAccess fileSystemAccess, AbsoluteFilePath filePath, OpenMode openMode)
+    private static RandomAccessFile createRandomAccessFile(IAbsoluteFileSystemAccess fileSystemAccess, AbsoluteFilePath filePath, OpenMode openMode)
             throws FileNotFoundException {
 
         Objects.requireNonNull(fileSystemAccess);
@@ -32,7 +32,13 @@ final class RandomFileAccessImpl extends BaseDataInputOutputFileAccess<RandomAcc
             fileExists = true;
             break;
 
-        case READ_WRITE_CREATE:
+        case WRITE_ONLY_CREATE_FAIL_IF_EXISTS:
+
+            mode = "w";
+            fileExists = false;
+            break;
+
+        case READ_WRITE_CREATE_FAIL_IF_EXISTS:
 
             mode = "rw";
             fileExists = false;

@@ -1,26 +1,29 @@
 package dev.jdata.db.utils.adt.lists;
 
+import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseInnerOuterList<T, V extends BaseValues<T, BaseInnerOuterList<T, V>, V>> extends BaseList<T, BaseInnerOuterList<T, V>, V> {
+public abstract class BaseInnerOuterList<
+                LIST_T,
+                LIST extends BaseInnerOuterList<LIST_T, LIST, VALUES>,
+                VALUES extends BaseValues<LIST_T, LIST, VALUES>> extends BaseList<LIST_T, LIST, VALUES> {
 
     private final int outerShift;
-
     private final long innerMask;
 
-    BaseInnerOuterList(V values, int outerShift, long innerMask) {
+    BaseInnerOuterList(VALUES values, int numInnerBits) {
         super(values);
 
-        this.outerShift = Checks.isNotNegative(outerShift);
-        this.innerMask = innerMask;
+        this.outerShift = Checks.isNotNegative(numInnerBits);
+        this.innerMask = BitsUtil.maskLong(numInnerBits);
     }
 
-    final int getOuterIndex(long node) {
+    public final int getOuterIndex(long node) {
 
         return (int)(node >>> outerShift);
     }
 
-    final int getInnerIndex(long node) {
+    public final int getInnerIndex(long node) {
 
         return (int)(node & innerMask);
     }

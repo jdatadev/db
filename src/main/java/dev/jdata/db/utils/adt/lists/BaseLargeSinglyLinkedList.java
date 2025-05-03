@@ -1,17 +1,23 @@
 package dev.jdata.db.utils.adt.lists;
 
-abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInnerOuterList<U, V>, V>> extends BaseLargeList<U, V> {
+public abstract class BaseLargeSinglyLinkedList<
+                INSTANCE,
+                LIST_T,
+                LIST extends BaseLargeSinglyLinkedList<INSTANCE, LIST_T, LIST, VALUES>,
+                VALUES extends BaseValues<LIST_T, LIST, VALUES>>
 
-    BaseLargeSinglyLinkedList(int initialOuterCapacity, int innerCapacity, BaseValuesFactory<U, V> valuesFactory) {
+        extends BaseLargeList<LIST_T, LIST, VALUES> {
+
+    protected BaseLargeSinglyLinkedList(int initialOuterCapacity, int innerCapacity, BaseValuesFactory<LIST_T, LIST, VALUES> valuesFactory) {
         super(initialOuterCapacity, innerCapacity, valuesFactory);
     }
 
     @Override
-    final void allocateInner(int outerIndex, int innerCapacity) {
+    final void allocateInner(int outerIndex, int innerArrayCapacity) {
 
     }
 
-    final long addHeadNodeAndReturnNode(T instance, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long addHeadNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = allocateNextNode();
 
@@ -27,7 +33,7 @@ abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInner
         return node;
     }
 
-    final long addTailNodeAndReturnNode(T instance, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long addTailNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = allocateNextNode();
 
@@ -50,7 +56,7 @@ abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInner
         return node;
     }
 
-    final long removeHeadNodeAndReturnNode(T instance, long headNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long removeHeadNodeAndReturnNode(INSTANCE instance, long headNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         if (headNode == NO_NODE) {
 
@@ -71,7 +77,7 @@ abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInner
         return headNode;
     }
 
-    final long removeTailNodeAndReturnNode(T instance, long newTailNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long removeTailNodeAndReturnNode(INSTANCE instance, long newTailNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         if (tailNode == NO_NODE) {
 
@@ -94,7 +100,7 @@ abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInner
         return tailNode;
     }
 
-    final void removeNodeByFindingPreviousNode(T instance, long node, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final void removeNodeByFindingPreviousNode(INSTANCE instance, long node, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         long previousNode = NO_NODE;
 
@@ -106,7 +112,7 @@ abstract class BaseLargeSinglyLinkedList<T, U, V extends BaseValues<U, BaseInner
         removeNode(instance, node, previousNode, headNode, tailNode, headNodeSetter, tailNodeSetter);
     }
 
-    final void removeNode(T instance, long node, long previousNode, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final void removeNode(INSTANCE instance, long node, long previousNode, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         if (isEmpty(headNode, tailNode)) {
 

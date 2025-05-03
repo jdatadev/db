@@ -1,10 +1,10 @@
 package dev.jdata.db.sql.parse.dml.insert;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
+import org.jutils.ast.objects.list.IAddableList;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.sql.ast.SQLAllocator;
@@ -39,7 +39,7 @@ public final class SQLInsertParser extends SQLStatementParser {
 
         final SQLAllocator allocator = lexer.getAllocator();
 
-        final List<Expression> expressions = allocator.allocateList(100);
+        final IAddableList<Expression> expressions = allocator.allocateList(100);
 
         lexer.lexExpect(SQLToken.LPAREN);
 

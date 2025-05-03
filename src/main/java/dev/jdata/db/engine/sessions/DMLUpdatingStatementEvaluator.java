@@ -12,7 +12,7 @@ import dev.jdata.db.engine.database.EvaluateException;
 import dev.jdata.db.engine.database.OverflowException;
 import dev.jdata.db.engine.database.SQLExpressionEvaluator;
 import dev.jdata.db.engine.transactions.Transaction;
-import dev.jdata.db.schema.Table;
+import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.sql.ast.clauses.SQLWhereClause;
 import dev.jdata.db.sql.ast.statements.dml.SQLColumnValueUpdateValue;
 import dev.jdata.db.sql.ast.statements.dml.SQLColumnValueUpdateValues;
@@ -21,7 +21,7 @@ import dev.jdata.db.sql.ast.statements.dml.SQLInsertStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateValues;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.arrays.ILongArrayGetters;
+import dev.jdata.db.utils.adt.arrays.ILongArray;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -31,7 +31,7 @@ public class DMLUpdatingStatementEvaluator {
 
         final TableAndColumnNames tableAndColumnNames = evaluatorParameter.getTableAndColumnNames();
 
-        final int tableId = tableAndColumnNames.getTableId(insertStatement.getTableName());
+        final int tableId = tableAndColumnNames.getColumnsObjectId(insertStatement.getTableName());
         final Table table = tableAndColumnNames.getTable(tableId);
 
         evaluatorParameter.initializeForDMLUpdateOperation(table);
@@ -113,7 +113,7 @@ public class DMLUpdatingStatementEvaluator {
 
         final TableAndColumnNames tableAndColumnNames = evaluatorParameter.getTableAndColumnNames();
 
-        final int tableId = tableAndColumnNames.getTableId(updateStatement.getTableName());
+        final int tableId = tableAndColumnNames.getColumnsObjectId(updateStatement.getTableName());
         final Table table = tableAndColumnNames.getTable(tableId);
 
         evaluatorParameter.initializeForDMLUpdateOperation(table);
@@ -160,12 +160,12 @@ public class DMLUpdatingStatementEvaluator {
     @FunctionalInterface
     private interface EvaluatedUpdateValuesProcessor<E extends Exception> {
 
-        void processEvaluatedValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArrayGetters rowIds,
+        void processEvaluatedValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArray rowIds,
                 DMLUpdatingEvaluatorParameter evaluatorParameter) throws OverflowException;
     }
 
     private static <E extends EvaluateException> void evaluteUpdateValues(ASTList<SQLColumnValueUpdateValue> values, SQLColumnValueUpdateValues updateValues,
-            ILongArrayGetters rowIds, DMLUpdatingEvaluatorParameter evaluatorParameter, EvaluatedUpdateValuesProcessor<E> evaluatedValuesProcessor) throws EvaluateException {
+            ILongArray rowIds, DMLUpdatingEvaluatorParameter evaluatorParameter, EvaluatedUpdateValuesProcessor<E> evaluatedValuesProcessor) throws EvaluateException {
 
         final int numColumns = values.size();
 
@@ -189,7 +189,7 @@ public class DMLUpdatingStatementEvaluator {
         }
     }
 
-    private static void storeUpdateValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArrayGetters rowIds,
+    private static void storeUpdateValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArray rowIds,
             DMLUpdatingEvaluatorParameter evaluatorParameter) throws OverflowException {
 
         final Transaction transaction = evaluatorParameter.getTransaction();

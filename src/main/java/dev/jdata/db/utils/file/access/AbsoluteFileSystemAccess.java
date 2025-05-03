@@ -2,10 +2,10 @@ package dev.jdata.db.utils.file.access;
 
 import java.nio.file.FileSystem;
 
-public interface AbsoluteFileSystemAccess extends FileSystemAccess<AbsoluteFilePath, AbsoluteDirectoryPath> {
+final class AbsoluteFileSystemAccess extends BaseNIOFileSystemAccess {
 
-    public static AbsoluteFileSystemAccess of(FileSystem fileSystem) {
-
-        return new AbsoluteFileSystemAccessImpl(fileSystem);
+    AbsoluteFileSystemAccess(FileSystem fileSystem, IPathAllocator<AbsoluteFilePath, AbsoluteDirectoryPath> absolutePathAllocator,
+            IPathAllocator<RelativeFilePath, RelativeDirectoryPath> relativePathAllocator, IPathObjectsAllocator pathObjectsAllocator) {
+        super(fileSystem, absolutePathAllocator, relativePathAllocator, pathObjectsAllocator);
     }
 }

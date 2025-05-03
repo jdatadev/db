@@ -1,8 +1,7 @@
 package dev.jdata.db.utils.adt.maps;
 
-import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.IGetters;
 
-public interface IMapGetters<K, V> extends IElements {
+public interface IMapGetters extends IGetters {
 
-    V get(K key);
 }

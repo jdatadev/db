@@ -8,7 +8,7 @@ import dev.jdata.db.DBConstants;
 import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.utils.adt.lists.FreeList;
 import dev.jdata.db.utils.adt.lists.Lists;
-import dev.jdata.db.utils.adt.sets.LongSet;
+import dev.jdata.db.utils.adt.sets.MutableLongBucketSet;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class MVCCTransactions {
@@ -29,7 +29,7 @@ public final class MVCCTransactions {
         this.freeList = new FreeList<>(MVCCTransaction[]::new);
     }
 
-    synchronized void select(TransactionSelect select, MVCCTransaction mvccTransaction, BufferedRows commitedRows, LongSet addedRowIdsDst, LongSet removedRowIdsDst,
+    synchronized void select(TransactionSelect select, MVCCTransaction mvccTransaction, BufferedRows commitedRows, MutableLongBucketSet addedRowIdsDst, MutableLongBucketSet removedRowIdsDst,
             List<MVCCTransaction> scratchTransansactionList) {
 
         Objects.requireNonNull(select);

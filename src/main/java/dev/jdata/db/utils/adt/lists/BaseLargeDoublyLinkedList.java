@@ -4,11 +4,17 @@ import java.util.Arrays;
 
 import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseLargeDoublyLinkedList<T, U, V extends BaseValues<U, BaseInnerOuterList<U, V>, V>> extends BaseLargeList<U, V> {
+abstract class BaseLargeDoublyLinkedList<
+                INSTANCE,
+                LIST_T,
+                LIST extends BaseLargeDoublyLinkedList<INSTANCE, LIST_T, LIST, VALUES>,
+                VALUES extends BaseValues<LIST_T, LIST, VALUES>>
+
+        extends BaseLargeList<LIST_T, LIST, VALUES> {
 
     private long[][] previous;
 
-    BaseLargeDoublyLinkedList(int initialOuterCapacity, int innerCapacity, BaseValuesFactory<U, V> valuesFactory) {
+    BaseLargeDoublyLinkedList(int initialOuterCapacity, int innerCapacity, BaseValuesFactory<LIST_T, LIST, VALUES> valuesFactory) {
         super(initialOuterCapacity, innerCapacity, valuesFactory);
 
         Checks.isCapacity(initialOuterCapacity);
@@ -33,12 +39,12 @@ abstract class BaseLargeDoublyLinkedList<T, U, V extends BaseValues<U, BaseInner
     }
 
     @Override
-    final void allocateInner(int outerIndex, int innerCapacity) {
+    final void allocateInner(int outerIndex, int innerArrayCapacity) {
 
-        previous[outerIndex] = new long[innerCapacity];
+        previous[outerIndex] = new long[innerArrayCapacity];
     }
 
-    final long addHeadNodeAndReturnNode(T instance, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long addHeadNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = allocateNextNode();
 
@@ -60,7 +66,7 @@ abstract class BaseLargeDoublyLinkedList<T, U, V extends BaseValues<U, BaseInner
         return node;
     }
 
-    final long addTailNodeAndReturnNode(T instance, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long addTailNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = allocateNextNode();
 
@@ -85,7 +91,7 @@ abstract class BaseLargeDoublyLinkedList<T, U, V extends BaseValues<U, BaseInner
         return node;
     }
 
-    final long removeHeadNodeAndReturnNode(T instance, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long removeHeadNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         if (isEmpty(headNode, tailNode)) {
 
@@ -109,7 +115,7 @@ abstract class BaseLargeDoublyLinkedList<T, U, V extends BaseValues<U, BaseInner
         return headNode;
     }
 
-    final long removeTailNodeAndReturnNode(T instance, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long removeTailNodeAndReturnNode(INSTANCE instance, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         if (tailNode == NO_NODE) {
 
@@ -136,7 +142,8 @@ abstract class BaseLargeDoublyLinkedList<T, U, V extends BaseValues<U, BaseInner
         return tailNode;
     }
 
-    final long removeListNodeAndReturnNode(T instance, long node, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long removeListNodeAndReturnNode(INSTANCE instance, long node, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter,
+            LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         if (isEmpty(headNode, tailNode)) {
 

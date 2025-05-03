@@ -3,9 +3,10 @@ package dev.jdata.db.engine.statements;
 import java.util.Objects;
 
 import dev.jdata.db.utils.adt.arrays.IIntArray;
-import dev.jdata.db.utils.adt.maps.IntToObjectMap;
+import dev.jdata.db.utils.adt.maps.MutableIntToObjectWithRemoveNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
 
+@Deprecated // statement cache?
 public final class SQLStatements {
 
     public static abstract class SQLStatement {
@@ -64,13 +65,13 @@ public final class SQLStatements {
 
     private int sqlStatementIdAllocator;
 
-    private final IntToObjectMap<SQLStatement> sqlStatementsById;
+    private final MutableIntToObjectWithRemoveNonBucketMap<SQLStatement> sqlStatementsById;
 
     public SQLStatements() {
 
         this.sqlStatementIdAllocator = 0;
 
-        this.sqlStatementsById = new IntToObjectMap<>(0, SQLStatement[]::new);
+        this.sqlStatementsById = new MutableIntToObjectWithRemoveNonBucketMap<>(0, SQLStatement[]::new);
     }
 
     public int prepareSQLStatement() {

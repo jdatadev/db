@@ -6,8 +6,9 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.allocators.IFreeing;
 
-public final class FreeList<T> implements Freeing<T>, IElements {
+public final class FreeList<T> implements IFreeing<T>, IElements {
 
     private T[] list;
     private int numElements;

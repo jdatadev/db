@@ -1,11 +1,10 @@
 package dev.jdata.db.sql.ast.conditions;
 
-import java.util.List;
-
 import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.ASTList;
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.context.Context;
 
 abstract class BaseSQLInCondition extends BaseSQLCondition {
@@ -13,7 +12,7 @@ abstract class BaseSQLInCondition extends BaseSQLCondition {
     private final long inKeyword;
     private final ASTList<Expression> expressions;
 
-    BaseSQLInCondition(Context context, long inKeyword, List<Expression> expressions) {
+    BaseSQLInCondition(Context context, long inKeyword, IListGetters<Expression> expressions) {
         super(context);
 
         this.inKeyword = checkIsKeyword(inKeyword);

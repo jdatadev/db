@@ -1,7 +1,6 @@
 package dev.jdata.db.engine.transactions.mvcc;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.function.IntFunction;
 
 import org.junit.Test;
@@ -20,13 +19,13 @@ import dev.jdata.db.engine.transactions.SelectColumn;
 import dev.jdata.db.engine.transactions.StringLookup;
 import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.engine.transactions.mvcc.MVCCTransaction.MVCCTransactionState;
-import dev.jdata.db.schema.Column;
-import dev.jdata.db.schema.Table;
+import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.types.IntegerType;
 import dev.jdata.db.test.unit.BaseTest;
+import dev.jdata.db.test.unit.TableBuilder;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.adt.arrays.ObjectArray;
-import dev.jdata.db.utils.adt.sets.LongSet;
+import dev.jdata.db.utils.adt.sets.MutableLongBucketSet;
 
 public final class MVCCTransactionTest extends BaseTest {
 
@@ -61,19 +60,20 @@ public final class MVCCTransactionTest extends BaseTest {
         final long rowId = 345L;
         final int intValue = 56;
 
-        final Column tableColumn = new Column("testcolumn" , IntegerType.INSTANCE, false);
-        final Table table = new Table(tableName, tableId, Arrays.asList(tableColumn));
+        final Table table = TableBuilder.create(tableName, tableId)
+                .addColumn("testcolumn", IntegerType.INSTANCE)
+                .build();
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = new LargeLongArray(1, 10);
+        final LargeLongArray rowIds = new LargeLongArray(1, 10, null);
 
         final DMLInsertRows rows = makeInsertRows(rowId, rowIds, intValue);
 
         mvccTransaction.insertRows(mvccSharedState, table, statementId, rowIds, rows);
 
-        final LongSet addedRowIds = new LongSet();
-        final LongSet removedRowIds = new LongSet();
+        final MutableLongBucketSet addedRowIds = new MutableLongBucketSet();
+        final MutableLongBucketSet removedRowIds = new MutableLongBucketSet();
 
         final TransactionSelect select = makeTransactionSelect(tableId, rowId, intValue);
 
@@ -123,19 +123,20 @@ public final class MVCCTransactionTest extends BaseTest {
         final long rowId = 345L;
         final int intValue = 56;
 
-        final Column tableColumn = new Column("testcolumn", IntegerType.INSTANCE, false);
-        final Table table = new Table(tableName, tableId, Arrays.asList(tableColumn));
+        final Table table = TableBuilder.create(tableName, tableId)
+                .addColumn("testcolumn", IntegerType.INSTANCE)
+                .build();
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = new LargeLongArray(1, 10);
+        final LargeLongArray rowIds = new LargeLongArray(1, 10, null);
 
         final DMLUpdateRows rows = makeUpdateRows(rowId, rowIds, intValue);
 
         mvccTransaction.updateRows(mvccSharedState, table, statementId, rowIds, rows);
 
-        final LongSet addedRowIds = new LongSet();
-        final LongSet removedRowIds = new LongSet();
+        final MutableLongBucketSet addedRowIds = new MutableLongBucketSet();
+        final MutableLongBucketSet removedRowIds = new MutableLongBucketSet();
 
         final TransactionSelect select = makeTransactionSelect(tableId, rowId, intValue);
 
@@ -225,19 +226,20 @@ public final class MVCCTransactionTest extends BaseTest {
         final long rowId = 345L;
         final int intValue = 56;
 
-        final Column tableColumn = new Column("testcolumn", IntegerType.INSTANCE, false);
-        final Table table = new Table(tableName, tableId, Arrays.asList(tableColumn));
+        final Table table = TableBuilder.create(tableName, tableId)
+                .addColumn("testcolumn", IntegerType.INSTANCE)
+                .build();
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = new LargeLongArray(1, 10);
+        final LargeLongArray rowIds = new LargeLongArray(1, 10, null);
 
         rowIds.add(rowId);
 
         mvccTransaction.deleteRows(mvccSharedState, table, statementId, rowIds);
 
-        final LongSet addedRowIds = new LongSet();
-        final LongSet removedRowIds = new LongSet();
+        final MutableLongBucketSet addedRowIds = new MutableLongBucketSet();
+        final MutableLongBucketSet removedRowIds = new MutableLongBucketSet();
 
         final TransactionSelect select = makeTransactionSelect(tableId, rowId, intValue);
 
@@ -278,12 +280,13 @@ public final class MVCCTransactionTest extends BaseTest {
         final long rowId = 345L;
         final int intValue = 56;
 
-        final Column tableColumn = new Column("testcolumn", IntegerType.INSTANCE, false);
-        final Table table = new Table(tableName, tableId, Arrays.asList(tableColumn));
+        final Table table = TableBuilder.create(tableName, tableId)
+                .addColumn("testcolumn", IntegerType.INSTANCE)
+                .build();
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = new LargeLongArray(1, 10);
+        final LargeLongArray rowIds = new LargeLongArray(1, 10, null);
 
         final DMLInsertRows rows = makeInsertRows(rowId, rowIds, intValue);
 
@@ -291,8 +294,8 @@ public final class MVCCTransactionTest extends BaseTest {
 
         mvccTransaction.deleteRows(mvccSharedState, table, statementId, rowIds);
 
-        final LongSet addedRowIds = new LongSet();
-        final LongSet removedRowIds = new LongSet();
+        final MutableLongBucketSet addedRowIds = new MutableLongBucketSet();
+        final MutableLongBucketSet removedRowIds = new MutableLongBucketSet();
 
         final TransactionSelect select = makeTransactionSelect(tableId, rowId, intValue);
 
@@ -419,7 +422,7 @@ public final class MVCCTransactionTest extends BaseTest {
 
         final ObjectArray<SelectColumn> selectColumns = ObjectArray.of(selectColumn);
 
-        final LongSet rowIdsToFilter = LongSet.of(rowId);
+        final MutableLongBucketSet rowIdsToFilter = MutableLongBucketSet.of(rowId);
 
         final StringLookup stringLookup = new StringLookup() {
 

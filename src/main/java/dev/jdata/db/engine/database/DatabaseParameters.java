@@ -7,7 +7,7 @@ import dev.jdata.db.DBConstants;
 import dev.jdata.db.data.cache.DataCache;
 import dev.jdata.db.engine.sessions.DBSession.LargeObjectStorer;
 import dev.jdata.db.engine.transactions.Transactions.TransactionFactory;
-import dev.jdata.db.schema.DatabaseSchemas;
+import dev.jdata.db.schema.DatabaseSchemaManager;
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -19,7 +19,7 @@ public final class DatabaseParameters implements IClearable {
     private TransactionFactory transactionFactory;
 
     private String name;
-    private DatabaseSchemas databaseSchemas;
+    private DatabaseSchemaManager databaseSchemas;
     private DataCache dataCache;
     private long initialTransactionId;
     private long[] initialRowIds;
@@ -48,7 +48,7 @@ public final class DatabaseParameters implements IClearable {
         this.transactionFactory= Objects.requireNonNull(transactionFactory);
     }
 
-    public void initializePerDatabase(DatabaseSchemas databaseSchemas, DataCache dataCache, long initialTransactionId, long[] initialRowIds) {
+    public void initializePerDatabase(DatabaseSchemaManager databaseSchemas, DataCache dataCache, long initialTransactionId, long[] initialRowIds) {
 
         this.databaseSchemas = Objects.requireNonNull(databaseSchemas);
         this.dataCache = dataCache;
@@ -68,7 +68,7 @@ public final class DatabaseParameters implements IClearable {
         return largeObjectStorer;
     }
 
-    public DatabaseSchemas getDatabaseSchemas() {
+    public DatabaseSchemaManager getDatabaseSchemas() {
         return databaseSchemas;
     }
 

@@ -3,18 +3,19 @@ package dev.jdata.db.engine.database;
 import java.util.Objects;
 
 import dev.jdata.db.DBConstants;
-import dev.jdata.db.schema.DatabaseSchema;
+import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
+import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class Tables {
 
     private TableState[] tables;
 
-    Tables(DatabaseSchema databaseSchema, long[] initialRowIds) {
+    Tables(IEffectiveDatabaseSchema databaseSchema, long[] initialRowIds) {
 
         Objects.requireNonNull(databaseSchema);
 
-        final int numTables = databaseSchema.getMaxTableId() + 1;
+        final int numTables = databaseSchema.computeMaxId(DDLObjectType.TABLE, -1) + 1;
 
         if (initialRowIds != null) {
 

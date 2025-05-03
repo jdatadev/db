@@ -1,11 +1,11 @@
 package dev.jdata.db.sql.parse.expression;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.expression.ExpressionList;
+import org.jutils.ast.objects.list.IAddableList;
 import org.jutils.ast.operator.Operator;
 import org.jutils.io.strings.StringResolver;
 import org.jutils.parse.ParserException;
@@ -44,8 +44,8 @@ abstract class BaseSQLExpressionParser extends BaseSQLParser {
 
         final SQLAllocator allocator = lexer.getAllocator();
 
-        final List<Expression> expressions = allocator.allocateList(initialCapacity);
-        final List<Operator> operators = allocator.allocateList(initialCapacity - 1);
+        final IAddableList<Expression> expressions = allocator.allocateList(initialCapacity);
+        final IAddableList<Operator> operators = allocator.allocateList(initialCapacity - 1);
 
         try {
             boolean done = false;
@@ -67,7 +67,7 @@ abstract class BaseSQLExpressionParser extends BaseSQLParser {
 
             } while (!done);
 
-            result = expressions.size() == 1
+            result = expressions.getNumElements() == 1
                     ? expressions.get(0)
                     : new ExpressionList(makeContext(), operators, expressions);
         }

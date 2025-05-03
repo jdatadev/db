@@ -1,9 +1,9 @@
 package dev.jdata.db.sql.parse.dml.select.projection;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
+import org.jutils.ast.objects.list.IAddableList;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.sql.ast.SQLAllocator;
@@ -37,7 +37,7 @@ public final class SQLProjectionClauseParser extends BaseSQLParser {
 
         final SQLAllocator allocator = lexer.getAllocator();
 
-        final List<SQLProjectionItem> projectionItems = allocator.allocateList(100);
+        final IAddableList<SQLProjectionItem> projectionItems = allocator.allocateList(100);
 
         try {
             do {

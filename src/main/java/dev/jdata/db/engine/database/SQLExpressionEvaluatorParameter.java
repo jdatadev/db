@@ -3,9 +3,10 @@ package dev.jdata.db.engine.database;
 import java.util.Objects;
 
 import dev.jdata.db.utils.allocators.IArrayAllocator;
+import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.allocators.ObjectCache;
 
-public class SQLExpressionEvaluatorParameter {
+public class SQLExpressionEvaluatorParameter extends ObjectCacheNode {
 
     public interface ElementAllocator<T> {
 

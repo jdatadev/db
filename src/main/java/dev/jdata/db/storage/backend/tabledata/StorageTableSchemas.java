@@ -2,19 +2,21 @@ package dev.jdata.db.storage.backend.tabledata;
 
 import java.util.Objects;
 
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
-import dev.jdata.db.schema.DatabaseSchema;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.schema.Table;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
+import dev.jdata.db.schema.model.diff.IDiffDatabaseSchema;
+import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
+import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.adt.arrays.TwoDimensionalArray;
+import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class StorageTableSchemas {
 
     private final TwoDimensionalArray<StorageTableSchema> storageTableSchemasByTableId;
 
-    public static StorageTableSchemas of(VersionedDatabaseSchemas versionedDatabaseSchemas, NumStorageBitsGetter numStorageBitsGetter) {
+    public static StorageTableSchemas of(VersionedDatabaseSchemas versionedDatabaseSchemas, INumStorageBitsGetter numStorageBitsGetter) {
 
         Objects.requireNonNull(versionedDatabaseSchemas);
         Objects.requireNonNull(numStorageBitsGetter);
@@ -22,7 +24,7 @@ public final class StorageTableSchemas {
         return new StorageTableSchemas(versionedDatabaseSchemas, numStorageBitsGetter);
     }
 
-    private StorageTableSchemas(VersionedDatabaseSchemas versionedDatabaseSchemas, NumStorageBitsGetter numStorageBitsGetter) {
+    private StorageTableSchemas(VersionedDatabaseSchemas versionedDatabaseSchemas, INumStorageBitsGetter numStorageBitsGetter) {
 
         Objects.requireNonNull(versionedDatabaseSchemas);
         Objects.requireNonNull(numStorageBitsGetter);
@@ -37,14 +39,21 @@ public final class StorageTableSchemas {
         });
     }
 
-    public synchronized void applyDatabaseShema(DatabaseSchema databaseSchema, NumStorageBitsGetter numStorageBitsGetter) {
+    public synchronized void applyDatabaseShema(IEffectiveDatabaseSchema effectiveDatabaseSchema, IDiffDatabaseSchema diffDatabaseSchema, INumStorageBitsGetter numStorageBitsGetter) {
 
-        Objects.requireNonNull(databaseSchema);
+        Objects.requireNonNull(effectiveDatabaseSchema);
+        Objects.requireNonNull(diffDatabaseSchema);
         Objects.requireNonNull(numStorageBitsGetter);
 
-        final DatabaseSchemaVersion databaseSchemaVersion = databaseSchema.getVersion();
+        final DatabaseSchemaVersion databaseSchemaVersion = effectiveDatabaseSchema.getVersion();
 
-        for (Table table : databaseSchema.getTables().getSchemaObjects()) {
+        final IIndexList<Table> tables = effectiveDatabaseSchema.getTables();
+
+        final long numElements = tables.getNumElements();
+
+        for (long i = 0L; i < numElements; ++ i) {
+
+            final Table table = tables.get(i);
 
             storageTableSchemasByTableId.addWithOuterExpand(table.getId(), new StorageTableSchema(table, databaseSchemaVersion, numStorageBitsGetter));
         }

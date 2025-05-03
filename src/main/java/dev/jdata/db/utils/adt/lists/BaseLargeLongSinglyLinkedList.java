@@ -1,11 +1,17 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.lists.LongList.ContainsOnlyPredicate;
+import dev.jdata.db.utils.adt.elements.ILongElements.LongElementPredicate;
+import dev.jdata.db.utils.adt.lists.ILongList.ContainsOnlyPredicate;
 
-abstract class BaseLargeLongSinglyLinkedList<T> extends BaseLargeSinglyLinkedList<T, long[], LongValues> {
+abstract class BaseLargeLongSinglyLinkedList<
+                INSTANCE,
+                LIST extends BaseLargeLongSinglyLinkedList<INSTANCE, LIST, VALUES>,
+                VALUES extends BaseLongValues<LIST, VALUES>>
 
-    BaseLargeLongSinglyLinkedList(int initialOuterCapacity, int innerCapacity) {
-        super(initialOuterCapacity, innerCapacity, LongValues::new);
+        extends BaseLargeSinglyLinkedList<INSTANCE, long[], LIST, VALUES> {
+
+    BaseLargeLongSinglyLinkedList(int initialOuterCapacity, int innerCapacity, BaseValuesFactory<long[], LIST, VALUES> valuesFactory) {
+        super(initialOuterCapacity, innerCapacity, valuesFactory);
     }
 
     @Override
@@ -23,6 +29,11 @@ abstract class BaseLargeLongSinglyLinkedList<T> extends BaseLargeSinglyLinkedLis
         return getValues().containsValue(this, value, headNode);
     }
 
+    final <P> boolean containsValue(long headNode, P parameter, LongElementPredicate<P> predicate) {
+
+        return getValues().containsValue(this, headNode, parameter, predicate);
+    }
+
     final boolean containsOnlyValue(long value, long headNode) {
 
         return getValues().containsOnlyValue(this, value, headNode);
@@ -33,12 +44,17 @@ abstract class BaseLargeLongSinglyLinkedList<T> extends BaseLargeSinglyLinkedLis
         return getValues().containsOnlyValue(this, value, headNode, containsOnlyPredicate);
     }
 
-    final long findValue(long value, long headNode) {
+    final long findValueNode(long value, long headNode) {
 
-        return getValues().findValue(this, value, headNode);
+        return getValues().findValueNode(this, value, headNode);
     }
 
-    final long addHeadValue(T instance, long value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final <P> long findNodeValue(long defaultValue, long headNode, P parameter, LongElementPredicate<P> predicate) {
+
+        return getValues().findNodeValue(this, defaultValue, headNode, parameter, predicate);
+    }
+
+    final long addHeadValue(INSTANCE instance, long value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = addHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
@@ -47,7 +63,7 @@ abstract class BaseLargeLongSinglyLinkedList<T> extends BaseLargeSinglyLinkedLis
         return node;
     }
 
-    final long addTailValue(T instance, long value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long addTailValue(INSTANCE instance, long value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = addTailNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
@@ -56,7 +72,7 @@ abstract class BaseLargeLongSinglyLinkedList<T> extends BaseLargeSinglyLinkedLis
         return node;
     }
 
-    final long removeHeadAndReturnValue(T instance, long headNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long removeHeadAndReturnValue(INSTANCE instance, long headNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long removedHeadNode = removeHeadNodeAndReturnNode(instance, headNode, headNodeSetter, tailNodeSetter);
 

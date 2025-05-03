@@ -3,7 +3,7 @@ package dev.jdata.db.utils.adt.maps;
 @Deprecated // currently not in use
 public final class AppendOnlyLinkedIntToIntMap {
 
-    private final IntToIntMap map;
+    private final MutableIntToIntMaxDistanceNonBucketMap map;
     private int[] list;
 
     public AppendOnlyLinkedIntToIntMap() {

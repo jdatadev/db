@@ -14,8 +14,9 @@ import java.util.function.ToIntFunction;
 import dev.jdata.db.utils.adt.elements.ByIndex;
 import dev.jdata.db.utils.adt.elements.ByIndex.ByIndexStringAdder;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.function.IntResultFunction;
+import dev.jdata.db.utils.function.BiObjToIntFunction;
 import dev.jdata.db.utils.function.IntToByteFunction;
+import dev.jdata.db.utils.function.IntToIntFunction;
 import dev.jdata.db.utils.scalars.Integers;
 
 public class Array {
@@ -34,7 +35,7 @@ public class Array {
         return sum;
     }
 
-    public static <T> int sum(T[] array, IntResultFunction<T> mapper) {
+    public static <T> int sum(T[] array, ToIntFunction<T> mapper) {
 
         Checks.isNotEmpty(array);
         Objects.requireNonNull(mapper);
@@ -43,13 +44,13 @@ public class Array {
 
         for (T element : array) {
 
-            sum += mapper.apply(element);
+            sum += mapper.applyAsInt(element);
         }
 
         return sum;
     }
 
-    public static <T> int max(T[] array, int defaultValue, IntResultFunction<T> mapper) {
+    public static <T> int max(T[] array, int defaultValue, ToIntFunction<T> mapper) {
 
         Objects.requireNonNull(array);
         Objects.requireNonNull(mapper);
@@ -59,7 +60,7 @@ public class Array {
 
         for (T element : array) {
 
-            final int value = mapper.apply(element);
+            final int value = mapper.applyAsInt(element);
 
             if (value > max) {
 
@@ -81,26 +82,35 @@ public class Array {
         return ByIndex.containsInstance(array, array.length, startIndex, numElements, instance, (b, i) -> b[i], ArrayIndexOutOfBoundsException::new);
     }
 
-    public static <T> boolean closureOrConstantContains(T[] array, Predicate<T> predicate) {
-
-        return ByIndex.contains(array, array.length, predicate, (b, i) -> b[i], (e, p) -> p.test(e), ArrayIndexOutOfBoundsException::new);
-    }
-
     public static <T, P> boolean contains(T[] array, P parameter, BiPredicate<T, P> predicate) {
 
         return ByIndex.contains(array, array.length, parameter, (b, i) -> b[i], predicate, ArrayIndexOutOfBoundsException::new);
     }
 
-    @Deprecated
-    public static <T> int findIndexWithClosureAllocation(T[] array, Predicate<T> predicate) {
+    public static <T> boolean closureOrConstantContains(T[] array, Predicate<T> predicate) {
+
+        return ByIndex.contains(array, array.length, predicate, (b, i) -> b[i], (e, p) -> p.test(e), ArrayIndexOutOfBoundsException::new);
+    }
+
+    public static <T, P> int findIndex(T[] array, P parameter, BiPredicate<T, P> predicate) {
+
+        return ByIndex.findIndex(array, array.length, parameter, (b, i) -> b[i], predicate, ArrayIndexOutOfBoundsException::new);
+    }
+
+    public static <T> int closureOrConstantFindIndex(T[] array, Predicate<T> predicate) {
 
         return ByIndex.findIndex(array, array.length, predicate, (b, i) -> b[i], (e, p) -> p.test(e), ArrayIndexOutOfBoundsException::new);
     }
 
-    @Deprecated
-    public static <T> int findIndexWithClosureAllocation(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
+    public static <T, P> int findIndex(T[] array, P parameter, int startIndex, int numElements, BiPredicate<T, P> predicate) {
 
-        return ByIndex.findIndex(array, array.length, startIndex, numElements, predicate, (b, i) -> b[i], (e, p) -> p.test(e), ArrayIndexOutOfBoundsException::new);
+        return ByIndex.findIndex(array, array.length, startIndex, numElements, parameter, (b, i) -> b[i], predicate, ArrayIndexOutOfBoundsException::new);
+    }
+
+    public static <T> int closureOrConstantFindIndex(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
+
+        return ByIndex.findIndex(array, array.length, startIndex, numElements, predicate, (b, i) -> b[i], predicate != null ? (e, p) -> p.test(e) : null,
+                ArrayIndexOutOfBoundsException::new);
     }
 
     public static Integer[] boxed(int[] toBox) {
@@ -145,7 +155,43 @@ public class Array {
         return Arrays.copyOf(toCopy, toCopy.length);
     }
 
-    public static <T> int[] mapToInt(T[] toMap, ToIntFunction<T> mapper) {
+    @FunctionalInterface
+    public interface IntMapper<P> {
+
+        int apply(int element, P parameter);
+    }
+
+    public static <P> int[] closureOrConstantMapInt(int[] array, IntToIntFunction mapper) {
+
+        return mapInt(array, mapper, (e, p) -> p.apply(e));
+    }
+
+    public static <P> int[] mapInt(int[] array, P parameter, IntMapper<P> mapper) {
+
+        Objects.requireNonNull(array);
+        Objects.requireNonNull(mapper);
+
+        final int arrayLength = array.length;
+
+        final int[] result = new int[arrayLength];
+
+        for (int i = 0; i < arrayLength; ++ i) {
+
+            result[i] = mapper.apply(array[i], parameter);
+        }
+
+        return result;
+    }
+
+    public static <T> int[] closureOrConstantMapToInt(T[] toMap, ToIntFunction<T> mapper) {
+
+        Objects.requireNonNull(toMap);
+        Objects.requireNonNull(mapper);
+
+        return mapToInt(toMap, mapper, (e, p) -> p.applyAsInt(e));
+    }
+
+    public static <T, P> int[] mapToInt(T[] toMap, P parameter, BiObjToIntFunction<T, P> mapper) {
 
         Objects.requireNonNull(toMap);
         Objects.requireNonNull(mapper);
@@ -156,7 +202,7 @@ public class Array {
 
         for (int i = 0; i < arrayLength; ++ i) {
 
-            mapped[i] = mapper.applyAsInt(toMap[i]);
+            mapped[i] = mapper.apply(toMap[i], parameter);
         }
 
         return mapped;
@@ -198,6 +244,11 @@ public class Array {
         return result;
     }
 
+    public static int[] checkToIntArray(long[] values) {
+
+        return toIntArray(values, Integers::checkLongToInt);
+    }
+
     public static int[] checkToUnsignedIntArray(long[] values) {
 
         return toIntArray(values, Integers::checkUnsignedLongToUnsignedInt);
@@ -217,7 +268,7 @@ public class Array {
         return result;
     }
 
-    static long[] toLongArray(int[] values) {
+    public static long[] toLongArray(int[] values) {
 
         final int length = values.length;
 
@@ -236,7 +287,7 @@ public class Array {
         Objects.requireNonNull(array);
         Objects.checkFromToIndex(startIndex, numElements, array.length);
 
-        return ByIndex.toString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[i]));
+        return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[i]));
     }
 
     public static String toString(int[] array, int startIndex, int numElements) {
@@ -244,7 +295,7 @@ public class Array {
         Objects.requireNonNull(array);
         Objects.checkFromToIndex(startIndex, numElements, array.length);
 
-        return ByIndex.toString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[i]));
+        return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[i]));
     }
 
     public static String toString(int[] array, int startIndex, int numElements, IntPredicate predicate) {
@@ -253,7 +304,7 @@ public class Array {
         Objects.checkFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(predicate);
 
-        return ByIndex.toString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
+        return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
     }
 
     public static void toString(int[] array, int startIndex, int numElements, StringBuilder sb, IntPredicate predicate) {
@@ -263,7 +314,7 @@ public class Array {
         Objects.requireNonNull(sb);
         Objects.requireNonNull(predicate);
 
-        ByIndex.toString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
+        ByIndex.closureOrConstantToString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
     }
 
     public static void toString(int[] array, int startIndex, int numElements, StringBuilder sb, IntPredicate predicate, ByIndexStringAdder<int[]> byIndexStringAdder) {
@@ -273,7 +324,7 @@ public class Array {
         Objects.requireNonNull(sb);
         Objects.requireNonNull(predicate);
 
-        ByIndex.toString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[i]), byIndexStringAdder);
+        ByIndex.closureOrConstantToString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[i]), byIndexStringAdder);
     }
 
     public static String toString(long[] array, int startIndex, int numElements, LongPredicate predicate) {
@@ -282,7 +333,7 @@ public class Array {
         Objects.checkFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(predicate);
 
-        return ByIndex.toString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
+        return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
     }
 
     public static void toString(long[] array, int startIndex, int numElements, StringBuilder sb, LongPredicate predicate) {
@@ -292,6 +343,6 @@ public class Array {
         Objects.requireNonNull(sb);
         Objects.requireNonNull(predicate);
 
-        ByIndex.toString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
+        ByIndex.closureOrConstantToString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
     }
 }

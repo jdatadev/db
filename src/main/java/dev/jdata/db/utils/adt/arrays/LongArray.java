@@ -1,8 +1,9 @@
 package dev.jdata.db.utils.adt.arrays;
 
 import dev.jdata.db.utils.adt.CapacityExponents;
+import dev.jdata.db.utils.adt.IResettable;
 
-public final class LongArray implements ILongArrayGetters {
+public final class LongArray implements ILongArray, ILongArrayMutators, IResettable {
 
     private static final int DEFAULT_INNER_CAPACITY_EXPONENT = 10;
 
@@ -21,19 +22,7 @@ public final class LongArray implements ILongArrayGetters {
 
     public LongArray(int initialOuterCapacity, int innerCapacityExponent) {
 
-        this.delegate = new LargeLongArray(initialOuterCapacity, innerCapacityExponent);
-    }
-
-    @Override
-    public boolean isEmpty() {
-
-        return delegate.isEmpty();
-    }
-
-    @Override
-    public long getNumElements() {
-
-        return delegate.getNumElements();
+        this.delegate = new LargeLongArray(initialOuterCapacity, innerCapacityExponent, null);
     }
 
     @Override
@@ -43,24 +32,45 @@ public final class LongArray implements ILongArrayGetters {
     }
 
     @Override
+    public long getLimit() {
+
+        return delegate.getLimit();
+    }
+
+    @Override
+    public boolean isEmpty() {
+
+        return delegate.isEmpty();
+    }
+
+    @Override
+    public void toString(long index, StringBuilder sb) {
+
+        delegate.toString(index, sb);
+    }
+
+    @Override
     public long get(long index) {
 
         return delegate.get(index);
     }
 
-    public void set(int index, long value) {
-
-        delegate.set(index, value);
-    }
-
+    @Override
     public void add(long value) {
 
         delegate.add(value);
     }
 
-    public void clear() {
+    @Override
+    public void set(int index, long value) {
 
-        delegate.clear();
+        delegate.set(index, value);
+    }
+
+    @Override
+    public void reset() {
+
+        delegate.reset();
     }
 
     @Override

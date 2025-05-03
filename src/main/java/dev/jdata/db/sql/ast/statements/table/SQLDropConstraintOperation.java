@@ -6,11 +6,9 @@ import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.parse.context.Context;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
-import dev.jdata.db.sql.ast.SQLFreeable;
 import dev.jdata.db.utils.adt.arrays.LongArray;
 
-public final class SQLDropConstraintOperation extends SQLAlterTableConstraintOperation implements SQLFreeable {
+public final class SQLDropConstraintOperation extends SQLAlterTableConstraintOperation {
 
     private final LongArray names;
 
@@ -18,12 +16,6 @@ public final class SQLDropConstraintOperation extends SQLAlterTableConstraintOpe
         super(context, dropKeyword, constraintKeyword);
 
         this.names = Objects.requireNonNull(names);
-    }
-
-    @Override
-    public void free(SQLAllocator allocator) {
-
-        allocator.freeLongArray(names);
     }
 
     @Override

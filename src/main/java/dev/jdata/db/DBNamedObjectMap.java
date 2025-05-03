@@ -1,94 +1,110 @@
 package dev.jdata.db;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
+import java.util.function.IntFunction;
 
+import org.jutils.io.strings.StringRef;
+
+import dev.jdata.db.utils.adt.CapacityExponents;
+import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.maps.MutableLongToObjectMaxDistanceNonBucketMap;
+import dev.jdata.db.utils.allocators.IFreeable;
+import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class DBNamedObjectMap<T extends DBNamedObject, M extends DBNamedObjectMap<T, M>> {
+public abstract class DBNamedObjectMap<T extends DBNamedObject, M extends DBNamedObjectMap<T, M>> implements IElements, IFreeable<ILongToObjectMaxDistanceMapAllocator<T>> {
 
-    private final Map<String, T> map;
+    private final MutableLongToObjectMaxDistanceNonBucketMap<T> map;
 
     public abstract M makeCopy();
 
     @Deprecated
-    protected DBNamedObjectMap(int initialCapacity) {
+    private DBNamedObjectMap(int initialCapacity, IntFunction<T[]> createValuesArray, ILongToObjectMaxDistanceMapAllocator<T> longToObjectMapAllocator) {
 
         Checks.isInitialCapacity(initialCapacity);
+        Objects.requireNonNull(createValuesArray);
+        Objects.requireNonNull(longToObjectMapAllocator);
 
-        this.map = new HashMap<>(initialCapacity);
+        this.map = longToObjectMapAllocator.allocateLongToObjectMap(CapacityExponents.computeCapacityExponent(initialCapacity), createValuesArray);
     }
 
-    protected DBNamedObjectMap(Collection<T> namedObjects) {
+    protected DBNamedObjectMap() {
+
+        this.map = null;
+    }
+
+    protected DBNamedObjectMap(IIndexList<T> namedObjects, IntFunction<T[]> createValuesArray, ILongToObjectMaxDistanceMapAllocator<T> longToObjectMapAllocator) {
 
         Objects.requireNonNull(namedObjects);
+        Objects.requireNonNull(createValuesArray);
+        Objects.requireNonNull(longToObjectMapAllocator);
 
-        this.map = new HashMap<>(namedObjects.size());
+        final long numElements = namedObjects.getNumElements();
 
-        for (T namedObject : namedObjects) {
+        this.map = longToObjectMapAllocator.allocateLongToObjectMap(CapacityExponents.computeCapacityExponent(numElements), createValuesArray);
 
-            put(namedObject.getName(), namedObject);
+        for (int i = 0; i < numElements; ++ i) {
+
+            final T namedObject = namedObjects.get(i);
+
+            put(namedObject.getHashName(), namedObject);
         }
     }
 
-    protected DBNamedObjectMap(M toCopy) {
+    protected DBNamedObjectMap(M toCopy, ILongToObjectMaxDistanceMapAllocator<T> longToObjectAllocator) {
 
         Objects.requireNonNull(toCopy);
+        Objects.requireNonNull(longToObjectAllocator);
 
-        this.map = new HashMap<>(((DBNamedObjectMap<T, M>)toCopy).map);
+        this.map = longToObjectAllocator.copyLongToObjectMap(((DBNamedObjectMap<T, ?>)toCopy).map);
     }
 
-    private void put(String schemaName, T schemaObject) {
+    @Override
+    public final boolean isEmpty() {
 
-        Checks.isSchemaName(schemaName);
+        return map.isEmpty();
+    }
+
+    @Override
+    public final long getNumElements() {
+
+        return map.getNumElements();
+    }
+
+    @Override
+    public final void free(ILongToObjectMaxDistanceMapAllocator<T> longToObjectAllocator) {
+
+        Objects.requireNonNull(longToObjectAllocator);
+
+        longToObjectAllocator.freeLongToObjectMap(map);
+    }
+
+    private void put(long schemaName, T schemaObject) {
+
+        StringRef.checkIsString(schemaName);
         Objects.requireNonNull(schemaObject);
 
-        final String key = makeKey(schemaName);
-
-        if (map.containsKey(key)) {
+        if (map.containsKey(schemaName)) {
 
             throw new IllegalStateException();
         }
 
-        map.put(key, schemaObject);
+        map.put(schemaName, schemaObject);
     }
 
-    protected final Stream<T> namedObjectsStream() {
+    protected final boolean containsNamedObject(long name) {
 
-        return map.values().stream();
+        StringRef.checkIsString(name);
+
+        return map.containsKey(name);
     }
 
-    protected final boolean containsNamedObject(String name) {
+    protected final T getNamedObject(long name) {
 
-        Checks.isDBName(name);
+        StringRef.checkIsString(name);
 
-        return map.containsKey(makeKey(name));
-    }
-
-    protected final T getNamedObject(String name) {
-
-        Checks.isDBName(name);
-
-        return map.get(makeKey(name));
-    }
-
-    protected final Iterable<String> getNames() {
-
-        return map.keySet();
-    }
-
-    protected final Iterable<T> getNamedObjects() {
-
-        return map.values();
-    }
-
-    @Deprecated // object allocation
-    private static String makeKey(String schemaName) {
-
-        return schemaName.toLowerCase();
+        return map.get(name);
     }
 
     @Override

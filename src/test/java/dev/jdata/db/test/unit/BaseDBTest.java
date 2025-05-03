@@ -1,9 +1,6 @@
 package dev.jdata.db.test.unit;
 
-import java.util.List;
-
-import dev.jdata.db.schema.Column;
-import dev.jdata.db.schema.Table;
+import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.types.BigIntType;
 import dev.jdata.db.schema.types.BlobType;
 import dev.jdata.db.schema.types.BooleanType;
@@ -19,32 +16,30 @@ import dev.jdata.db.schema.types.TextObjectType;
 import dev.jdata.db.schema.types.TimeType;
 import dev.jdata.db.schema.types.TimestampType;
 import dev.jdata.db.schema.types.VarCharType;
-import dev.jdata.db.utils.adt.lists.Lists;
+import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.checks.Checks;
 
 public abstract class BaseDBTest extends BaseTest {
 
     protected static final long TEST_TRANSACTION_ID = 0L;
 
-    private static List<SchemaDataType> createSchemaDataTypes() {
+    private static IIndexList<SchemaDataType> schemaDataTypes = IndexList.of(
 
-        return Lists.unmodifiableOf(
-
-                BooleanType.INSTANCE,
-                SmallIntType.INSTANCE,
-                IntegerType.INSTANCE,
-                BigIntType.INSTANCE,
-                FloatType.INSTANCE,
-                DoubleType.INSTANCE,
-                DecimalType.of(1, 2),
-                CharType.of(3),
-                VarCharType.of(4, 5),
-                DateType.INSTANCE,
-                TimeType.INSTANCE,
-                TimestampType.INSTANCE,
-                BlobType.INSTANCE,
-                TextObjectType.INSTANCE);
-    }
+            BooleanType.INSTANCE,
+            SmallIntType.INSTANCE,
+            IntegerType.INSTANCE,
+            BigIntType.INSTANCE,
+            FloatType.INSTANCE,
+            DoubleType.INSTANCE,
+            DecimalType.of(1, 2),
+            CharType.of(3),
+            VarCharType.of(4, 5),
+            DateType.INSTANCE,
+            TimeType.INSTANCE,
+            TimestampType.INSTANCE,
+            BlobType.INSTANCE,
+            TextObjectType.INSTANCE);
 
     protected static Table createTestTable(int tableId) {
 
@@ -56,8 +51,10 @@ public abstract class BaseDBTest extends BaseTest {
         Checks.isTableId(tableId);
         Checks.isTableName(tableName);
 
-        final List<Column> columns = Lists.unmodifiableOf(Lists.map(createSchemaDataTypes(), t -> new Column(t.getClass().getSimpleName().toLowerCase() + "_column", t, false)));
+        final TableBuilder tableBuilder = TableBuilder.create(tableName, tableId);
 
-        return new Table(tableName, tableId, columns);
+        schemaDataTypes.forEach(tableBuilder, (t, b) -> b.addColumn(t.getClass().getSimpleName().toLowerCase() + "_column", t));
+
+        return tableBuilder.build();
     }
 }

@@ -9,8 +9,8 @@ import dev.jdata.db.data.locktable.LockTable;
 import dev.jdata.db.data.locktable.LockTable.NotLockedException;
 import dev.jdata.db.dml.DMLInsertRows;
 import dev.jdata.db.dml.DMLUpdateRows;
-import dev.jdata.db.schema.Table;
-import dev.jdata.db.utils.adt.arrays.ILongArrayGetters;
+import dev.jdata.db.schema.model.objects.Table;
+import dev.jdata.db.utils.adt.arrays.ILongArray;
 import dev.jdata.db.utils.adt.arrays.LargeIntArray;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.checks.AssertionContants;
@@ -35,7 +35,7 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
         final int initialOuterCapacity = 1;
         final int innerCapacity = 10000;
 
-        this.lockedTableRows = new LargeLongArray(initialOuterCapacity, innerCapacity);
+        this.lockedTableRows = new LargeLongArray(initialOuterCapacity, innerCapacity, null);
         this.lockStatements = new LargeIntArray(initialOuterCapacity, innerCapacity);
 
         init(transactionDescriptor);
@@ -47,13 +47,13 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
     }
 
     @Override
-    public OperationResult insertRows(LockTable lockTable, Table table, int statementId, ILongArrayGetters rowIds, DMLInsertRows rows) {
+    public OperationResult insertRows(LockTable lockTable, Table table, int statementId, ILongArray rowIds, DMLInsertRows rows) {
 
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public OperationResult updateRows(LockTable lockTable, Table table, int statementId, ILongArrayGetters rowIds, DMLUpdateRows rows) {
+    public OperationResult updateRows(LockTable lockTable, Table table, int statementId, ILongArray rowIds, DMLUpdateRows rows) {
 
         Objects.requireNonNull(lockTable);
         Objects.requireNonNull(table);
@@ -74,7 +74,7 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
     }
 
     @Override
-    public OperationResult deleteRows(LockTable lockTable, Table table, int statementId, ILongArrayGetters rowIds) {
+    public OperationResult deleteRows(LockTable lockTable, Table table, int statementId, ILongArray rowIds) {
 
         Objects.requireNonNull(lockTable);
         Objects.requireNonNull(table);
@@ -123,12 +123,12 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
 
         if (ASSERT) {
 
-            Assertions.areSameNumElements(lockedTableRows, lockStatements);
+            Assertions.isSameLimit(lockedTableRows, lockStatements);
         }
 
         Objects.requireNonNull(lockTable);
 
-        final long numLockedRows = lockedTableRows.getNumElements();
+        final long numLockedRows = lockedTableRows.getLimit();
 
         for (long i = 0; i <  numLockedRows; ++ i) {
 
@@ -149,7 +149,7 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
             }
         }
 
-        lockedTableRows.clear();
-        lockStatements.clear();
+        lockedTableRows.reset();
+        lockStatements.reset();
     }
 }

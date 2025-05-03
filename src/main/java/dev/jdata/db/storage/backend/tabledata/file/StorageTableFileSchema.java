@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
 
-import dev.jdata.db.schema.DatabaseSchema;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.schema.Table;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
+import dev.jdata.db.schema.model.IDatabaseSchema;
+import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.utils.checks.Checks;
@@ -127,9 +127,7 @@ public final class StorageTableFileSchema {
 
         private static int getNumNullValueBitmapBits(int tableId, DatabaseSchemaVersion databaseSchemaVersion, VersionedDatabaseSchemas versionedDatabaseSchemas) {
 
-System.out.println("version=" + databaseSchemaVersion + " schemas=" + versionedDatabaseSchemas);
-
-            final DatabaseSchema databaseSchema = versionedDatabaseSchemas.getSchema(databaseSchemaVersion);
+            final IDatabaseSchema databaseSchema = versionedDatabaseSchemas.getSchema(databaseSchemaVersion);
 
             final Table table = databaseSchema.getTable(tableId);
 

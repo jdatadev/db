@@ -3,7 +3,12 @@ package dev.jdata.db.utils.adt.lists;
 import dev.jdata.db.utils.adt.elements.BaseElements;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseList<T, U extends BaseList<T, U, V>, V extends BaseValues<T, U, V>> extends BaseElements {
+public abstract class BaseList<
+                INSTANCE,
+                LIST extends BaseList<INSTANCE, LIST, VALUES>,
+                VALUES extends BaseValues<INSTANCE, LIST, VALUES>>
+
+        extends BaseElements {
 
     public static final long NO_NODE = -1L;
 
@@ -14,25 +19,25 @@ public abstract class BaseList<T, U extends BaseList<T, U, V>, V extends BaseVal
 
     abstract long getNextNode(long node);
 
-    private final V values;
+    private final VALUES values;
 
-    BaseList(V values) {
+    BaseList(VALUES values) {
 
         this.values = values;
     }
 
-    final V getValues() {
+    protected final VALUES getValues() {
         return values;
     }
 
-    final T toListArrayValues(long headNode) {
+    final INSTANCE toListArrayValues(long headNode) {
 
         checkIsNode(headNode);
 
         return toListArrayValues(headNode, intNumElements(getNumElements(headNode)));
     }
 
-    final T toListArrayValues(long headNode, int numElements) {
+    final INSTANCE toListArrayValues(long headNode, int numElements) {
 
         checkIsNode(headNode);
         Checks.isNumElements(numElements);
@@ -53,8 +58,8 @@ public abstract class BaseList<T, U extends BaseList<T, U, V>, V extends BaseVal
     }
 
     @SuppressWarnings("unchecked")
-    private U getThis() {
+    private LIST getThis() {
 
-        return (U)this;
+        return (LIST)this;
     }
 }

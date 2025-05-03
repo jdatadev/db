@@ -4,7 +4,9 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-public final class ObjectCache<T> {
+import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer;
+
+public final class ObjectCache<T> implements IObjectCache<T>, IInstanceAllocator<T> {
 
     private final ParameterObjectCache<T, Void> delegate;
 
@@ -14,6 +16,38 @@ public final class ObjectCache<T> {
         Objects.requireNonNull(createArray);
 
         this.delegate = new ParameterObjectCache<>(p -> allocator.get(), createArray);
+    }
+
+    @Override
+    public long getNumCurrentlyAllocatedInstances() {
+
+        return delegate.getNumCurrentlyAllocatedInstances();
+    }
+
+    @Override
+    public long getNumFreeListInstances() {
+
+        return delegate.getNumFreeListInstances();
+    }
+
+    @Override
+    public long getTotalNumAllocatedInstances() {
+
+        return delegate.getTotalNumAllocatedInstances();
+    }
+
+    @Override
+    public long getTotalNumFreedInstances() {
+
+        return delegate.getTotalNumFreedInstances();
+    }
+
+    @Override
+    public void addCache(IAllocatorsStatisticsGatherer statisticsGatherer, String name, Class<T> objectType) {
+
+        Objects.requireNonNull(statisticsGatherer);
+
+        statisticsGatherer.addObjectCache(name, objectType, this);
     }
 
     public T allocate() {

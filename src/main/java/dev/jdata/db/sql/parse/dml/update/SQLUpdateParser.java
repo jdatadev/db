@@ -1,10 +1,10 @@
 package dev.jdata.db.sql.parse.dml.update;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
+import org.jutils.ast.objects.list.IAddableList;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.sql.ast.SQLAllocator;
@@ -50,7 +50,7 @@ public class SQLUpdateParser extends SQLStatementParser {
 
         final SQLAllocator allocator = lexer.getAllocator();
 
-        final List<SQLColumnValueUpdateValue> updateValues = allocator.allocateList(100);
+        final IAddableList<SQLColumnValueUpdateValue> updateValues = allocator.allocateList(100);
 
         final SQLColumnValueUpdateValues result;
 

@@ -1,9 +1,9 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.lists.LongList.ContainsOnlyPredicate;
+import dev.jdata.db.utils.adt.lists.ILongList.ContainsOnlyPredicate;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseLargeIntListTest<T extends BaseLargeList<?, ?> & LargeIntList> extends BaseLargeListTest<T> {
+abstract class BaseLargeIntListTest<T extends BaseLargeList<?, ?, ?> & LargeIntList> extends BaseLargeListTest<T> {
 
     @Override
     final long getValue(T list, long node) {

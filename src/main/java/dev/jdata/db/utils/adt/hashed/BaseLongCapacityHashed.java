@@ -20,7 +20,7 @@ abstract class BaseLongCapacityHashed<T> extends BaseHashed<T> {
 
     protected abstract long increaseCapacity(long currentCapacity);
 
-    protected abstract T rehash(T hashed, long newCapacity);
+    protected abstract T rehash(T hashed, long newCapacity, long keyMask);
 
     BaseLongCapacityHashed(long initialCapacity, float loadFactor, Supplier<T> createHashed, Consumer<T> clearHashed) {
         super(loadFactor, createHashed, clearHashed);
@@ -39,26 +39,36 @@ abstract class BaseLongCapacityHashed<T> extends BaseHashed<T> {
         }
     }
 
-    protected final void checkCapacity(int numAdditionalElements) {
+    protected final long checkCapacity(int numAdditionalElements) {
+
+        Checks.isLengthAboveZero(numAdditionalElements);
 
         if (DEBUG) {
 
             PrintDebug.enter(debugClass, b -> b.add("numAdditionalElements", numAdditionalElements).add("capacity", capacity));
         }
 
-        final long newCapacity = checkCapacityAndRehash(numAdditionalElements, capacity, this, i -> i.increaseCapacity(i.capacity), (h, c, i) -> i.rehash(h, capacity));
+        final long newCapacity = checkCapacityAndRehash(numAdditionalElements, capacity, this, i -> i.increaseCapacity(i.capacity),
+                (h, c, i) -> i.rehash(h, c, makeKeyMask(c)));
 
-        this.keyMask = makeKeyMask(newCapacity);
+        final long result;
 
         if (newCapacity != -1L) {
 
+            result = this.keyMask = makeKeyMask(newCapacity);
+
             this.capacity = Integers.checkUnsignedLongToUnsignedInt(newCapacity);
+        }
+        else {
+            result = this.keyMask;
         }
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass);
+            PrintDebug.exitWithHex(debugClass, result);
         }
+
+        return result;
     }
 
     protected final long getKeyMask() {

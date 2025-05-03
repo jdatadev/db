@@ -1,17 +1,50 @@
 package dev.jdata.db;
 
-import dev.jdata.db.utils.checks.Checks;
+import java.util.Objects;
+
+import org.jutils.io.strings.StringRef;
+import org.jutils.io.strings.StringResolver;
 
 public abstract class DBNamedObject {
 
-    private final String name;
+    private final long parsedName;
+    private final long hashName;
 
-    protected DBNamedObject(String name) {
+    protected DBNamedObject(long parsedName, long hashName) {
 
-        this.name = Checks.isSchemaName(name);
+        this.parsedName = StringRef.checkIsString(parsedName);
+        this.hashName = StringRef.checkIsString(hashName);
     }
 
-    public final String getName() {
-        return name;
+    protected DBNamedObject(DBNamedObject toCopy) {
+
+        this.parsedName = toCopy.parsedName;
+        this.hashName = toCopy.hashName;
+    }
+
+    public final long getParsedName() {
+        return parsedName;
+    }
+
+    public final long getHashName() {
+        return hashName;
+    }
+
+    public final long getFileSystemName() {
+        return hashName;
+    }
+
+    public void toString(StringResolver stringResolver, StringBuilder sb) {
+
+        Objects.requireNonNull(stringResolver);
+        Objects.requireNonNull(sb);
+
+        sb.append("[parsedname=");
+        stringResolver.appendString(parsedName, sb);
+
+        sb.append(", hashName=");
+        stringResolver.appendString(hashName, sb);
+
+        sb.append(']');
     }
 }

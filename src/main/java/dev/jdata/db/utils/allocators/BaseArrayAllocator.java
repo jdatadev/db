@@ -6,9 +6,9 @@ import java.util.function.ToIntFunction;
 
 import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseArrayAllocator<T> extends BaseNodeAllocator<T, BaseArrayAllocator.ArrayAllocatorNode<T>> {
+public abstract class BaseArrayAllocator<T> extends InstanceNodeAllocator<T, BaseArrayAllocator.ArrayAllocatorNode<T>> {
 
-    static final class ArrayAllocatorNode<T> extends BaseNodeAllocator.AllocatorNode<T, ArrayAllocatorNode<T>> {
+    static final class ArrayAllocatorNode<T> extends InstanceNodeAllocator.InstanceAllocatorNode<T, ArrayAllocatorNode<T>> {
 
         int arrayLength;
     }
@@ -20,7 +20,7 @@ abstract class BaseArrayAllocator<T> extends BaseNodeAllocator<T, BaseArrayAlloc
     private ArrayAllocatorNode<T> arrayFreeList;
     private ArrayAllocatorNode<T> nodeFreeList;
 
-    BaseArrayAllocator(IntFunction<T> createArray, ToIntFunction<T> arrayLengthGetter) {
+    protected BaseArrayAllocator(IntFunction<T> createArray, ToIntFunction<T> arrayLengthGetter) {
         this(createArray, arrayLengthGetter, false);
     }
 
@@ -34,15 +34,19 @@ abstract class BaseArrayAllocator<T> extends BaseNodeAllocator<T, BaseArrayAlloc
         this.nodeFreeList = null;
     }
 
-    final T allocateArrayInstance(int minimumCapacity) {
+    protected final T allocateArrayInstance(int minimumCapacity) {
 
         Checks.isCapacity(minimumCapacity);
 
         final T result;
 
+        final boolean fromFreeList;
+
         if (arrayFreeList == null) {
 
             result = createArray.apply(minimumCapacity);
+
+            fromFreeList = false;
         }
         else {
             ArrayAllocatorNode<T> previousNode = null;
@@ -79,21 +83,29 @@ abstract class BaseArrayAllocator<T> extends BaseNodeAllocator<T, BaseArrayAlloc
 
                 result = foundNode.instance;
 
-                foundNode.init(nodeFreeList, null);
+                foundNode.init(nodeFreeList, true, null);
 
                 nodeFreeList = foundNode;
+
+                fromFreeList = true;
             }
             else {
                 result = createArray.apply(minimumCapacity);
+
+                fromFreeList = false;
             }
         }
+
+        addAllocatedInstance(fromFreeList);
 
         return result;
     }
 
-    final void freeArrayInstance(T array) {
+    protected final void freeArrayInstance(T array) {
 
         Objects.requireNonNull(array);
+
+        addFreedInstance(true);
 
         final ArrayAllocatorNode<T> allocatorNode;
 
@@ -111,7 +123,7 @@ abstract class BaseArrayAllocator<T> extends BaseNodeAllocator<T, BaseArrayAlloc
 
         if (arrayFreeList == null) {
 
-            allocatorNode.init(null, array);
+            allocatorNode.init(null, false, array);
 
             this.arrayFreeList = allocatorNode;
         }
@@ -149,7 +161,7 @@ abstract class BaseArrayAllocator<T> extends BaseNodeAllocator<T, BaseArrayAlloc
                 this.arrayFreeList = allocatorNode;
             }
 
-            allocatorNode.init(nextNode, array);
+            allocatorNode.init(nextNode, false, array);
         }
     }
 }

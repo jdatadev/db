@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.sets;
 
-public interface ILongSet extends ILongSetMutators, ILongSetGetters {
+import dev.jdata.db.utils.adt.elements.ILongElements;
+
+public interface ILongSet extends ISet, ILongSetGetters, ILongElements {
 
 }

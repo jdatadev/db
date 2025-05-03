@@ -2,7 +2,6 @@ package dev.jdata.db.engine.database;
 
 import java.nio.ByteBuffer;
 import java.sql.JDBCType;
-import java.util.List;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.CustomExpression;
@@ -10,10 +9,12 @@ import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.expression.ExpressionAdapter;
 import org.jutils.ast.objects.expression.ExpressionList;
 import org.jutils.ast.objects.list.ASTList;
+import org.jutils.ast.objects.list.IImutableList;
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.ast.operator.Arithmetic;
 import org.jutils.ast.operator.Operator;
 
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.schema.DBType;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.sql.ast.expressions.BaseSQLExpression;
@@ -34,6 +35,7 @@ import dev.jdata.db.utils.adt.integers.MutableLargeInteger;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.scalars.Integers;
 
 public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressionEvaluatorParameter, Void, EvaluateException>
         implements SQLExpressionVisitor<SQLExpressionEvaluatorParameter, Void,  EvaluateException>, IClearable {
@@ -51,7 +53,7 @@ public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressio
 
     private SQLExpressionEvaluatorParameter parameter;
 
-    private List<Operator> operators;
+    private IImutableList<Operator> operators;
     private int numOperators;
 
     SQLExpressionEvaluator() {
@@ -158,7 +160,7 @@ public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressio
         expression.visit(this, parameter);
     }
 
-    public final int getNumBits(SchemaDataType schemaDataType, NumStorageBitsGetter numStorageBitsGetter) {
+    public final int getNumBits(SchemaDataType schemaDataType, INumStorageBitsGetter numStorageBitsGetter) {
 
         return numStorageBitsGetter.getMaxNumBits(schemaDataType);
     }
@@ -1116,9 +1118,9 @@ public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressio
 
         default:
 
-            final List<Operator> operators = expression.getOperators();
+            final IListGetters<Operator> operators = expression.getOperators();
 
-            final int numOperators = operators.size();
+            final long numOperators = operators.getNumElements();
 
             if (numExpressions - 1 != numOperators) {
 
@@ -1126,8 +1128,8 @@ public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressio
             }
 
             this.parameter = parameter;
-            this.operators = operators;
-            this.numOperators = numOperators;
+            this.operators = operators.toImmutableList();
+            this.numOperators = Integers.checkUnsignedLongToUnsignedInt(numOperators);
 
             expressions.foreachWithIndexAndParameter(this, (e, i, p) -> {
 
@@ -1138,7 +1140,7 @@ public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressio
                     p.evaluate(e, param);
                 }
                 else {
-                    final List<Operator> ops = p.operators;
+                    final IListGetters<Operator> ops = p.operators;
                     final int numOps = p.numOperators;
 
                     final SQLExpressionEvaluator subExpressionEvaluator = param.allocateEvaluator();

@@ -1,6 +1,8 @@
 package dev.jdata.db.sql.parse.expression;
 
-public final class SQLScratchExpressionValues {
+import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
+
+public final class SQLScratchExpressionValues extends ObjectCacheNode {
 
     private final SQLScratchIntegerValue integerValue;
     private final SQLScratchIntegerValue fractionValue;

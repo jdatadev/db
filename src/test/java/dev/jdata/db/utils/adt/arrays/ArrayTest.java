@@ -1,5 +1,6 @@
 package dev.jdata.db.utils.adt.arrays;
 
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
@@ -64,14 +65,14 @@ public final class ArrayTest extends BaseByIndexTest {
 
     @Test
     @Category(UnitTest.class)
-    public final void testBoxedIntArray() {
+    public void testBoxedIntArray() {
 
         checkCopyElements(Function.identity(), Array::boxed, (a, i) -> a[i], a -> a.length);
     }
 
     @Test
     @Category(UnitTest.class)
-    public final void testCopyOfIntArray() {
+    public void testCopyOfIntArray() {
 
         checkCopyElements(Function.identity(), Array::copyOf, (a, i) -> a[i], a -> a.length);
     }
@@ -99,15 +100,77 @@ public final class ArrayTest extends BaseByIndexTest {
 
     @Test
     @Category(UnitTest.class)
-    public final void testMapToInt() {
+    public void testClosureOrConstantMapInt() {
 
-        assertThatThrownBy(() -> Array.mapToInt(null, e -> 0)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> Array.mapToInt(create("abc"), null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Array.closureOrConstantMapInt(null, e -> 0)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Array.closureOrConstantMapInt(create(123), null)).isInstanceOf(NullPointerException.class);
 
-        final int[] oneMapped = Array.mapToInt(create("1"), Integer::parseInt);
+        final int[] oneMapped = Array.closureOrConstantMapInt(create(123), i -> i + 111);
+        assertThat(oneMapped).containsExactly(234);
+
+        final int[] threeMapped = Array.closureOrConstantMapInt(create(1, 2, 3), i -> i + 10);
+        assertThat(threeMapped).containsExactly(11, 12, 13);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testMapInt() {
+
+        final Object parameter = new Object();
+
+        assertThatThrownBy(() -> Array.mapInt(null, parameter, (e, p) -> 0)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Array.mapInt(create(123), parameter, null)).isInstanceOf(NullPointerException.class);
+
+        assertThat(Array.mapInt(create(123), parameter, (e, p) -> {
+
+            assertThat(p).isSameAs(parameter);
+
+            return e + 111;
+        }))
+        .containsExactly(234);
+
+        final int[] oneMapped = Array.mapInt(create(123), parameter, (e, p) -> e + 111);
+        assertThat(oneMapped).containsExactly(234);
+
+        final int[] threeMapped = Array.mapInt(create(1, 2, 3), parameter, (e, p) -> e + 10);
+        assertThat(threeMapped).containsExactly(11, 12, 13);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testClosureOrConstantMapToInt() {
+
+        assertThatThrownBy(() -> Array.closureOrConstantMapToInt(null, e -> 0)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Array.closureOrConstantMapToInt(create("abc"), null)).isInstanceOf(NullPointerException.class);
+
+        final int[] oneMapped = Array.closureOrConstantMapToInt(create("1"), Integer::parseInt);
         assertThat(oneMapped).containsExactly(1);
 
-        final int[] threeMapped = Array.mapToInt(create("1", "2", "3"), Integer::parseInt);
+        final int[] threeMapped = Array.closureOrConstantMapToInt(create("1", "2", "3"), Integer::parseInt);
+        assertThat(threeMapped).containsExactly(1, 2, 3);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testMapToInt() {
+
+        final Object parameter = new Object();
+
+        assertThatThrownBy(() -> Array.mapToInt(null, parameter, (e, p) -> 0)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Array.mapToInt(create("abc"), parameter, null)).isInstanceOf(NullPointerException.class);
+
+        assertThat(Array.mapToInt(create("123"), parameter, (e, p) -> {
+
+            assertThat(p).isSameAs(parameter);
+
+            return Integer.parseInt(e);
+        }))
+        .containsExactly(123);
+
+        final int[] oneMapped = Array.mapToInt(create("1"), parameter, (e, p) -> Integer.parseInt(e));
+        assertThat(oneMapped).containsExactly(1);
+
+        final int[] threeMapped = Array.mapToInt(create("1", "2", "3"), parameter, (e, p) -> Integer.parseInt(e));
         assertThat(threeMapped).containsExactly(1, 2, 3);
     }
 
@@ -129,6 +192,27 @@ public final class ArrayTest extends BaseByIndexTest {
 
     @Test
     @Category(UnitTest.class)
+    public void testCheckToIntArray() {
+
+        final long minUnsignedInt = Integer.MIN_VALUE;
+        final long maxUnsignedInt = Integer.MAX_VALUE;
+
+        assertThatThrownBy(() -> Array.checkToUnsignedIntArray(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Array.checkToUnsignedIntArray(new long[] { minUnsignedInt - 1L })).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Array.checkToUnsignedIntArray(new long[] { maxUnsignedInt + 1L })).isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(Array.checkToIntArray(new long[0])).isEmpty();
+        assertThat(Array.checkToIntArray(new long[] { 0L })).containsExactly(0);
+
+        assertThat(Array.checkToIntArray(new long[] { minUnsignedInt })).containsExactly((int)(minUnsignedInt));
+        assertThat(Array.checkToIntArray(new long[] { maxUnsignedInt })).containsExactly((int)(maxUnsignedInt));
+        assertThat(Array.checkToIntArray(new long[] { 0L })).containsExactly(0);
+        assertThat(Array.checkToIntArray(new long[] { 1L, 0L })).containsExactly(1, 0);
+        assertThat(Array.checkToIntArray(new long[] { 1L, 0L, 2L })).containsExactly(1, 0, 2);
+    }
+
+    @Test
+    @Category(UnitTest.class)
     public void testCheckToUnsignedIntArray() {
 
         final long maxUnsignedInt = Integer.MAX_VALUE;
@@ -144,6 +228,25 @@ public final class ArrayTest extends BaseByIndexTest {
         assertThat(Array.checkToUnsignedIntArray(new long[] { 0L })).containsExactly(0);
         assertThat(Array.checkToUnsignedIntArray(new long[] { 1L, 0L })).containsExactly(1, 0);
         assertThat(Array.checkToUnsignedIntArray(new long[] { 1L, 0L, 2L })).containsExactly(1, 0, 2);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testCheckToLongArray() {
+
+        final int minUnsignedInt = Integer.MIN_VALUE;
+        final int maxUnsignedInt = Integer.MAX_VALUE;
+
+        assertThatThrownBy(() -> Array.toLongArray(null)).isInstanceOf(NullPointerException.class);
+
+        assertThat(Array.toLongArray(new int[0])).isEmpty();
+        assertThat(Array.toLongArray(new int[] { 0 })).containsExactly(0);
+
+        assertThat(Array.toLongArray(new int[] { minUnsignedInt })).containsExactly(minUnsignedInt);
+        assertThat(Array.toLongArray(new int[] { maxUnsignedInt })).containsExactly(maxUnsignedInt);
+        assertThat(Array.toLongArray(new int[] { 0 })).containsExactly(0);
+        assertThat(Array.toLongArray(new int[] { 1, 0 })).containsExactly(1, 0);
+        assertThat(Array.toLongArray(new int[] { 1, 0, 2 })).containsExactly(1, 0, 2);
     }
 
     @Override
@@ -165,18 +268,35 @@ public final class ArrayTest extends BaseByIndexTest {
     }
 
     @Override
-    protected <T> int findIndex(T[] array, Predicate<T> predicate) {
+    protected <T, P> int findIndex(T[] array, P parameter, BiPredicate<T, P> predicate) {
 
-        return Array.findIndexWithClosureAllocation(array, predicate);
+        return Array.findIndex(array, parameter, predicate);
     }
 
     @Override
-    protected <T> int findIndexRange(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
+    protected <T> int closureOrConstantFindIndex(T[] array, Predicate<T> predicate) {
 
-        return Array.findIndexWithClosureAllocation(array, startIndex, numElements, predicate);
+        return Array.closureOrConstantFindIndex(array, predicate);
+    }
+
+    @Override
+    protected <T, P> int findIndexInRange(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
+
+        return Array.findIndex(array, parameter, startIndex, numElements, predicate);
+    }
+
+    @Override
+    protected <T> int closureOrConstantFindIndexInRange(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
+
+        return Array.closureOrConstantFindIndex(array, startIndex, numElements, predicate);
     }
 
     private static String[] create(String ... values) {
+
+        return values;
+    }
+
+    private static int[] create(int ... values) {
 
         return values;
     }

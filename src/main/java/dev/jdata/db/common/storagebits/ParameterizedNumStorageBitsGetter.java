@@ -5,7 +5,7 @@ import java.util.Objects;
 import dev.jdata.db.schema.types.SchemaCustomType;
 import dev.jdata.db.schema.types.SchemaDataType;
 
-public final class ParameterizedNumStorageBitsGetter implements NumStorageBitsGetter {
+public final class ParameterizedNumStorageBitsGetter implements INumStorageBitsGetter {
 
     private final NumStorageBitsParameters parameters;
     private final BaseMinNumStorageBitsAdapter minNumBitsVisitor;

@@ -5,16 +5,19 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
 
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import dev.jdata.db.DBConstants;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.common.storagebits.NumStorageBitsParameters;
 import dev.jdata.db.common.storagebits.ParameterizedNumStorageBitsGetter;
 import dev.jdata.db.common.storagebits.StorageMode;
-import dev.jdata.db.schema.DatabaseSchema;
+import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.schema.SchemaMap;
-import dev.jdata.db.schema.Table;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
-import dev.jdata.db.schema.View;
+import dev.jdata.db.schema.model.IDatabaseSchema;
+import dev.jdata.db.schema.model.SchemaMap;
+import dev.jdata.db.schema.model.databaseschema.CompleteDatabaseSchema;
+import dev.jdata.db.schema.model.objects.Table;
+import dev.jdata.db.schema.model.schemamaps.CompleteSchemaMaps;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.file.BaseFileTableStorageFileTest.TestData;
@@ -22,7 +25,10 @@ import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.NumCol
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;
 import dev.jdata.db.test.unit.BaseDBTest;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.lists.Lists;
+import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.lists.IndexList.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
+import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Assertions;
@@ -78,7 +84,13 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
 
             final Table table = createTestTable(tableId);
 
-            this.dbSchemas = prepareStorageTableSchemas(databaseSchemaVersion, table);
+            final HeapIndexListAllocator<Table> tableIndexListAllocator = new HeapIndexListAllocator<>(Table[]::new);
+            final HeapIndexListAllocator<IDatabaseSchema> databaseSchemaIndexListAllocator = new HeapIndexListAllocator<>(IDatabaseSchema[]::new);
+            final ILongToObjectMaxDistanceMapAllocator<Table> longToObjectMapAllocator = null;
+
+            final TestAllocators testAllocators = new TestAllocators(tableIndexListAllocator, longToObjectMapAllocator, databaseSchemaIndexListAllocator);
+
+            this.dbSchemas = prepareStorageTableSchemas(databaseSchemaVersion, testAllocators, table);
             this.sequenceNo = Checks.isSequenceNo(sequenceNo);
             this.startRowId = Checks.isRowId(startRowId);
             this.initialTransactionId = Checks.isTransactionId(initialTransactionId);
@@ -194,6 +206,21 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
             this.numRows = Checks.isAboveZero(numRows);
             this.rowBuffer = Objects.requireNonNull(rowBuffer);
             this.numRowBytes = Checks.isAboveZero(numRowBytes);
+        }
+    }
+
+    private static final class TestAllocators {
+
+        private final IndexListAllocator<Table> tableIndexListAllocator;
+        private final ILongToObjectMaxDistanceMapAllocator<Table> longToObjectMapAllocator;
+        private final IndexListAllocator<IDatabaseSchema> databaseSchemaIndexListAllocator;
+
+        TestAllocators(IndexListAllocator<Table> tableIndexListAllocator, ILongToObjectMaxDistanceMapAllocator<Table> longToObjectMapAllocator,
+                IndexListAllocator<IDatabaseSchema> databaseSchemaIndexListAllocator) {
+
+            this.tableIndexListAllocator = Objects.requireNonNull(tableIndexListAllocator);
+            this.longToObjectMapAllocator = Objects.requireNonNull(longToObjectMapAllocator);
+            this.databaseSchemaIndexListAllocator = Objects.requireNonNull(databaseSchemaIndexListAllocator);
         }
     }
 
@@ -375,43 +402,49 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
         return new TestSchema(dbSchemas, table, maxRows, maxTransactions);
     }
 
-    private static StorageTableSchema prepareStorageTableSchema(Table table) {
+    private static StorageTableSchema prepareStorageTableSchema(Table table, TestAllocators testAllocators) {
 
         Objects.requireNonNull(table);
+        Objects.requireNonNull(testAllocators);
 
         final DatabaseSchemaVersion databaseSchemaVersion = DatabaseSchemaVersion.of(DatabaseSchemaVersion.INITIAL_VERSION);
 
-        return prepareStorageTableSchema(table, databaseSchemaVersion);
+        return prepareStorageTableSchema(table, testAllocators, databaseSchemaVersion);
     }
 
-    private static StorageTableSchema prepareStorageTableSchema(Table table, DatabaseSchemaVersion databaseSchemaVersion) {
+    private static StorageTableSchema prepareStorageTableSchema(Table table, TestAllocators testAllocators, DatabaseSchemaVersion databaseSchemaVersion) {
 
         Objects.requireNonNull(table);
-        Objects.requireNonNull(databaseSchemaVersion);
+        Objects.requireNonNull(testAllocators);
 
-        return prepareStorageTableSchemas(databaseSchemaVersion, table).getStorageTableSchema(table.getId());
+        return prepareStorageTableSchemas(databaseSchemaVersion, testAllocators, table).getStorageTableSchema(table.getId());
     }
 
-    private static TestDBSchemas prepareStorageTableSchemas(DatabaseSchemaVersion databaseSchemaVersion, Table ... tables) {
+    private static TestDBSchemas prepareStorageTableSchemas(DatabaseSchemaVersion databaseSchemaVersion, TestAllocators testAllocators, Table ... tables) {
 
         Objects.requireNonNull(databaseSchemaVersion);
+        Objects.requireNonNull(testAllocators);
         Checks.isNotEmpty(tables);
         Checks.areElements(tables, Objects::nonNull);
 
-        final SchemaMap<Table> tablesSchemaMap = SchemaMap.of(Lists.unmodifiableOf(tables));
-        final SchemaMap<View> viewsSchemaMap = SchemaMap.of(Lists.empty());
+        final SchemaMap<Table> tablesSchemaMap = SchemaMap.of(testAllocators. tableIndexListAllocator.of(tables), Table[]::new, testAllocators.longToObjectMapAllocator);
 
-        final DatabaseSchema databaseSchema = new DatabaseSchema("testdb", databaseSchemaVersion, tablesSchemaMap, viewsSchemaMap);
+        final CompleteSchemaMaps schemaMaps = new CompleteSchemaMaps(tablesSchemaMap, SchemaMap.empty(), SchemaMap.empty(), SchemaMap.empty(), SchemaMap.empty(),
+                SchemaMap.empty());
 
-        final VersionedDatabaseSchemas versionedDatabaseSchemas = VersionedDatabaseSchemas.of(Lists.unmodifiableOf(databaseSchema));
+        final DatabaseId databaseId = new DatabaseId(DBConstants.INITIAL_DESCRIPTORABLE, "testdb");
+
+        final CompleteDatabaseSchema databaseSchema = CompleteDatabaseSchema.of(databaseId, databaseSchemaVersion, schemaMaps);
+
+        final VersionedDatabaseSchemas versionedDatabaseSchemas = VersionedDatabaseSchemas.of(databaseId, IndexList.of(databaseSchema),
+                testAllocators.databaseSchemaIndexListAllocator);
 
         final StorageMode storageMode = StorageMode.INT_REFERENCE;
 
         final int minBits = 1;
 
         final NumStorageBitsParameters numStorageBitsParameters = new NumStorageBitsParameters(minBits, minBits, minBits, minBits, storageMode, null, storageMode, storageMode);
-
-        final NumStorageBitsGetter numStorageBitsGetter = new ParameterizedNumStorageBitsGetter(numStorageBitsParameters);
+        final INumStorageBitsGetter numStorageBitsGetter = new ParameterizedNumStorageBitsGetter(numStorageBitsParameters);
 
         final StorageTableSchemas storageTableSchemas = StorageTableSchemas.of(versionedDatabaseSchemas, numStorageBitsGetter);
 

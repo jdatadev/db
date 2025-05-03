@@ -1,25 +1,16 @@
 package dev.jdata.db.utils.allocators;
 
-abstract class BaseNodeAllocator<T, N extends BaseNodeAllocator.AllocatorNode<T, N>> {
+abstract class BaseNodeAllocator<T, U extends BaseNodeAllocator.AllocatorNode<U>> extends BaseObjectAllocator<T> {
 
-    static class AllocatorNode<T, N extends AllocatorNode<T, N>> {
+    public static class AllocatorNode<T extends AllocatorNode<T>> extends Allocatable {
 
-        N next;
-        T instance;
+        T next;
 
-        void init(N next, T instance) {
+        final void init(T next, boolean allocated) {
+
+            setAllocated(allocated);
 
             this.next = next;
-            this.instance = instance;
         }
-    }
-
-    N instanceFreeList;
-    N nodeFreeList;
-
-    BaseNodeAllocator() {
-
-        this.instanceFreeList = null;
-        this.nodeFreeList = null;
     }
 }

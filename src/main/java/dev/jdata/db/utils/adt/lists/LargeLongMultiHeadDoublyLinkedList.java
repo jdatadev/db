@@ -1,8 +1,11 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.lists.LongList.ContainsOnlyPredicate;
+import dev.jdata.db.utils.adt.lists.ILongList.ContainsOnlyPredicate;
 
-public final class LargeLongMultiHeadDoublyLinkedList<T> extends BaseLargeLongDoublyLinkedList<T> implements LongMutableMultiList<T> {
+public final class LargeLongMultiHeadDoublyLinkedList<INSTANCE>
+
+        extends BaseLargeLongDoublyLinkedList<INSTANCE, LargeLongMultiHeadDoublyLinkedList<INSTANCE>>
+        implements ILongMutableMultiList<INSTANCE> {
 
     public LargeLongMultiHeadDoublyLinkedList(int initialOuterCapacity, int innerCapacity) {
         super(initialOuterCapacity, innerCapacity);
@@ -30,23 +33,23 @@ public final class LargeLongMultiHeadDoublyLinkedList<T> extends BaseLargeLongDo
         return findValue(value, headNode);
     }
 
-    public long addHead(T instance, long value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    public long addHead(INSTANCE instance, long value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         return addHeadValue(instance, value, headNode, tailNode, headNodeSetter, tailNodeSetter);
     }
 
-    public long addTail(T instance, long value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    public long addTail(INSTANCE instance, long value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         return addTailValue(instance, value, headNode, tailNode, headNodeSetter, tailNodeSetter);
     }
 
-    private long removeTail(T instance, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    private long removeTail(INSTANCE instance, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         return getValue(removeTailNodeAndReturnNode(instance, tailNode, headNodeSetter, tailNodeSetter));
     }
 
     @Override
-    public long removeNode(T instance, long node, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    public long removeNode(INSTANCE instance, long node, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         return getValue(removeListNodeAndReturnNode(instance, node, headNode, tailNode, headNodeSetter, tailNodeSetter));
     }
@@ -62,7 +65,7 @@ public final class LargeLongMultiHeadDoublyLinkedList<T> extends BaseLargeLongDo
 
     }
 
-    public void clear(T instance, long headNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    public void clear(INSTANCE instance, long headNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         clearNodes(instance, headNode, headNodeSetter, tailNodeSetter);
     }

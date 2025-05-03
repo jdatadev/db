@@ -1,10 +1,9 @@
 package dev.jdata.db.sql.ast.statements.table;
 
-import java.util.List;
-
 import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.list.ASTList;
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.context.Context;
 
 public final class SQLAddColumnsOperation extends SQLColumnOperation {
@@ -12,7 +11,7 @@ public final class SQLAddColumnsOperation extends SQLColumnOperation {
     private final long addKeyword;
     private final ASTList<SQLAddColumnDefinition> columnDefinition;
 
-    public SQLAddColumnsOperation(Context context, long addKeyword, List<SQLAddColumnDefinition> addColumnOperation) {
+    public SQLAddColumnsOperation(Context context, long addKeyword, IListGetters<SQLAddColumnDefinition> addColumnOperation) {
         super(context);
 
         this.addKeyword = checkIsKeyword(addKeyword);

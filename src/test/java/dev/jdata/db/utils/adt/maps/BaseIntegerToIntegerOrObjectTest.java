@@ -7,12 +7,20 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import dev.jdata.db.utils.adt.IClearable;
+import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.hashed.BaseHashedTest;
-import dev.jdata.db.utils.adt.sets.IntSet;
 
-abstract class BaseIntegerToIntegerOrObjectTest<K, V, M extends KeyMap<K>> extends BaseHashedTest {
+abstract class BaseIntegerToIntegerOrObjectTest<K, V, M extends IKeyMap<K> & IClearable> extends BaseHashedTest {
 
-    abstract M createMap(int initialCapacityExponent);
+    static int value(int key) {
+
+        return key + 1000;
+    }
+
+    abstract M createMap(int[] keys, int[] values);
+
+    abstract boolean supportsContainsKey();
 
     abstract K createKeysArray(int length);
     abstract V createValuesArray(int length);
@@ -20,174 +28,78 @@ abstract class BaseIntegerToIntegerOrObjectTest<K, V, M extends KeyMap<K>> exten
     abstract int getKey(K keys, int index);
     abstract int getValue(V values, int index);
 
-    abstract boolean contains(M map, int key);
+    abstract boolean containsKey(M map, int key);
     abstract int get(M map, int key);
+    abstract int getWithDefaultValue(M map, int key, int defaultValue);
     abstract int[] getKeys(M map);
-    abstract <T> void forEachKeysAndValues(M map, T parameter);
-    abstract <T> void forEachKeysAndValues(M map, T parameter, List<Integer> keysDst, List<Integer> valuesDst, List<T> parameters);
+    abstract <P> void forEachKeysAndValues(M map, P parameter);
+    abstract <P> void forEachKeysAndValues(M map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters);
     abstract void keysAndValues(M map, K keysDst, V valuesDst);
-    abstract void put(M map, int key, int value);
-    abstract boolean remove(M map, int key);
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testPutAndGetWithOverwrite() {
-
-        final M map = createMap(0);
-
-        assertThat(map).isEmpty();
-        assertThat(map).hasNumElements(0L);
-
-        for (int numElements = 1; numElements <= MAX_ELEMENTS; numElements *= 10) {
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                put(map, i);
-
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(i + 1);
-            }
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                put(map, i);
-
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(numElements);
-            }
-
-            assertThat(map).hasNumElements(numElements);
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                assertThat(get(map, i)).isEqualTo(value(i));
-
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(numElements);
-            }
-
-            assertThat(map).hasNumElements(numElements);
-
-            checkGetKeys(map, numElements);
-
-            map.clear();
-        }
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testPutGetAndRemoveNewMap() {
-
-        for (int numElements = 1; numElements <= MAX_ELEMENTS; numElements *= 10) {
-
-            final M map = createMap(0);
-
-            assertThat(map).isEmpty();
-            assertThat(map).hasNumElements(0);
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                put(map, i);
-
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(i + 1);
-            }
-
-            assertThat(map).hasNumElements(numElements);
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                assertThat(get(map, i)).isEqualTo(value(i));
-
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(numElements);
-            }
-
-            checkGetKeys(map, numElements);
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                assertThat(remove(map, i)).isTrue();
-
-                assertThat(map.isEmpty()).isEqualTo(i == numElements - 1);
-                assertThat(map).hasNumElements(numElements - i - 1);
-            }
-
-            checkGetKeys(map, 0);
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                assertThat(remove(map, i)).isFalse();
-
-                assertThat(map).isEmpty();
-                assertThat(map).hasNumElements(0L);
-            }
-
-            checkGetKeys(map, 0);
-        }
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testPutAndGetWithClear() {
-
-        final M map = createMap(0);
-
-        assertThat(map).isEmpty();
-        assertThat(map).hasNumElements(0L);
-
-        for (int numElements = 1; numElements < MAX_ELEMENTS; numElements *= 10) {
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                put(map, i);
-
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(i + 1);
-            }
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                assertThat(get(map, i)).isEqualTo(value(i));
-
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(numElements);
-            }
-
-            checkGetKeys(map, numElements);
-
-            map.clear();
-
-            assertThat(map).isEmpty();
-            assertThat(map).hasNumElements(0L);
-        }
-    }
 
     @Test
     @Category(UnitTest.class)
     public final void testContainsKey() {
 
-        final M map = createMap(0);
+        if (supportsContainsKey()) {
 
-        assertThat(map).isEmpty();
+            final int key = 123;
+            final int value = 234;
 
-        put(map, 123);
+            final M map = createMap(new int[] { key }, new int[] { value });
 
-        assertThat(contains(map, 123)).isTrue();
-        assertThat(contains(map, 234)).isFalse();
+            assertThat(map).hasNumElements(1L);
+
+            assertThat(key).isNotEqualTo(value);
+
+            assertThat(containsKey(map, key)).isTrue();
+            assertThat(containsKey(map, value)).isFalse();
+        }
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public final void testGet() {
+
+        final int key = 123;
+        final int value = 234;
+
+        final M map = createMap(new int[] { key }, new int[] { value });
+
+        assertThat(map).hasNumElements(1L);
+
+        assertThat(key).isNotEqualTo(value);
+
+        assertThat(get(map, 123)).isEqualTo(234);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public final void testGetWithDefaultValue() {
+
+        if (supportsGetWithDefaultValue()) {
+
+            final int key = 123;
+            final int value = 234;
+
+            final M map = createMap(new int[] { key }, new int[] { value });
+
+            assertThat(map).hasNumElements(1L);
+
+            assertThat(key).isNotEqualTo(value);
+
+            assertThat(getWithDefaultValue(map, 345, 456)).isEqualTo(456);
+            assertThat(getWithDefaultValue(map, 123, 456)).isEqualTo(234);
+        }
     }
 
     @Test
     @Category(UnitTest.class)
     public final void testKeys() {
 
-        final M map = createMap(0);
+        final int[] keys = new int[] { 123, 234, 345 };
+        final int[] values = Array.closureOrConstantMapInt(keys, e -> value(e));
 
-        assertThat(map).isEmpty();
-
-        put(map, 123);
-        put(map, 234);
-        put(map, 345);
+        final M map = createMap(keys, values);
 
         assertThat(getKeys(map)).containsExactlyInAnyOrder(123, 234, 345);
     }
@@ -202,13 +114,7 @@ abstract class BaseIntegerToIntegerOrObjectTest<K, V, M extends KeyMap<K>> exten
 
     private void checkForEachKeysAndValues(boolean passParameter) {
 
-        final M map = createMap(0);
-
-        assertThat(map).isEmpty();
-
-        put(map, 123, 234);
-        put(map, 345, 456);
-        put(map, 567, 678);
+        final M map = createMap(new int[] { 123, 345, 567 }, new int[] { 234, 456, 678 });
 
         final int numElements = 3;
 
@@ -265,13 +171,7 @@ abstract class BaseIntegerToIntegerOrObjectTest<K, V, M extends KeyMap<K>> exten
     @Category(UnitTest.class)
     public final void testKeysAndValues() {
 
-        final M map = createMap(0);
-
-        assertThat(map).isEmpty();
-
-        put(map, 123, 234);
-        put(map, 345, 456);
-        put(map, 567, 678);
+        final M map = createMap(new int[] { 123, 345, 567 }, new int[] { 234, 456, 678 });
 
         final int numElements = 3;
 
@@ -331,72 +231,46 @@ abstract class BaseIntegerToIntegerOrObjectTest<K, V, M extends KeyMap<K>> exten
     @Category(UnitTest.class)
     public final void testIsEmpty() {
 
-        final M map = createMap(0);
+        final M emptyMap = createMapFromArrays(0);
+        assertThat(emptyMap).isEmpty();
 
-        assertThat(map).isEmpty();
-
-        put(map, 1);
-
-        assertThat(map).isNotEmpty();
+        final M nonEmptyMap = createMapFromArrays(1);
+        assertThat(nonEmptyMap).isNotEmpty();
     }
 
     @Test
     @Category(UnitTest.class)
     public final void testGetNumElements() {
 
-        final M map = createMap(0);
+        final M zeroLengthMap = createMapFromArrays(0);
 
-        assertThat(map).hasNumElements(0L);
+        assertThat(zeroLengthMap).hasNumElements(0L);
 
-        for (int i = 0; i < MAX_ELEMENTS; ++ i) {
+        for (int numElements = 1; numElements < MAX_ELEMENTS; numElements *= 10) {
 
-            put(map, i);
+            final M map = createMapFromArrays(numElements);
 
-            assertThat(map).hasNumElements(i + 1);
+            assertThat(map).hasNumElements(numElements);
         }
     }
 
-    @Test
-    @Category(UnitTest.class)
-    public final void testClear() {
+    boolean supportsGetWithDefaultValue() {
 
-        final M map = createMap(0);
-
-        assertThat(map).isEmpty();
-
-        for (int i = 0; i < MAX_ELEMENTS; ++ i) {
-
-            put(map, i);
-        }
-
-        assertThat(map).isNotEmpty();
-
-        map.clear();
-
-        assertThat(map).isEmpty();
+        return supportsContainsKey();
     }
 
-    private void checkGetKeys(M map, int numElements) {
+    private M createMapFromArrays(int numElements) {
 
-        final int[] keys = getKeys(map);
-
-        assertThat(keys.length).isEqualTo(numElements);
-
-        final IntSet values = IntSet.of(keys);
+        final int[] keys = new int[numElements];
+        final int[] values = new int[numElements];
 
         for (int i = 0; i < numElements; ++ i) {
 
-            assertThat(values).contains(i);
+            final int key = keys[i] = 123 + i;
+
+            values[i] = value(key);
         }
-    }
 
-    private void put(M map, int integer) {
-
-        put(map, integer, value(integer));
-    }
-
-    private static int value(int key) {
-
-        return key + 1000;
+        return createMap(keys, values);
     }
 }

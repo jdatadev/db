@@ -1,8 +1,12 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.lists.IntList.ContainsOnlyPredicate;
+import dev.jdata.db.utils.adt.lists.IIntList.ContainsOnlyPredicate;
 
-abstract class BaseLargeIntDoublyLinkedList<T> extends BaseLargeDoublyLinkedList<T, int[], IntValues> {
+abstract class BaseLargeIntDoublyLinkedList<
+                INSTANCE,
+                LIST extends BaseLargeIntDoublyLinkedList<INSTANCE, LIST>>
+
+        extends BaseLargeDoublyLinkedList<INSTANCE, int[], LIST, IntValues<LIST>> {
 
     BaseLargeIntDoublyLinkedList(int initialOuterCapacity, int innerCapacity) {
         super(initialOuterCapacity, innerCapacity, IntValues::new);
@@ -30,10 +34,10 @@ abstract class BaseLargeIntDoublyLinkedList<T> extends BaseLargeDoublyLinkedList
 
     final long findValue(int value, long headNode) {
 
-        return getValues().findValue(this, value, headNode);
+        return getValues().findValueNode(this, value, headNode);
     }
 
-    final long addHeadValue(T instance, int value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long addHeadValue(INSTANCE instance, int value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = addHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
@@ -42,7 +46,7 @@ abstract class BaseLargeIntDoublyLinkedList<T> extends BaseLargeDoublyLinkedList
         return node;
     }
 
-    final long addTailValue(T instance, int value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long addTailValue(INSTANCE instance, int value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = addTailNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
@@ -51,14 +55,14 @@ abstract class BaseLargeIntDoublyLinkedList<T> extends BaseLargeDoublyLinkedList
         return node;
     }
 
-    final int removeHead(T instance, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final int removeHead(INSTANCE instance, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long removedHeadNode = removeHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
         return getValue(removedHeadNode);
     }
 
-    final int removeListNode(T instance, long node, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final int removeListNode(INSTANCE instance, long node, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         return getValue(removeListNodeAndReturnNode(instance, node, headNode, tailNode, headNodeSetter, tailNodeSetter));
     }

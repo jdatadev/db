@@ -1,16 +1,16 @@
 package dev.jdata.db.sql.ast.conditions;
 
-import java.util.Arrays;
-
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.operator.Relational;
 import org.jutils.parse.context.Context;
+
+import dev.jdata.db.utils.allocators.AddableListAllocator.AddableList;
 
 @Deprecated
 public final class SQLComparisonCondition extends SQLExpressionList implements SQLCondition {
 
     public SQLComparisonCondition(Context context, Expression lhs, Relational operator, Expression rhs) {
-        super(context, Arrays.asList(operator),  Arrays.asList(lhs, rhs));
+        super(context, AddableList.of(operator), AddableList.of(lhs, rhs));
     }
 
     @Override

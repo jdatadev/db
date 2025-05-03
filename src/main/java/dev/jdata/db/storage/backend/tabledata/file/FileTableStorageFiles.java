@@ -1,28 +1,29 @@
 package dev.jdata.db.storage.backend.tabledata.file;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
+import dev.jdata.db.DBConstants;
 import dev.jdata.db.storage.backend.file.BaseStorageFiles;
-import dev.jdata.db.utils.adt.collections.Coll;
+import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.IIndexListGetters;
 import dev.jdata.db.utils.allocators.IByteArrayAllocator;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RandomFileAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.file.access.RelativeFileSystemAccess;
 
 public final class FileTableStorageFiles extends BaseStorageFiles<RandomFileAccess, FileTableStorageFile> {
 
-    static final int INITIAL_SEQUENCE_NO = 0;
+    static final int INITIAL_SEQUENCE_NO = DBConstants.FILE_INITIAL_SEQUENCE_NO;
 
     private int sequenceNoAllocator;
 
-    FileTableStorageFiles(RelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath tableDirectoryPath, List<FileTableStorageFile> files) {
+    FileTableStorageFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath tableDirectoryPath, IIndexList<FileTableStorageFile> files) {
         super(fileSystemAccess, tableDirectoryPath, files);
 
-        this.sequenceNoAllocator = Coll.max(files, INITIAL_SEQUENCE_NO, FileTableStorageFile::getSequenceNo);
+        this.sequenceNoAllocator = files.maxInt(INITIAL_SEQUENCE_NO, FileTableStorageFile::getSequenceNo);
     }
 
     @Override
@@ -65,7 +66,7 @@ public final class FileTableStorageFiles extends BaseStorageFiles<RandomFileAcce
         final RelativeFilePath filePath = constructPath(sequenceNo);
         final RelativeFilePath tempFilePath = constructTempPath(sequenceNo);
 
-        final RelativeFileSystemAccess fileSystemAccess = getFileSystemAccess();
+        final IRelativeFileSystemAccess fileSystemAccess = getFileSystemAccess();
 
         boolean ok = false;
 
@@ -130,41 +131,37 @@ public final class FileTableStorageFiles extends BaseStorageFiles<RandomFileAcce
         }
     }
 
-    private static <T> T binarySearch(List<T> list, long toFind, RangeGetter<T> rangeGetter) {
+    private static <T> T binarySearch(IIndexListGetters<T> list, long toFind, RangeGetter<T> rangeGetter) {
 
         final T result;
 
-        switch (list.size()) {
+        final long numElements = list.getNumElements();
 
-        case 0:
+        if (numElements == 0L) {
 
             result = null;
-            break;
-
-        case 1:
+        }
+        else if (numElements == 1L) {
 
             final T element = list.get(0);
 
             result = rangeGetter.withinRange(element, toFind) ? element : null;
-            break;
-
-        default:
-
-            result = binarySearch(list, 0, list.size(), toFind, rangeGetter);
-            break;
+        }
+        else {
+            result = binarySearch(list, 0, list.getNumElements(), toFind, rangeGetter);
         }
 
         return result;
     }
 
-    private static <T> T binarySearch(List<T> list, int beginIndex, int numElements, long toFind, RangeGetter<T> rangeGetter) {
+    private static <T> T binarySearch(IIndexListGetters<T> list, long beginIndex, long numElements, long toFind, RangeGetter<T> rangeGetter) {
 
         if (numElements < 2) {
 
             throw new IllegalStateException();
         }
 
-        final int midIndex = beginIndex + (numElements / 2);
+        final long midIndex = beginIndex + (numElements / 2);
 
         final T midElement = list.get(midIndex);
 
@@ -174,7 +171,7 @@ public final class FileTableStorageFiles extends BaseStorageFiles<RandomFileAcce
 
         if (toFind < elementBeginValue) {
 
-            final int numSubElements = midIndex - beginIndex;
+            final long numSubElements = midIndex - beginIndex;
 
             if (numSubElements == 1) {
 
@@ -191,9 +188,9 @@ public final class FileTableStorageFiles extends BaseStorageFiles<RandomFileAcce
             result = midElement;
         }
         else {
-            final int numSubElements = numElements - midIndex;
+            final long numSubElements = numElements - midIndex;
 
-            final int nextAfterMidIndex = midIndex + 1;
+            final long nextAfterMidIndex = midIndex + 1;
 
             if (numSubElements == 1) {
 

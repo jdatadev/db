@@ -1,10 +1,10 @@
 package dev.jdata.db.sql.parse.ddl.table;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
 import org.jutils.ast.objects.BaseASTElement;
+import org.jutils.ast.objects.list.IAddableList;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.sql.ast.SQLAllocator;
@@ -122,7 +122,7 @@ public class SQLAlterTableParser extends SQLStatementParser {
 
         final SQLAllocator allocator = lexer.getAllocator();
 
-        final List<SQLAddColumnDefinition> addColumnDefinitions = allocator.allocateList(10);
+        final IAddableList<SQLAddColumnDefinition> addColumnDefinitions = allocator.allocateList(10);
 
         try {
             for (;;) {
@@ -164,7 +164,7 @@ public class SQLAlterTableParser extends SQLStatementParser {
 
         final SQLAllocator allocator = lexer.getAllocator();
 
-        final List<SQLModifyColumn> modifyColumns = allocator.allocateList(10);
+        final IAddableList<SQLModifyColumn> modifyColumns = allocator.allocateList(10);
 
         try {
             for (;;) {

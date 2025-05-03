@@ -13,11 +13,11 @@ import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
-import dev.jdata.db.utils.file.access.FilePath;
-import dev.jdata.db.utils.file.access.FileSystemAccess.OpenMode;
+import dev.jdata.db.utils.file.access.IFilePath;
+import dev.jdata.db.utils.file.access.IFileSystemAccess.OpenMode;
 import dev.jdata.db.utils.file.access.RandomFileAccess;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.file.access.RelativeFileSystemAccess;
+import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.scalars.Integers;
 
 public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess> implements PrintDebug {
@@ -28,7 +28,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
 
     static final String FILE_NAME_PREFIX = "tabledata";
 
-    static FileTableStorageFile addNewFile(RelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath, int sequenceNo, StorageTableFileSchema storageTableFileSchema,
+    static FileTableStorageFile addNewFile(IRelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath, int sequenceNo, StorageTableFileSchema storageTableFileSchema,
             long startRowId) throws IOException {
 
         if (parseSequenceNo(filePath.getFileName()) != sequenceNo) {
@@ -36,7 +36,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
             throw new IllegalArgumentException();
         }
 
-        final RandomFileAccess randomFileAccess = createRandomFileAccess(fileSystemAccess, filePath, OpenMode.READ_WRITE_CREATE);
+        final RandomFileAccess randomFileAccess = createRandomFileAccess(fileSystemAccess, filePath, OpenMode.READ_WRITE_CREATE_FAIL_IF_EXISTS);
 
         storageTableFileSchema.write(randomFileAccess);
 
@@ -45,7 +45,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
         return new FileTableStorageFile(sequenceNo, storageTableFileSchema, randomFileAccess, startRowId, 0L);
     }
 
-    static FileTableStorageFile openExistingFile(RelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath,
+    static FileTableStorageFile openExistingFile(IRelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath,
             StorageTableFileSchemaGetters storageTableFileSchemaGetters) throws IOException {
 
         final RandomFileAccess randomFileAccess = createRandomFileAccess(fileSystemAccess, filePath, OpenMode.READ_WRITE_EXISTING);
@@ -77,7 +77,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
         return new FileTableStorageFile(filePath, storageTableSchema, randomFileAccess, startRow, randomFileAccess.length());
     }
 
-    static FileTableStorageFile openExistingFileFromStorageTableFileSchema(RelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath, int sequenceNo,
+    static FileTableStorageFile openExistingFileFromStorageTableFileSchema(IRelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath, int sequenceNo,
             StorageTableFileSchema storageTableFileSchema, long startRowId) throws IOException {
 
         final RandomFileAccess randomFileAccess = createRandomFileAccess(fileSystemAccess, filePath, OpenMode.READ_WRITE_EXISTING);
@@ -133,7 +133,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
 
     private byte lastByte;
 
-    private FileTableStorageFile(FilePath filePath, StorageTableFileSchema storageTableFileSchema, RandomFileAccess randomFileAccess, long startRowId, long fileLength)
+    private FileTableStorageFile(IFilePath filePath, StorageTableFileSchema storageTableFileSchema, RandomFileAccess randomFileAccess, long startRowId, long fileLength)
             throws IOException {
         this(parseSequenceNo(filePath.getFileName()), storageTableFileSchema, randomFileAccess, startRowId, fileLength);
     }
@@ -443,7 +443,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
         return constructTableFileName(FILE_NAME_PREFIX, sequenceNo);
     }
 
-    void expandTo(RelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath, StorageTableFileSchema updatedStorageTableFileSchema,
+    void expandTo(IRelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath, StorageTableFileSchema updatedStorageTableFileSchema,
             IByteArrayAllocator byteBufferAllocator) throws IOException {
 
         Objects.requireNonNull(fileSystemAccess);
@@ -626,7 +626,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
         } while (remainingRows != 0L);
     }
 
-    private static RandomFileAccess createRandomFileAccess(RelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath, OpenMode openMode) throws IOException {
+    private static RandomFileAccess createRandomFileAccess(IRelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath, OpenMode openMode) throws IOException {
 
         Objects.requireNonNull(fileSystemAccess);
         Objects.requireNonNull(filePath);

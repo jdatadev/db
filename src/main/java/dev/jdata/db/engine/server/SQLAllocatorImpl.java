@@ -1,21 +1,23 @@
 package dev.jdata.db.engine.server;
 
-import java.util.List;
+import org.jutils.ast.objects.list.IAddableList;
 
 import dev.jdata.db.sql.ast.SQLAllocator;
 import dev.jdata.db.utils.adt.arrays.LongArray;
 import dev.jdata.db.utils.adt.decimals.MutableDecimal;
 import dev.jdata.db.utils.adt.integers.ILargeInteger;
 import dev.jdata.db.utils.adt.integers.MutableLargeInteger;
+import dev.jdata.db.utils.allocators.AddableListAllocator;
 import dev.jdata.db.utils.allocators.ArrayOfLongsAllocator;
-import dev.jdata.db.utils.allocators.ListAllocator;
+import dev.jdata.db.utils.allocators.IAddableListAllocator;
 import dev.jdata.db.utils.allocators.LongArrayAllocator;
 import dev.jdata.db.utils.allocators.MutableDecimalAllocator;
 import dev.jdata.db.utils.allocators.MutableLargeIntegerAllocator;
+import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
-final class SQLAllocatorImpl implements SQLAllocator {
+final class SQLAllocatorImpl extends ObjectCacheNode implements SQLAllocator {
 
-    private final ListAllocator listAllocator;
+    private final IAddableListAllocator listAllocator;
     private final LongArrayAllocator longArrayAllocator;
     private final ArrayOfLongsAllocator arrayOfLongsAllocator;
     private final MutableDecimalAllocator mutableDecimalAllocator;
@@ -23,7 +25,7 @@ final class SQLAllocatorImpl implements SQLAllocator {
 
     public SQLAllocatorImpl() {
 
-        this.listAllocator = new ListAllocator(Object[]::new);
+        this.listAllocator = new AddableListAllocator();
         this.longArrayAllocator = new LongArrayAllocator();
         this.arrayOfLongsAllocator = new ArrayOfLongsAllocator();
         this.mutableDecimalAllocator = new MutableDecimalAllocator();
@@ -31,13 +33,13 @@ final class SQLAllocatorImpl implements SQLAllocator {
     }
 
     @Override
-    public <T> List<T> allocateList(int minimumCapacity) {
+    public <T> IAddableList<T> allocateList(int minimumCapacity) {
 
         return listAllocator.allocateList(minimumCapacity);
     }
 
     @Override
-    public void freeList(List<?> list) {
+    public void freeList(IAddableList<?> list) {
 
         listAllocator.freeList(list);
     }

@@ -6,7 +6,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import dev.jdata.db.utils.adt.strings.Strings;
-import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
 
 public interface PrintDebug {
@@ -323,6 +322,11 @@ public interface PrintDebug {
         exit(javaClass, binaryString(result));
     }
 
+    public static void exitWithHex(Class<?> javaClass, long result) {
+
+        exit(javaClass, hexString(result));
+    }
+
     public static void exit(Class<?> javaClass, Consumer<NameValueBuilder> consumer) {
 
         exit(javaClass, null, false, consumer);
@@ -396,26 +400,26 @@ public interface PrintDebug {
 
     public static String binaryString(byte value) {
 
-        return BitsUtil.binaryString(value, true);
+        return Strings.binaryString(value, true);
     }
 
     public static String binaryString(short value) {
 
-        return binaryString(Short.toUnsignedInt(value));
+        return Strings.binaryString(value, true);
     }
 
     public static String binaryString(int value) {
 
-        return BitsUtil.BINARY_PREFIX + Integer.toBinaryString(value);
+        return Strings.binaryString(value, true);
     }
 
     public static String binaryString(long value) {
 
-        return BitsUtil.BINARY_PREFIX + Long.toBinaryString(value);
+        return Strings.binaryString(value, true);
     }
 
     public static String hexString(long value) {
 
-        return "0x" + Long.toHexString(value);
+        return Strings.hexString(value, true);
     }
 }

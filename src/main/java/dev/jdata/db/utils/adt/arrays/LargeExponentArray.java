@@ -1,14 +1,17 @@
 package dev.jdata.db.utils.adt.arrays;
 
 import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.elements.BaseByIndexElements;
+import dev.jdata.db.utils.adt.IResettable;
+import dev.jdata.db.utils.adt.byindex.IByIndex;
 import dev.jdata.db.utils.adt.elements.ICapacity;
-import dev.jdata.db.utils.adt.elements.IMutableElements;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-public abstract class LargeExponentArray extends BaseByIndexElements implements IMutableElements, ICapacity {
+public abstract class LargeExponentArray implements ICapacity, IByIndex, IResettable {
+
+    private final int innerCapacityExponent;
+    private final int innerArrayLengthNumElements;
 
     private final int outerIndexShift;
     private final long innerIndexMask;
@@ -16,7 +19,7 @@ public abstract class LargeExponentArray extends BaseByIndexElements implements 
     private final int innerCapacity;
     private final int innerNumAllocateElements;
 
-    private int numOuterEntries;
+    private int numOuterUtilizedEntries;
 
     private int numOuterAllocatedEntries;
 
@@ -24,7 +27,10 @@ public abstract class LargeExponentArray extends BaseByIndexElements implements 
 
         Checks.isCapacityExponent(innerCapacityExponent);
         Checks.isNotNegative(numOuterAllocatedEntries);
-        Checks.isAboveZero(innerArrayLengthNumElements);
+        Checks.isNotNegative(innerArrayLengthNumElements);
+
+        this.innerCapacityExponent = innerCapacityExponent;
+        this.innerArrayLengthNumElements = innerArrayLengthNumElements;
 
         final int innerCapacityNumBits = innerCapacityExponent;
 
@@ -37,21 +43,31 @@ public abstract class LargeExponentArray extends BaseByIndexElements implements 
 
         this.numOuterAllocatedEntries = numOuterAllocatedEntries;
 
-        this.numOuterEntries = 0;
+        this.numOuterUtilizedEntries = 0;
     }
 
     @Override
-    public void clear() {
+    public void reset() {
 
-        super.clearNumElements();
-
-        this.numOuterEntries = 0;
+        this.numOuterUtilizedEntries = 0;
     }
 
     @Override
     public final long getCapacity() {
 
         return numOuterAllocatedEntries * innerCapacity;
+    }
+
+    private int getInnerCapacityExponent() {
+        return innerCapacityExponent;
+    }
+
+    protected final long getInnerIndexMask() {
+        return innerIndexMask;
+    }
+
+    protected final int getInnerArrayLengthNumElements() {
+        return innerArrayLengthNumElements;
     }
 
     protected final int getInnerNumAllocateElements() {
@@ -62,18 +78,32 @@ public abstract class LargeExponentArray extends BaseByIndexElements implements 
         return numOuterAllocatedEntries;
     }
 
+    protected final void incrementNumOuterAllocatedEntries(int numAdditional) {
+
+        Checks.isLengthAboveZero(numAdditional);
+
+        this.numOuterAllocatedEntries += numAdditional;
+    }
+
     protected final void incrementNumOuterAllocatedEntries() {
 
         ++ numOuterAllocatedEntries;
     }
 
-    protected final int getNumOuterEntries() {
-        return numOuterEntries;
+    protected final int getNumOuterUtilizedEntries() {
+        return numOuterUtilizedEntries;
     }
 
-    protected final void incrementNumOuterEntries() {
+    protected final void incrementNumOuterUtilizedEntries(int numAdditional) {
 
-        ++ numOuterEntries;
+        Checks.isLengthAboveZero(numAdditional);
+
+        this.numOuterUtilizedEntries += numAdditional;
+    }
+
+    protected final void incrementNumOuterUtilizedEntries() {
+
+        ++ numOuterUtilizedEntries;
     }
 
     protected final int getInnerCapacity() {
@@ -83,6 +113,11 @@ public abstract class LargeExponentArray extends BaseByIndexElements implements 
     protected final int getOuterIndex(long index) {
 
         return Integers.checkUnsignedLongToUnsignedInt(index >>> outerIndexShift);
+    }
+
+    protected final int getInnerIndex(long index) {
+
+        return getInnerIndexNotCountingNumElements(index) + getInnerArrayLengthNumElements();
     }
 
     protected final int getInnerIndexNotCountingNumElements(long index) {

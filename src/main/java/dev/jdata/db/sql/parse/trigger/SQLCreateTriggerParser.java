@@ -1,11 +1,13 @@
 package dev.jdata.db.sql.parse.trigger;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
 import org.jutils.ast.objects.BaseASTElement;
 import org.jutils.ast.objects.expression.Expression;
+import org.jutils.ast.objects.list.IAddable;
+import org.jutils.ast.objects.list.IAddableList;
+import org.jutils.ast.objects.list.IImutableList;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.sql.ast.SQLAllocator;
@@ -324,11 +326,13 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
             SQLToken.DELETE
     };
 
-    private List<SQLTriggeredAction> parseTriggeredActions(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private IImutableList<SQLTriggeredAction> parseTriggeredActions(SQLExpressionLexer lexer) throws ParserException, IOException {
 
         final SQLAllocator allocator = lexer.getAllocator();
 
-        final List<SQLTriggeredAction> result = allocator.allocateList(100);
+        final IAddableList<SQLTriggeredAction> list = allocator.allocateList(100);
+
+        final IImutableList<SQLTriggeredAction> result;
 
         try {
             for (;;) {
@@ -351,14 +355,14 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
                     condition = null;
                 }
 
-                final List<SQLTriggeredStatement> triggeredStatements = allocator.allocateList(100);
+                final IAddableList<SQLTriggeredStatement> triggeredStatements = allocator.allocateList(100);
 
                 try {
                     parseTriggeredStatements(lexer, triggeredStatements);
 
                     final SQLTriggeredAction triggeredAction = new SQLTriggeredAction(makeContext(), whenKeyword, condition, triggeredStatements);
 
-                    result.add(triggeredAction);
+                    list.add(triggeredAction);
                 }
                 finally {
 
@@ -400,16 +404,18 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
             }
 
             lexer.lexExpect(SQLToken.RPAREN);
+
+            result = list.toImmutableList();
         }
         finally {
 
-            allocator.freeList(result);
+            allocator.freeList(list);
         }
 
         return result;
     }
 
-    private void parseTriggeredStatements(SQLExpressionLexer lexer, List<SQLTriggeredStatement> dst) throws ParserException, IOException {
+    private void parseTriggeredStatements(SQLExpressionLexer lexer, IAddable<SQLTriggeredStatement> dst) throws ParserException, IOException {
 
         for (;;) {
 

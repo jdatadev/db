@@ -1,22 +1,345 @@
 package dev.jdata.db.utils.adt.lists;
 
 import java.lang.reflect.Array;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.elements.ICapacity;
+import dev.jdata.db.utils.adt.elements.IIterableElements;
+import dev.jdata.db.utils.allocators.ADTInstanceAllocator;
+import dev.jdata.db.utils.allocators.BaseArrayAllocator;
+import dev.jdata.db.utils.allocators.IAllocators;
+import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer.RefType;
+import dev.jdata.db.utils.allocators.IBuilder;
+import dev.jdata.db.utils.allocators.IInstanceAllocator;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class IndexList<T> implements List<T>, ICapacity, IMutableIndexList<T> {
+public final class IndexList<T> extends BaseIndexList<T> implements ICapacity, IIndexList<T> {
 
-    private final IntFunction<T[]> createArray;
-    private T[] array;
-    private int numElements;
+    public static abstract class IndexListAllocator<T> extends ADTInstanceAllocator<T, Builder<T>> implements IInstanceAllocator<T> {
+
+        @SafeVarargs
+        public final IIndexList<T> of(T ... instances) {
+
+            final Builder<T> builder = allocateIndexListBuilder(instances.length);
+
+            builder.addTail(instances);
+
+            return builder.build();
+        }
+
+        abstract Builder<T> allocateIndexListBuilder(int minimumCapacity);
+        public abstract void freeIndexListBuilder(Builder<T> builder);
+
+        abstract IndexList<T> allocateIndexList(int minimumCapacity);
+        public abstract void freeIndexList(IIndexList<T> list);
+
+        abstract MutableIndexList<T> allocateMutableIndexList(int minimumCapacity);
+        public abstract void freeIndexMutableList(MutableIndexList<T> list);
+
+        abstract IndexList<T> swapToImmutable(MutableIndexList<T> mutableIndexList);
+    }
+
+    public static final class HeapIndexListAllocator<T> extends IndexListAllocator<T> {
+
+        private final IntFunction<T[]> createElementsArray;
+
+        public HeapIndexListAllocator(IntFunction<T[]> createElementsArray) {
+
+            this.createElementsArray = Objects.requireNonNull(createElementsArray);
+        }
+
+        @Override
+        Builder<T> allocateIndexListBuilder(int minimumCapacity) {
+
+            addAllocatedBuilder(false);
+
+            return new Builder<>(minimumCapacity, this);
+        }
+
+        @Override
+        public void freeIndexListBuilder(Builder<T> builder) {
+
+            Objects.requireNonNull(builder);
+
+            addFreedBuilder(false);
+        }
+
+        @Override
+        IndexList<T> allocateIndexList(int minimumCapacity) {
+
+            addAllocatedInstance(false);
+
+            return new IndexList<>(createElementsArray, minimumCapacity);
+        }
+
+        @Override
+        public void freeIndexList(IIndexList<T> list) {
+
+            Objects.requireNonNull(list);
+
+            addFreedInstance(false);
+        }
+
+        @Override
+        MutableIndexList<T> allocateMutableIndexList(int minimumCapacity) {
+
+            addAllocatedInstance(false);
+
+            return new MutableIndexList<>(createElementsArray, minimumCapacity);
+        }
+
+        @Override
+        public void freeIndexMutableList(MutableIndexList<T> list) {
+
+            Objects.requireNonNull(list);
+
+            addFreedInstance(false);
+        }
+
+        @Override
+        IndexList<T> swapToImmutable(MutableIndexList<T> mutableIndexList) {
+
+            Objects.requireNonNull(mutableIndexList);
+
+            return mutableIndexList.swapToImmutable();
+        }
+    }
+
+    private static final class ArrayIndexListBuilderAllocator<T> extends BaseArrayAllocator<Builder<T>> {
+
+        ArrayIndexListBuilderAllocator(IntFunction<T[]> createListElementsArray, IndexListAllocator<T> listAllocator) {
+            super(c -> new Builder<>(c, listAllocator), l -> Integers.checkUnsignedLongToUnsignedInt(l.getNumElements()));
+        }
+
+        Builder<T> allocateIndexListBuilder(int minimumCapacity) {
+
+            return allocateArrayInstance(minimumCapacity);
+        }
+
+        void freeIndexListBuilder(Builder<T> builder) {
+
+            freeArrayInstance(builder);
+        }
+    }
+
+    private static final class IndexListArrayAllocator<T> extends BaseArrayAllocator<IndexList<T>> {
+
+        IndexListArrayAllocator(IntFunction<T[]> createListElementsArray) {
+            super(c -> new IndexList<>(createListElementsArray, c), l -> Integers.checkUnsignedLongToUnsignedInt(l.getNumElements()));
+        }
+
+        IndexList<T> allocateIndexList(int minimumCapacity) {
+
+            return allocateArrayInstance(minimumCapacity);
+        }
+
+        void freeIndexList(IndexList<T> list) {
+
+            freeArrayInstance(list);
+        }
+    }
+
+    private static final class MutableIndexListArrayAllocator<T> extends BaseArrayAllocator<MutableIndexList<T>> {
+
+        MutableIndexListArrayAllocator(IntFunction<T[]> createListElementsArray) {
+            super(c -> new MutableIndexList<>(createListElementsArray, c), l -> Integers.checkUnsignedLongToUnsignedInt(l.getNumElements()));
+        }
+
+        MutableIndexList<T> allocateMutableIndexList(int minimumCapacity) {
+
+            return allocateArrayInstance(minimumCapacity);
+        }
+
+        void freeMutableIndexList(MutableIndexList<T> list) {
+
+            freeArrayInstance(list);
+        }
+    }
+
+    public static final class CacheIndexListAllocator<T> extends IndexListAllocator<T> implements IAllocators {
+
+        private final ArrayIndexListBuilderAllocator<T> listBuilderArrayAllocator;
+        private final IndexListArrayAllocator<T> listArrayAllocator;
+        private final MutableIndexListArrayAllocator<T> mutableListArrayAllocator;
+
+        public CacheIndexListAllocator(IntFunction<T[]> createElementsArray) {
+
+            Objects.requireNonNull(createElementsArray);
+
+            this.listBuilderArrayAllocator = new ArrayIndexListBuilderAllocator<>(createElementsArray, this);
+            this.listArrayAllocator = new IndexListArrayAllocator<>(createElementsArray);
+            this.mutableListArrayAllocator = new MutableIndexListArrayAllocator<>(createElementsArray);
+        }
+
+        @Override
+        public void gatherStatistics(IAllocatorsStatisticsGatherer statisticsGatherer) {
+
+            Objects.requireNonNull(statisticsGatherer);
+
+            statisticsGatherer.addInstanceAllocator("listBuilderArrayAllocator", RefType.INSTANTIATED, IndexList.Builder.class, listBuilderArrayAllocator);
+            statisticsGatherer.addInstanceAllocator("listArrayAllocator", RefType.INSTANTIATED, IndexList.class, listArrayAllocator);
+            statisticsGatherer.addInstanceAllocator("mutableListArrayAllocator", RefType.INSTANTIATED, MutableIndexList.class, mutableListArrayAllocator);
+        }
+
+        @Override
+        Builder<T> allocateIndexListBuilder(int minimumCapacity) {
+
+            return listBuilderArrayAllocator.allocateIndexListBuilder(minimumCapacity);
+        }
+
+        @Override
+        public void freeIndexListBuilder(Builder<T> builder) {
+
+            listBuilderArrayAllocator.freeIndexListBuilder(builder);
+        }
+
+        @Override
+        IndexList<T> allocateIndexList(int minimumCapacity) {
+
+            return listArrayAllocator.allocateIndexList(minimumCapacity);
+        }
+
+        @Override
+        public void freeIndexList(IIndexList<T> list) {
+
+            listArrayAllocator.freeIndexList((IndexList<T>)list);
+        }
+
+        @Override
+        MutableIndexList<T> allocateMutableIndexList(int minimumCapacity) {
+
+            return mutableListArrayAllocator.allocateMutableIndexList(minimumCapacity);
+        }
+
+        @Override
+        public void freeIndexMutableList(MutableIndexList<T> list) {
+
+            mutableListArrayAllocator.freeMutableIndexList(list);
+        }
+
+        @Override
+        IndexList<T> swapToImmutable(MutableIndexList<T> mutableIndexList) {
+
+            Objects.requireNonNull(mutableIndexList);
+
+            return mutableIndexList.swapToImmutableAndClear();
+        }
+    }
+
+    @SafeVarargs
+    public static <T> IIndexList<T> of(T ... instances) {
+
+        Objects.requireNonNull(instances);
+
+        return new IndexList<>(instances);
+    }
+
+    public static <T> IIndexList<T> sortedOf(IIterableElements<T> elements, Comparator<? super T> comparator, IntFunction<T[]> createArray, IndexListAllocator<T> allocator) {
+
+        Objects.requireNonNull(elements);
+        Objects.requireNonNull(comparator);
+        Objects.requireNonNull(createArray);
+
+        final int numElements = Integers.checkUnsignedLongToUnsignedInt(elements.getNumElements());
+
+        final MutableIndexList<T> sorted = allocator != null
+                ? allocator.allocateMutableIndexList(numElements)
+                : new MutableIndexList<>(createArray, numElements);
+
+        sorted.addTail(elements);
+
+        sorted.sort(comparator);
+
+        return allocator != null
+                ? allocator.swapToImmutable(sorted)
+                : sorted.swapToImmutable();
+    }
+
+    public static <T> Builder<T> createBuilder(IntFunction<T[]> createArray) {
+
+        return createBuilder(createArray, DEFAULT_INITIAL_CAPACITY);
+    }
+
+    public static <T> Builder<T> createBuilder(IntFunction<T[]> createArray, int initialCapacity) {
+
+        return new Builder<>(new IndexList<>(createArray, initialCapacity));
+    }
+
+    public static <T> Builder<T> createBuilder(IndexListAllocator<T> listAllcator) {
+
+        return createBuilder(DEFAULT_INITIAL_CAPACITY, listAllcator);
+    }
+
+    public static <T> Builder<T> createBuilder(int minimumCapacity, IndexListAllocator<T> listAllocator) {
+
+        return listAllocator.allocateIndexListBuilder(minimumCapacity);
+    }
+
+    public static final class Builder<T> implements IIndexListMutators<T>, IBuilder<T, Builder<T>> {
+
+        private IndexList<T> list;
+
+        private Builder(IndexList<T> list) {
+
+            this.list = list;
+        }
+
+        private Builder(int minimumCapacity, IndexListAllocator<T> listAllocator) {
+
+            Checks.isInitialCapacity(minimumCapacity);
+            Objects.requireNonNull(listAllocator);
+
+            this.list = listAllocator.allocateIndexList(minimumCapacity);
+        }
+
+        @Override
+        public void addHead(T instance) {
+
+            list.addHead(instance);
+        }
+
+        @Override
+        public void addTail(T instance) {
+
+            list.addTail(instance);
+        }
+
+        @Override
+        public void addTail(@SuppressWarnings("unchecked") T... instances) {
+
+            list.addTail(instances);
+        }
+
+        public IIndexList<T> build() {
+
+            final IndexList<T> result = list;
+
+            if (result == null) {
+
+                throw new IllegalStateException();
+            }
+
+            this.list = null;
+
+            return result;
+        }
+
+        final long getNumElements() {
+
+            return list.getNumElements();
+        }
+    }
+
+    private static final IIndexList<?> emptyList = new IndexList<Object>();
+
+    @SuppressWarnings("unchecked")
+    public static <T> IIndexList<T> empty() {
+
+        return (IIndexList<T>)emptyList;
+    }
 
     public static <T> IndexList<T> of(T instance) {
 
@@ -32,338 +355,29 @@ public final class IndexList<T> implements List<T>, ICapacity, IMutableIndexList
         return result;
     }
 
-    public IndexList(IntFunction<T[]> createArray) {
-        this(createArray, 10);
+    private IndexList() {
+
     }
 
-    public IndexList(IntFunction<T[]> createArray, IIndexList<T> toCopy) {
-        this(createArray, Integers.checkUnsignedLongToUnsignedInt(toCopy.getNumElements()));
+    IndexList(IntFunction<T[]> createArray) {
+        this(createArray, DEFAULT_INITIAL_CAPACITY);
+    }
 
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(toCopy.getNumElements());
+    IndexList(IntFunction<T[]> createArray, T[] instances, int numElements) {
+        super(createArray, instances, numElements);
+    }
 
-        for (int i = 0; i < numElements; ++ i) {
-
-            array[i] = toCopy.get(i);
-        }
-
-        this.numElements = numElements;
+    private IndexList(T[] instances) {
+        super(instances);
     }
 
     public IndexList(IntFunction<T[]> createArray, int initialCapacity) {
-
-        Objects.requireNonNull(createArray);
-        Checks.isInitialCapacity(initialCapacity);
-
-        this.createArray = createArray;
-
-        this.array = createArray.apply(initialCapacity);
-        this.numElements = 0;
+        super(createArray, initialCapacity);
     }
 
     @Override
-    public long getNumElements() {
+    public final IMutableIndexList<T> copyToMutable() {
 
-        return numElements;
-    }
-
-    @Override
-    public T get(long index) {
-
-        if (index < 0) {
-
-            throw new IndexOutOfBoundsException();
-        }
-        else if (index >= numElements) {
-
-            throw new IndexOutOfBoundsException();
-        }
-
-        return array[(int)index];
-    }
-
-    @Override
-    public T getHead() {
-
-        if (numElements == 0) {
-
-            throw new IllegalStateException();
-        }
-
-        return array[0];
-    }
-
-    @Override
-    public T getTail() {
-
-        if (numElements == 0) {
-
-            throw new IllegalStateException();
-        }
-
-        return array[numElements - 1];
-    }
-
-    private static int increaseCapacity(int capacity) {
-
-        return capacity << 1;
-    }
-
-    @Override
-    public void addHead(T instance) {
-
-        if (instance == null) {
-
-            throw new NullPointerException();
-        }
-
-        T[] dstArray = array;
-        final int arrayLength = dstArray.length;
-
-        final int num = numElements;
-
-        if (num == arrayLength) {
-
-            final T[] newArray = createArray.apply(increaseCapacity(arrayLength));
-
-            System.arraycopy(dstArray, 0, newArray, 1, arrayLength);
-
-            this.array = dstArray = newArray;
-        }
-        else {
-            System.arraycopy(dstArray, 0, dstArray, 1, num);
-        }
-
-        dstArray[0] = instance;
-
-        ++ numElements;
-    }
-
-    @Override
-    public void addTail(T instance) {
-
-        if (instance == null) {
-
-            throw new NullPointerException();
-        }
-
-        T[] dstArray = array;
-        final int arrayLength = dstArray.length;
-
-        if (numElements == arrayLength) {
-
-            final T[] newArray = createArray.apply(arrayLength << 1);
-
-            System.arraycopy(dstArray, 0, newArray, 0, arrayLength);
-
-            this.array = dstArray = newArray;
-        }
-
-        dstArray[numElements ++] = instance;
-    }
-
-    @Override
-    public int size() {
-
-        return numElements;
-    }
-
-    @Override
-    public boolean isEmpty() {
-
-        return numElements == 0;
-    }
-
-    @Override
-    public boolean contains(Object o) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Iterator<T> iterator() {
-
-        return new Iterator<T>() {
-
-            private int index;
-
-            {
-                this.index = 0;
-            }
-
-            @Override
-            public boolean hasNext() {
-
-                return index < numElements;
-            }
-
-            @Override
-            public T next() {
-
-                if (index >= numElements) {
-
-                    throw new IndexOutOfBoundsException();
-                }
-
-                return array[index ++];
-            }
-        };
-    }
-
-    @Override
-    public Object[] toArray() {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <E> E[] toArray(E[] dst) {
-
-        Objects.checkFromIndexSize(0, dst.length, this.array.length);
-
-        final int num = numElements;
-
-        for (int i = 0; i < num; ++ i) {
-
-            @SuppressWarnings("unchecked")
-            final E element = (E)array[i];
-
-            dst[i] = element;
-        }
-
-        return dst;
-    }
-
-    @Override
-    public boolean add(T instance) {
-
-        addTail(instance);
-
-        return true;
-    }
-
-    @Override
-    public boolean remove(Object o) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean containsAll(Collection<?> c) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean addAll(Collection<? extends T> collection) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean addAll(int index, Collection<? extends T> c) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean removeAll(Collection<?> c) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean retainAll(Collection<?> c) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void clear() {
-
-        this.numElements = 0;
-    }
-
-    @Override
-    public T get(int index) {
-
-        if (index < 0) {
-
-            throw new IndexOutOfBoundsException();
-        }
-        else if (index >= numElements) {
-
-            throw new IndexOutOfBoundsException();
-        }
-
-        return array[index];
-    }
-
-    @Override
-    public T set(int index, T element) {
-
-        if (index < 0) {
-
-            throw new IndexOutOfBoundsException();
-        }
-        else if (index >= numElements) {
-
-            throw new IndexOutOfBoundsException();
-        }
-        else if (element == null) {
-
-            throw new NullPointerException();
-        }
-
-        array[index] = element;
-
-        return element;
-    }
-
-    @Override
-    public void add(int index, T element) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public T remove(int index) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int indexOf(Object o) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int lastIndexOf(Object o) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ListIterator<T> listIterator() {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ListIterator<T> listIterator(int index) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<T> subList(int fromIndex, int toIndex) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public long getCapacity() {
-
-        return array.length;
+        return new MutableIndexList<>(getCreateArray(), this);
     }
 }

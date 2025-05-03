@@ -5,7 +5,7 @@ import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.test.unit.BaseTest;
 
-abstract class BaseLargeArrayTest<O, I, T extends LargeExponentArray> extends BaseTest {
+abstract class BaseLargeArrayTest<O, I, T extends LargeExponentArray & IArray> extends BaseTest {
 
     abstract T createArray(int initialOuterCapacity, int innerCapacityExponent);
 
@@ -64,13 +64,13 @@ abstract class BaseLargeArrayTest<O, I, T extends LargeExponentArray> extends Ba
         final T array = createArray(0, 0);
 
         assertThat(array.getInnerCapacity()).isEqualTo(1);
-        assertThat(array.getNumOuterEntries()).isEqualTo(0);
+        assertThat(array.getNumOuterUtilizedEntries()).isEqualTo(0);
         assertThat(array.getNumOuterAllocatedEntries()).isEqualTo(0);
 
         addValue(array, 12);
 
         assertThat(array.getInnerCapacity()).isEqualTo(1);
-        assertThat(array.getNumOuterEntries()).isEqualTo(1);
+        assertThat(array.getNumOuterUtilizedEntries()).isEqualTo(1);
         assertThat(array.getNumOuterAllocatedEntries()).isEqualTo(1);
 
         checkElements(array, 12);
@@ -78,7 +78,7 @@ abstract class BaseLargeArrayTest<O, I, T extends LargeExponentArray> extends Ba
         addValue(array, 23);
 
         assertThat(array.getInnerCapacity()).isEqualTo(1);
-        assertThat(array.getNumOuterEntries()).isEqualTo(2);
+        assertThat(array.getNumOuterUtilizedEntries()).isEqualTo(2);
         assertThat(array.getNumOuterAllocatedEntries()).isEqualTo(2);
 
         checkElements(array, 12, 23);
@@ -86,21 +86,21 @@ abstract class BaseLargeArrayTest<O, I, T extends LargeExponentArray> extends Ba
         addValue(array, 34);
 
         assertThat(array.getInnerCapacity()).isEqualTo(1);
-        assertThat(array.getNumOuterEntries()).isEqualTo(3);
+        assertThat(array.getNumOuterUtilizedEntries()).isEqualTo(3);
         assertThat(array.getNumOuterAllocatedEntries()).isEqualTo(3);
 
         checkElements(array, 12, 23, 34);
 
-        array.clear();
+        array.reset();
 
         assertThat(array.getInnerCapacity()).isEqualTo(1);
-        assertThat(array.getNumOuterEntries()).isEqualTo(0);
+        assertThat(array.getNumOuterUtilizedEntries()).isEqualTo(0);
         assertThat(array.getNumOuterAllocatedEntries()).isEqualTo(3);
 
         addValue(array, 12);
 
         assertThat(array.getInnerCapacity()).isEqualTo(1);
-        assertThat(array.getNumOuterEntries()).isEqualTo(1);
+        assertThat(array.getNumOuterUtilizedEntries()).isEqualTo(1);
         assertThat(array.getNumOuterAllocatedEntries()).isEqualTo(3);
 
         checkElements(array, 12);
@@ -108,7 +108,7 @@ abstract class BaseLargeArrayTest<O, I, T extends LargeExponentArray> extends Ba
         addValue(array, 23);
 
         assertThat(array.getInnerCapacity()).isEqualTo(1);
-        assertThat(array.getNumOuterEntries()).isEqualTo(2);
+        assertThat(array.getNumOuterUtilizedEntries()).isEqualTo(2);
         assertThat(array.getNumOuterAllocatedEntries()).isEqualTo(3);
 
         checkElements(array, 12, 23);
@@ -116,7 +116,7 @@ abstract class BaseLargeArrayTest<O, I, T extends LargeExponentArray> extends Ba
         addValue(array, 34);
 
         assertThat(array.getInnerCapacity()).isEqualTo(1);
-        assertThat(array.getNumOuterEntries()).isEqualTo(3);
+        assertThat(array.getNumOuterUtilizedEntries()).isEqualTo(3);
         assertThat(array.getNumOuterAllocatedEntries()).isEqualTo(3);
 
         checkElements(array, 12, 23, 34);
@@ -129,15 +129,15 @@ abstract class BaseLargeArrayTest<O, I, T extends LargeExponentArray> extends Ba
         final T array = createArray();
 
         assertThat(array).isEmpty();
-        assertThat(array).hasNumElements(0L);
+        assertThat(array).hasLimit(0L);
 
         addValue(array, 12);
         assertThat(array).isNotEmpty();
-        assertThat(array).hasNumElements(1L);
+        assertThat(array).hasLimit(1L);
 
-        array.clear();
+        array.reset();
         assertThat(array).isEmpty();
-        assertThat(array).hasNumElements(0L);
+        assertThat(array).hasLimit(0L);
     }
 
     private void checkElements(T array, int ... expectedElements) {
@@ -145,7 +145,7 @@ abstract class BaseLargeArrayTest<O, I, T extends LargeExponentArray> extends Ba
         final int expectedNumElements = expectedElements.length;
 
         assertThat(array.isEmpty()).isEqualTo(expectedNumElements == 0);
-        assertThat(array).hasNumElements(expectedNumElements);
+        assertThat(array).hasLimit(expectedNumElements);
 
         for (int i = 0; i < expectedNumElements; ++ i) {
 

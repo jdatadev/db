@@ -3,10 +3,14 @@ package dev.jdata.db.utils.adt.lists;
 import java.util.Arrays;
 
 import dev.jdata.db.utils.adt.IClearable;
-import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterList<T, U>, U>> extends BaseInnerOuterList<T, U> implements IClearable {
+public abstract class BaseLargeList<
+                LIST_T,
+                LIST extends BaseLargeList<LIST_T, LIST, VALUES>,
+                VALUES extends BaseValues<LIST_T, LIST, VALUES>>
+
+        extends BaseInnerOuterList<LIST_T, LIST, VALUES> implements IClearable {
 
     public static boolean isEmpty(long headNode, long tailNode) {
 
@@ -29,12 +33,13 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
     }
 
     @FunctionalInterface
-    interface BaseValuesFactory<T, U extends BaseValues<T, BaseInnerOuterList<T, U>, U>> {
+    public interface BaseValuesFactory<T, U extends BaseInnerOuterList<T, U, V>, V extends BaseValues<T, U, V>> {
 
-        U create(int initialOuterCapacity);
+        V create(int initialOuterCapacity);
     }
 
-    private final int innerCapacity;
+    private final int innerNodeCapacity;
+    private final int innerArrayCapacity;
 
     private long[][] next;
 
@@ -43,23 +48,24 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
     private long freeListHead;
 
     abstract void reallocateOuter(int newOuterLength);
-    abstract void allocateInner(int outerIndex, int innerCapacity);
+    abstract void allocateInner(int outerIndex, int innerArrayCapacity);
 
     abstract void clearNumElements();
 
-    BaseLargeList(int initialOuterCapacity, int innerCapacity, BaseValuesFactory<T, U> valuesFactory) {
-        super(valuesFactory.create(initialOuterCapacity), 32, BitsUtil.maskLong(32, 0));
+    BaseLargeList(int initialOuterCapacity, int innerNodeCapacity, BaseValuesFactory<LIST_T, LIST, VALUES> valuesFactory) {
+        super(valuesFactory.create(initialOuterCapacity), 32);
 
-        Checks.isCapacity(initialOuterCapacity);
-        Checks.isCapacity(innerCapacity);
+        Checks.isInitialCapacity(initialOuterCapacity);
+        Checks.isCapacity(innerNodeCapacity);
 
-        this.innerCapacity = innerCapacity;
+        this.innerNodeCapacity = innerNodeCapacity;
+        this.innerArrayCapacity = innerNodeCapacity + 1;
 
         this.next = new long[initialOuterCapacity][];
 
-        next[0] = allocateListNodes(innerCapacity);
+        next[0] = allocateListNodes(innerNodeCapacity);
 
-        getValues().allocateInner(0, innerCapacity);
+        getValues().allocateInner(0, innerNodeCapacity);
 
         this.numOuterEntries = 1;
 
@@ -153,7 +159,7 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
 
             if (numNodes == array.length - 1) {
 
-                final U values = getValues();
+                final VALUES values = getValues();
 
                 final int currentOuterLength = next.length;
 
@@ -168,13 +174,13 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
                     this.next = Arrays.copyOf(next, newOuterLength);
                 }
 
-                final int innerToAllocate = innerCapacity;
+                final int innerNodesToAllocate = innerNodeCapacity;
 
-                array = next[numOuterEntries] = allocateListNodes(innerToAllocate);
+                array = next[numOuterEntries] = allocateListNodes(innerNodesToAllocate);
 
-                allocateInner(numOuterEntries, innerToAllocate);
+                allocateInner(numOuterEntries, innerNodesToAllocate);
 
-                values.allocateInner(numOuterEntries ++, innerToAllocate);
+                values.allocateInner(numOuterEntries ++, innerNodesToAllocate);
 
                 numNodes = 0;
             }
@@ -212,15 +218,15 @@ public abstract class BaseLargeList<T, U extends BaseValues<T, BaseInnerOuterLis
         setNode(next, node, nextNode);
     }
 
-    static long[] allocateListNodes(int capacity) {
+    static long[] allocateListNodes(int nodeCapacity) {
 
-        Checks.isCapacity(capacity);
+        Checks.isCapacity(nodeCapacity);
 
-        final long[] nodes = new long[capacity + 1];
+        final long[] nodes = new long[nodeCapacity + 1];
 
         Arrays.fill(nodes, NO_NODE);
 
-        nodes[0] = 0;
+        nodes[0] = 0L;
 
         return nodes;
     }

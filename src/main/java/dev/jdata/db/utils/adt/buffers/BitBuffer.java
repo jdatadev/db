@@ -10,10 +10,11 @@ import dev.jdata.db.utils.adt.decimals.MutableDecimal;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.function.ByteGetter;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class BitBuffer extends BaseLargeByteArray {
+public final class BitBuffer extends BaseLargeByteArray implements PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BIT_BUFFER;
 
@@ -65,7 +66,7 @@ public final class BitBuffer extends BaseLargeByteArray {
     }
 
     @Override
-    protected void toString(long index, StringBuilder sb) {
+    public void toString(long index, StringBuilder sb) {
 
     }
 

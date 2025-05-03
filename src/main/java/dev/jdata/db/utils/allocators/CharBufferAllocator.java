@@ -12,6 +12,14 @@ public final class CharBufferAllocator extends BaseBufferAllocator<CharBuffer> i
     }
 
     @Override
+    public CharBuffer allocateForEncodeCharacters(long numCharacters) {
+
+        Checks.isNumCharacters(numCharacters);
+
+        return allocateArrayInstance(Integers.checkUnsignedLongToUnsignedInt(numCharacters));
+    }
+
+    @Override
     public CharBuffer allocateForDecodeBytes(long numBytes) {
 
         Checks.isNumBytes(numBytes);

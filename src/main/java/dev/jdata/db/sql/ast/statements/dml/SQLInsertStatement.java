@@ -1,12 +1,11 @@
 package dev.jdata.db.sql.ast.statements.dml;
 
-import java.util.List;
-
 import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.ASTList;
 import org.jutils.ast.objects.list.ASTSingle;
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.statements.SQLStatementVisitor;
@@ -22,7 +21,8 @@ public final class SQLInsertStatement extends SQLDMLUpdatingStatement implements
     private final long valuesKeyword;
     private final ASTList<Expression> values;
 
-    public SQLInsertStatement(Context context, long insertKeyword, long intoKeyword, long tableName, SQLColumnNames columnNames, long valuesKeyword, List<Expression> values) {
+    public SQLInsertStatement(Context context, long insertKeyword, long intoKeyword, long tableName, SQLColumnNames columnNames, long valuesKeyword,
+            IListGetters<Expression> values) {
         super(context);
 
         this.insertKeyword = checkIsKeyword(insertKeyword);

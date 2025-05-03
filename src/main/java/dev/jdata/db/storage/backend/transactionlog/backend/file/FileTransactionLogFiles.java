@@ -2,15 +2,15 @@ package dev.jdata.db.storage.backend.transactionlog.backend.file;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 
 import dev.jdata.db.storage.backend.file.BaseStorageFiles;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
-import dev.jdata.db.utils.adt.maps.LongToObjectMap;
+import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.maps.MutableLongToObjectWithRemoveNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.file.access.RelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.SequentialFileAccess;
 
 public final class FileTransactionLogFiles extends BaseStorageFiles<SequentialFileAccess, FileTransactionLogFile> {
@@ -22,12 +22,12 @@ public final class FileTransactionLogFiles extends BaseStorageFiles<SequentialFi
         return parseSequenceNo(fileName, FILE_NAME_PREFIX);
     }
 
-    private final LongToObjectMap<FileTransactionLogFile> fileByLongToObjectMap;
+    private final MutableLongToObjectWithRemoveNonBucketMap<FileTransactionLogFile> fileByLongToObjectMap;
 
-    public FileTransactionLogFiles(RelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath directoryPath, List<FileTransactionLogFile> files) {
+    public FileTransactionLogFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath directoryPath, IIndexList<FileTransactionLogFile> files) {
         super(fileSystemAccess, directoryPath, files);
 
-        this.fileByLongToObjectMap = new LongToObjectMap<>(10, 1, HashedConstants.DEFAULT_LOAD_FACTOR, FileTransactionLogFile[]::new);
+        this.fileByLongToObjectMap = new MutableLongToObjectWithRemoveNonBucketMap<>(10, 1, HashedConstants.DEFAULT_LOAD_FACTOR, FileTransactionLogFile[]::new);
     }
 
     @Override

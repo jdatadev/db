@@ -1,12 +1,11 @@
 package dev.jdata.db.sql.ast.statements.dml;
 
-import java.util.List;
-
 import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.ASTList;
 import org.jutils.ast.objects.list.ASTSingle;
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.context.Context;
 
 public final class SQLJoinFromTable extends SQLFromTable {
@@ -16,7 +15,7 @@ public final class SQLJoinFromTable extends SQLFromTable {
     private final ASTSingle<Expression> onCondition;
     private final ASTList<SQLTableJoin> join;
 
-    public SQLJoinFromTable(Context context, SQLObjectNameAndAlias fromTable, long onKeyword, Expression onCondition, List<SQLTableJoin> join) {
+    public SQLJoinFromTable(Context context, SQLObjectNameAndAlias fromTable, long onKeyword, Expression onCondition, IListGetters<SQLTableJoin> join) {
         super(context);
 
         this.fromTable = makeSingle(fromTable);

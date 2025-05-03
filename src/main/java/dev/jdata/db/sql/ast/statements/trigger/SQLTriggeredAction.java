@@ -1,24 +1,23 @@
 package dev.jdata.db.sql.ast.statements.trigger;
 
-import java.util.List;
-
 import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.BaseASTElement;
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.ASTList;
 import org.jutils.ast.objects.list.ASTSingle;
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 
-public class SQLTriggeredAction extends BaseASTElement {
+public final class SQLTriggeredAction extends BaseASTElement {
 
     private final long whenKeyword;
     private final ASTSingle<Expression> condition;
     private final ASTList<BaseSQLStatement> statements;
 
-    public SQLTriggeredAction(Context context, long whenKeyword, Expression condition, List<SQLTriggeredStatement> statements) {
+    public SQLTriggeredAction(Context context, long whenKeyword, Expression condition, IListGetters<SQLTriggeredStatement> statements) {
         super(context);
 
         checkIsKeywordAndElementOrNot(whenKeyword, condition);
@@ -27,7 +26,7 @@ public class SQLTriggeredAction extends BaseASTElement {
         this.condition = safeMakeSingle(condition);
 
         @SuppressWarnings("unchecked")
-        final List<BaseSQLStatement> statementsList = (List<BaseSQLStatement>)(List<?>)statements;
+        final IListGetters<BaseSQLStatement> statementsList = (IListGetters<BaseSQLStatement>)(IListGetters<?>)statements;
 
         this.statements = makeList(statementsList);
     }

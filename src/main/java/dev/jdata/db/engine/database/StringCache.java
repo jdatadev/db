@@ -7,14 +7,16 @@ import org.jutils.io.strings.StringResolver.CharacterBuffer;
 @Deprecated
 public final class StringCache implements IStringCache {
 
-//    private final LargeCharArray charArray;
-
-//    private long numCharacters;
-
     @Override
     public String getString(CharSequence charSequence) {
 
         return new StringBuilder(charSequence).toString();
+    }
+
+    @Override
+    public String getString(int i) {
+
+        throw new UnsupportedOperationException();
     }
 
     @Override

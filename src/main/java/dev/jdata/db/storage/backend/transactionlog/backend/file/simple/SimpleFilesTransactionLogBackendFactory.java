@@ -1,8 +1,6 @@
 package dev.jdata.db.storage.backend.transactionlog.backend.file.simple;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
@@ -10,10 +8,14 @@ import dev.jdata.db.storage.backend.transactionlog.backend.file.BaseFileTransact
 import dev.jdata.db.storage.backend.transactionlog.backend.file.FileTransactionLogBackendConfiguration;
 import dev.jdata.db.storage.backend.transactionlog.backend.file.FileTransactionLogFile;
 import dev.jdata.db.storage.backend.transactionlog.backend.file.FileTransactionLogFiles;
+import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.file.access.AbsoluteDirectoryPath;
+import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.file.access.RelativeFileSystemAccess;
+import dev.jdata.db.utils.scalars.Integers;
 
 public final class SimpleFilesTransactionLogBackendFactory
         extends BaseFileTransactionLogBackendFactory<FileTransactionLogBackendConfiguration, SimpleFilesTransactionLogBackend> {
@@ -25,31 +27,62 @@ public final class SimpleFilesTransactionLogBackendFactory
         Objects.requireNonNull(configuration);
 
         final AbsoluteDirectoryPath rootPath = configuration.getRootPath();
-        final RelativeFileSystemAccess fileSystemAccess = RelativeFileSystemAccess.create(rootPath, configuration.getFileSystemAccess());
+        final IRelativeFileSystemAccess fileSystemAccess = IRelativeFileSystemAccess.create(rootPath, configuration.getFileSystemAccess());
 
         final RelativeDirectoryPath relativeRootPath = RelativeDirectoryPath.ROOT;
 
-        final List<RelativeFilePath> transactionFilePaths = fileSystemAccess.listFilePaths(relativeRootPath);
+        final IIndexList<RelativeFilePath> transactionFilePaths;
 
-        final List<FileTransactionLogFile> fileTransactionLogFileList = readTransactionLogFiles(fileSystemAccess, transactionFilePaths);
+        final IndexListAllocator<RelativeFilePath> indexListAllocator = null;
+
+        final IndexList.Builder<RelativeFilePath> transactionFilePathsBuilder = IndexList.createBuilder(indexListAllocator);
+
+        try {
+            fileSystemAccess.listFilePaths(relativeRootPath, transactionFilePathsBuilder, (p, b) -> b.addTail(p));
+
+            transactionFilePaths = transactionFilePathsBuilder.build();
+        }
+        finally {
+
+            indexListAllocator.freeIndexListBuilder(transactionFilePathsBuilder);
+        }
+
+        final IIndexList<FileTransactionLogFile> fileTransactionLogFileList = readTransactionLogFiles(fileSystemAccess, transactionFilePaths);
 
         final FileTransactionLogFiles fileTransactionLogFiles = new FileTransactionLogFiles(fileSystemAccess, relativeRootPath, fileTransactionLogFileList);
 
         return new SimpleFilesTransactionLogBackend(storageTableSchemas, fileTransactionLogFiles);
     }
 
-    private static List<FileTransactionLogFile> readTransactionLogFiles(RelativeFileSystemAccess fileSystemAccess, List<RelativeFilePath> transactionLogFilePaths)
+    private static IIndexList<FileTransactionLogFile> readTransactionLogFiles(IRelativeFileSystemAccess fileSystemAccess, IIndexList<RelativeFilePath> transactionLogFilePaths)
             throws IOException {
 
-        final List<FileTransactionLogFile> fileTransactionLogFileList = new ArrayList<>(transactionLogFilePaths.size());
+        final long numElements = transactionLogFilePaths.getNumElements();
+        final int initialCapacity = Integers.checkUnsignedLongToUnsignedInt(numElements);
 
-        for (RelativeFilePath transactionLogFilePath : transactionLogFilePaths) {
+        final IIndexList<FileTransactionLogFile> result;
 
-            final FileTransactionLogFile fileTransactionLogFile = FileTransactionLogFile.read(fileSystemAccess, transactionLogFilePath);
+        final IndexListAllocator<FileTransactionLogFile> indexListAllocator = null;
 
-            fileTransactionLogFileList.add(fileTransactionLogFile);
+        final IndexList.Builder<FileTransactionLogFile> fileTransactionLogFileList = IndexList.createBuilder(initialCapacity, indexListAllocator);
+
+        try {
+            for (long i = 0; i < numElements; ++ i) {
+
+                final RelativeFilePath transactionLogFilePath = transactionLogFilePaths.get(i);
+
+                final FileTransactionLogFile fileTransactionLogFile = FileTransactionLogFile.read(fileSystemAccess, transactionLogFilePath);
+
+                fileTransactionLogFileList.addTail(fileTransactionLogFile);
+            }
+
+            result = fileTransactionLogFileList.build();
+        }
+        finally {
+
+            indexListAllocator.freeIndexListBuilder(fileTransactionLogFileList);
         }
 
-        return fileTransactionLogFileList;
+        return result;
     }
 }

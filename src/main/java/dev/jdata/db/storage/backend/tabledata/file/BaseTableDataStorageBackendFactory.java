@@ -3,7 +3,7 @@ package dev.jdata.db.storage.backend.tabledata.file;
 import java.io.IOException;
 import java.util.Objects;
 
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.storage.backend.BaseStorageBackendFactory;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.TableDataStorageBackend;
@@ -13,11 +13,11 @@ public abstract class BaseTableDataStorageBackendFactory<C extends TableStorageB
         extends BaseStorageBackendFactory<C, TableDataStorageBackend>
         implements TableDataStorageBackendFactory<C> {
 
-    protected abstract TableDataStorageBackend initializeTables(C configuration, StorageTableSchemas storageTableSchemas, NumStorageBitsGetter numStorageBitsGetter)
+    protected abstract TableDataStorageBackend initializeTables(C configuration, StorageTableSchemas storageTableSchemas, INumStorageBitsGetter numStorageBitsGetter)
             throws IOException;
 
     @Override
-    protected final TableDataStorageBackend initializeBackend(C configuration, StorageTableSchemas storageTableSchemas, NumStorageBitsGetter numStorageBitsGetter)
+    protected final TableDataStorageBackend initializeBackend(C configuration, StorageTableSchemas storageTableSchemas, INumStorageBitsGetter numStorageBitsGetter)
             throws IOException {
 
         Objects.requireNonNull(configuration);

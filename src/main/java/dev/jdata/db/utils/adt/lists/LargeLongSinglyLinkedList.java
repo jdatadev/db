@@ -1,6 +1,11 @@
 package dev.jdata.db.utils.adt.lists;
 
-public final class LargeLongSinglyLinkedList extends BaseLargeLongSinglyLinkedList<LargeLongSinglyLinkedList> implements LargeLongList {
+import java.util.Objects;
+
+public final class LargeLongSinglyLinkedList
+
+        extends BaseLargeLongSinglyLinkedList<LargeLongSinglyLinkedList, LargeLongSinglyLinkedList, LongValues<LargeLongSinglyLinkedList>>
+        implements ILargeLongList {
 
     private long headNode;
     private long tailNode;
@@ -8,7 +13,7 @@ public final class LargeLongSinglyLinkedList extends BaseLargeLongSinglyLinkedLi
     private long numElements;
 
     public LargeLongSinglyLinkedList(int initialOuterCapacity, int innerCapacity) {
-        super(initialOuterCapacity, innerCapacity);
+        super(initialOuterCapacity, innerCapacity, LongValues::new);
 
         this.headNode = NO_NODE;
         this.tailNode = NO_NODE;
@@ -31,6 +36,17 @@ public final class LargeLongSinglyLinkedList extends BaseLargeLongSinglyLinkedLi
     public long[] toArray() {
 
         return toListArrayValues(headNode, intNumElements(numElements));
+    }
+
+    @Override
+    public <P, E extends Exception> void forEach(P parameter, ForEach<P, E> forEach) throws E {
+
+        Objects.requireNonNull(forEach);
+
+        for (long n = headNode; n != NO_NODE; n = getNextNode(n)) {
+
+            forEach.each(getValue(n), parameter);
+        }
     }
 
     @Override

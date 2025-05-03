@@ -3,7 +3,7 @@ package dev.jdata.db.storage.backend.tabledata.file;
 import java.io.IOException;
 import java.util.Objects;
 
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.data.RowDataNumBits;
 import dev.jdata.db.data.tables.TableByIdMap;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
@@ -34,7 +34,7 @@ public abstract class BaseFileTableDataStorageBackend extends BaseTableDataStora
 
     private final TableByIdMap<FileTableStorageFiles> fileTableStorageByTableId;
 
-    protected BaseFileTableDataStorageBackend(VersionedDatabaseSchemas versionedDatabaseSchemas, NumStorageBitsGetter numStorageBitsGetter,
+    protected BaseFileTableDataStorageBackend(VersionedDatabaseSchemas versionedDatabaseSchemas, INumStorageBitsGetter numStorageBitsGetter,
             TableByIdMap<FileTableStorageFiles> fileTableStorageByTableId) {
         super(versionedDatabaseSchemas, numStorageBitsGetter);
 

@@ -4,8 +4,10 @@ import java.util.function.Consumer;
 
 import dev.jdata.db.utils.adt.CapacityExponents;
 import dev.jdata.db.utils.adt.arrays.LargeExponentArray;
+import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadSinglyLinkedList;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.BiIntToObjectFunction;
+import dev.jdata.db.utils.scalars.Integers;
 
 public abstract class BaseLargeArrayHashed<T extends LargeExponentArray> extends BaseLongCapacityHashed<T> {
 
@@ -18,7 +20,7 @@ public abstract class BaseLargeArrayHashed<T extends LargeExponentArray> extends
         Checks.isInitialCapacity(initialOuterCapacity);
         Checks.isCapacityExponent(innerCapacityExponent);
 
-        this.innerCapacityExponent = initialOuterCapacity;
+        this.innerCapacityExponent = innerCapacityExponent;
     }
 
     @Override
@@ -29,5 +31,18 @@ public abstract class BaseLargeArrayHashed<T extends LargeExponentArray> extends
 
     protected final int getInnerCapacityExponent() {
         return innerCapacityExponent;
+    }
+
+    protected static int computeOuterCapacity(long newCapacity, int innerCapacityExponent) {
+
+        Checks.isCapacity(newCapacity);
+        Checks.isCapacityExponent(innerCapacityExponent);
+
+        return Integers.checkUnsignedLongToUnsignedInt(newCapacity / CapacityExponents.computeCapacity(innerCapacityExponent));
+    }
+
+    protected static <T> LargeLongMultiHeadSinglyLinkedList<T> createBuckets(int initialOuterCapacity, int innerCapacityExponent) {
+
+        return new LargeLongMultiHeadSinglyLinkedList<>(initialOuterCapacity, CapacityExponents.computeCapacity(innerCapacityExponent));
     }
 }

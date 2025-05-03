@@ -1,0 +1,26 @@
+package dev.jdata.db.utils.adt.sets;
+
+import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.elements.IIntElements.ForEach;
+import dev.jdata.db.utils.scalars.Integers;
+
+public final class LongBucketSetTest extends BaseImmutableIntegerSetTest<LongBucketSet> {
+
+    @Override
+    LongBucketSet createSet(int[] values) {
+
+        return LongBucketSet.of(Array.toLongArray(values));
+    }
+
+    @Override
+    <P> void forEach(LongBucketSet set, P parameter, ForEach<P, RuntimeException> forEach) {
+
+        set.forEach(parameter, (e, p) -> forEach.each(Integers.checkLongToInt(e), p));
+    }
+
+    @Override
+    boolean contains(LongBucketSet set, int value) {
+
+        return set.contains(value);
+    }
+}

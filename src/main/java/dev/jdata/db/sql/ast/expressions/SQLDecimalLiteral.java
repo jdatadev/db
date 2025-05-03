@@ -6,11 +6,9 @@ import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.parse.context.Context;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
-import dev.jdata.db.sql.ast.SQLFreeable;
 import dev.jdata.db.utils.adt.decimals.MutableDecimal;
 
-public final class SQLDecimalLiteral extends SQLLiteral implements SQLFreeable {
+public final class SQLDecimalLiteral extends SQLLiteral {
 
     private final MutableDecimal decimal;
 
@@ -22,12 +20,6 @@ public final class SQLDecimalLiteral extends SQLLiteral implements SQLFreeable {
 
     public MutableDecimal getDecimal() {
         return decimal;
-    }
-
-    @Override
-    public void free(SQLAllocator allocator) {
-
-        allocator.freeDecimal(decimal);
     }
 
     @Override

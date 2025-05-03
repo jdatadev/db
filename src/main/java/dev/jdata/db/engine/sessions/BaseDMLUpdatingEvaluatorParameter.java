@@ -4,21 +4,21 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 import dev.jdata.db.DBConstants;
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.data.RowDataNumBitsAndOffsets;
 import dev.jdata.db.dml.DMLInsertRows;
 import dev.jdata.db.dml.DMLUpdateRows;
 import dev.jdata.db.dml.DMLUpdateRows.UpdateRow;
 import dev.jdata.db.engine.database.SQLExpressionEvaluator;
-import dev.jdata.db.schema.Table;
+import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
-import dev.jdata.db.utils.allocators.IByteArrayByteBufferAllocator;
 import dev.jdata.db.utils.allocators.IArrayAllocator;
+import dev.jdata.db.utils.allocators.IByteArrayByteBufferAllocator;
 import dev.jdata.db.utils.checks.Checks;
 
 abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParameter {
 
-    private final NumStorageBitsGetter numStorageBitsGetter;
+    private final INumStorageBitsGetter numStorageBitsGetter;
     private final IByteArrayByteBufferAllocator byteArrayByteBufferAllocator;
     private final ILargeLongArrayAllocator largeLongArrayAllocator;
 
@@ -40,7 +40,7 @@ abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParamet
 
     abstract void evaluateParameterByIndex(int parameterIndex, SQLExpressionEvaluator dst);
 
-    BaseDMLUpdatingEvaluatorParameter(IArrayAllocator<SQLExpressionEvaluator> arrayAllocator, NumStorageBitsGetter numStorageBitsGetter,
+    BaseDMLUpdatingEvaluatorParameter(IArrayAllocator<SQLExpressionEvaluator> arrayAllocator, INumStorageBitsGetter numStorageBitsGetter,
             IByteArrayByteBufferAllocator byteArrayByteBufferAllocator, ILargeLongArrayAllocator largeLongArrayAllocator) {
         super(arrayAllocator);
 
@@ -59,7 +59,7 @@ abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParamet
         };
     }
 
-    final NumStorageBitsGetter getNumStorageBitsGetter() {
+    final INumStorageBitsGetter getNumStorageBitsGetter() {
         return numStorageBitsGetter;
     }
 
@@ -86,7 +86,7 @@ abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParamet
 
         Objects.requireNonNull(largeLongArray);
 
-        largeLongArray.clear();
+        largeLongArray.reset();
 
         largeLongArrayAllocator.freeLargeLongArray(largeLongArray);
     }

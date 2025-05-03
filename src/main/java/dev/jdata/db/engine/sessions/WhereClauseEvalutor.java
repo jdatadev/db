@@ -1,7 +1,7 @@
 package dev.jdata.db.engine.sessions;
 
 import dev.jdata.db.engine.transactions.Transaction;
-import dev.jdata.db.schema.Table;
+import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.sql.ast.clauses.SQLWhereClause;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 

@@ -1,11 +1,16 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.lists.IntList.ContainsOnlyPredicate;
+import dev.jdata.db.utils.adt.lists.IIntList.ContainsOnlyPredicate;
 
-abstract class BaseLargeIntSinglyLinkedList<T> extends BaseLargeSinglyLinkedList<T, int[], IntValues> {
+abstract class BaseLargeIntSinglyLinkedList<
+                INSTANCE,
+                LIST extends BaseLargeIntSinglyLinkedList<INSTANCE, LIST, VALUES>,
+                VALUES extends BaseIntValues<LIST, VALUES>>
 
-    BaseLargeIntSinglyLinkedList(int initialOuterCapacity, int innerCapacity) {
-        super(initialOuterCapacity, innerCapacity, IntValues::new);
+        extends BaseLargeSinglyLinkedList<INSTANCE, int[], LIST, VALUES> {
+
+    BaseLargeIntSinglyLinkedList(int initialOuterCapacity, int innerCapacity, BaseValuesFactory<int[], LIST, VALUES> valuesFactory) {
+        super(initialOuterCapacity, innerCapacity, valuesFactory);
     }
 
     @Override
@@ -33,12 +38,12 @@ abstract class BaseLargeIntSinglyLinkedList<T> extends BaseLargeSinglyLinkedList
         return getValues().containsOnlyValue(this, value, headNode, containsOnlyPredicate);
     }
 
-    final long findValue(int value, long headNode) {
+    final long findValueNode(int value, long headNode) {
 
-        return getValues().findValue(this, value, headNode);
+        return getValues().findValueNode(this, value, headNode);
     }
 
-    final long addHeadValue(T instance, int value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long addHeadValue(INSTANCE instance, int value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = addHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
@@ -47,7 +52,7 @@ abstract class BaseLargeIntSinglyLinkedList<T> extends BaseLargeSinglyLinkedList
         return node;
     }
 
-    final long addTailValue(T instance, int value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long addTailValue(INSTANCE instance, int value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = addTailNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
@@ -56,7 +61,7 @@ abstract class BaseLargeIntSinglyLinkedList<T> extends BaseLargeSinglyLinkedList
         return node;
     }
 
-    final int removeHeadAndReturnValue(T instance, long headNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final int removeHeadAndReturnValue(INSTANCE instance, long headNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long removedHeadNode = removeHeadNodeAndReturnNode(instance, headNode, headNodeSetter, tailNodeSetter);
 

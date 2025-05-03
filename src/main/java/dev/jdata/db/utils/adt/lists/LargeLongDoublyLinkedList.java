@@ -1,6 +1,8 @@
 package dev.jdata.db.utils.adt.lists;
 
-public final class LargeLongDoublyLinkedList extends BaseLargeLongDoublyLinkedList<LargeLongDoublyLinkedList> implements LargeLongList {
+import java.util.Objects;
+
+public final class LargeLongDoublyLinkedList extends BaseLargeLongDoublyLinkedList<LargeLongDoublyLinkedList, LargeLongDoublyLinkedList> implements ILargeLongList {
 
     private long headNode;
     private long tailNode;
@@ -25,6 +27,17 @@ public final class LargeLongDoublyLinkedList extends BaseLargeLongDoublyLinkedLi
     @Override
     public long getNumElements() {
         return numElements;
+    }
+
+    @Override
+    public <P, E extends Exception> void forEach(P parameter, ForEach<P, E> forEach) throws E {
+
+        Objects.requireNonNull(forEach);
+
+        for (long n = headNode; n != NO_NODE; n = getNextNode(n)) {
+
+            forEach.each(getValue(n), parameter);
+        }
     }
 
     @Override

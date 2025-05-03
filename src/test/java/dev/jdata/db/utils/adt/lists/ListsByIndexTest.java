@@ -1,6 +1,7 @@
 package dev.jdata.db.utils.adt.lists;
 
 import java.util.Arrays;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
@@ -32,14 +33,26 @@ public final class ListsByIndexTest extends BaseByIndexTest {
     }
 
     @Override
-    protected <T> int findIndex(T[] array, Predicate<T> predicate) {
+    protected <T, P> int findIndex(T[] array, P parameter, BiPredicate<T, P> predicate) {
 
-        return Lists.findIndexWithClosureAllocation(Arrays.asList(array), predicate);
+        return Lists.findIndex(Arrays.asList(array), parameter, predicate);
     }
 
     @Override
-    protected <T> int findIndexRange(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
+    protected <T> int closureOrConstantFindIndex(T[] array, Predicate<T> predicate) {
 
-        return Lists.findIndexWithClosureAllocation(Arrays.asList(array), startIndex, numElements, predicate);
+        return Lists.closureOrConstantFindIndex(Arrays.asList(array), predicate);
+    }
+
+    @Override
+    protected <T, P> int findIndexInRange(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
+
+        return Lists.findIndex(Arrays.asList(array), array.length, startIndex, numElements, parameter, predicate);
+    }
+
+    @Override
+    protected <T> int closureOrConstantFindIndexInRange(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
+
+        return Lists.closureOrConstantFindIndex(Arrays.asList(array), startIndex, numElements, predicate);
     }
 }

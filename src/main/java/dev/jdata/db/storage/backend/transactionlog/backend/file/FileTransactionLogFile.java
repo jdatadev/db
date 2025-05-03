@@ -7,9 +7,9 @@ import java.util.Objects;
 
 import dev.jdata.db.storage.backend.file.BaseStorageFile;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.file.access.FileSystemAccess.OpenMode;
+import dev.jdata.db.utils.file.access.IFileSystemAccess.OpenMode;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.file.access.RelativeFileSystemAccess;
+import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.SequentialFileAccess;
 
 public final class FileTransactionLogFile extends BaseStorageFile<SequentialFileAccess> {
@@ -17,7 +17,7 @@ public final class FileTransactionLogFile extends BaseStorageFile<SequentialFile
     private final long transactionId;
     private final DataOutputStream dataOutputStream;
 
-    public static FileTransactionLogFile read(RelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath) throws IOException {
+    public static FileTransactionLogFile read(IRelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath) throws IOException {
 
         Objects.requireNonNull(fileSystemAccess);
         Objects.requireNonNull(filePath);
@@ -39,7 +39,7 @@ public final class FileTransactionLogFile extends BaseStorageFile<SequentialFile
         return result;
     }
 
-    FileTransactionLogFile(long transactionId, RelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath) throws IOException {
+    FileTransactionLogFile(long transactionId, IRelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath) throws IOException {
         super(createSequentialFileAccess(fileSystemAccess, filePath));
 
         this.transactionId = Checks.isTransactionId(transactionId);
@@ -94,7 +94,7 @@ public final class FileTransactionLogFile extends BaseStorageFile<SequentialFile
         dataOutputStream.writeLong(transactionId);
     }
 
-    private static SequentialFileAccess createSequentialFileAccess(RelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath) throws IOException {
+    private static SequentialFileAccess createSequentialFileAccess(IRelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath) throws IOException {
 
         if (fileSystemAccess.exists(filePath)) {
 

@@ -2,10 +2,11 @@ package dev.jdata.db.utils;
 
 import java.util.Objects;
 
+import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 
-public abstract class StateObject<T extends Enum<T> & State> implements PrintDebug {
+public abstract class StateObject<T extends Enum<T> & State> extends ObjectCacheNode implements PrintDebug {
 
     public static enum NoStatesEnum {
 

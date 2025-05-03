@@ -1,6 +1,9 @@
 package dev.jdata.db.utils.adt.lists;
 
-public final class LargeIntSinglyLinkedList extends BaseLargeIntSinglyLinkedList<LargeIntSinglyLinkedList> implements LargeIntList {
+public final class LargeIntSinglyLinkedList
+
+        extends BaseLargeIntSinglyLinkedList<LargeIntSinglyLinkedList, LargeIntSinglyLinkedList, IntValues<LargeIntSinglyLinkedList>>
+        implements LargeIntList {
 
     private long headNode;
     private long tailNode;
@@ -8,7 +11,7 @@ public final class LargeIntSinglyLinkedList extends BaseLargeIntSinglyLinkedList
     private long numElements;
 
     public LargeIntSinglyLinkedList(int initialOuterCapacity, int innerCapacity) {
-        super(initialOuterCapacity, innerCapacity);
+        super(initialOuterCapacity, innerCapacity, IntValues::new);
 
         this.headNode = NO_NODE;
         this.tailNode = NO_NODE;

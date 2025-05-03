@@ -1,6 +1,10 @@
 package dev.jdata.db.utils.adt.lists;
 
-public interface IMutableIndexList<T> extends IIndexList<T>, ITailListMutators<T> {
+import java.util.Comparator;
 
-    void addHead(T instance);
+public interface IMutableIndexList<T> extends IIndexListGetters<T>, IIndexListMutators<T> {
+
+    void set(long index, T instance);
+
+    void sort(Comparator<? super T> comparator);
 }

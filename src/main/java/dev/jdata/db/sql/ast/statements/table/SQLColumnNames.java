@@ -7,12 +7,10 @@ import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.BaseSQLElement;
-import dev.jdata.db.sql.ast.SQLAllocator;
-import dev.jdata.db.sql.ast.SQLFreeable;
 import dev.jdata.db.utils.adt.arrays.LongArray;
 import dev.jdata.db.utils.adt.elements.IElements;
 
-public final class SQLColumnNames extends BaseSQLElement implements IElements, SQLFreeable {
+public final class SQLColumnNames extends BaseSQLElement implements IElements {
 
     private final LongArray names;
 
@@ -31,18 +29,12 @@ public final class SQLColumnNames extends BaseSQLElement implements IElements, S
     @Override
     public long getNumElements() {
 
-        return names.getNumElements();
+        return names.getLimit();
     }
 
     public long get(int index) {
 
         return names.get(index);
-    }
-
-    @Override
-    public void free(SQLAllocator allocator) {
-
-        allocator.freeLongArray(names);
     }
 
     @Override

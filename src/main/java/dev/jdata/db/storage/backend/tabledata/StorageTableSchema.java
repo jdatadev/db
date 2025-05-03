@@ -3,10 +3,10 @@ package dev.jdata.db.storage.backend.tabledata;
 import java.util.Arrays;
 import java.util.Objects;
 
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
-import dev.jdata.db.schema.Column;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.schema.Table;
+import dev.jdata.db.schema.model.objects.Column;
+import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.collections.Coll;
@@ -21,7 +21,7 @@ public final class StorageTableSchema {
         private final int maxBits;
         private final boolean isNullable;
 
-        private StorageSchemaColumn(SchemaDataType schemaDataType, boolean isNullable, NumStorageBitsGetter numStorageBitsGetter) {
+        private StorageSchemaColumn(SchemaDataType schemaDataType, boolean isNullable, INumStorageBitsGetter numStorageBitsGetter) {
 
             Objects.requireNonNull(schemaDataType);
             Objects.requireNonNull(numStorageBitsGetter);
@@ -82,7 +82,7 @@ public final class StorageTableSchema {
     private final StorageSchemaColumn[] columns;
     private final int totalMaxBits;
 
-    StorageTableSchema(Table table, DatabaseSchemaVersion databaseSchemaVersion, NumStorageBitsGetter numStorageBitsGetter) {
+    StorageTableSchema(Table table, DatabaseSchemaVersion databaseSchemaVersion, INumStorageBitsGetter numStorageBitsGetter) {
 
         Objects.requireNonNull(table);
         Objects.requireNonNull(databaseSchemaVersion);
@@ -145,14 +145,14 @@ public final class StorageTableSchema {
         else {
             final StorageTableSchema other = (StorageTableSchema)object;
 
-            result = Objects.equals(databaseSchemaVersion, other.databaseSchemaVersion) && tableId == other.tableId && totalMaxBits == other.totalMaxBits
+            result = databaseSchemaVersion.equals(other.databaseSchemaVersion) && tableId == other.tableId && totalMaxBits == other.totalMaxBits
                     && Arrays.equals(columns, other.columns);
         }
 
         return result;
     }
 
-    private static StorageSchemaColumn toStorageSchemaColumn(Column tableColumn, NumStorageBitsGetter numStorageBitsGetter) {
+    private static StorageSchemaColumn toStorageSchemaColumn(Column tableColumn, INumStorageBitsGetter numStorageBitsGetter) {
 
         return new StorageSchemaColumn(tableColumn.getSchemaType(), tableColumn.isNullable(), numStorageBitsGetter);
     }

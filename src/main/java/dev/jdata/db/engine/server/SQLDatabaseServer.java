@@ -4,9 +4,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
-import java.util.List;
 import java.util.Objects;
 
+import org.jutils.ast.objects.list.IAddableList;
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.engine.database.DatabaseParameters;
@@ -28,6 +29,8 @@ import dev.jdata.db.sql.parse.SQLParser;
 import dev.jdata.db.sql.parse.SQLParser.SQLString;
 import dev.jdata.db.sql.parse.SQLParserFactory;
 import dev.jdata.db.sql.parse.expression.SQLScratchExpressionValues;
+import dev.jdata.db.utils.allocators.NodeObjectCache;
+import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.allocators.ObjectCache;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
@@ -39,7 +42,7 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
         SelectResultWriter<E> getSelectResultWriter();
     }
 
-    private static final class ExecuteSQLParameter {
+    private static final class ExecuteSQLParameter extends ObjectCacheNode {
 
         private IDatabaseServer server;
         private ExecuteSQLResultWriter<?> resultWriter;
@@ -54,10 +57,10 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
     private final IDatabaseServer server;
     private final SQLParser parser;
 
-    private final ObjectCache<SQLAllocatorImpl> allocatorsCache;
-    private final ObjectCache<SQLScratchExpressionValues> scratchExpressionValuesCache;
+    private final NodeObjectCache<SQLAllocatorImpl> allocatorsCache;
+    private final NodeObjectCache<SQLScratchExpressionValues> scratchExpressionValuesCache;
     private final ObjectCache<CharBufferLoadStream> charBufferLoadStreamCache;
-    private final ObjectCache<ExecuteSQLParameter> executeSQLParameterCache;
+    private final NodeObjectCache<ExecuteSQLParameter> executeSQLParameterCache;
 
     public SQLDatabaseServer(IDatabaseServer server, SQLParserFactory parserFactory) {
 
@@ -67,10 +70,10 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
         this.server = server;
         this.parser = parserFactory.createParser();
 
-        this.allocatorsCache = new ObjectCache<>(SQLAllocatorImpl::new, SQLAllocatorImpl[]::new);
-        this.scratchExpressionValuesCache = new ObjectCache<>(SQLScratchExpressionValues::new, SQLScratchExpressionValues[]::new);
+        this.allocatorsCache = new NodeObjectCache<>(SQLAllocatorImpl::new);
+        this.scratchExpressionValuesCache = new NodeObjectCache<>(SQLScratchExpressionValues::new);
         this.charBufferLoadStreamCache = new ObjectCache<>(CharBufferLoadStream::new, CharBufferLoadStream[]::new);
-        this.executeSQLParameterCache = new ObjectCache<>(ExecuteSQLParameter::new, ExecuteSQLParameter[]::new);
+        this.executeSQLParameterCache = new NodeObjectCache<>(ExecuteSQLParameter::new);
     }
 
     @Override
@@ -149,7 +152,7 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
 
             result = onSQL(executeSQLParameter, databaseId, sessionId, charBuffer, (instance, dId, sId, sqlStatements, sqlStrings) -> {
 
-                Checks.isExactlyOne(sqlStatements.size());
+                Checks.isExactlyOne(sqlStatements.getNumElements());
 
                 final BaseSQLStatement sqlStatement = sqlStatements.get(0);
 
@@ -210,7 +213,7 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
 
         final long preparedStatementId = onSQL(this.server, databaseId, sessionId, charBuffer, (instance, dId, sId, sqlStatements, sqlStrings) -> {
 
-            Checks.isExactlyOne(sqlStatements.size());
+            Checks.isExactlyOne(sqlStatements.getNumElements());
 
             return instance.prepareStatement(dId, sId, sqlStatements.get(0), sqlStrings.get(0));
         });
@@ -247,7 +250,7 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
     @FunctionalInterface
     private interface OnParsedStatements<T, E extends Exception> {
 
-        long apply(T instance, int databaseId, int sessionId, List<BaseSQLStatement> sqlStatements, List<SQLString> sqlStrings) throws E;
+        long apply(T instance, int databaseId, int sessionId, IListGetters<BaseSQLStatement> sqlStatements, IListGetters<SQLString> sqlStrings) throws E;
     }
 
     private <T, R, E extends Exception> long onSQL(T instance, int databaseId, int sessionId, CharBuffer charBuffer, OnParsedStatements<T, E> onParsedStatements)
@@ -268,8 +271,8 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
 
         final int initialCapacity = 1;
 
-        final List<BaseSQLStatement> sqlStatements = allocator.allocateList(initialCapacity);
-        final List<SQLString> sqlStrings = allocator.allocateList(initialCapacity);
+        final IAddableList<BaseSQLStatement> sqlStatements = allocator.allocateList(initialCapacity);
+        final IAddableList<SQLString> sqlStrings = allocator.allocateList(initialCapacity);
 
         try {
             charBufferLoadStream.initialize(charBuffer);

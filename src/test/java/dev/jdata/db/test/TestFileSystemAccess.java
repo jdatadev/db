@@ -8,23 +8,23 @@ import java.util.Objects;
 
 import dev.jdata.db.utils.file.access.AbsoluteDirectoryPath;
 import dev.jdata.db.utils.file.access.BaseNIOFileSystemAccess;
-import dev.jdata.db.utils.file.access.RelativeFileSystemAccess;
+import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.paths.PathIOUtil;
 
 public final class TestFileSystemAccess extends BaseNIOFileSystemAccess implements Closeable {
 
-    public static RelativeFileSystemAccess create() throws IOException {
+    public static IRelativeFileSystemAccess create() throws IOException {
 
         final TestFileSystemAccess testFileSystemAccess = createTestFileSystemAccess();
 
         return create(testFileSystemAccess);
     }
 
-    public static RelativeFileSystemAccess create(TestFileSystemAccess testFileSystemAccess) throws IOException {
+    public static IRelativeFileSystemAccess create(TestFileSystemAccess testFileSystemAccess) throws IOException {
 
         Objects.requireNonNull(testFileSystemAccess);
 
-        return RelativeFileSystemAccess.create(testFileSystemAccess.rootDirectoryPath, testFileSystemAccess);
+        return IRelativeFileSystemAccess.create(testFileSystemAccess.rootDirectoryPath, testFileSystemAccess);
     }
 
     public static TestFileSystemAccess createTestFileSystemAccess() throws IOException {
@@ -42,7 +42,7 @@ public final class TestFileSystemAccess extends BaseNIOFileSystemAccess implemen
 
         this.tempDirectory = Objects.requireNonNull(tempDirectory);
 
-        this.rootDirectoryPath = AbsoluteDirectoryPath.of(tempDirectory);
+        this.rootDirectoryPath = directoryPathOf(tempDirectory);
     }
 
     @Override

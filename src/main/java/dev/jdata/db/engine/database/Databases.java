@@ -12,24 +12,24 @@ import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
 import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.parse.SQLParser.SQLString;
-import dev.jdata.db.utils.adt.maps.ObjectMap;
+import dev.jdata.db.utils.adt.maps.MutableObjectWithRemoveNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class Databases extends BaseSingleTypeDescriptorables<DatabaseState, Database> implements IDatabases {
 
     private final IStringCache stringCache;
 
-    private final ObjectMap<String, Database> databaseByName;
+    private final MutableObjectWithRemoveNonBucketMap<String, Database> databaseByName;
 
-    private final ObjectMap<SQLString, BaseSQLStatement> statementCache;
+    private final MutableObjectWithRemoveNonBucketMap<SQLString, BaseSQLStatement> statementCache;
 
     public Databases(IStringCache stringCache, boolean cacheStatements) {
         super(Database[]::new);
 
         this.stringCache = Objects.requireNonNull(stringCache);
 
-        this.databaseByName = new ObjectMap<>(0, String[]::new, Database[]::new);
-        this.statementCache = cacheStatements ? new ObjectMap<>(0, SQLString[]::new, BaseSQLStatement[]::new) : null;
+        this.databaseByName = new MutableObjectWithRemoveNonBucketMap<>(0, String[]::new, Database[]::new);
+        this.statementCache = cacheStatements ? new MutableObjectWithRemoveNonBucketMap<>(0, SQLString[]::new, BaseSQLStatement[]::new) : null;
     }
 
     @Override

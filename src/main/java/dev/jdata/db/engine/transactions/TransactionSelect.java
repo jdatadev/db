@@ -4,12 +4,13 @@ import java.util.Objects;
 
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.arrays.IObjectArray;
-import dev.jdata.db.utils.adt.maps.IntToObjectMap;
-import dev.jdata.db.utils.adt.sets.ILongSet;
+import dev.jdata.db.utils.adt.maps.MutableIntToObjectMaxDistanceNonBucketMap;
 import dev.jdata.db.utils.adt.sets.ILongSetGetters;
+import dev.jdata.db.utils.adt.sets.IMutableLongSet;
+import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class TransactionSelect implements IClearable {
+public final class TransactionSelect extends ObjectCacheNode implements IClearable {
 
     public enum ConditionOperator {
 
@@ -29,14 +30,15 @@ public final class TransactionSelect implements IClearable {
     private IObjectArray<SelectColumn> selectColumns;
     private ILongSetGetters rowIdsToFilter;
     private StringLookup stringLookup;
-    private final IntToObjectMap<SelectColumn> selectColumnsMap;
+    private final MutableIntToObjectMaxDistanceNonBucketMap<SelectColumn> selectColumnsMap;
 
     public TransactionSelect() {
 
-        this.selectColumnsMap = new IntToObjectMap<SelectColumn>(0, SelectColumn[]::new);
+        this.selectColumnsMap = new MutableIntToObjectMaxDistanceNonBucketMap<>(0, SelectColumn[]::new);
     }
 
-    public void initialize(int tableId, ConditionOperator conditionOperator, IObjectArray<SelectColumn> selectColumns, ILongSet rowIdsToFilter, StringLookup stringLookup) {
+    public void initialize(int tableId, ConditionOperator conditionOperator, IObjectArray<SelectColumn> selectColumns, IMutableLongSet rowIdsToFilter,
+            StringLookup stringLookup) {
 
         this.tableId = Checks.isTableId(tableId);
 

@@ -20,11 +20,13 @@ public class ByIndex {
     @FunctionalInterface
     public interface ByIndexSetter<T, U> {
 
-       void set(U byIndex, int index, T element);
+       void set(U byIndex, int index, T value);
     }
 
     public static <T, U> boolean containsInstance(U byIndex, int byIndexLength, T instance, ByIndexGetter<T, U> getter,
             Supplier<IndexOutOfBoundsException> exceptionSupplier) {
+
+        Objects.requireNonNull(instance);
 
         return findIndex(byIndex, byIndexLength, 0, byIndexLength, instance, getter, (e, p) -> e == p, exceptionSupplier) != -1;
     }
@@ -52,6 +54,12 @@ public class ByIndex {
     public static <T, U, P> int findIndex(U byIndex, int byIndexLength, P parameter, ByIndexGetter<T, U> getter, BiPredicate<T, P> predicate,
             Supplier<IndexOutOfBoundsException> exceptionSupplier) {
 
+        Objects.requireNonNull(byIndex);
+        Checks.isLengthAboveOrAtZero(byIndexLength);
+        Objects.requireNonNull(getter);
+        Objects.requireNonNull(predicate);
+        Objects.requireNonNull(exceptionSupplier);
+
         return findIndex(byIndex, byIndexLength, 0, byIndexLength, parameter, getter, predicate, exceptionSupplier);
     }
 
@@ -60,9 +68,18 @@ public class ByIndex {
 
         Objects.requireNonNull(byIndex);
         Checks.isLengthAboveOrAtZero(byIndexLength);
-        Objects.requireNonNull(predicate);
+
+        final int endIndex;
 
         if (startIndex < 0) {
+
+            throw exceptionSupplier.get();
+        }
+        else if (startIndex >= byIndexLength && byIndexLength != 0) {
+
+            throw exceptionSupplier.get();
+        }
+        else if ((endIndex = startIndex + numElements) > byIndexLength) {
 
             throw exceptionSupplier.get();
         }
@@ -70,21 +87,6 @@ public class ByIndex {
         Checks.isNumElements(numElements);
         Objects.requireNonNull(predicate);
         Objects.requireNonNull(exceptionSupplier);
-
-        final int endIndex = startIndex + numElements;
-
-        if (byIndexLength == 0) {
-
-            throw exceptionSupplier.get();
-        }
-        else if (startIndex >= byIndexLength) {
-
-            throw exceptionSupplier.get();
-        }
-        else if (endIndex > byIndexLength) {
-
-            throw exceptionSupplier.get();
-        }
 
         int foundIndex = -1;
 
@@ -126,22 +128,22 @@ public class ByIndex {
         void addString(T instance, int index, StringBuilder sb);
     }
 
-    public static <T> String toString(T byIndex, int startIndex, int numElements, BiConsumer<T, StringBuilder> prefixAdder, ByIndexStringAdder<T> byIndexStringAdder) {
+    public static <T> String closureOrConstantToString(T byIndex, int startIndex, int numElements, BiConsumer<T, StringBuilder> prefixAdder, ByIndexStringAdder<T> byIndexStringAdder) {
 
-        return largeToString(byIndex, (long)startIndex, (long)numElements, prefixAdder, null, (a, i, b) -> byIndexStringAdder.addString(a, (int)i, b));
+        return closureOrConstantLargeToString(byIndex, (long)startIndex, (long)numElements, prefixAdder, null, (a, i, b) -> byIndexStringAdder.addString(a, (int)i, b));
     }
 
-    public static <T> String toString(T byIndex, int startIndex, int numElements, BiConsumer<T, StringBuilder> prefixAdder,
+    public static <T> String closureOrConstantToString(T byIndex, int startIndex, int numElements, BiConsumer<T, StringBuilder> prefixAdder,
             ByIndexStringAdderPredicate<T> byIndexStringAdderPredicate, ByIndexStringAdder<T> byIndexStringAdder) {
 
-        return largeToString(byIndex, (long)startIndex, (long)numElements, prefixAdder, (a, i) -> byIndexStringAdderPredicate.test(a, (int)i),
+        return closureOrConstantLargeToString(byIndex, (long)startIndex, (long)numElements, prefixAdder, (a, i) -> byIndexStringAdderPredicate.test(a, (int)i),
                 (a, i, b) -> byIndexStringAdder.addString(a, (int)i, b));
     }
 
-    public static <T> void toString(T byIndex, int startIndex, int numElements, StringBuilder sb, BiConsumer<T, StringBuilder> prefixAdder,
+    public static <T> void closureOrConstantToString(T byIndex, int startIndex, int numElements, StringBuilder sb, BiConsumer<T, StringBuilder> prefixAdder,
             ByIndexStringAdderPredicate<T> byIndexStringAdderPredicate, ByIndexStringAdder<T> byIndexStringAdder) {
 
-        largeToString(byIndex, (long)startIndex, (long)numElements, sb, prefixAdder, (a, i) -> byIndexStringAdderPredicate.test(a, (int)i),
+        closureOrConstantLargeToString(byIndex, (long)startIndex, (long)numElements, sb, prefixAdder, (a, i) -> byIndexStringAdderPredicate.test(a, (int)i),
                 (a, i, b) -> byIndexStringAdder.addString(a, (int)i, b));
     }
 
@@ -157,29 +159,50 @@ public class ByIndex {
         void addString(T instance, long index, StringBuilder sb);
     }
 
-    public static <T> String largeToString(T byIndex, long startIndex, long numElements, BiConsumer<T, StringBuilder> prefixAdder,
+    public static <T> String closureOrConstantLargeToString(T byIndex, long startIndex, long numElements, BiConsumer<T, StringBuilder> prefixAdder,
             LargeByIndexStringAdder<T> byIndexStringAdder) {
 
-        return largeToString(byIndex, startIndex, numElements, prefixAdder, null, byIndexStringAdder);
+        return closureOrConstantLargeToString(byIndex, startIndex, numElements, prefixAdder, null, byIndexStringAdder);
     }
 
-    public static <T> String largeToString(T byIndex, long startIndex, long numElements, BiConsumer<T, StringBuilder> prefixAdder,
+    public static <T> String closureOrConstantLargeToString(T byIndex, long startIndex, long numElements, BiConsumer<T, StringBuilder> prefixAdder,
             LargeByIndexStringAdderPredicate<T> byIndexStringAdderPredicate, LargeByIndexStringAdder<T> byIndexStringAdder) {
 
         final StringBuilder sb = new StringBuilder(Integers.checkUnsignedLongToUnsignedInt(numElements * 10));
 
-        largeToString(byIndex, startIndex, numElements, sb, prefixAdder, byIndexStringAdderPredicate, byIndexStringAdder);
+        closureOrConstantLargeToString(byIndex, startIndex, numElements, sb, prefixAdder, byIndexStringAdderPredicate, byIndexStringAdder);
 
         return sb.toString();
     }
 
-    public static <T> void largeToString(T byIndex, long startIndex, long numElements, StringBuilder sb, BiConsumer<T, StringBuilder> prefixAdder,
+    public static <T> void closureOrConstantLargeToString(T byIndex, long startIndex, long numElements, StringBuilder sb, BiConsumer<T, StringBuilder> prefixAdder,
             LargeByIndexStringAdderPredicate<T> byIndexStringAdderPredicate, LargeByIndexStringAdder<T> byIndexStringAdder) {
+
+        largeToString(byIndex, startIndex, numElements, sb, byIndexStringAdderPredicate, byIndexStringAdder, prefixAdder,
+                byIndexStringAdderPredicate != null ? (instance, index, parameter) -> parameter.test(instance, index) : null,
+                (instance, index, b, parameter) -> parameter.addString(instance, index, b));
+    }
+
+    @FunctionalInterface
+    public interface LargeByIndexStringAdderParameterPredicate<T, P> {
+
+        boolean test(T instance, long index, P parameter);
+    }
+
+    @FunctionalInterface
+    public interface LargeByIndexStringParameterAdder<T, P> {
+
+        void addString(T instance, long index, StringBuilder sb, P parameter);
+    }
+
+    public static <T, U, V> void largeToString(T byIndex, long startIndex, long numElements, StringBuilder sb, U predicateParameter, V adderParameter,
+            BiConsumer<T, StringBuilder> prefixAdder, LargeByIndexStringAdderParameterPredicate<T, U> byIndexStringAdderParameterPredicate,
+            LargeByIndexStringParameterAdder<T, V> byIndexStringParameterAdder) {
 
         Objects.requireNonNull(byIndex);
         Checks.isIndex(startIndex);
         Checks.isNumElements(numElements);
-        Objects.requireNonNull(byIndexStringAdder);
+        Objects.requireNonNull(byIndexStringParameterAdder);
 
         if (prefixAdder != null) {
 
@@ -199,14 +222,14 @@ public class ByIndex {
 
             final long index = startIndex + i;
 
-            if (byIndexStringAdderPredicate == null || byIndexStringAdderPredicate.test(byIndex, index)) {
+            if (byIndexStringAdderParameterPredicate == null || byIndexStringAdderParameterPredicate.test(byIndex, index, predicateParameter)) {
 
                 if (sb.length() > prefixLength) {
 
                     sb.append(',');
                 }
 
-                byIndexStringAdder.addString(byIndex, index, sb);
+                byIndexStringParameterAdder.addString(byIndex, index, sb, adderParameter);
             }
         }
 

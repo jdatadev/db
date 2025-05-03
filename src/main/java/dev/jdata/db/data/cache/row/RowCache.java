@@ -8,17 +8,17 @@ import dev.jdata.db.data.RowDataNumBitsGetter;
 import dev.jdata.db.data.cache.DataCache;
 import dev.jdata.db.utils.adt.lists.LargeLongDoublyLinkedList;
 import dev.jdata.db.utils.adt.lists.LargeLongSinglyLinkedList;
-import dev.jdata.db.utils.adt.maps.LongToLongMap;
+import dev.jdata.db.utils.adt.maps.MutableLongToLongWithRemoveNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class RowCache extends BaseRows implements DataCache {
 
-    private static final long NO_INDEX = LongToLongMap.NO_VALUE;
+    private static final long NO_INDEX = -1L;
 
     private static final int BYTE_ARRAY_SIZE = 1000 * 1000;
 
-    private final LongToLongMap indexByRow;
-    private final LongToLongMap insertionOrderNodeByRow;
+    private final MutableLongToLongWithRemoveNonBucketMap indexByRow;
+    private final MutableLongToLongWithRemoveNonBucketMap insertionOrderNodeByRow;
 
     private final RowLargeByteArray cache;
     private final long[] numBits;
@@ -30,8 +30,8 @@ public final class RowCache extends BaseRows implements DataCache {
 
         final int initialCapacityExponent = 0;
 
-        this.indexByRow = new LongToLongMap(initialCapacityExponent);
-        this.insertionOrderNodeByRow = new LongToLongMap(initialCapacityExponent);
+        this.indexByRow = new MutableLongToLongWithRemoveNonBucketMap(initialCapacityExponent);
+        this.insertionOrderNodeByRow = new MutableLongToLongWithRemoveNonBucketMap(initialCapacityExponent);
 
         final int initialCapacity = 1000;
 

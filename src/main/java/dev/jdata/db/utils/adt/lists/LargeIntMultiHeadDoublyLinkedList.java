@@ -1,6 +1,9 @@
 package dev.jdata.db.utils.adt.lists;
 
-public final class LargeIntMultiHeadDoublyLinkedList<T> extends BaseLargeIntDoublyLinkedList<T> implements IntMultiList {
+public final class LargeIntMultiHeadDoublyLinkedList<INSTANCE>
+
+        extends BaseLargeIntDoublyLinkedList<INSTANCE, LargeIntMultiHeadDoublyLinkedList<INSTANCE>>
+        implements IIntMultiList {
 
     public LargeIntMultiHeadDoublyLinkedList(int initialOuterCapacity, int innerCapacity) {
         super(initialOuterCapacity, innerCapacity);
@@ -13,20 +16,20 @@ public final class LargeIntMultiHeadDoublyLinkedList<T> extends BaseLargeIntDoub
 
     public long findNode(int value, long headNode) {
 
-        return getValues().findValue(this, value, headNode);
+        return getValues().findValueNode(this, value, headNode);
     }
 
-    public long addHead(T instance, int value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    public long addHead(INSTANCE instance, int value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         return addHeadValue(instance, value, headNode, tailNode, headNodeSetter, tailNodeSetter);
     }
 
-    public long addTail(T instance, int value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    public long addTail(INSTANCE instance, int value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         return addTailValue(instance, value, headNode, tailNode, headNodeSetter, tailNodeSetter);
     }
 
-    public int removeNode(T instance, long node, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    public int removeNode(INSTANCE instance, long node, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         return getValue(removeListNodeAndReturnNode(instance, node, headNode, tailNode, headNodeSetter, tailNodeSetter));
     }

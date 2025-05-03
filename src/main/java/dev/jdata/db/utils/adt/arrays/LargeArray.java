@@ -3,10 +3,10 @@ package dev.jdata.db.utils.adt.arrays;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.elements.IMutableElements;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.scalars.Integers;
 
-public abstract class LargeArray<O, I> extends LargeExponentArray implements IMutableElements {
+abstract class LargeArray<O, I> extends LargeExponentArray {
 
     private final IntFunction<O> createOuterArray;
 
@@ -32,16 +32,16 @@ public abstract class LargeArray<O, I> extends LargeExponentArray implements IMu
     }
 
     @Override
-    public final void clear() {
+    public void reset() {
 
-        final int numOuter = getNumOuterEntries();
+        final int numOuter = getNumOuterUtilizedEntries();
 
         for (int i = 0; i < numOuter; ++ i) {
 
             setInnerArrayLength(getInnerArray(array, i), 0);
         }
 
-        super.clear();
+        super.reset();
     }
 
     final O getArray() {
@@ -53,44 +53,131 @@ public abstract class LargeArray<O, I> extends LargeExponentArray implements IMu
         this.array = Objects.requireNonNull(array);
     }
 
-    final I checkCapacity() {
+    final <P> I checkCapacity(P parameter, ArrayClearer<I, P> arrayClearer) {
 
-        final int numOuterAllocatedEntries = getNumOuterAllocatedEntries();
-        final int numOuterUtilizedEntries = getNumOuterEntries();
+         return checkCapacity(1, parameter, arrayClearer);
+    }
 
-        final I result;
+    @FunctionalInterface
+    interface ArrayClearer<T, P> {
+
+        void clear(T array, int startIndex, int numElements, P parameter);
+    }
+
+    final <P> void clearArrays(P parameter, ArrayClearer<I, P> arrayClearer) {
+
+        Objects.requireNonNull(arrayClearer);
+
+        final int numOuter = getNumOuterUtilizedEntries();
+
+        final O outerArray = array;
+
+        final int innerCapacity = getInnerCapacity();
+
+        final int innerArrayLengthNumElements = getInnerArrayLengthNumElements();
+
+        for (int i = 0; i < numOuter; ++ i) {
+
+            final I a = getInnerArray(outerArray, i);
+
+            if (arrayClearer != null) {
+
+                arrayClearer.clear(a, innerArrayLengthNumElements, innerCapacity, parameter);
+            }
+        }
+    }
+
+    final <P> I checkCapacity(long numAdditional, P parameter, ArrayClearer<I, P> arrayClearer) {
+
+        Checks.isLengthAboveZero(numAdditional);
+        Objects.requireNonNull(arrayClearer);
+
+        int numOuterAllocatedEntries = getNumOuterAllocatedEntries();
+        int numOuterUtilizedEntries = getNumOuterUtilizedEntries();
+
+        final int innerCapacity = getInnerCapacity();
+
+        final int resultIndex;
+
+        final int innerArrayLengthNumElements = getInnerArrayLengthNumElements();
+        final boolean setInnerArrayLength = innerArrayLengthNumElements != 0;
 
         if (numOuterAllocatedEntries == 0) {
 
-            incrementNumOuterAllocatedEntries();
-            incrementNumOuterEntries();
+            final int numOuter = Integers.checkUnsignedLongToUnsignedInt(((numAdditional - 1) / innerCapacity) + 1);
 
-            this.array = createOuterArray.apply(1);
+            incrementNumOuterAllocatedEntries(numOuter);
+            incrementNumOuterUtilizedEntries(numOuter);
 
-            result = setInnerArray(array, 0, getInnerCapacity() + 1);
-        }
-        else if (numOuterUtilizedEntries == 0) {
+            this.array = createOuterArray.apply(numOuter);
 
-            incrementNumOuterEntries();
+            final int innerNumAllocateElements = getInnerNumAllocateElements();
 
-            result = getInnerArray(array, 0);
+            for (int i = 0; i < numOuter; ++ i) {
 
-            setInnerArrayLength(result, 0);
+                final I a = setInnerArray(array, i, innerNumAllocateElements);
+
+                if (arrayClearer != null) {
+
+                    arrayClearer.clear(a, innerArrayLengthNumElements, innerCapacity, parameter);
+                }
+
+                if (setInnerArrayLength) {
+
+                    setInnerArrayLength(a, 0);
+                }
+            }
+
+            resultIndex = 0;
         }
         else {
-            final I innerArray = getInnerArray(array, numOuterUtilizedEntries - 1);
+            long remainingAdditional = numAdditional;
 
-            final int numInnerElements = getNumInnerElements(innerArray);
+            if (numOuterUtilizedEntries == 0) {
 
-            if (numInnerElements == getInnerArrayLength(innerArray) - 1) {
+                incrementNumOuterUtilizedEntries();
 
-                final int outerArrayLength = getOuterArrayLength(array);
+                ++ numOuterUtilizedEntries;
 
-                if (numOuterUtilizedEntries < numOuterAllocatedEntries) {
+                final I a = getInnerArray(array, 0);
 
-                    result = getInnerArray(array, numOuterUtilizedEntries);
+                if (setInnerArrayLength) {
+
+                    setInnerArrayLength(a, 0);
+                }
+
+                remainingAdditional -= Math.min(innerCapacity, numAdditional);
+
+                resultIndex = 0;
+            }
+            else {
+                if (setInnerArrayLength) {
+
+                    final I innerArray = getInnerArray(array, numOuterUtilizedEntries - 1);
+
+                    final int numInnerElements = getNumInnerElements(innerArray);
+
+                    remainingAdditional -= Math.min(numInnerElements, numAdditional);
+
+                    resultIndex = numInnerElements < innerCapacity
+                            ? numOuterUtilizedEntries - 1
+                            : numOuterUtilizedEntries;
                 }
                 else {
+                    remainingAdditional = numAdditional;
+
+                    resultIndex = numOuterUtilizedEntries;
+                }
+            }
+
+            final int innerNumAllocateElements = getInnerNumAllocateElements();
+
+            while (remainingAdditional != 0L) {
+
+                if (numOuterUtilizedEntries == numOuterAllocatedEntries) {
+
+                    final int outerArrayLength = getOuterArrayLength(array);
+
                     if (numOuterUtilizedEntries == outerArrayLength) {
 
                         this.array = copyOuterArray(array, outerArrayLength << 2);
@@ -100,18 +187,29 @@ public abstract class LargeArray<O, I> extends LargeExponentArray implements IMu
 
                     incrementNumOuterAllocatedEntries();
 
-                    result = setInnerArray(array, numOuterUtilizedEntries, getInnerNumAllocateElements());
+                    ++ numOuterAllocatedEntries;
 
-                    setInnerArrayLength(result, 0);
+                    final I a = setInnerArray(array, numOuterUtilizedEntries, innerNumAllocateElements);
+
+                    if (arrayClearer != null) {
+
+                        arrayClearer.clear(a, innerArrayLengthNumElements, innerCapacity, parameter);
+                    }
+
+                    if (setInnerArrayLength) {
+
+                        setInnerArrayLength(a, 0);
+                    }
                 }
 
-                incrementNumOuterEntries();
-            }
-            else {
-                result = innerArray;
+                incrementNumOuterUtilizedEntries();
+
+                ++ numOuterUtilizedEntries;
+
+                remainingAdditional -= Math.min(innerCapacity, remainingAdditional);
             }
         }
 
-        return result;
+        return getInnerArray(array, resultIndex);
     }
 }

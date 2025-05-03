@@ -13,22 +13,22 @@ import org.mockito.Mockito;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema;
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;
 import dev.jdata.db.utils.adt.maps.OrderedIntCountMap;
-import dev.jdata.db.utils.file.access.FileSystemAccess.OpenMode;
+import dev.jdata.db.utils.file.access.IFileSystemAccess.OpenMode;
+import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RandomFileAccess;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.file.access.RelativeFileSystemAccess;
 
 public final class FileTableStorageFileMockTest extends BaseFileTableStorageFileTest<FileTableStorageFileMockTest.MockTestData, RuntimeException> {
 
     static final class MockTestData extends BaseFileTableStorageFileTest.TestData {
 
-        private final RelativeFileSystemAccess fileSystemAccess;
+        private final IRelativeFileSystemAccess fileSystemAccess;
         private final RandomFileAccess randomFileAccess;
 
         MockTestData(int sequenceNo, long startRowId, long initialTransactionId) {
             super(sequenceNo, startRowId, initialTransactionId);
 
-            this.fileSystemAccess = Mockito.mock(RelativeFileSystemAccess.class);
+            this.fileSystemAccess = Mockito.mock(IRelativeFileSystemAccess.class);
             this.randomFileAccess = Mockito.mock(RandomFileAccess.class);
         }
 
@@ -40,7 +40,7 @@ public final class FileTableStorageFileMockTest extends BaseFileTableStorageFile
         @Override
         RelativeFilePath getFilePath(String fileName) {
 
-            return makeTestFilePath(fileName);
+            return makeTestFilePath(fileSystemAccess, fileName);
         }
     }
 
@@ -51,17 +51,17 @@ public final class FileTableStorageFileMockTest extends BaseFileTableStorageFile
         final FileInitializer<MockTestData> fileInitializer = (d, s) -> {
 
             final TestSchema testSchema = d.testSchema;
-            final RelativeFileSystemAccess fileSystemAccess = d.fileSystemAccess;
+            final IRelativeFileSystemAccess fileSystemAccess = d.fileSystemAccess;
             final RandomFileAccess randomFileAccess = d.randomFileAccess;
 
             final RelativeFilePath filePath = d.getFilePath();
 
-            Mockito.when(fileSystemAccess.openRandomFileAccess(eq(filePath), eq(OpenMode.READ_WRITE_CREATE))).thenReturn(randomFileAccess);
+            Mockito.when(fileSystemAccess.openRandomFileAccess(eq(filePath), eq(OpenMode.READ_WRITE_CREATE_FAIL_IF_EXISTS))).thenReturn(randomFileAccess);
 
             final FileTableStorageFile fileTableStorageFile = FileTableStorageFile.addNewFile(fileSystemAccess, filePath, d.sequenceNo, testSchema.storageTableFileSchema,
                     d.initialTransactionId);
 
-            Mockito.verify(fileSystemAccess).openRandomFileAccess(eq(filePath), eq(OpenMode.READ_WRITE_CREATE));
+            Mockito.verify(fileSystemAccess).openRandomFileAccess(eq(filePath), eq(OpenMode.READ_WRITE_CREATE_FAIL_IF_EXISTS));
 
             verifyFileTableStorageFile(fileTableStorageFile, d);
 
@@ -82,7 +82,7 @@ public final class FileTableStorageFileMockTest extends BaseFileTableStorageFile
         final FileInitializer<MockTestData> fileInitializer = (d, s) -> {
 
             final TestSchema testSchema = d.testSchema;
-            final RelativeFileSystemAccess fileSystemAccess = d.fileSystemAccess;
+            final IRelativeFileSystemAccess fileSystemAccess = d.fileSystemAccess;
             final RandomFileAccess randomFileAccess = d.randomFileAccess;
 
             final RelativeFilePath filePath = d.getFilePath();
@@ -120,12 +120,12 @@ public final class FileTableStorageFileMockTest extends BaseFileTableStorageFile
         final FileInitializer<MockTestData> fileInitializer = (d, s) -> {
 
             final TestSchema testSchema = d.testSchema;
-            final RelativeFileSystemAccess fileSystemAccess = d.fileSystemAccess;
+            final IRelativeFileSystemAccess fileSystemAccess = d.fileSystemAccess;
             final RandomFileAccess randomFileAccess = d.randomFileAccess;
 
             final RelativeFilePath filePath = d.getFilePath();
 
-            Mockito.when(fileSystemAccess.openRandomFileAccess(eq(filePath), eq(OpenMode.READ_WRITE_CREATE))).thenReturn(randomFileAccess);
+            Mockito.when(fileSystemAccess.openRandomFileAccess(eq(filePath), eq(OpenMode.READ_WRITE_CREATE_FAIL_IF_EXISTS))).thenReturn(randomFileAccess);
 
             final FileTableStorageFile fileTableStorageFile = FileTableStorageFile.openExistingFileFromStorageTableFileSchema(fileSystemAccess, filePath, d.sequenceNo,
                     testSchema.storageTableFileSchema, d.startRowId);
@@ -151,7 +151,7 @@ public final class FileTableStorageFileMockTest extends BaseFileTableStorageFile
     @Override
     void checkAppendRows(MockTestData testData, long startRowId, FileInitializer<MockTestData> fileInitializer) throws IOException {
 
-        final RelativeFileSystemAccess fileSystemAccess = testData.fileSystemAccess;
+        final IRelativeFileSystemAccess fileSystemAccess = testData.fileSystemAccess;
         final RandomFileAccess randomFileAccess = testData.randomFileAccess;
 
         final CheckAppendResult checkAppendResult = checkAppend(testData, startRowId, fileInitializer);

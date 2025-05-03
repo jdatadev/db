@@ -11,8 +11,12 @@ import java.util.function.Predicate;
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.utils.adt.Contains;
+import dev.jdata.db.utils.adt.arrays.IArray;
 import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.strings.CharSequences;
+import dev.jdata.db.utils.adt.strings.Characters;
+import dev.jdata.db.utils.adt.strings.Strings;
 import dev.jdata.db.utils.function.CharPredicate;
 
 public class Checks {
@@ -34,6 +38,11 @@ public class Checks {
         }
 
         return value;
+    }
+
+    public static boolean checkIsNotNull(Object object) {
+
+        return object != null;
     }
 
     public static int isNotNegative(int value) {
@@ -190,6 +199,14 @@ public class Checks {
         }
     }
 
+    public static <T> void areEqual(T object1, T object2) {
+
+        if (!object1.equals(object2)) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
     public static <T> void areNotEqual(T object1, T object2) {
 
         if (object1.equals(object2)) {
@@ -227,27 +244,72 @@ public class Checks {
         return value;
     }
 
-    public static boolean isFileName(String fileName) {
+    public static <T extends CharSequence> T isFileName(T fileName) {
 
-        return isPathName(fileName);
+        if (!checkIsFileName(fileName)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return fileName;
     }
 
-    public static boolean isDirectoryName(String directoryName) {
+    public static String isFileNamePrefix(String fileNamePrefix) {
 
-        return isPathName(directoryName);
+        if (!checkIsFileNamePrefix(fileNamePrefix)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return fileNamePrefix;
     }
 
-    public static boolean isFileNamePrefix(String fileNamePrefix) {
+    public static boolean checkIsFileName(CharSequence fileName) {
 
-        return stringContainsOnly(fileNamePrefix, c -> c >= 'a' && c <= 'z');
+        return checkIsPathName(fileName);
     }
 
-    public static boolean isPathName(String pathName) {
+    public static <T extends CharSequence> T isDirectoryName(T directoryName) {
 
-        return isASCIIAlphaNumeric(pathName, c -> c == '_' || c == '.');
+        if (!checkIsDirectoryName(directoryName)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return directoryName;
+    }
+
+    public static boolean checkIsDirectoryName(CharSequence directoryName) {
+
+        return checkIsPathName(directoryName);
+    }
+
+    public static boolean checkIsFileNamePrefix(String fileNamePrefix) {
+
+        return Strings.containsOnly(fileNamePrefix, c -> c >= 'a' && c <= 'z');
+    }
+
+    public static <T extends CharSequence> T isPathName(T pathName) {
+
+        if (checkIsPathName(pathName)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return pathName;
+    }
+
+    public static boolean checkIsPathName(CharSequence pathName) {
+
+        return CharSequences.isASCIIAlphaNumeric(pathName, c -> c == '_' || c == '.');
     }
 
     public static String isTableName(String tableName) {
+
+        return isSchemaObjectName(tableName);
+    }
+
+    public static String isSchemaObjectName(String tableName) {
 
         return isSchemaName(tableName);
     }
@@ -285,7 +347,7 @@ public class Checks {
 
             result = false;
         }
-        else if (!hasFirstCharacterAndRemaining(dbName, Character::isAlphabetic, c -> isASCIIAlphaNumeric(c) || c == '_')) {
+        else if (!CharSequences.hasFirstCharacterAndRemaining(dbName, Character::isAlphabetic, c -> Characters.isASCIIAlphaNumeric(c) || c == '_')) {
 
             result = false;
         }
@@ -296,14 +358,9 @@ public class Checks {
         return result;
     }
 
-    public static String startsWith(String string, String prefix) {
+    public static String isNotEmpty(String string) {
 
-        if (prefix == null) {
-
-            throw new NullPointerException();
-        }
-
-        if (!string.startsWith(prefix)) {
+        if (string.isEmpty()) {
 
             throw new IllegalArgumentException();
         }
@@ -311,9 +368,43 @@ public class Checks {
         return string;
     }
 
+    public static String isNotEmptyWithNoBlanks(String string) {
+
+        if (string.isEmpty() || Strings.stringContainsAny(string, Character::isWhitespace)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return string;
+    }
+
+    public static <T extends CharSequence> T startsWith(T charSequence, String prefix) {
+
+        if (prefix == null) {
+
+            throw new NullPointerException();
+        }
+        else if (!CharSequences.startsWith(charSequence, prefix)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return charSequence;
+    }
+
+    public static <T extends CharSequence> T containsOnly(T charSequence, int startIndex, int numCharacters, CharPredicate predicate) {
+
+        if (!CharSequences.containsOnly(charSequence, startIndex, numCharacters, predicate)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return charSequence;
+    }
+
     public static String isAlphabetic(String string) {
 
-        if (!stringContainsOnly(string, Character::isAlphabetic)) {
+        if (!Strings.containsOnly(string, Character::isAlphabetic)) {
 
             throw new IllegalArgumentException();
         }
@@ -328,7 +419,7 @@ public class Checks {
 
     private static String isJavaIdentifier(String string, int numCharacters) {
 
-        if (!hasFirstCharacterAndRemaining(string, numCharacters, Character::isJavaIdentifierStart, Character::isJavaIdentifierPart)) {
+        if (!Strings.hasFirstCharacterAndRemaining(string, numCharacters, Character::isJavaIdentifierStart, Character::isJavaIdentifierPart)) {
 
             throw new IllegalArgumentException();
         }
@@ -360,97 +451,12 @@ public class Checks {
 
     private static String isJavaVariable(String string, int numCharacters) {
 
-        if (!hasFirstCharacterAndRemaining(string, numCharacters, Character::isJavaIdentifierStart, c -> Character.isJavaIdentifierPart(c) || c == '.')) {
+        if (!Strings.hasFirstCharacterAndRemaining(string, numCharacters, Character::isJavaIdentifierStart, c -> Character.isJavaIdentifierPart(c) || c == '.')) {
 
             throw new IllegalArgumentException();
         }
 
         return string;
-    }
-
-    public static String containsOnly(String string, int startIndex, int numCharacters, CharPredicate predicate) {
-
-        if (!stringContainsOnly(string, startIndex, numCharacters, predicate)) {
-
-            throw new IllegalArgumentException();
-        }
-
-        return string;
-    }
-
-    private static boolean isASCIIAlphaNumeric(String string) {
-
-        return isASCIIAlphaNumeric(string, c -> true);
-    }
-
-    private static boolean isASCIIAlphaNumeric(String string, CharPredicate additionalPredicate) {
-
-        return stringContainsOnly(string, c ->
-                   isASCIIAlphaNumeric(c)
-                || additionalPredicate.test(c));
-    }
-
-    private static boolean isASCIIAlphaNumeric(char c) {
-
-        return
-                   (c >= '0' && c <= '9')
-                || (c >= 'A' && c <= 'Z')
-                || (c >= 'a' && c <= 'z');
-    }
-
-    private static boolean stringContainsOnly(String string, CharPredicate predicate) {
-
-        return stringContainsOnly(string, 0, string.length(), predicate);
-    }
-
-    private static boolean stringContainsOnly(String string, int startIndex, int numCharacters, CharPredicate predicate) {
-
-        return charSequenceContainsOnly(string, startIndex, numCharacters, predicate);
-    }
-
-    private static boolean charSequenceContainsOnly(CharSequence charSequence, int startIndex, int numCharacters, CharPredicate predicate) {
-
-        boolean containsOnly = true;
-
-        for (int i = 0; i < numCharacters; ++ i) {
-
-            if (!predicate.test(charSequence.charAt(startIndex + i))) {
-
-                containsOnly = false;
-                break;
-            }
-        }
-
-        return containsOnly;
-    }
-
-    private static boolean hasFirstCharacterAndRemaining(CharSequence charSequence, CharPredicate firstCharacterPredicate, CharPredicate remainingCharacterspredicate) {
-
-        return hasFirstCharacterAndRemaining(charSequence, charSequence.length(), firstCharacterPredicate, remainingCharacterspredicate);
-    }
-
-    private static boolean hasFirstCharacterAndRemaining(CharSequence charSequence, int numCharacters, CharPredicate firstCharacterPredicate,
-            CharPredicate remainingCharacterspredicate) {
-
-        final boolean result;
-
-        if (numCharacters == 0) {
-
-            result = false;
-        }
-        else {
-            if (!firstCharacterPredicate.test(charSequence.charAt(0))) {
-
-                result = false;
-            }
-            else {
-                result = numCharacters > 1
-                        ? charSequenceContainsOnly(charSequence, 0, numCharacters - 1, remainingCharacterspredicate)
-                        : true;
-            }
-        }
-
-        return result;
     }
 
     public static <T, C extends Collection<T>> C isEmpty(C collection) {
@@ -474,6 +480,16 @@ public class Checks {
     }
 
     public static int[] isNotEmpty(int[] array) {
+
+        if (array.length == 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return array;
+    }
+
+    public static long[] isNotEmpty(long[] array) {
 
         if (array.length == 0) {
 
@@ -619,6 +635,14 @@ public class Checks {
         }
     }
 
+    public static void isSameLimit(IArray array1, IArray array2) {
+
+        if (array1.getLimit() != array2.getLimit()) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
     public static int isInitialCapacity(int initialCapacity) {
 
         if (initialCapacity < 1) {
@@ -649,7 +673,22 @@ public class Checks {
         return capacity;
     }
 
+    public static long isCapacity(long capacity) {
+
+        if (capacity < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return capacity;
+    }
+
     private static final int MAX_CAPACITY_EXPONENT = Integer.SIZE - 1;
+
+    public static int isInitialCapacityExponent(int initialCapacityExponent) {
+
+        return isCapacityExponent(initialCapacityExponent);
+    }
 
     public static int isCapacityExponent(int capacityExponent) {
 
@@ -663,6 +702,20 @@ public class Checks {
         }
 
         return capacityExponent;
+    }
+
+    public static int isCapacityExponentIncrease(int capacityExponentIncrease) {
+
+        if (capacityExponentIncrease < 1) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (capacityExponentIncrease > MAX_CAPACITY_EXPONENT) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return capacityExponentIncrease;
     }
 
     public static int isOffset(int offset) {
@@ -865,6 +918,16 @@ public class Checks {
         return numBytes;
     }
 
+    public static long isNumCharacters(long numCharacters) {
+
+        if (numCharacters < 1) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return numCharacters;
+    }
+
     public static int isNumColumnBits(int numColumnBits) {
 
         if (numColumnBits < 1) {
@@ -908,17 +971,52 @@ public class Checks {
 
     public static int isTableId(int tableId) {
 
-        return isSchemaId(tableId);
+        return isSchemaObjectId(tableId);
     }
 
-    public static int isSchemaId(int schemaId) {
+    public static int isViewId(int viewId) {
 
-        if (schemaId < 0) {
+        return isSchemaObjectId(viewId);
+    }
+
+    public static int isIndexId(int indexId) {
+
+        return isSchemaObjectId(indexId);
+    }
+
+    public static int isTriggerId(int triggerId) {
+
+        return isSchemaObjectId(triggerId);
+    }
+
+    public static int isDBFunctionId(int dbFunctionId) {
+
+        return isSchemaObjectId(dbFunctionId);
+    }
+
+    public static int isProcedureId(int procedureId) {
+
+        return isSchemaObjectId(procedureId);
+    }
+
+    public static int isSchemaObjectId(int schemaObjectId) {
+
+        return isDBNamedIdentifiableId(schemaObjectId);
+    }
+
+    public static int isColumnId(int columnId) {
+
+        return isDBNamedIdentifiableId(columnId);
+    }
+
+    private static int isDBNamedIdentifiableId(int dbNamedIdentifiableId) {
+
+        if (dbNamedIdentifiableId < 0) {
 
             throw new IllegalArgumentException();
         }
 
-        return schemaId;
+        return dbNamedIdentifiableId;
     }
 
     public static long isRowId(long rowId) {

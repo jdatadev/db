@@ -7,13 +7,13 @@ import dev.jdata.db.DBException;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.LockType;
 import dev.jdata.db.data.BaseRows;
-import dev.jdata.db.utils.adt.arrays.ILongArrayGetters;
+import dev.jdata.db.utils.adt.arrays.ILongArray;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.adt.lists.BaseList;
 import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadDoublyLinkedList;
-import dev.jdata.db.utils.adt.lists.LongMultiList;
-import dev.jdata.db.utils.adt.lists.LongMutableMultiList;
+import dev.jdata.db.utils.adt.lists.ILongMultiList;
+import dev.jdata.db.utils.adt.lists.ILongMutableMultiList;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
@@ -152,7 +152,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
 
         this.rowLockSetter = new RowLockSetter();
 
-        this.scratchLockIndices = new LargeLongArray(initialOuterCapacity, innerCapacity);
+        this.scratchLockIndices = new LargeLongArray(initialOuterCapacity, innerCapacity, null);
     }
 
     public boolean tryReadLockTable(int tableId, int transactionDescriptor, int statementId) {
@@ -307,20 +307,20 @@ public final class LockTable extends BaseRows implements PrintDebug {
         unlockRow(tableId, rowId, transactionDescriptor, statementId, LockType.WRITE);
     }
 
-    public synchronized boolean tryLockRows(int tableId, ILongArrayGetters rowIds, int transactionDescriptor, int statementId, LockType lockType) {
+    public synchronized boolean tryLockRows(int tableId, ILongArray rowIds, int transactionDescriptor, int statementId, LockType lockType) {
 
         checkParameters(tableId, transactionDescriptor, statementId, lockType);
         Objects.requireNonNull(rowIds);
 
         if (DEBUG) {
 
-            enter(b -> b.add("tableId", tableId).add("rowIds.getNumElements()", rowIds.getNumElements()).add("transactionDescriptor", transactionDescriptor)
+            enter(b -> b.add("tableId", tableId).add("rowIds.getLimit()", rowIds.getLimit()).add("transactionDescriptor", transactionDescriptor)
                     .add("statementId", statementId).add("lockType", lockType));
         }
 
         boolean allLocksAquired = true;
 
-        final long numRows = rowIds.getNumElements();
+        final long numRows = rowIds.getLimit();
 
         if (ASSERT) {
 
@@ -355,7 +355,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
         }
         finally {
 
-            scratchLockIndices.clear();
+            scratchLockIndices.reset();
         }
 
         return allLocksAquired;
@@ -445,7 +445,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
         return result;
     }
 
-    private static boolean canLock(LongMultiList lockInfoLists, int transactionDescriptor, LockType lockType, long numReadLocks, long numWriteLocks,
+    private static boolean canLock(ILongMultiList lockInfoLists, int transactionDescriptor, LockType lockType, long numReadLocks, long numWriteLocks,
             long lockInfoListsHeadNode) {
 
         if (DEBUG) {
@@ -1028,7 +1028,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
 
             -- lockArray[tableId];
 
-            final LongMutableMultiList<LockTable> lockInfoLists = lockTable.lockInfoLists;
+            final ILongMutableMultiList<LockTable> lockInfoLists = lockTable.lockInfoLists;
 
             final long lockInfoValue = lockInfoValue(transactionDescriptor, statementId, lockType);
 

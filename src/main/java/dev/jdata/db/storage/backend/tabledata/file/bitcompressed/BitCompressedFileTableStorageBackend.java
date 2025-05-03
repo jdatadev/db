@@ -2,7 +2,7 @@ package dev.jdata.db.storage.backend.tabledata.file.bitcompressed;
 
 import java.io.IOException;
 
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.data.RowDataNumBits;
 import dev.jdata.db.data.tables.TableByIdMap;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
@@ -16,7 +16,7 @@ import dev.jdata.db.utils.bits.BitsUtil;
 
 final class BitCompressedFileTableStorageBackend extends BaseFileTableDataStorageBackend {
 
-    BitCompressedFileTableStorageBackend(VersionedDatabaseSchemas versionedDatabaseSchemas, NumStorageBitsGetter numStorageBitsGetter,
+    BitCompressedFileTableStorageBackend(VersionedDatabaseSchemas versionedDatabaseSchemas, INumStorageBitsGetter numStorageBitsGetter,
             TableByIdMap<FileTableStorageFiles> fileTableStorageByTableId) {
         super(versionedDatabaseSchemas, numStorageBitsGetter, fileTableStorageByTableId);
     }

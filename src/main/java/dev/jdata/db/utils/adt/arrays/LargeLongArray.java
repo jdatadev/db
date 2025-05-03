@@ -2,15 +2,39 @@ package dev.jdata.db.utils.adt.arrays;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.ObjLongConsumer;
 
-public final class LargeLongArray extends LargeArray<long[][], long[]> implements ILongArrayGetters {
+import dev.jdata.db.utils.adt.IClearable;
+import dev.jdata.db.utils.adt.elements.ByIndex;
+import dev.jdata.db.utils.adt.strings.StringBuilders;
+import dev.jdata.db.utils.checks.Checks;
 
-    public LargeLongArray(int initialOuterCapacity, int innerCapacityExponent) {
-        super(initialOuterCapacity, innerCapacityExponent, 1, long[][]::new);
+public final class LargeLongArray extends LargeLimitArray<long[][], long[]> implements IClearable, ILongArray {
+
+    private static final ArrayClearer<long[], Long> arrayClearer = (a, s, n, p) -> {
+
+        if  (p != null) {
+
+            Arrays.fill(a, s, s + n, p.longValue());
+        }
+    };
+
+    private final Long clearValue;
+
+    public LargeLongArray(int initialOuterCapacity, int innerCapacityExponent, Long clearValue) {
+        super(initialOuterCapacity, innerCapacityExponent, 0, long[][]::new);
+
+        this.clearValue = clearValue;
     }
 
     @Override
-    protected void toString(long index, StringBuilder sb) {
+    public void clear() {
+
+        clearArrays(clearValue, arrayClearer);
+    }
+
+    @Override
+    public void toString(long index, StringBuilder sb) {
 
         sb.append(get(index));
     }
@@ -18,62 +42,27 @@ public final class LargeLongArray extends LargeArray<long[][], long[]> implement
     @Override
     public long get(long index) {
 
-        return getArray()[getOuterIndex(index)][getInnerIndexNotCountingNumElements(index) + 1];
+        Objects.checkIndex(index, getLimit());
+
+        return getArray()[getOuterIndex(index)][getInnerIndex(index)];
     }
 
     public void add(long value) {
 
         final long[] array = checkCapacity();
 
-        incrementNumElements();
+        final long index = getAndIncrementLimit();
 
-        final int innerIndex = (int)array[0];
-
-        ++ array[0];
-
-        array[innerIndex + 1] = value;
+        array[getInnerIndex(index)] = value;
     }
 
     public void set(long index, long value) {
 
-        Objects.checkIndex(index, getNumElements());
+        Checks.isIndex(index);
 
-        final int outerIndex = getOuterIndex(index);
+        final int outerIndex = ensureCapacityAndLimit(index);
 
-        if (outerIndex >= getNumOuterEntries()) {
-
-            throw new IllegalArgumentException();
-        }
-
-        final long[] array = getArray()[outerIndex];
-
-        final int numInnerElements = getNumInnerElements(array);
-
-        final int innerIndex = getInnerIndexNotCountingNumElements(index);
-
-        if (innerIndex >= numInnerElements) {
-
-            throw new IllegalArgumentException();
-        }
-
-        array[innerIndex + 1] = value;
-    }
-
-    public void fill(long value) {
-
-        final int numOuter = getNumOuterAllocatedEntries();
-
-        for (int outerIndex = 0; outerIndex < numOuter; ++ outerIndex) {
-
-            final long[] array = getArray()[outerIndex];
-
-            final int numInner = array.length;
-
-            for (int innerIndex = 1; innerIndex < numInner; ++ innerIndex) {
-
-                array[innerIndex] = value;
-            }
-        }
+        getArray()[outerIndex][getInnerIndex(index)] = value;
     }
 
     @Override
@@ -103,18 +92,62 @@ public final class LargeLongArray extends LargeArray<long[][], long[]> implement
     @Override
     void setInnerArrayLength(long[] innerArray, int length) {
 
-        innerArray[0] = length;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     int getNumInnerElements(long[] innerArray) {
 
-        return (int)innerArray[0];
+        throw new UnsupportedOperationException();
     }
 
     @Override
     long[] setInnerArray(long[][] outerArray, int outerIndex, int innerArrayLength) {
 
         return outerArray[outerIndex] = new long[innerArrayLength];
+    }
+
+    private long[] checkCapacity() {
+
+        return checkCapacity(clearValue, arrayClearer);
+    }
+
+    private int ensureCapacityAndLimit(long index) {
+
+        return ensureCapacityAndLimit(index, clearValue, arrayClearer);
+    }
+
+    @Override
+    public String toString() {
+
+        final StringBuilder sb = new StringBuilder();
+
+        toString(sb, StringBuilder::append);
+
+        return sb.toString();
+    }
+
+    public void toString(StringBuilder sb, ObjLongConsumer<StringBuilder> appender) {
+
+        Objects.requireNonNull(sb);
+        Objects.requireNonNull(appender);
+
+        ByIndex.largeToString(this, 0L, getLimit(), sb, null, appender, null, null, (instance, index, b, a) -> a.accept(b, instance.get(index)));
+    }
+
+    public String toHexString() {
+
+        final StringBuilder sb = new StringBuilder();
+
+        toHexString(sb);
+
+        return sb.toString();
+    }
+
+    public void toHexString(StringBuilder sb) {
+
+        Objects.requireNonNull(sb);
+
+        toString(sb, (b, element) -> StringBuilders.hexString(b, element, true, 16));
     }
 }

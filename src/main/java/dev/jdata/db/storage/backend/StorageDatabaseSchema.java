@@ -3,8 +3,8 @@ package dev.jdata.db.storage.backend;
 import java.util.Objects;
 
 import dev.jdata.db.data.tables.TableByIdMap;
-import dev.jdata.db.schema.DatabaseSchema;
-import dev.jdata.db.schema.Table;
+import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
+import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.CheckedExceptionFunction;
@@ -13,7 +13,8 @@ public final class StorageDatabaseSchema {
 
     private final TableByIdMap<StorageTableFileSchema> storageTableSchemaByTableId;
 
-    <E extends Exception> StorageDatabaseSchema(DatabaseSchema databaseSchema, CheckedExceptionFunction<Table, StorageTableFileSchema, E> storageTableSchemaFactory) throws E {
+    <E extends Exception> StorageDatabaseSchema(IEffectiveDatabaseSchema databaseSchema, CheckedExceptionFunction<Table, StorageTableFileSchema, E> storageTableSchemaFactory)
+            throws E {
 
         Objects.requireNonNull(databaseSchema);
         Objects.requireNonNull(storageTableSchemaFactory);

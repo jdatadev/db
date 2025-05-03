@@ -1,9 +1,12 @@
 package dev.jdata.db.utils.adt.lists;
 
-abstract class BaseValues<T, U extends BaseList<T, U, V>, V extends BaseValues<T, U, V>> {
+public abstract class BaseValues<
+                LIST_T,
+                LIST extends BaseList<LIST_T, LIST, VALUES>,
+                VALUES extends BaseValues<LIST_T, LIST, VALUES>> {
 
-    abstract void reallocateOuter(int newOuterLength);
-    abstract void allocateInner(int outerIndex, int innerCapacity);
+    protected abstract void reallocateOuter(int newOuterLength);
+    protected abstract void allocateInner(int outerIndex, int innerCapacity);
 
-    abstract T toArray(U list, long headNode, int numElements);
+    protected abstract LIST_T toArray(LIST list, long headNode, int numElements);
 }

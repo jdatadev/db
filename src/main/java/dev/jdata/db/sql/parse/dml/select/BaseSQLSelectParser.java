@@ -1,9 +1,10 @@
 package dev.jdata.db.sql.parse.dml.select;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
+import org.jutils.ast.objects.list.IAddableList;
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
 
@@ -40,7 +41,7 @@ public abstract class BaseSQLSelectParser<T extends BaseSQLSelectStatement> exte
     private final SQLHavingClauseParser havingClauseParser;
     private final SQLOrderByClauseParser orderByClauseParser;
 
-    protected abstract T createSelectStatement(Context context, List<SQLSelectStatementPart> parts, List<SQLUnion> unions);
+    protected abstract T createSelectStatement(Context context, IListGetters<SQLSelectStatementPart> parts, IListGetters<SQLUnion> unions);
 
     protected BaseSQLSelectParser(SQLExpressionParser expressionParser, SQLConditionParser conditionParser, SQLWhereClauseParser whereClauseParser) {
 
@@ -71,8 +72,8 @@ public abstract class BaseSQLSelectParser<T extends BaseSQLSelectStatement> exte
 
         final T result;
 
-        final List<SQLSelectStatementPart> selectStatementParts = allocator.allocateList(selectPartsInitialCapacity);
-        final List<SQLUnion> unions = allocator.allocateList(selectPartsInitialCapacity - 1);
+        final IAddableList<SQLSelectStatementPart> selectStatementParts = allocator.allocateList(selectPartsInitialCapacity);
+        final IAddableList<SQLUnion> unions = allocator.allocateList(selectPartsInitialCapacity - 1);
 
         final SQLToken[] expectedUnionTokens = UNION_TOKENS;
 

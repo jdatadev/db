@@ -3,16 +3,19 @@ package dev.jdata.db.storage.backend;
 import java.util.Objects;
 
 import dev.jdata.db.common.storagebits.NumStorageBitsParameters;
-import dev.jdata.db.schema.DatabaseSchema;
+import dev.jdata.db.configuration.CommonConfiguration;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
+import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 
-public abstract class StorageBackendConfiguration {
+public abstract class StorageBackendConfiguration extends CommonConfiguration {
 
-    private final DatabaseSchema databaseSchema;
+    private final IEffectiveDatabaseSchema databaseSchema;
     private final VersionedDatabaseSchemas versionedDatabaseSchemas;
     private final NumStorageBitsParameters numStorageBitsParameters;
 
-    protected StorageBackendConfiguration(DatabaseSchema databaseSchema, VersionedDatabaseSchemas versionedDatabaseSchemas, NumStorageBitsParameters numStorageBitsParameters) {
+    protected StorageBackendConfiguration(CommonConfiguration commonConfiguration, IEffectiveDatabaseSchema databaseSchema, VersionedDatabaseSchemas versionedDatabaseSchemas,
+            NumStorageBitsParameters numStorageBitsParameters) {
+        super(commonConfiguration);
 
         Objects.requireNonNull(databaseSchema);
         Objects.requireNonNull(versionedDatabaseSchemas);
@@ -29,7 +32,7 @@ public abstract class StorageBackendConfiguration {
         this.numStorageBitsParameters = numStorageBitsParameters;
     }
 
-    public final DatabaseSchema getDatabaseSchema() {
+    public final IEffectiveDatabaseSchema getDatabaseSchema() {
         return databaseSchema;
     }
 

@@ -1,9 +1,10 @@
 package dev.jdata.db.sql.parse.dml.select.result;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
+import org.jutils.ast.objects.list.IAddableList;
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
 
@@ -21,7 +22,7 @@ public abstract class BaseSQLGroupOrOrderByClauseParser<T extends BaseSQLElement
     private final SQLProjectionItemParser projectionItemParser;
 
     protected abstract T parseElement(SQLExpressionLexer lexer, Context context, SQLProjectionItem projectionItem) throws IOException;
-    protected abstract U createGroupOrOrderByClause(Context context, List<T> elements);
+    protected abstract U createGroupOrOrderByClause(Context context, IListGetters<T> elements);
 
     protected BaseSQLGroupOrOrderByClauseParser(SQLProjectionItemParser projectionItemParser) {
 
@@ -34,7 +35,7 @@ public abstract class BaseSQLGroupOrOrderByClauseParser<T extends BaseSQLElement
 
         final U result;
 
-        final List<T> list = allocator.allocateList(10);
+        final IAddableList<T> list = allocator.allocateList(10);
 
         try {
             for (;;) {

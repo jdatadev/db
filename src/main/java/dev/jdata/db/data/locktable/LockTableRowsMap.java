@@ -1,13 +1,13 @@
 package dev.jdata.db.data.locktable;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.hashed.HashedConstants;
-import dev.jdata.db.utils.adt.lists.BaseList;
-import dev.jdata.db.utils.adt.maps.BaseLongMap;
+import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
+import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
+import dev.jdata.db.utils.adt.maps.BaseLongNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-final class LockTableRowsMap extends BaseLongMap<LockTableRowsMap.RowsMapValues> implements ILockTableRowsMap {
+final class LockTableRowsMap extends BaseLongNonBucketMap<LockTableRowsMap.RowsMapValues> implements ILockTableRowsMap {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_LOCK_TABLE_ROWS;
 
@@ -40,13 +40,13 @@ final class LockTableRowsMap extends BaseLongMap<LockTableRowsMap.RowsMapValues>
     }
 
     LockTableRowsMap(int initialCapacityExponent) {
-        super(initialCapacityExponent, HashedConstants.DEFAULT_LOAD_FACTOR, RowsMapValues::new);
+        super(initialCapacityExponent, RowsMapValues::new);
     }
 
     @Override
     public long getLockIndex(long key) {
 
-        Checks.isNotNegative(key);
+        NonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -86,7 +86,7 @@ final class LockTableRowsMap extends BaseLongMap<LockTableRowsMap.RowsMapValues>
     @Override
     public void put(long key, long lock, long lockInfoListsHeadNode, long lockInfoListsTailNode) {
 
-        Checks.isNotNegative(key);
+        NonBucket.checkIsHashArrayElement(key);
         Checks.isNotNegative(lockInfoListsHeadNode);
         Checks.isNotNegative(lockInfoListsTailNode);
 
@@ -97,7 +97,7 @@ final class LockTableRowsMap extends BaseLongMap<LockTableRowsMap.RowsMapValues>
 
         final long putResult = put(key);
 
-        final int index = getPutIndex(putResult);
+        final int index = IntPutResult.getPutIndex(putResult);
 
         if (index != NO_INDEX) {
 
@@ -111,14 +111,22 @@ final class LockTableRowsMap extends BaseLongMap<LockTableRowsMap.RowsMapValues>
     }
 
     @Override
-    protected void put(RowsMapValues values, int index, RowsMapValues newValues, int newIndex) {
+    public void remove(long key) {
 
-        newValues.put(values, index, newIndex);
-    }
+        if (DEBUG) {
 
-    @Override
-    protected void clearValues(RowsMapValues values) {
+            enter(b -> b.add("key", key));
+        }
 
+        if (removeAndReturnIndex(key) != NO_INDEX) {
+
+            throw new IllegalStateException();
+        }
+
+        if (DEBUG) {
+
+            exit(b -> b.add("key", key));
+        }
     }
 
     @Override
@@ -139,18 +147,28 @@ final class LockTableRowsMap extends BaseLongMap<LockTableRowsMap.RowsMapValues>
 
         final long result;
 
-        if (containsKey(key)) {
+        final int lockIndex = getIndex(key);
 
-            final int lockIndex = getIndex(key);
+        if (lockIndex == NO_INDEX) {
 
-            final RowsMapValues values = getValues();
-
-            result = values.lockInfoListsHeadNodes[lockIndex];
+            throw new IllegalArgumentException();
         }
-        else {
-            result = BaseList.NO_NODE;
-        }
+
+        final RowsMapValues values = getValues();
+
+        result = values.lockInfoListsHeadNodes[lockIndex];
 
         return result;
+    }
+
+    @Override
+    protected void put(RowsMapValues values, int index, RowsMapValues newValues, int newIndex) {
+
+        newValues.put(values, index, newIndex);
+    }
+
+    @Override
+    protected void clearValues(RowsMapValues values) {
+
     }
 }

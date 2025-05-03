@@ -1,8 +1,12 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.lists.LongList.ContainsOnlyPredicate;
+import dev.jdata.db.utils.adt.lists.ILongList.ContainsOnlyPredicate;
 
-abstract class BaseLargeLongDoublyLinkedList<T> extends BaseLargeDoublyLinkedList<T, long[], LongValues> {
+abstract class BaseLargeLongDoublyLinkedList<
+                INSTANCE,
+                LIST extends BaseLargeLongDoublyLinkedList<INSTANCE, LIST>>
+
+        extends BaseLargeDoublyLinkedList<INSTANCE, long[], LIST, LongValues<LIST>> {
 
     BaseLargeLongDoublyLinkedList(int initialOuterCapacity, int innerCapacity) {
         super(initialOuterCapacity, innerCapacity, LongValues::new);
@@ -30,10 +34,10 @@ abstract class BaseLargeLongDoublyLinkedList<T> extends BaseLargeDoublyLinkedLis
 
     final long findValue(long value, long headNode) {
 
-        return getValues().findValue(this, value, headNode);
+        return getValues().findValueNode(this, value, headNode);
     }
 
-    final long addHeadValue(T instance, long value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long addHeadValue(INSTANCE instance, long value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = addHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
@@ -42,7 +46,7 @@ abstract class BaseLargeLongDoublyLinkedList<T> extends BaseLargeDoublyLinkedLis
         return node;
     }
 
-    final long addTailValue(T instance, long value, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long addTailValue(INSTANCE instance, long value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = addTailNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
@@ -51,7 +55,7 @@ abstract class BaseLargeLongDoublyLinkedList<T> extends BaseLargeDoublyLinkedLis
         return node;
     }
 
-    final long removeHead(T instance, long headNode, long tailNode, LongNodeSetter<T> headNodeSetter, LongNodeSetter<T> tailNodeSetter) {
+    final long removeHead(INSTANCE instance, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long removedHeadNode = removeHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 

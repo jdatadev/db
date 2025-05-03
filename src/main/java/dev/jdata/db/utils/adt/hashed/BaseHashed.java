@@ -7,11 +7,11 @@ import java.util.function.ToLongFunction;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.elements.BaseNumElements;
-import dev.jdata.db.utils.adt.elements.IMutableElements;
+import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 
-abstract class BaseHashed<T> extends BaseNumElements implements IMutableElements, PrintDebug {
+abstract class BaseHashed<T> extends BaseNumElements implements IElements, PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_HASHED;
 
@@ -49,8 +49,23 @@ abstract class BaseHashed<T> extends BaseNumElements implements IMutableElements
         }
     }
 
-    @Override
-    public void clear() {
+    BaseHashed(BaseHashed<T> toCopy, T copyOfHashed) {
+        super(toCopy);
+
+        Objects.requireNonNull(copyOfHashed);
+
+        if (copyOfHashed == toCopy.hashed) {
+
+            throw new IllegalArgumentException();
+        }
+
+        this.loadFactor = toCopy.loadFactor;
+        this.clearHashed = toCopy.clearHashed;
+
+        this.hashed = copyOfHashed;
+    }
+
+    protected final void clearHashed() {
 
         if (DEBUG) {
 
@@ -89,6 +104,25 @@ abstract class BaseHashed<T> extends BaseNumElements implements IMutableElements
         T rehash(T hashed, long newCapacity, P parameter);
     }
 
+    final <P> long increaseCapacityAndRehash(long capacity, P parameter, ToLongFunction<P> capacityIncreaser, Rehasher<T, P> rehasher) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("capacity", capacity));
+        }
+
+        final long newCapacity = capacityIncreaser.applyAsLong(parameter);
+
+        this.hashed = rehasher.rehash(hashed, newCapacity, parameter);
+
+        if (DEBUG) {
+
+            exit(newCapacity);
+        }
+
+        return newCapacity;
+    }
+
     final <P> long checkCapacityAndRehash(long numAdditionalElements, long capacity, P parameter, ToLongFunction<P> capacityIncreaser, Rehasher<T, P> rehasher) {
 
         if (DEBUG) {
@@ -104,7 +138,7 @@ abstract class BaseHashed<T> extends BaseNumElements implements IMutableElements
 
             if (DEBUG) {
 
-                debug("rehash hashed to capacity " + capacity);
+                debug("rehash hashed to capacity " + newCapacity + " from " + capacity);
             }
 
             this.hashed = rehasher.rehash(hashed, newCapacity, parameter);
@@ -115,7 +149,7 @@ abstract class BaseHashed<T> extends BaseNumElements implements IMutableElements
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, newCapacity);
+            exit(newCapacity);
         }
 
         return newCapacity;

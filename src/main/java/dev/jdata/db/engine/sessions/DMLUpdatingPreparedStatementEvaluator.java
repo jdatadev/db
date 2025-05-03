@@ -8,7 +8,7 @@ import dev.jdata.db.dml.DMLInsertRows.InsertRow;
 import dev.jdata.db.engine.database.EvaluateException;
 import dev.jdata.db.engine.database.OverflowException;
 import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
-import dev.jdata.db.schema.Table;
+import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.sql.ast.clauses.SQLWhereClause;
 import dev.jdata.db.sql.ast.statements.dml.SQLDeleteStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLInsertStatement;
@@ -22,7 +22,7 @@ class DMLUpdatingPreparedStatementEvaluator extends BaseDMLUpdatingEvaluator {
         final PreparedStatementParameters preparedStatementParameters = evaluatorParameter.getPreparedStatementParameters();
         final TableAndColumnNames tableAndColumnNames = evaluatorParameter.getTableAndColumnNames();
 
-        final int tableId = tableAndColumnNames.getTableId(insertStatement.getTableName());
+        final int tableId = tableAndColumnNames.getColumnsObjectId(insertStatement.getTableName());
         final Table table = tableAndColumnNames.getTable(tableId);
 
         evaluatorParameter.initializeForDMLUpdateOperation(table);
@@ -77,7 +77,7 @@ class DMLUpdatingPreparedStatementEvaluator extends BaseDMLUpdatingEvaluator {
         final PreparedStatementParameters preparedStatementParameters = evaluatorParameter.getPreparedStatementParameters();
         final TableAndColumnNames tableAndColumnNames = evaluatorParameter.getTableAndColumnNames();
 
-        final int tableId = tableAndColumnNames.getTableId(updateStatement.getTableName());
+        final int tableId = tableAndColumnNames.getColumnsObjectId(updateStatement.getTableName());
         final Table table = tableAndColumnNames.getTable(tableId);
 
         evaluatorParameter.initializeForDMLUpdateOperation(table);

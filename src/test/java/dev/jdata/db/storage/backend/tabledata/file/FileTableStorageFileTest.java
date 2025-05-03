@@ -10,15 +10,15 @@ import org.junit.experimental.categories.Category;
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;
 import dev.jdata.db.test.TestFileSystemAccess;
 import dev.jdata.db.utils.bits.BitBufferUtil;
+import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.file.access.RelativeFileSystemAccess;
 
 public final class FileTableStorageFileTest extends BaseFileTableStorageFileTest<FileTableStorageFileTest.FileTestData, IOException> {
 
     static final class FileTestData extends BaseFileTableStorageFileTest.TestData {
 
         private final TestFileSystemAccess testFileSystemAccess;
-        private final RelativeFileSystemAccess fileSystemAccess;
+        private final IRelativeFileSystemAccess fileSystemAccess;
 
         FileTestData(int sequenceNo, long startRowId, long initialTransactionId) throws IOException {
             super(sequenceNo, startRowId, initialTransactionId);
@@ -36,7 +36,7 @@ public final class FileTableStorageFileTest extends BaseFileTableStorageFileTest
         @Override
         RelativeFilePath getFilePath(String fileName) {
 
-            return RelativeFilePath.of(fileName);
+            return fileSystemAccess.filePathOf(fileName);
         }
 
         private DataInputStream openDataInputStream() throws IOException {
@@ -59,7 +59,7 @@ public final class FileTableStorageFileTest extends BaseFileTableStorageFileTest
         final FileInitializer<FileTestData> fileInitializer = (d, s) -> {
 
             final TestSchema testSchema = d.testSchema;
-            final RelativeFileSystemAccess fileSystemAccess = d.fileSystemAccess;
+            final IRelativeFileSystemAccess fileSystemAccess = d.fileSystemAccess;
 
             final RelativeFilePath filePath = d.getFilePath();
 
@@ -83,7 +83,7 @@ public final class FileTableStorageFileTest extends BaseFileTableStorageFileTest
         final FileInitializer<FileTestData> fileInitializer = (d, s) -> {
 
             final TestSchema testSchema = d.testSchema;
-            final RelativeFileSystemAccess fileSystemAccess = d.fileSystemAccess;
+            final IRelativeFileSystemAccess fileSystemAccess = d.fileSystemAccess;
 
             final TestDBSchemas dbSchemas = d.dbSchemas;
 
@@ -111,7 +111,7 @@ public final class FileTableStorageFileTest extends BaseFileTableStorageFileTest
         final FileInitializer<FileTestData> fileInitializer = (d, s) -> {
 
             final TestSchema testSchema = d.testSchema;
-            final RelativeFileSystemAccess fileSystemAccess = d.fileSystemAccess;
+            final IRelativeFileSystemAccess fileSystemAccess = d.fileSystemAccess;
 
             final RelativeFilePath filePath = d.getFilePath();
 

@@ -16,7 +16,7 @@ final class LargeLockedRows extends LockedRows {
 
         Objects.requireNonNull(lockedRows);
         Objects.requireNonNull(values);
-        Checks.areSameNumElements(lockedRows, values);
+        Checks.isSameLimit(lockedRows, values);
 
         this.lockedRows = lockedRows;
         this.values = values;
@@ -25,13 +25,13 @@ final class LargeLockedRows extends LockedRows {
     @Override
     public boolean isEmpty() {
 
-        return lockedRows.isEmpty();
+        return lockedRows.getLimit() == 0;
     }
 
     @Override
     public long getNumElements() {
 
-        return lockedRows.getNumElements();
+        return lockedRows.getLimit();
     }
 
     @Override

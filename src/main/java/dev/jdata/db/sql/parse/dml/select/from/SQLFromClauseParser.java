@@ -1,10 +1,10 @@
 package dev.jdata.db.sql.parse.dml.select.from;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
+import org.jutils.ast.objects.list.IAddableList;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
 
@@ -39,7 +39,7 @@ public class SQLFromClauseParser extends BaseSQLParser {
 
         final SQLAllocator allocator = lexer.getAllocator();
 
-        final List<SQLFromTable> fromTables = allocator.allocateList(10);
+        final IAddableList<SQLFromTable> fromTables = allocator.allocateList(10);
 
         try {
             for (;;) {
@@ -124,7 +124,7 @@ public class SQLFromClauseParser extends BaseSQLParser {
 
         final SQLJoinFromTable result;
 
-        final List<SQLTableJoin> tableJoins = allocator.allocateList(10);
+        final IAddableList<SQLTableJoin> tableJoins = allocator.allocateList(10);
 
         try {
             for (;;) {

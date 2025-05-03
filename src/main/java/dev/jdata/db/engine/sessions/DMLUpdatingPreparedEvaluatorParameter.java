@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.sql.JDBCType;
 import java.util.Objects;
 
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.dml.DMLInsertRows.InsertRow;
 import dev.jdata.db.engine.database.SQLExpressionEvaluator;
 import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
@@ -22,7 +22,7 @@ public final class DMLUpdatingPreparedEvaluatorParameter extends BaseDMLUpdating
 
     private long result;
 
-    public DMLUpdatingPreparedEvaluatorParameter(IArrayAllocator<SQLExpressionEvaluator> arrayAllocator, NumStorageBitsGetter numStorageBitsGetter,
+    public DMLUpdatingPreparedEvaluatorParameter(IArrayAllocator<SQLExpressionEvaluator> arrayAllocator, INumStorageBitsGetter numStorageBitsGetter,
             IByteArrayByteBufferAllocator byteArrayByteBufferAllocator, ILargeLongArrayAllocator largeLongArrayAllocator, IArrayAllocator<InsertRow> insertRowArrayAllocator) {
         super(arrayAllocator, numStorageBitsGetter, byteArrayByteBufferAllocator, largeLongArrayAllocator);
 

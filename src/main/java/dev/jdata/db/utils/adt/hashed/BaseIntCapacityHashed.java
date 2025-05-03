@@ -2,6 +2,7 @@ package dev.jdata.db.utils.adt.hashed;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.ToLongFunction;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.checks.Checks;
@@ -35,6 +36,50 @@ abstract class BaseIntCapacityHashed<T> extends BaseHashed<T> {
 
             PrintDebug.exit(debugClass);
         }
+    }
+
+    BaseIntCapacityHashed(BaseIntCapacityHashed<T> toCopy, T copyOfHashed) {
+        super(toCopy, copyOfHashed);
+    }
+
+    protected final int getCapacity() {
+        return capacity;
+    }
+
+    protected final <P> int increaseCapacityAndRehash(P parameter, ToLongFunction<P> capacityIncreaser, Rehasher<T, P> rehasher) {
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass);
+        }
+
+        final long newCapacity = increaseCapacityAndRehash(capacity, parameter, capacityIncreaser, rehasher);
+
+        final int result = this.capacity = Integers.checkUnsignedLongToUnsignedInt(newCapacity);
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result);
+        }
+
+        return result;
+    }
+
+    protected final int increaseCapacityAndRehash() {
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass);
+        }
+
+        final int result = increaseCapacityAndRehash(this, i -> i.increaseCapacity(), (h, c, i) -> i.rehash(h, Integers.checkUnsignedLongToUnsignedInt(c)));
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result);
+        }
+
+        return result;
     }
 
     protected final void checkCapacity(int numAdditionalElements) {

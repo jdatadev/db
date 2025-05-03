@@ -53,6 +53,6 @@ public class BufferUtil {
 
     private static <T extends Buffer> void toString(T buffer, int offset, int length, int numCharactersPerElement, StringBuilder sb, ByIndexStringAdder<T> stringAdder) {
 
-        ByIndex.toString(buffer, offset, length, sb, null, null, stringAdder);
+        ByIndex.closureOrConstantToString(buffer, offset, length, sb, null, null, stringAdder);
     }
 }

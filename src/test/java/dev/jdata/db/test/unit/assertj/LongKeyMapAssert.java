@@ -3,11 +3,11 @@ package dev.jdata.db.test.unit.assertj;
 import java.util.HashSet;
 import java.util.Set;
 
-import dev.jdata.db.utils.adt.maps.LongKeyMap;
+import dev.jdata.db.utils.adt.maps.ILongContainsKeyMap;
 
-public final class LongKeyMapAssert  extends BaseElementsAssert<LongKeyMapAssert, LongKeyMap> {
+public final class LongKeyMapAssert extends BaseElementsAssert<LongKeyMapAssert, ILongContainsKeyMap> {
 
-    LongKeyMapAssert(LongKeyMap actual) {
+    LongKeyMapAssert(ILongContainsKeyMap actual) {
         super(actual, LongKeyMapAssert.class);
     }
 

@@ -1,10 +1,11 @@
 package dev.jdata.db.sql.parse.expression;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
+import org.jutils.ast.objects.list.IAddableList;
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.ast.operator.Arithmetic;
 import org.jutils.ast.operator.Operator;
 import org.jutils.io.strings.StringResolver;
@@ -134,7 +135,7 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
     @FunctionalInterface
     private interface FunctionFactory<T extends BaseSQLFunctionCallExpression> {
 
-        T createFunction(Context context, long functionName, List<Expression> parameters);
+        T createFunction(Context context, long functionName, IListGetters<Expression> parameters);
     }
 
     private <T extends BaseSQLFunctionCallExpression> T parseFunction(SQLExpressionLexer lexer, long functionName, FunctionFactory<T> functionFactory)
@@ -142,7 +143,7 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
 
         final SQLAllocator allocator = lexer.getAllocator();
 
-        final List<Expression> parameters = allocator.allocateList(10);
+        final IAddableList<Expression> parameters = allocator.allocateList(10);
 
         try {
             parseParameters(lexer, parameters);
@@ -155,7 +156,7 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
         return functionFactory.createFunction(makeContext(), functionName, parameters);
     }
 
-    private void parseParameters(SQLExpressionLexer lexer, List<Expression> dst) throws ParserException, IOException {
+    private void parseParameters(SQLExpressionLexer lexer, IAddableList<Expression> dst) throws ParserException, IOException {
 
         lexer.lexExpect(SQLToken.LPAREN);
 

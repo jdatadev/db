@@ -2,12 +2,12 @@ package dev.jdata.db.engine.sessions;
 
 import java.util.Objects;
 
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.dml.DMLInsertRows.InsertRow;
 import dev.jdata.db.engine.database.SQLExpressionEvaluator;
 import dev.jdata.db.engine.transactions.TransactionSelect.TransactionSelectAllocator;
-import dev.jdata.db.utils.adt.maps.LongToIntMapGetters;
-import dev.jdata.db.utils.adt.sets.LargeLongSet;
+import dev.jdata.db.utils.adt.maps.ILongToIntMapGetters;
+import dev.jdata.db.utils.adt.sets.MutableLargeLongBucketSet;
 import dev.jdata.db.utils.allocators.IArrayAllocator;
 import dev.jdata.db.utils.allocators.IByteArrayByteBufferAllocator;
 import dev.jdata.db.utils.checks.Checks;
@@ -16,9 +16,9 @@ public final class DMLUpdatingEvaluatorParameter extends BaseDMLUpdatingEvaluato
 
     public interface ILargeLongSetAllocator {
 
-        LargeLongSet allocateLargeLongSet();
+        MutableLargeLongBucketSet allocateLargeLongSet();
 
-        void freeLargeLongSet(LargeLongSet largeLongSet);
+        void freeLargeLongSet(MutableLargeLongBucketSet largeLongSet);
     }
 
     private final TransactionSelectAllocator transactionSelectAllocator;
@@ -29,11 +29,11 @@ public final class DMLUpdatingEvaluatorParameter extends BaseDMLUpdatingEvaluato
     @Deprecated
     private SQLExpressionEvaluator expressionEvaluator;
 
-    private LongToIntMapGetters columnIndexByColumnName;
+    private ILongToIntMapGetters columnIndexByColumnName;
 
     private long numUpdated;
 
-    public DMLUpdatingEvaluatorParameter(IArrayAllocator<SQLExpressionEvaluator> expressionEvaluatorArrayAllocator, NumStorageBitsGetter numStorageBitsGetter,
+    public DMLUpdatingEvaluatorParameter(IArrayAllocator<SQLExpressionEvaluator> expressionEvaluatorArrayAllocator, INumStorageBitsGetter numStorageBitsGetter,
             IByteArrayByteBufferAllocator byteArrayByteBufferAllocator, ILargeLongArrayAllocator largeLongArrayAllocator, TransactionSelectAllocator transactionSelectAllocator,
             ILargeLongSetAllocator largeLongSetAllocator) {
         super(expressionEvaluatorArrayAllocator, numStorageBitsGetter, byteArrayByteBufferAllocator, largeLongArrayAllocator);

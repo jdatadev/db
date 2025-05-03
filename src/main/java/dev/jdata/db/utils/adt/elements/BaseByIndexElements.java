@@ -1,13 +1,14 @@
 package dev.jdata.db.utils.adt.elements;
 
-public abstract class BaseByIndexElements extends BaseNumElements {
+import dev.jdata.db.utils.adt.byindex.IByIndex;
 
-    protected abstract void toString(long index, StringBuilder sb);
+@Deprecated // currently not in use
+public abstract class BaseByIndexElements extends BaseNumElements implements IByIndex {
 
     @Override
     public final String toString() {
 
-        return ByIndex.largeToString(this, 0L, getNumElements(), (byIndex, sb) -> sb.append(byIndex.getClass().getSimpleName()),
+        return ByIndex.closureOrConstantLargeToString(this, 0L, getNumElements(), (byIndex, sb) -> sb.append(byIndex.getClass().getSimpleName()),
                 (byIndex, index, sb) -> byIndex.toString(index, sb));
     }
 }

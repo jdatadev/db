@@ -38,7 +38,7 @@ public abstract class BaseLargeByteArray extends LargeExponentArray implements I
 
         if (buffers != null) {
 
-            final int numOuter = getNumOuterEntries();
+            final int numOuter = getNumOuterUtilizedEntries();
 
             for (int i = 0; i < numOuter; ++ i) {
 
@@ -46,7 +46,7 @@ public abstract class BaseLargeByteArray extends LargeExponentArray implements I
             }
         }
 
-        super.clear();
+        super.reset();
     }
 
     protected final byte[] getBuffer(long byteOffset) {
@@ -58,18 +58,18 @@ public abstract class BaseLargeByteArray extends LargeExponentArray implements I
 
     protected final byte[] getLastBufferOrAllocate() {
 
-        return getNumOuterEntries() != 0 ? getLastBuffer() : allocate();
+        return getNumOuterUtilizedEntries() != 0 ? getLastBuffer() : allocate();
     }
 
     private byte[] getLastBuffer() {
 
-        return buffers[getNumOuterEntries() - 1];
+        return buffers[getNumOuterUtilizedEntries() - 1];
     }
 
     final byte[] checkCapacity() {
 
         final int numOuterAllocatedEntries = getNumOuterAllocatedEntries();
-        final int numOuterUtilizedEntries = getNumOuterEntries();
+        final int numOuterUtilizedEntries = getNumOuterUtilizedEntries();
 
         final byte[] result;
 
@@ -94,7 +94,7 @@ public abstract class BaseLargeByteArray extends LargeExponentArray implements I
 
                     setNumElements(result, 0);
 
-                    incrementNumOuterEntries();
+                    incrementNumOuterUtilizedEntries();
                 }
                 else {
                     result = allocateNewOuter(numOuterUtilizedEntries);
@@ -111,7 +111,7 @@ public abstract class BaseLargeByteArray extends LargeExponentArray implements I
     protected final byte[] allocate() {
 
         final int numOuterAllocatedEntries = getNumOuterAllocatedEntries();
-        final int numOuterUtilizedEntries = getNumOuterEntries();
+        final int numOuterUtilizedEntries = getNumOuterUtilizedEntries();
 
         final byte[] result;
 
@@ -139,7 +139,7 @@ public abstract class BaseLargeByteArray extends LargeExponentArray implements I
         setNumElements(result, 0);
 
         incrementNumOuterAllocatedEntries();
-        incrementNumOuterEntries();
+        incrementNumOuterUtilizedEntries();
 
         return result;
     }
@@ -150,7 +150,7 @@ public abstract class BaseLargeByteArray extends LargeExponentArray implements I
 
         setNumElements(result, 0);
 
-        incrementNumOuterEntries();
+        incrementNumOuterUtilizedEntries();
 
         return result;
     }
@@ -178,7 +178,7 @@ public abstract class BaseLargeByteArray extends LargeExponentArray implements I
         setNumElements(result, 0);
 
         incrementNumOuterAllocatedEntries();
-        incrementNumOuterEntries();
+        incrementNumOuterUtilizedEntries();
 
         return result;
     }

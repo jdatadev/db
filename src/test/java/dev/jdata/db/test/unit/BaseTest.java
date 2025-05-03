@@ -8,6 +8,7 @@ import dev.jdata.db.test.unit.assertj.CustomAssertJAssertions;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
 
 public abstract class BaseTest extends CustomAssertJAssertions {
@@ -80,10 +81,11 @@ public abstract class BaseTest extends CustomAssertJAssertions {
         return Array.toUnsignedByteArray(values);
     }
 
-    protected static RelativeFilePath makeTestFilePath(String fileName) {
+    protected static RelativeFilePath makeTestFilePath(IRelativeFileSystemAccess fileSystemAccess, CharSequence fileName) {
 
+        Objects.requireNonNull(fileSystemAccess);
         Checks.isFileName(fileName);
 
-        return RelativeFilePath.of(fileName);
+        return fileSystemAccess.filePathOf(fileName);
     }
 }

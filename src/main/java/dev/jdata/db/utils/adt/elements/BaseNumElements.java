@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.elements;
 
+import java.util.Objects;
+
 import dev.jdata.db.utils.debug.PrintDebug;
 
 public abstract class BaseNumElements extends BaseElements implements PrintDebug {
@@ -7,6 +9,18 @@ public abstract class BaseNumElements extends BaseElements implements PrintDebug
     private static final boolean DEBUG = Boolean.FALSE;
 
     private long numElements;
+
+    protected BaseNumElements() {
+
+        this.numElements = 0L;
+    }
+
+    protected BaseNumElements(BaseNumElements toCopy) {
+
+        Objects.requireNonNull(toCopy);
+
+        this.numElements = toCopy.numElements;
+    }
 
     public final boolean isEmpty() {
 

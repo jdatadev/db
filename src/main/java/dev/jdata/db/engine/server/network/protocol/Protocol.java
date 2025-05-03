@@ -6,7 +6,7 @@ import java.util.Objects;
 
 import dev.jdata.db.engine.database.IDatabaseExecuteOperations.DataWriter;
 import dev.jdata.db.engine.server.network.protocol.ProtocolMessage.ProtocolAllocator;
-import dev.jdata.db.utils.allocators.ObjectCache;
+import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class Protocol {
@@ -16,24 +16,23 @@ public final class Protocol {
     public static final int MESSAGE_READ_MORE_DATA = -1;
     public static final int MESSAGE_PROCESS_WITH_BLOCKING_READ = -2;
 
-
-    private final ObjectCache<SetupMessage> setupMessageCache;
-    private final ObjectCache<ExecuteSQLMessage> executeSQLMessageCache;
-    private final ObjectCache<PrepareStatementMessage> prepareStatementMessageCache;
-    private final ObjectCache<ExecutePreparedStatementMessage> executePreparedStatementMessageCache;
-    private final ObjectCache<AddPreparedStatementBatchMessage> addPreparedStatementBatchMessageCache;
-    private final ObjectCache<ExecutePreparedStatementBatchMessage> executePreparedStatementBatchMessageCache;
-    private final ObjectCache<FreePreparedStatementMessage> freePreparedStatementMessageCache;
+    private final NodeObjectCache<SetupMessage> setupMessageCache;
+    private final NodeObjectCache<ExecuteSQLMessage> executeSQLMessageCache;
+    private final NodeObjectCache<PrepareStatementMessage> prepareStatementMessageCache;
+    private final NodeObjectCache<ExecutePreparedStatementMessage> executePreparedStatementMessageCache;
+    private final NodeObjectCache<AddPreparedStatementBatchMessage> addPreparedStatementBatchMessageCache;
+    private final NodeObjectCache<ExecutePreparedStatementBatchMessage> executePreparedStatementBatchMessageCache;
+    private final NodeObjectCache<FreePreparedStatementMessage> freePreparedStatementMessageCache;
 
     public Protocol() {
 
-        this.setupMessageCache = new ObjectCache<>(SetupMessage::new, SetupMessage[]::new);
-        this.executeSQLMessageCache = new ObjectCache<>(ExecuteSQLMessage::new, ExecuteSQLMessage[]::new);
-        this.prepareStatementMessageCache = new ObjectCache<>(PrepareStatementMessage::new, PrepareStatementMessage[]::new);
-        this.executePreparedStatementMessageCache = new ObjectCache<>(ExecutePreparedStatementMessage::new, ExecutePreparedStatementMessage[]::new);
-        this.addPreparedStatementBatchMessageCache = new ObjectCache<>(AddPreparedStatementBatchMessage::new, AddPreparedStatementBatchMessage[]::new);
-        this.executePreparedStatementBatchMessageCache = new ObjectCache<>(ExecutePreparedStatementBatchMessage::new, ExecutePreparedStatementBatchMessage[]::new);
-        this.freePreparedStatementMessageCache = new ObjectCache<>(FreePreparedStatementMessage::new, FreePreparedStatementMessage[]::new);
+        this.setupMessageCache = new NodeObjectCache<>(SetupMessage::new);
+        this.executeSQLMessageCache = new NodeObjectCache<>(ExecuteSQLMessage::new);
+        this.prepareStatementMessageCache = new NodeObjectCache<>(PrepareStatementMessage::new);
+        this.executePreparedStatementMessageCache = new NodeObjectCache<>(ExecutePreparedStatementMessage::new);
+        this.addPreparedStatementBatchMessageCache = new NodeObjectCache<>(AddPreparedStatementBatchMessage::new);
+        this.executePreparedStatementBatchMessageCache = new NodeObjectCache<>(ExecutePreparedStatementBatchMessage::new);
+        this.freePreparedStatementMessageCache = new NodeObjectCache<>(FreePreparedStatementMessage::new);
     }
 
     public static int isCompleteMessage(ByteBuffer byteBuffer, int offset, int length) {

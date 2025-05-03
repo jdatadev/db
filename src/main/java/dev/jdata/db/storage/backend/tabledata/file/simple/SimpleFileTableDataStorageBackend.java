@@ -2,7 +2,7 @@ package dev.jdata.db.storage.backend.tabledata.file.simple;
 
 import java.io.IOException;
 
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.data.RowDataNumBits;
 import dev.jdata.db.data.tables.TableByIdMap;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
@@ -15,7 +15,7 @@ import dev.jdata.db.utils.bits.BitBufferUtil;
 
 final class SimpleFileTableDataStorageBackend extends BaseFileTableDataStorageBackend {
 
-    SimpleFileTableDataStorageBackend(VersionedDatabaseSchemas versionedDatabaseSchemas, NumStorageBitsGetter numStorageBitsGetter,
+    SimpleFileTableDataStorageBackend(VersionedDatabaseSchemas versionedDatabaseSchemas, INumStorageBitsGetter numStorageBitsGetter,
             TableByIdMap<FileTableStorageFiles> fileTableStorageByTableId) {
         super(versionedDatabaseSchemas, numStorageBitsGetter, fileTableStorageByTableId);
     }

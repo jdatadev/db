@@ -5,10 +5,11 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PathIOUtil {
@@ -23,16 +24,25 @@ public class PathIOUtil {
         Objects.requireNonNull(directoryPath);
         Objects.requireNonNull(predicate);
 
-        final List<Path> result;
+        final List<Path> result = new ArrayList<>();
+
+        listPaths(directoryPath, result, predicate, (p, l) -> l.add(p));
+
+        return result;
+    }
+
+    public static <P> void listPaths(Path directoryPath, P parameter, Predicate<Path> predicate, BiConsumer<Path, P> consumer) throws IOException {
+
+        Objects.requireNonNull(directoryPath);
+        Objects.requireNonNull(predicate);
+        Objects.requireNonNull(consumer);
 
         try (Stream<Path> stream = Files.list(directoryPath)) {
 
-            result = stream
+            stream
                     .filter(predicate)
-                    .collect(Collectors.toList());
+                    .forEach(p -> consumer.accept(p, parameter));
         }
-
-        return result;
     }
 
     public static boolean deleteRecursively(Path path) throws IOException {

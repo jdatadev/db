@@ -4,17 +4,23 @@ import java.util.Collection;
 
 import dev.jdata.db.utils.adt.KeyElements;
 import dev.jdata.db.utils.adt.KeySetElements;
+import dev.jdata.db.utils.adt.arrays.IArray;
 import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.maps.ILongContainsKeyMap;
 import dev.jdata.db.utils.adt.maps.IMapOfCollection;
-import dev.jdata.db.utils.adt.maps.LongKeyMap;
-import dev.jdata.db.utils.adt.sets.IntSet;
-import dev.jdata.db.utils.adt.sets.LongSet;
+import dev.jdata.db.utils.adt.sets.MutableIntBucketSet;
+import dev.jdata.db.utils.adt.sets.MutableLongBucketSet;
 
 public class CustomAssertJAssertions extends org.assertj.core.api.Assertions {
 
     public static ElementsAssert assertThat(IElements actual) {
 
         return new ElementsAssert(actual);
+    }
+
+    public static ArrayAssert assertThat(IArray actual) {
+
+        return new ArrayAssert(actual);
     }
 
     public static KeyElementsAssert assertThat(KeyElements actual) {
@@ -32,17 +38,17 @@ public class CustomAssertJAssertions extends org.assertj.core.api.Assertions {
         return new MapOfCollectionAssert<>(actual);
     }
 
-    public static IntSetAssert assertThat(IntSet actual) {
+    public static IntBucketSetAssert assertThat(MutableIntBucketSet actual) {
 
-        return new IntSetAssert(actual);
+        return new IntBucketSetAssert(actual);
     }
 
-    public static LongSetAssert assertThat(LongSet actual) {
+    public static LongBucketSetAssert assertThat(MutableLongBucketSet actual) {
 
-        return new LongSetAssert(actual);
+        return new LongBucketSetAssert(actual);
     }
 
-    public static LongKeyMapAssert assertThat(LongKeyMap actual) {
+    public static LongKeyMapAssert assertThat(ILongContainsKeyMap actual) {
 
         return new LongKeyMapAssert(actual);
     }

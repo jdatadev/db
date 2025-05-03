@@ -30,7 +30,7 @@ import dev.jdata.db.engine.server.network.protocol.ProtocolMessageType;
 import dev.jdata.db.engine.server.network.protocol.SetupMessage;
 import dev.jdata.db.engine.server.network.protocol.SetupMessage.DatabaseCreateMode;
 import dev.jdata.db.engine.server.network.protocol.strings.CharString;
-import dev.jdata.db.utils.allocators.ObjectCache;
+import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class DatabaseNetworkServer {
@@ -83,7 +83,7 @@ public final class DatabaseNetworkServer {
 
     private final Protocol protocol;
 
-    private final ObjectCache<NetworkClient> networkClientCache;
+    private final NodeObjectCache<NetworkClient> networkClientCache;
     private final Map<Charset, CharsetDecoder> decoderByCharset;
 
     public DatabaseNetworkServer(SQLDatabaseServer serverDelegate, ProtocolAllocator protocolAllocator) {
@@ -93,7 +93,7 @@ public final class DatabaseNetworkServer {
 
         this.protocol = new Protocol();
 
-        this.networkClientCache = new ObjectCache<>(() -> new NetworkClient(this), NetworkClient[]::new);
+        this.networkClientCache = new NodeObjectCache<>(() -> new NetworkClient(this));
         this.decoderByCharset = new HashMap<>(3);
     }
 

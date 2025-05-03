@@ -11,10 +11,10 @@ import dev.jdata.db.utils.State;
 import dev.jdata.db.utils.adt.Contains;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.elements.BaseNumElements;
-import dev.jdata.db.utils.adt.lists.Freeing;
+import dev.jdata.db.utils.allocators.IFreeing;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends BaseDescriptorable<T>, V extends Freeing<U> & Contains> extends BaseNumElements {
+public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends BaseDescriptorable<T>, V extends IFreeing<U> & Contains> extends BaseNumElements {
 
     @FunctionalInterface
     protected interface DescriptorableFactory<T, R> {
@@ -74,7 +74,7 @@ public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends B
 
         Objects.requireNonNull(descriptorableFactory);
 
-        int descriptor = Array.findIndexWithClosureAllocation(descriptorables, 0, numArrayElements, e -> e == null);
+        int descriptor = Array.closureOrConstantFindIndex(descriptorables, 0, numArrayElements, e -> e == null);
 
         if (descriptor == -1) {
 

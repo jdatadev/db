@@ -1,9 +1,9 @@
 package dev.jdata.db.sql.parse.ddl.table;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
+import org.jutils.ast.objects.list.IAddableList;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.sql.ast.SQLAllocator;
@@ -30,7 +30,7 @@ public class SQLCreateTableParser extends SQLStatementParser {
 
         final SQLAllocator allocator = lexer.getAllocator();
 
-        final List<SQLTableColumnDefinition> columnDefinitions = allocator.allocateList(100);
+        final IAddableList<SQLTableColumnDefinition> columnDefinitions = allocator.allocateList(100);
 
         try {
             lexer.lexExpect(SQLToken.LPAREN);

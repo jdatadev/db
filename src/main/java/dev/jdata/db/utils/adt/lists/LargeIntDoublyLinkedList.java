@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.adt.lists;
 
-public final class LargeIntDoublyLinkedList extends BaseLargeIntDoublyLinkedList<LargeIntDoublyLinkedList> implements LargeIntList {
+public final class LargeIntDoublyLinkedList extends BaseLargeIntDoublyLinkedList<LargeIntDoublyLinkedList, LargeIntDoublyLinkedList> implements LargeIntList {
 
     private long headNode;
     private long tailNode;

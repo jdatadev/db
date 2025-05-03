@@ -14,7 +14,7 @@ interface ILockTableRowsMap extends IElements {
 
     void put(long key, long lock, long lockInfoListsHeadNode, long lockInfoListsTailNode);
 
-    boolean remove(long key);
+    void remove(long key);
 
     LockedRows getLockedRows();
     long getLockHoldersHeadNode(long key);

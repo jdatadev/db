@@ -5,7 +5,7 @@ import java.util.function.Function;
 
 import org.jutils.ast.objects.list.ASTList;
 
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.data.RowDataNumBits;
 import dev.jdata.db.data.RowDataNumBitsAndOffsets;
 import dev.jdata.db.dml.DMLInsertUpdateRows;
@@ -15,7 +15,7 @@ import dev.jdata.db.engine.database.EvaluateException;
 import dev.jdata.db.engine.database.OverflowException;
 import dev.jdata.db.engine.database.SQLExpressionEvaluator;
 import dev.jdata.db.engine.transactions.Transaction;
-import dev.jdata.db.schema.Table;
+import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.sql.ast.clauses.SQLWhereClause;
 import dev.jdata.db.sql.ast.statements.dml.SQLColumnValueUpdateValue;
@@ -64,7 +64,7 @@ class ColumnStoreUtil {
     }
 
     static <T extends InsertUpdateRow> int setTableColumns(int tableId, SQLColumnNames sqlcolumnNames, DMLInsertUpdateRows<T> insertUpdateRows, T[] rows,
-            RowDataNumBits rowDataNumBits, TableAndColumnNames columnNames, NumStorageBitsGetter numStorageBitsGetter) {
+            RowDataNumBits rowDataNumBits, TableAndColumnNames columnNames, INumStorageBitsGetter numStorageBitsGetter) {
 
         final int numColumnNames = Integers.checkUnsignedLongToUnsignedInt(sqlcolumnNames.getNumElements());
 
@@ -78,7 +78,7 @@ class ColumnStoreUtil {
     }
 
     private static <T extends InsertUpdateRow, U> int setTableColumnsByIndex(int tableId, U sqlColumnNames, int numColumnNames, DMLInsertUpdateRows<T> insertUpdateRows, T[] rows,
-            RowDataNumBits rowDataNumBits, TableAndColumnNames columnNames, NumStorageBitsGetter numStorageBitsGetter, ColumnNameGetter<U> columnNameGetter) {
+            RowDataNumBits rowDataNumBits, TableAndColumnNames columnNames, INumStorageBitsGetter numStorageBitsGetter, ColumnNameGetter<U> columnNameGetter) {
 
         Checks.isExactlyOne(rows.length);
 
@@ -129,7 +129,7 @@ class ColumnStoreUtil {
     }
 
     private static int setTableColumn(int tableId, int i, long sqlColumnName, DMLInsertUpdateRows<?> insertUpdateRows, TableAndColumnNames columnNames,
-            NumStorageBitsGetter numStorageBitsGetter) {
+            INumStorageBitsGetter numStorageBitsGetter) {
 
         final int columnIndex = columnNames.getColumnIndex(tableId, sqlColumnName);
 

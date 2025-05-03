@@ -9,7 +9,7 @@ import dev.jdata.db.engine.database.EvaluateException;
 import dev.jdata.db.engine.database.OverflowException;
 import dev.jdata.db.engine.database.SQLExpressionEvaluator;
 import dev.jdata.db.engine.transactions.Transaction;
-import dev.jdata.db.schema.Table;
+import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.sql.ast.clauses.SQLWhereClause;
 import dev.jdata.db.sql.ast.statements.dml.SQLColumnValueUpdateValue;
 import dev.jdata.db.sql.ast.statements.dml.SQLColumnValueUpdateValues;
@@ -17,7 +17,7 @@ import dev.jdata.db.sql.ast.statements.dml.SQLDeleteStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateValues;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.arrays.ILongArrayGetters;
+import dev.jdata.db.utils.adt.arrays.ILongArray;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 
 class BaseDMLUpdatingEvaluator {
@@ -53,12 +53,12 @@ class BaseDMLUpdatingEvaluator {
     @FunctionalInterface
     private interface EvaluatedUpdateValuesProcessor<E extends Exception> {
 
-        void processEvaluatedValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArrayGetters rowIds,
+        void processEvaluatedValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArray rowIds,
                 BaseDMLUpdatingEvaluatorParameter evaluatorParameter) throws OverflowException;
     }
 
     private static <E extends EvaluateException> void evaluteUpdateValues(ASTList<SQLColumnValueUpdateValue> values, SQLColumnValueUpdateValues updateValues,
-            ILongArrayGetters rowIds, BaseDMLUpdatingEvaluatorParameter evaluatorParameter, EvaluatedUpdateValuesProcessor<E> evaluatedValuesProcessor)
+            ILongArray rowIds, BaseDMLUpdatingEvaluatorParameter evaluatorParameter, EvaluatedUpdateValuesProcessor<E> evaluatedValuesProcessor)
                     throws EvaluateException {
 
         final int numColumns = values.size();
@@ -83,7 +83,7 @@ class BaseDMLUpdatingEvaluator {
         }
     }
 
-    private static void storeUpdateValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArrayGetters rowIds,
+    private static void storeUpdateValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArray rowIds,
             BaseDMLUpdatingEvaluatorParameter evaluatorParameter) throws OverflowException {
 
         final Transaction transaction = evaluatorParameter.getTransaction();

@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.sets;
 
-public interface IIntSet extends IIntSetMutators, IIntSetGetters {
+import dev.jdata.db.utils.adt.elements.IIntElements;
+
+public interface IIntSet extends ISet, IIntSetGetters, IIntElements {
 
 }

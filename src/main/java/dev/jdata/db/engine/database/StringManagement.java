@@ -5,31 +5,47 @@ import java.util.Objects;
 import org.jutils.io.strings.StringRef;
 import org.jutils.io.strings.StringResolver;
 
+import dev.jdata.db.utils.adt.strings.Strings;
 import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
+import dev.jdata.db.utils.checks.Checks;
 
 public final class StringManagement {
 
-    private final IStringCache stringCache;
+    public static String getHashNameString(String parsedName) {
+
+        Checks.isDBName(parsedName);
+
+        return Strings.isAllLowerCase(parsedName) ? parsedName : parsedName.toLowerCase();
+    }
+
+    private final StringStorer stringStorer;
     private final CharacterBuffersAllocator characterBuffersAllocator;
 
-    public StringManagement(IStringCache stringCache, CharacterBuffersAllocator characterBuffersAllocator) {
+    public StringManagement(CharacterBuffersAllocator characterBuffersAllocator) {
 
-        this.stringCache = Objects.requireNonNull(stringCache);
+        this.stringStorer = new StringStorer(1, 10);
         this.characterBuffersAllocator = Objects.requireNonNull(characterBuffersAllocator);
     }
 
-    String getParsedString(StringResolver parserStringResolver, long stringRef) {
+    public long resolveParsedStringRef(StringResolver parserStringResolver, long stringRef) {
 
         Objects.requireNonNull(parserStringResolver);
         StringRef.checkIsString(stringRef);
 
-        return parserStringResolver.makeString(stringRef, stringCache, characterBuffersAllocator, (b, n, p) -> p.makeString(b, n));
+        return parserStringResolver.makeStringRef(stringRef, this, characterBuffersAllocator, (b, n, i) -> i.stringStorer.getOrAddStringRef(b, n));
     }
 
-    String getLowerCaseString(CharSequence charSequence) {
+    public long getHashStringRef(long parsedStringRef) {
 
-        Objects.requireNonNull(charSequence);
+        StringRef.checkIsString(parsedStringRef);
 
-        return stringCache.getLowerCaseString(charSequence);
+        return stringStorer.containsOnly(parsedStringRef, Character::isLowerCase)
+                ? parsedStringRef
+                : stringStorer.toLowerCase(parsedStringRef);
+    }
+
+    public String getLowerCaseString(long stringRef) {
+
+        throw new UnsupportedOperationException();
     }
 }

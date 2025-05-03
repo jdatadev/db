@@ -1,9 +1,9 @@
 package dev.jdata.db.sql.parse.dml.select.result.orderby;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
 
@@ -81,7 +81,7 @@ public class SQLOrderByClauseParser extends BaseSQLGroupOrOrderByClauseParser<SQ
     }
 
     @Override
-    protected SQLOrderByClause createGroupOrOrderByClause(Context context, List<SQLOrderByItem> elements) {
+    protected SQLOrderByClause createGroupOrOrderByClause(Context context, IListGetters<SQLOrderByItem> elements) {
 
         return new SQLOrderByClause(context, elements);
     }

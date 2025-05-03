@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.Objects;
 
-final class SequentialFileAccessImpl<F extends FilePath, D extends DirectoryPath<F, D>, A extends FileSystemAccess<F, D>>
+final class SequentialFileAccessImpl<F extends IFilePath, D extends IDirectoryPath<F, D>, A extends IFileSystemAccess<F, D>>
         extends BaseFileAccess
         implements SequentialFileAccess {
 

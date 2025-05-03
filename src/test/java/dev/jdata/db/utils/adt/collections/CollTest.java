@@ -1,61 +1,26 @@
 package dev.jdata.db.utils.adt.collections;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.ToIntFunction;
+import java.util.function.ToLongFunction;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import dev.jdata.db.test.unit.BaseTest;
+import dev.jdata.db.utils.adt.elements.BaseElementsAggregatesTest;
 import dev.jdata.db.utils.adt.lists.Lists;
 
-public final class CollTest extends BaseTest {
-
-    @Test
-    @Category(UnitTest.class)
-    public void testMax() {
-
-        assertThatThrownBy(() -> Coll.max(null, 0, Integer::intValue)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> Coll.max(Lists.unmodifiableOf(1, 2, 3), 0, null)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> Coll.max(Lists.unmodifiableOf(1, 2, 3), 0, null)).isInstanceOf(NullPointerException.class);
-
-        assertThat(Coll.max(Lists.empty(), 0,   Integer::intValue)).isEqualTo(0);
-        assertThat(Coll.max(Lists.empty(), 123, Integer::intValue)).isEqualTo(123);
-
-        assertThat(Coll.max(Lists.unmodifiableOf(0),                123, Integer::intValue)).isEqualTo(0);
-        assertThat(Coll.max(Lists.unmodifiableOf(0, 1),             123, Integer::intValue)).isEqualTo(1);
-        assertThat(Coll.max(Lists.unmodifiableOf(1, 2 ,0),          123, Integer::intValue)).isEqualTo(2);
-        assertThat(Coll.max(Lists.unmodifiableOf(1, 0, -2),         123, Integer::intValue)).isEqualTo(1);
-        assertThat(Coll.max(Lists.unmodifiableOf(1, 0, 1, -2),      123, Integer::intValue)).isEqualTo(1);
-        assertThat(Coll.max(Lists.unmodifiableOf(-1, 0, -1, -2),    123, Integer::intValue)).isEqualTo(0);
-        assertThat(Coll.max(Lists.unmodifiableOf(-1, -3, -1, -2),   123, Integer::intValue)).isEqualTo(-1);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public void testCount() {
-
-        assertThatThrownBy(() -> Coll.count(null, e -> true)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> Coll.count(Lists.unmodifiableOf(1, 2, 3), null)).isInstanceOf(NullPointerException.class);
-
-        assertThat(Coll.count(Lists.empty(), e -> true)).isEqualTo(0);
-
-        assertThat(Coll.count(Lists.unmodifiableOf(0),              e -> false)).isEqualTo(0);
-        assertThat(Coll.count(Lists.unmodifiableOf(0),              e -> true)).isEqualTo(1);
-        assertThat(Coll.count(Lists.unmodifiableOf(0, 1),           e -> false)).isEqualTo(0);
-        assertThat(Coll.count(Lists.unmodifiableOf(0, 1),           e -> true)).isEqualTo(2);
-        assertThat(Coll.count(Lists.unmodifiableOf(0, 1),           e -> e < 1)).isEqualTo(1);
-        assertThat(Coll.count(Lists.unmodifiableOf(1, 2 ,0),        e -> false)).isEqualTo(0);
-        assertThat(Coll.count(Lists.unmodifiableOf(1, 2 ,0),        e -> true)).isEqualTo(3);
-        assertThat(Coll.count(Lists.unmodifiableOf(1, 2 ,0),        e -> e < 2)).isEqualTo(2);
-        assertThat(Coll.count(Lists.unmodifiableOf(1, 0, 1, -2),    e -> e != 0)).isEqualTo(3);
-    }
+public final class CollTest extends BaseElementsAggregatesTest<Collection<Integer>> {
 
     @Test
     @Category(UnitTest.class)
@@ -138,5 +103,39 @@ public final class CollTest extends BaseTest {
         assertThat(Coll.toArray(Lists.unmodifiableOf(1, 2, 3), 1, Integer[]::new, List::get)).containsExactly(1);
         assertThat(Coll.toArray(Lists.unmodifiableOf(1, 2, 3), 2, Integer[]::new, List::get)).containsExactly(1, 2);
         assertThat(Coll.toArray(Lists.unmodifiableOf(1, 2, 3), 3, Integer[]::new, List::get)).containsExactly(1, 2, 3);
+    }
+
+    @Override
+    protected Collection<Integer> createTestElements(Integer[] elementsToAdd) {
+
+        final Collection<Integer> collection = new ArrayList<>();
+
+        collection.addAll(Arrays.asList(elementsToAdd));
+
+        return collection;
+    }
+
+    @Override
+    protected <P> long count(Collection<Integer> elements, P parameter, BiPredicate<Integer, P> predicate) {
+
+        return Coll.count(elements, parameter, predicate);
+    }
+
+    @Override
+    protected long countWithClosure(Collection<Integer> elements, Predicate<Integer> predicate) {
+
+        return Coll.countWithClosure(elements, predicate);
+    }
+
+    @Override
+    protected int maxInt(Collection<Integer> elements, int defaultValue, ToIntFunction<Integer> mapper) {
+
+        return Coll.maxInt(elements, defaultValue, mapper);
+    }
+
+    @Override
+    protected long maxLong(Collection<Integer> elements, long defaultValue, ToLongFunction<Integer> mapper) {
+
+        return Coll.maxLong(elements, defaultValue, mapper);
     }
 }

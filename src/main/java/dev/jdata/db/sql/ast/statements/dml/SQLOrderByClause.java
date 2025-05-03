@@ -1,12 +1,11 @@
 package dev.jdata.db.sql.ast.statements.dml;
 
-import java.util.List;
-
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.context.Context;
 
 public final class SQLOrderByClause extends SQLOrderByOrGroupByClause<SQLOrderByItem> {
 
-    public SQLOrderByClause(Context context, List<SQLOrderByItem> items) {
+    public SQLOrderByClause(Context context, IListGetters<SQLOrderByItem> items) {
         super(context, items);
     }
 }

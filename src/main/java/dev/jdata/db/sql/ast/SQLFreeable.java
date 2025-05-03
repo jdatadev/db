@@ -1,6 +1,8 @@
 package dev.jdata.db.sql.ast;
 
-public interface SQLFreeable {
+import dev.jdata.db.utils.allocators.IFreeable;
 
-    void free(SQLAllocator allocator);
+@Deprecated
+public interface SQLFreeable extends IFreeable<SQLAllocator> {
+
 }

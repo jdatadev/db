@@ -1,8 +1,8 @@
 package dev.jdata.db.sql.parse.ddl.index;
 
 import java.io.IOException;
-import java.util.List;
 
+import org.jutils.ast.objects.list.IAddableList;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.sql.ast.SQLAllocator;
@@ -29,7 +29,7 @@ public class SQLCreateIndexParser extends SQLStatementParser {
 
         final SQLAllocator allocator = lexer.getAllocator();
 
-        final List<SQLIndexColumn> columns = allocator.allocateList(10);
+        final IAddableList<SQLIndexColumn> columns = allocator.allocateList(10);
 
         final SQLCreateIndexStatement result;
 

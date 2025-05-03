@@ -9,8 +9,9 @@ import dev.jdata.db.engine.server.network.protocol.strings.MutableString;
 import dev.jdata.db.engine.server.network.protocol.strings.MutableString.CharArrayAllocator;
 import dev.jdata.db.utils.allocators.ICharBufferAllocator;
 import dev.jdata.db.utils.allocators.ICopyByteBufferAllocator;
+import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
-public abstract class ProtocolMessage {
+public abstract class ProtocolMessage extends ObjectCacheNode {
 
     public interface ProtocolAllocator extends ICopyByteBufferAllocator, ICharBufferAllocator, CharArrayAllocator, JDBCTypeArrayAllocator, RowDataNumBitsAllocator {
 

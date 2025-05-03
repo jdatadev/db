@@ -3,25 +3,26 @@ package dev.jdata.db.utils.allocators;
 import java.util.List;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.lists.ArrayListImpl;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class ListAllocator extends BaseArrayAllocator<IndexList<?>> implements IListAllocator {
+@Deprecated
+public final class ListAllocator extends BaseArrayAllocator<ArrayListImpl<?>> implements IListAllocator {
 
     public ListAllocator(IntFunction<Object[]> createArray) {
-        super(c -> new IndexList<Object>(createArray, c), l -> Integers.checkUnsignedLongToUnsignedInt(l.getCapacity()));
+        super(c -> new ArrayListImpl<>(createArray, c), l -> Integers.checkUnsignedLongToUnsignedInt(l.getCapacity()));
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> List<T> allocateList(int minimumCapoacity) {
+    public <T> List<T> allocateList(int minimumCapacity) {
 
-        return (IndexList<T>)allocateArrayInstance(minimumCapoacity);
-     }
+        return (List<T>)allocateArrayInstance(minimumCapacity);
+    }
 
     @Override
     public void freeList(List<?> list) {
 
-        freeArrayInstance((IndexList<?>)list);
+        freeArrayInstance((ArrayListImpl<?>)list);
     }
 }

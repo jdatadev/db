@@ -4,6 +4,7 @@ import dev.jdata.db.utils.checks.Checks;
 
 public final class DatabaseSchemaVersion implements Comparable<DatabaseSchemaVersion> {
 
+    public static final int NO_VERSION = -1;
     public static final int INITIAL_VERSION = 1;
 
     public static DatabaseSchemaVersion of(int versionNumber) {

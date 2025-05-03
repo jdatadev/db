@@ -6,11 +6,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiPredicate;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
+import java.util.function.ToIntFunction;
+import java.util.function.ToLongFunction;
 
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.function.IntResultFunction;
 
 public class Coll {
 
@@ -30,7 +32,7 @@ public class Coll {
         return result;
     }
 
-    public static <T> int max(Iterable<T> iterable, int defaultValue, IntResultFunction<T> mapper) {
+    public static <T> int maxInt(Iterable<T> iterable, int defaultValue, ToIntFunction<T> mapper) {
 
         Objects.requireNonNull(iterable);
         Objects.requireNonNull(mapper);
@@ -40,7 +42,7 @@ public class Coll {
 
         for (T element : iterable) {
 
-            final int value = mapper.apply(element);
+            final int value = mapper.applyAsInt(element);
 
             if (value > max) {
 
@@ -52,22 +54,52 @@ public class Coll {
         return found ? max : defaultValue;
     }
 
-    public static <T> int count(Iterable<T> iterable, Predicate<T> predicate) {
+    public static <T> long maxLong(Iterable<T> iterable, long defaultValue, ToLongFunction<T> mapper) {
+
+        Objects.requireNonNull(iterable);
+        Objects.requireNonNull(mapper);
+
+        long max = Long.MIN_VALUE;
+        boolean found = false;
+
+        for (T element : iterable) {
+
+            final long value = mapper.applyAsLong(element);
+
+            if (value > max) {
+
+                max = value;
+                found = true;
+            }
+        }
+
+        return found ? max : defaultValue;
+    }
+
+    public static <T, P> long count(Iterable<T> iterable, P parameter, BiPredicate<T, P> predicate) {
 
         Objects.requireNonNull(iterable);
         Objects.requireNonNull(predicate);
 
-        int count = 0;
+        long count = 0;
 
         for (T element : iterable) {
 
-            if (predicate.test(element)) {
+            if (predicate.test(element, parameter)) {
 
                 ++ count;
             }
         }
 
         return count;
+    }
+
+    public static <T> long countWithClosure(Iterable<T> iterable, Predicate<T> predicate) {
+
+        Objects.requireNonNull(iterable);
+        Objects.requireNonNull(predicate);
+
+        return count(iterable, predicate, (e, p) -> p.test(e));
     }
 
     public static <T> List<T> sorted(Collection<T> collection, Comparator<T> comparator) {

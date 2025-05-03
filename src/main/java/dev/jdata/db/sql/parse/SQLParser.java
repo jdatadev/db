@@ -1,9 +1,13 @@
 package dev.jdata.db.sql.parse;
 
+import java.io.DataOutput;
 import java.io.IOException;
-import java.util.List;
+import java.nio.CharBuffer;
 import java.util.Objects;
 
+import org.jutils.ast.objects.list.IAddable;
+import org.jutils.ast.objects.list.IAddableList;
+import org.jutils.ast.objects.list.IImutableList;
 import org.jutils.io.buffers.StringBuffers;
 import org.jutils.io.loadstream.LoadStream;
 import org.jutils.parse.ParserException;
@@ -43,6 +47,12 @@ public abstract class SQLParser extends BaseSQLParser {
 
             return sb.toString();
         }
+
+        long getLength();
+
+        void write(DataOutput dataOutput) throws IOException;
+
+        long writeToCharBuffer(CharBuffer dst, long offset);
     }
 
     private final SQLToken[] statementTokens;
@@ -98,17 +108,27 @@ public abstract class SQLParser extends BaseSQLParser {
         this.dropTriggerParser = parserFactory.createDropTriggerParser();
     }
 
-    private List<BaseSQLStatement> parse(LoadStream loadStream, SQLAllocator allocator, SQLScratchExpressionValues scratchExpressionValues) throws ParserException, IOException {
+    private IImutableList<BaseSQLStatement> parse(LoadStream loadStream, SQLAllocator allocator, SQLScratchExpressionValues scratchExpressionValues) throws ParserException, IOException {
 
-        final List<BaseSQLStatement> result = allocator.allocateList(1);
+        final IImutableList<BaseSQLStatement> result;
 
-        parse(loadStream, allocator, scratchExpressionValues, result, null);
+        final IAddableList<BaseSQLStatement> sqlStatements = allocator.allocateList(1);
+
+        try {
+            parse(loadStream, allocator, scratchExpressionValues, sqlStatements, null);
+        }
+        finally {
+
+            result = sqlStatements.toImmutableList();
+
+            allocator.freeList(sqlStatements);
+        }
 
         return result;
     }
 
-    public void parse(LoadStream loadStream, SQLAllocator allocator, SQLScratchExpressionValues scratchExpressionValues, List<BaseSQLStatement> sqlStatementDst,
-            List<SQLString> sqlStringsDst) throws ParserException, IOException {
+    public void parse(LoadStream loadStream, SQLAllocator allocator, SQLScratchExpressionValues scratchExpressionValues, IAddable<BaseSQLStatement> sqlStatementDst,
+            IAddable<SQLString> sqlStringsDst) throws ParserException, IOException {
 
         Objects.requireNonNull(loadStream);
         Objects.requireNonNull(scratchExpressionValues);

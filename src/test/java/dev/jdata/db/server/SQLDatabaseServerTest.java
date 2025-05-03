@@ -12,14 +12,13 @@ import org.jutils.parse.ParserException;
 
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.common.storagebits.BaseMaxNumStorageBitsAdapter;
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.common.storagebits.NumStorageBitsParameters;
 import dev.jdata.db.engine.database.DatabaseParameters;
 import dev.jdata.db.engine.database.Databases;
 import dev.jdata.db.engine.database.DatabasesAllocators;
 import dev.jdata.db.engine.database.ExecuteException;
 import dev.jdata.db.engine.database.IDatabaseExecuteOperations.SelectResultWriter;
-import dev.jdata.db.engine.database.IStringCache;
 import dev.jdata.db.engine.database.StringCache;
 import dev.jdata.db.engine.database.StringManagement;
 import dev.jdata.db.engine.server.DatabaseServer;
@@ -29,9 +28,11 @@ import dev.jdata.db.engine.sessions.DBSession.LargeObjectStorer;
 import dev.jdata.db.engine.transactions.Transaction;
 import dev.jdata.db.engine.transactions.Transactions.TransactionFactory;
 import dev.jdata.db.engine.transactions.mvcc.MVCCTransaction;
-import dev.jdata.db.schema.DatabaseSchema;
+import dev.jdata.db.schema.DatabaseId;
+import dev.jdata.db.schema.DatabaseSchemaManager;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.schema.DatabaseSchemas;
+import dev.jdata.db.schema.SchemaManagementAllocators;
+import dev.jdata.db.schema.model.databaseschema.CompleteDatabaseSchema;
 import dev.jdata.db.schema.types.SchemaCustomType;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.sql.parse.SQLParser;
@@ -39,6 +40,7 @@ import dev.jdata.db.sql.parse.SQLParserFactory;
 import dev.jdata.db.sql.parse.SQLToken;
 import dev.jdata.db.test.unit.BaseTest;
 import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
+import dev.jdata.db.utils.allocators.IntBucketSetAllocator;
 import dev.jdata.db.utils.checks.Checks;
 
 public class SQLDatabaseServerTest extends BaseTest {
@@ -116,12 +118,11 @@ public class SQLDatabaseServerTest extends BaseTest {
 
         final DatabaseParameters parameters = new DatabaseParameters();
 
-        final NumStorageBitsGetter numStorageBitsGetter = makeNumStorageBitsGetter();
+        final INumStorageBitsGetter numStorageBitsGetter = makeNumStorageBitsGetter();
         final DatabasesAllocators databasesAllocators = new DatabasesAllocators(numStorageBitsGetter);
 
-        final IStringCache stringCache = new StringCache();
         final CharacterBuffersAllocator characterBuffersAllocator = new CharacterBuffersAllocator();
-        final StringManagement stringManagement = new StringManagement(stringCache, characterBuffersAllocator);
+        final StringManagement stringManagement = new StringManagement(characterBuffersAllocator);
         final LargeObjectStorer<IOException> largeObjectStorer = makeLargeObjectStorer();
 
         final TransactionFactory transactionFactory = makeTransactionFactory();
@@ -132,15 +133,21 @@ public class SQLDatabaseServerTest extends BaseTest {
 
         final String databaseName = "testdb";
 
-        final DatabaseSchema databaseSchema = DatabaseSchema.empty(databaseName, schemaVersion);
-        final DatabaseSchemas databaseSchemas = DatabaseSchemas.of(databaseName, databaseSchema);
+        final DatabaseId databaseId = new DatabaseId(DBConstants.INITIAL_DESCRIPTORABLE, databaseName);
+
+        final IntBucketSetAllocator intSetAllocator = new IntBucketSetAllocator();
+
+        final SchemaManagementAllocators schemaManagementAllocators = new SchemaManagementAllocators(intSetAllocator);
+
+        final CompleteDatabaseSchema databaseSchema = CompleteDatabaseSchema.empty(databaseId, schemaVersion);
+        final DatabaseSchemaManager databaseSchemas = DatabaseSchemaManager.of(databaseId, databaseSchema, schemaManagementAllocators.getSchemaManagerAllocator());
 
         parameters.initializePerDatabase(databaseSchemas, null, DBConstants.NO_TRANSACTION_ID, null);
 
         return parameters;
     }
 
-    private static NumStorageBitsGetter makeNumStorageBitsGetter() {
+    private static INumStorageBitsGetter makeNumStorageBitsGetter() {
 
         final BaseMaxNumStorageBitsAdapter maxNumStorageBitsAdapter = new BaseMaxNumStorageBitsAdapter() {
 
@@ -151,7 +158,7 @@ public class SQLDatabaseServerTest extends BaseTest {
             }
         };
 
-        return new NumStorageBitsGetter() {
+        return new INumStorageBitsGetter() {
 
             @Override
             public int getMinNumBits(SchemaDataType schemaDataType) {

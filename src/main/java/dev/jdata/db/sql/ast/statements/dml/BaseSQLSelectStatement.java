@@ -1,11 +1,11 @@
 package dev.jdata.db.sql.ast.statements.dml;
 
-import java.util.List;
 import java.util.Objects;
 
 import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.list.ASTList;
+import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.statements.SQLStatementVisitor;
@@ -15,13 +15,13 @@ public abstract class BaseSQLSelectStatement extends SQLDMLStatement {
     private final ASTList<SQLSelectStatementPart> parts;
     private final ASTList<SQLUnion> unions;
 
-    public BaseSQLSelectStatement(Context context, List<SQLSelectStatementPart> parts, List<SQLUnion> unions) {
+    public BaseSQLSelectStatement(Context context, IListGetters<SQLSelectStatementPart> parts, IListGetters<SQLUnion> unions) {
         super(context);
 
         Objects.requireNonNull(parts);
         Objects.requireNonNull(unions);
 
-        if (unions.size() != parts.size()) {
+        if (unions.getNumElements() != parts.getNumElements()) {
 
             throw new IllegalArgumentException();
         }

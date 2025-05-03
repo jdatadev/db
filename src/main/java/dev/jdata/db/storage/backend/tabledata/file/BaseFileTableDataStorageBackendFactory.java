@@ -1,32 +1,38 @@
 package dev.jdata.db.storage.backend.tabledata.file;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
-import dev.jdata.db.common.storagebits.NumStorageBitsGetter;
+import org.jutils.io.strings.StringResolver;
+
+import dev.jdata.db.DBNamedObject;
+import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
+import dev.jdata.db.configuration.CommonConfiguration;
 import dev.jdata.db.data.tables.TableByIdMap;
-import dev.jdata.db.schema.DatabaseSchema;
-import dev.jdata.db.schema.SchemaMapGetters;
-import dev.jdata.db.schema.Table;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
+import dev.jdata.db.schema.model.ISchemaMap;
+import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
+import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.TableDataStorageBackend;
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;
+import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.file.access.AbsoluteDirectoryPath;
+import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.file.access.RelativeFileSystemAccess;
+import dev.jdata.db.utils.scalars.Integers;
 
 public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDataStorageBackendFactory<FileTableStorageBackendConfiguration> {
 
-    protected abstract TableDataStorageBackend createTableStorageBackend(VersionedDatabaseSchemas versionedDatabaseSchemas, NumStorageBitsGetter numStorageBitsGetter,
+    protected abstract TableDataStorageBackend createTableStorageBackend(VersionedDatabaseSchemas versionedDatabaseSchemas, INumStorageBitsGetter numStorageBitsGetter,
             TableByIdMap<FileTableStorageFiles> fileTableStorageByTableId);
 
     @Override
     protected TableDataStorageBackend initializeTables(FileTableStorageBackendConfiguration configuration, StorageTableSchemas storageTableSchemas,
-            NumStorageBitsGetter numStorageBitsGetter) throws IOException {
+            INumStorageBitsGetter numStorageBitsGetter) throws IOException {
 
         Objects.requireNonNull(configuration);
         Objects.requireNonNull(storageTableSchemas);
@@ -39,54 +45,112 @@ public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDa
     private static TableByIdMap<FileTableStorageFiles> initializeTableDirectories(FileTableStorageBackendConfiguration configuration, StorageTableSchemas storageTableSchemas)
             throws IOException {
 
-        final DatabaseSchema databaseSchema = configuration.getDatabaseSchema();
+        final IEffectiveDatabaseSchema databaseSchema = configuration.getDatabaseSchema();
         final VersionedDatabaseSchemas versionedDatabaseSchemas = configuration.getVersionedDatabaseSchemas();
 
         final AbsoluteDirectoryPath rootPath = configuration.getRootPath();
-        final RelativeFileSystemAccess fileSystemAccess = RelativeFileSystemAccess.create(rootPath, configuration.getFileSystemAccess());
+        final IRelativeFileSystemAccess fileSystemAccess = IRelativeFileSystemAccess.create(rootPath, configuration.getFileSystemAccess());
 
-        applyDatabaseSchema(fileSystemAccess, rootPath, databaseSchema);
+        final DirectoryResolveParameters directoryResolveParameters = new DirectoryResolveParameters();
+
+        final RelativeDirectoryPath relativeRootPath = RelativeDirectoryPath.ROOT;
+
+        directoryResolveParameters.initialize(fileSystemAccess, relativeRootPath, configuration.getStringResolver());
+
+        applyDatabaseSchema(directoryResolveParameters, databaseSchema);
 
         final StorageTableFileSchemaGetters storageTableFileSchemaGetters = new StorageTableFileSchemaGetters(versionedDatabaseSchemas, storageTableSchemas);
 
-        return new TableByIdMap<>(databaseSchema, FileTableStorageFiles[]::new, t -> {
-
-            final RelativeDirectoryPath tableFilePath = getTablePath(rootPath, t.getName());
-
-            final List<RelativeFilePath> tableFilePaths = fileSystemAccess.listFilePaths(tableFilePath);
-
-            final List<FileTableStorageFile> fileTableStorageFileList = readTableFiles(fileSystemAccess, tableFilePaths, storageTableFileSchemaGetters);
-
-            return new FileTableStorageFiles(fileSystemAccess, tableFilePath, fileTableStorageFileList);
-        });
+        return new TableByIdMap<>(databaseSchema, FileTableStorageFiles[]::new,
+                t -> createFileTableStorageFiles(fileSystemAccess, relativeRootPath, t, configuration, storageTableFileSchemaGetters));
     }
 
-    private static List<FileTableStorageFile> readTableFiles(RelativeFileSystemAccess fileSystemAccess, List<RelativeFilePath> tableFilePaths,
-            StorageTableFileSchemaGetters storageTableFileSchemaGetters) throws IOException {
+    private static FileTableStorageFiles createFileTableStorageFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath rootPath, Table table,
+            CommonConfiguration configuration, StorageTableFileSchemaGetters storageTableFileSchemaGetters) throws IOException {
 
-        final List<FileTableStorageFile> fileTableStorageFileList = new ArrayList<>(tableFilePaths.size());
+        final RelativeDirectoryPath tableFilePath = getTablePath(fileSystemAccess, rootPath, table, configuration);
 
-        for (RelativeFilePath tableFilePath : tableFilePaths) {
+        final IIndexList<RelativeFilePath> tableFilePaths;
 
-            final FileTableStorageFile fileTableStorageFile = FileTableStorageFile.openExistingFile(fileSystemAccess, tableFilePath, storageTableFileSchemaGetters);
+        final IndexListAllocator<RelativeFilePath> indexListAllocator = null;
 
-            fileTableStorageFileList.add(fileTableStorageFile);
+        final IndexList.Builder<RelativeFilePath> tableFilePathsBuilder = IndexList.createBuilder(indexListAllocator);
+
+        try {
+            fileSystemAccess.listFilePaths(tableFilePath, tableFilePathsBuilder, (p, b) -> b.addTail(p));
+
+            tableFilePaths = tableFilePathsBuilder.build();
+        }
+        finally {
+
+            indexListAllocator.freeIndexListBuilder(tableFilePathsBuilder);
         }
 
-        return fileTableStorageFileList;
+        final IIndexList<FileTableStorageFile> fileTableStorageFileList = readTableFiles(fileSystemAccess, tableFilePaths, storageTableFileSchemaGetters);
+
+        return new FileTableStorageFiles(fileSystemAccess, tableFilePath, fileTableStorageFileList);
     }
 
-    private static void applyDatabaseSchema(RelativeFileSystemAccess fileSystemAccess, AbsoluteDirectoryPath rootPath, DatabaseSchema databaseSchema) throws IOException {
+    private static IIndexList<FileTableStorageFile> readTableFiles(IRelativeFileSystemAccess fileSystemAccess, IIndexList<RelativeFilePath> tableFilePaths,
+            StorageTableFileSchemaGetters storageTableFileSchemaGetters) throws IOException {
 
-        Objects.requireNonNull(fileSystemAccess);
-        Objects.requireNonNull(rootPath);
-        Objects.requireNonNull(databaseSchema);
+        final IIndexList<FileTableStorageFile> result;
 
-        final SchemaMapGetters<Table> tableMap = databaseSchema.getTables();
+        final long numElements = tableFilePaths.getNumElements();
 
-        for (String schemaName : tableMap.getSchemaNames()) {
+        final int initialCapacity = Integers.checkUnsignedLongToUnsignedInt(numElements);
 
-            final RelativeDirectoryPath tableDirectoryPath = rootPath.relativize(rootPath.resolveDirectory(schemaName));
+        final IndexListAllocator<FileTableStorageFile> indexListAllocator = null;
+
+        final IndexList.Builder<FileTableStorageFile> fileTableStorageFileListBuilder = IndexList.createBuilder(initialCapacity, indexListAllocator);
+
+        try {
+            for (long i = 0; i < numElements; ++ i) {
+
+                final RelativeFilePath tableFilePath = tableFilePaths.get(i);
+
+                final FileTableStorageFile fileTableStorageFile = FileTableStorageFile.openExistingFile(fileSystemAccess, tableFilePath, storageTableFileSchemaGetters);
+
+                fileTableStorageFileListBuilder.addTail(fileTableStorageFile);
+            }
+
+            result = fileTableStorageFileListBuilder.build();
+        }
+        finally {
+
+            indexListAllocator.freeIndexListBuilder(fileTableStorageFileListBuilder);
+        }
+
+        return result;
+    }
+
+    static final class DirectoryResolveParameters {
+
+        private IRelativeFileSystemAccess fileSystemAccess;
+        private RelativeDirectoryPath rootPath;
+        private StringResolver stringResolver;
+
+        void initialize(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath rootPath, StringResolver stringResolver) {
+
+            this.fileSystemAccess = Objects.requireNonNull(fileSystemAccess);
+            this.rootPath = Objects.requireNonNull(rootPath);
+            this.stringResolver = Objects.requireNonNull(stringResolver);
+        }
+    }
+
+    private static void applyDatabaseSchema(DirectoryResolveParameters parameters, IEffectiveDatabaseSchema databaseSchema) throws IOException {
+
+        Objects.requireNonNull(parameters);
+
+        final ISchemaMap<Table> tableMap = databaseSchema.getTableMap();
+
+        tableMap.forEach(parameters, (o, p) -> {
+
+            final IRelativeFileSystemAccess fileSystemAccess = p.fileSystemAccess;
+
+            final String tableName = getFileSystemName(o, p.stringResolver);
+
+            final RelativeDirectoryPath tableDirectoryPath = fileSystemAccess.resolveDirectory(p.rootPath, tableName);
 
             if (fileSystemAccess.exists(tableDirectoryPath)) {
 
@@ -98,11 +162,19 @@ public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDa
             else {
                 fileSystemAccess.createDirectories(tableDirectoryPath);
             }
-        }
+        });
     }
 
-    private static RelativeDirectoryPath getTablePath(AbsoluteDirectoryPath rootPath, String tableName) {
+    private static RelativeDirectoryPath getTablePath(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath rootPath, Table table,
+            CommonConfiguration configuration) {
 
-        return rootPath.relativize(rootPath.resolveDirectory(tableName));
+        final String tableName = getFileSystemName(table, configuration.getStringResolver());
+
+        return fileSystemAccess.resolveDirectory(rootPath, tableName);
+    }
+
+    private static final String getFileSystemName(DBNamedObject dbNamedObject, StringResolver stringResolver) {
+
+        return stringResolver.asString(dbNamedObject.getFileSystemName());
     }
 }

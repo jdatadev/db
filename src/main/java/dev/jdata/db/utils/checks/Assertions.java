@@ -1,6 +1,7 @@
 package dev.jdata.db.utils.checks;
 
 import dev.jdata.db.utils.adt.Contains;
+import dev.jdata.db.utils.adt.arrays.IArray;
 import dev.jdata.db.utils.adt.elements.IElements;
 
 public class Assertions {
@@ -88,6 +89,14 @@ public class Assertions {
     public static void areSameNumElements(IElements elements1, IElements elements2) {
 
         if (elements1.getNumElements() != elements2.getNumElements()) {
+
+            throwAssertion();
+        }
+    }
+
+    public static void isSameLimit(IArray array1, IArray array2) {
+
+        if (array1.getLimit() != array2.getLimit()) {
 
             throwAssertion();
         }
