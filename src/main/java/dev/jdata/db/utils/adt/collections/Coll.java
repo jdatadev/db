@@ -94,7 +94,7 @@ public class Coll {
         return count;
     }
 
-    public static <T> long countWithClosure(Iterable<T> iterable, Predicate<T> predicate) {
+    public static <T> long closureOrConstantCount(Iterable<T> iterable, Predicate<T> predicate) {
 
         Objects.requireNonNull(iterable);
         Objects.requireNonNull(predicate);

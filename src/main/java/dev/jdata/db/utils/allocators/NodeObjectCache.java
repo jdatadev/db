@@ -10,6 +10,13 @@ public final class NodeObjectCache<T extends ObjectCacheNode> extends BaseNodeAl
 
     public static abstract class ObjectCacheNode extends BaseNodeAllocator.AllocatorNode<ObjectCacheNode> {
 
+        protected ObjectCacheNode() {
+
+        }
+
+        protected ObjectCacheNode(AllocationType allocationType) {
+            super(allocationType);
+        }
     }
 
     private final Supplier<T> allocator;
@@ -54,7 +61,7 @@ public final class NodeObjectCache<T extends ObjectCacheNode> extends BaseNodeAl
             fromFreeList = false;
         }
 
-        result.init(null, true);
+        result.init(null, true, true);
 
         addAllocatedInstance(fromFreeList);
 
@@ -72,7 +79,7 @@ public final class NodeObjectCache<T extends ObjectCacheNode> extends BaseNodeAl
 
         addFreedInstance(true);
 
-        instance.init(freeList, false);
+        instance.init(freeList, true, false);
 
         this.freeList = instance;
     }

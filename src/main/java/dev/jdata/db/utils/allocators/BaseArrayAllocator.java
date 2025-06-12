@@ -83,7 +83,7 @@ public abstract class BaseArrayAllocator<T> extends InstanceNodeAllocator<T, Bas
 
                 result = foundNode.instance;
 
-                foundNode.init(nodeFreeList, true, null);
+                foundNode.init(nodeFreeList, true, false, null);
 
                 nodeFreeList = foundNode;
 
@@ -123,7 +123,7 @@ public abstract class BaseArrayAllocator<T> extends InstanceNodeAllocator<T, Bas
 
         if (arrayFreeList == null) {
 
-            allocatorNode.init(null, false, array);
+            allocatorNode.init(null, true, true, array);
 
             this.arrayFreeList = allocatorNode;
         }
@@ -161,7 +161,7 @@ public abstract class BaseArrayAllocator<T> extends InstanceNodeAllocator<T, Bas
                 this.arrayFreeList = allocatorNode;
             }
 
-            allocatorNode.init(nextNode, false, array);
+            allocatorNode.init(nextNode, true, true, array);
         }
     }
 }

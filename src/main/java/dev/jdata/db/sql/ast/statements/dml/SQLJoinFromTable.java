@@ -5,7 +5,7 @@ import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.ASTList;
 import org.jutils.ast.objects.list.ASTSingle;
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
 import org.jutils.parse.context.Context;
 
 public final class SQLJoinFromTable extends SQLFromTable {
@@ -15,7 +15,7 @@ public final class SQLJoinFromTable extends SQLFromTable {
     private final ASTSingle<Expression> onCondition;
     private final ASTList<SQLTableJoin> join;
 
-    public SQLJoinFromTable(Context context, SQLObjectNameAndAlias fromTable, long onKeyword, Expression onCondition, IListGetters<SQLTableJoin> join) {
+    public SQLJoinFromTable(Context context, SQLObjectNameAndAlias fromTable, long onKeyword, Expression onCondition, IIndexListGetters<SQLTableJoin> join) {
         super(context);
 
         this.fromTable = makeSingle(fromTable);

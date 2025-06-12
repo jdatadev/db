@@ -16,6 +16,13 @@ public abstract class BaseLargeArrayMap<T extends LargeExponentArray, U> extends
     private static final boolean ASSERT = AssertionContants.ASSERT_BASE_OBJECT_NON_CONTAINS_KEY_NON_BUCKET_MAP;
 
     private static final int NO_KEY = -1;
+
+    @FunctionalInterface
+    public interface ForEachKeyAndValueWithKeysAndValues<K, V, P1, P2> {
+
+        void each(K keys, long keyIndex, V values, long valueIndex, P1 parameter1, P2 parameter2);
+    }
+
 /*
     protected abstract void put(T values, long index, T newValues, long newIndex);
     protected abstract void clearValues(T values);

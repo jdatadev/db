@@ -12,11 +12,11 @@ import dev.jdata.db.utils.checks.Checks;
 
 abstract class BaseLongToObjectBucketMap<T, MAP extends BaseLongToObjectBucketMap<T, MAP>>
 
-        extends BaseLongBucketMap<
+        extends BaseLongKeyBucketMap<
                 BaseLongToObjectBucketMap.LongToObjectBucketMapMultiHeadSinglyLinkedList<MAP, T>,
                 BaseLongToObjectBucketMap.LongToObjectValues<MAP, T>,
                 MAP>
-        implements ILongToObjectMapGetters<T>, ILongToObjectBucketMapGetters<T> {
+        implements ILongToObjectCommonMapGetters<T>, ILongToObjectDynamicMapGetters<T> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_TO_OBJECT_BUCKET_MAP;
 
@@ -87,13 +87,13 @@ abstract class BaseLongToObjectBucketMap<T, MAP extends BaseLongToObjectBucketMa
     }
 
     @Override
-    public final <P> void forEachKeyAndValue(P parameter, ForEachKeyAndValue<T, P> forEachKeyAndValue) {
+    public final <P> void forEachKeyAndValue(P parameter, IForEachKeyAndValue<T, P> forEach) {
 
-        Objects.requireNonNull(forEachKeyAndValue);
+        Objects.requireNonNull(forEach);
 
         if (DEBUG) {
 
-            enter(b -> b.add("parameter", parameter).add("forEachKeyAndValue", forEachKeyAndValue));
+            enter(b -> b.add("parameter", parameter).add("forEach", forEach));
         }
 
         final long[] bucketHeadNodesHashArray = getHashed();
@@ -108,14 +108,56 @@ abstract class BaseLongToObjectBucketMap<T, MAP extends BaseLongToObjectBucketMa
 
             for (long n = bucketHeadNode; n != noElement; n = buckets.getNextNode(n)) {
 
-                forEachKeyAndValue.each(buckets.getValue(n), buckets.getObjectValue(n), parameter);
+                forEach.each(buckets.getValue(n), buckets.getObjectValue(n), parameter);
             }
         }
 
         if (DEBUG) {
 
-            exit(b -> b.add("parameter", parameter).add("forEachKeyAndValue", forEachKeyAndValue));
+            exit(b -> b.add("parameter", parameter).add("forEach", forEach));
         }
+    }
+
+    @Override
+    public final <P, DELEGATE, R> R forEachKeyAndValueWithResult(R defaultResult, P parameter, DELEGATE delegate, IForEachKeyAndValueWithResult<T, P, DELEGATE, R> forEach) {
+
+        Objects.requireNonNull(forEach);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("defaultResult", defaultResult).add("parameter", parameter).add("delegate", delegate).add("forEach", forEach));
+        }
+
+        R result = defaultResult;
+
+        final long[] bucketHeadNodesHashArray = getHashed();
+        final int bucketHeadNodesHashArrayLength = bucketHeadNodesHashArray.length;
+
+        final long noElement = BaseList.NO_NODE;
+        final LongToObjectBucketMapMultiHeadSinglyLinkedList<MAP, T> buckets = getBuckets();
+
+        for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
+
+            final long bucketHeadNode = bucketHeadNodesHashArray[i];
+
+            for (long n = bucketHeadNode; n != noElement; n = buckets.getNextNode(n)) {
+
+                final R forEachResult = forEach.each(buckets.getValue(n), buckets.getObjectValue(n), parameter, delegate);
+
+                if (forEachResult != null) {
+
+                    result = forEachResult;
+                    break;
+                }
+            }
+        }
+
+        if (DEBUG) {
+
+            exit(result, b -> b.add("defaultResult", defaultResult).add("parameter", parameter).add("delegate", delegate).add("forEach", forEach));
+        }
+
+        return result;
     }
 
     @Override

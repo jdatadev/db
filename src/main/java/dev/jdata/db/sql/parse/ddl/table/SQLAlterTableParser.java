@@ -1,13 +1,13 @@
 package dev.jdata.db.sql.parse.ddl.table;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.BaseASTElement;
 import org.jutils.ast.objects.list.IAddableList;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.table.SQLAddColumnDefinition;
 import dev.jdata.db.sql.ast.statements.table.SQLAddColumnsOperation;
 import dev.jdata.db.sql.ast.statements.table.SQLAddForeignKeyConstraintOperation;
@@ -55,7 +55,8 @@ public class SQLAlterTableParser extends SQLStatementParser {
             SQLToken.CONSTRAINT
     };
 
-    public final SQLAlterTableStatement parseAlterTable(SQLExpressionLexer lexer, long alterKeyword, long tableKeyword) throws ParserException, IOException {
+    public final <E extends Exception, I extends CharInput<E>> SQLAlterTableStatement parseAlterTable(SQLExpressionLexer<E, I> lexer, long alterKeyword, long tableKeyword)
+            throws ParserException, E {
 
         final long tableName = lexer.lexName();
 
@@ -118,9 +119,10 @@ public class SQLAlterTableParser extends SQLStatementParser {
         return new SQLAlterTableStatement(makeContext(), commandKeyword, tableKeyword, tableName, alterTableOperation);
     }
 
-    private SQLAddColumnsOperation parseAddColumns(SQLExpressionLexer lexer, long addKeyword) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLAddColumnsOperation parseAddColumns(SQLExpressionLexer<E, I> lexer, long addKeyword)
+            throws ParserException, E {
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final IAddableList<SQLAddColumnDefinition> addColumnDefinitions = allocator.allocateList(10);
 
@@ -160,9 +162,10 @@ public class SQLAlterTableParser extends SQLStatementParser {
         return new SQLAddColumnsOperation(makeContext(), addKeyword, addColumnDefinitions);
     }
 
-    private SQLModifyColumnsOperation parseModifyColumns(SQLExpressionLexer lexer, long modifyKeyword) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLModifyColumnsOperation parseModifyColumns(SQLExpressionLexer<E, I> lexer, long modifyKeyword)
+            throws ParserException, E {
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final IAddableList<SQLModifyColumn> modifyColumns = allocator.allocateList(10);
 
@@ -189,7 +192,8 @@ public class SQLAlterTableParser extends SQLStatementParser {
         return new SQLModifyColumnsOperation(makeContext(), modifyKeyword, modifyColumns);
     }
 
-    private SQLAlterTableAddConstraintOperation parseAddConstraint(SQLExpressionLexer lexer, long addKeyword, long constraintKeyword) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLAlterTableAddConstraintOperation parseAddConstraint(SQLExpressionLexer<E, I> lexer, long addKeyword,
+            long constraintKeyword) throws ParserException, E {
 
         final SQLToken subCommandToken = lexer.lex(addConstraintTokens);
 
@@ -280,7 +284,8 @@ public class SQLAlterTableParser extends SQLStatementParser {
         return addConstraintOperation;
     }
 
-    private static SQLDropConstraintOperation parseDropConstraint(SQLExpressionLexer lexer, long dropKeyword, long constraintsKeyword) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> SQLDropConstraintOperation parseDropConstraint(SQLExpressionLexer<E, I> lexer, long dropKeyword,
+            long constraintsKeyword) throws ParserException, E {
 
         final boolean hasParenthesis = lexer.lex(SQLToken.LPAREN);
 
@@ -294,7 +299,8 @@ public class SQLAlterTableParser extends SQLStatementParser {
         return new SQLDropConstraintOperation(makeContext(), dropKeyword, constraintsKeyword, constraintNames);
     }
 
-    private static SQLDropColumnOperation parseDropColumn(SQLExpressionLexer lexer, long dropKeyword) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> SQLDropColumnOperation parseDropColumn(SQLExpressionLexer<E, I> lexer, long dropKeyword)
+            throws ParserException, E {
 
         final boolean hasParenthesis = lexer.lex(SQLToken.LPAREN);
 

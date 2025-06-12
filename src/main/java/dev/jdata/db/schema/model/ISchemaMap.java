@@ -1,5 +1,7 @@
 package dev.jdata.db.schema.model;
 
+import org.jutils.io.strings.StringResolver;
+
 import dev.jdata.db.DBNamedObject;
 import dev.jdata.db.utils.adt.elements.IIterableElements;
 import dev.jdata.db.utils.adt.lists.IIndexList;
@@ -13,4 +15,6 @@ public interface ISchemaMap<T extends DBNamedObject> extends IIterableElements<T
     T getSchemaObjectById(int id);
 
     IIndexList<T> getSchemaObjects();
+
+    boolean isEqualTo(StringResolver thisStringResolver, ISchemaMap<T> other, StringResolver otherStringResolver);
 }

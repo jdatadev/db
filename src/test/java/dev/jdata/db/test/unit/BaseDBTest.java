@@ -1,5 +1,11 @@
 package dev.jdata.db.test.unit;
 
+import java.util.Objects;
+
+import dev.jdata.db.DBConstants;
+import dev.jdata.db.engine.database.StringStorer;
+import dev.jdata.db.schema.DatabaseId;
+import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.types.BigIntType;
 import dev.jdata.db.schema.types.BlobType;
@@ -24,6 +30,11 @@ public abstract class BaseDBTest extends BaseTest {
 
     protected static final long TEST_TRANSACTION_ID = 0L;
 
+    protected static final String TEST_DATABASE_NAME = "testdb";
+    protected static final DatabaseId TEST_DATABASE_ID = new DatabaseId(DBConstants.INITIAL_DESCRIPTORABLE, TEST_DATABASE_NAME);
+
+    protected static final DatabaseSchemaVersion TEST_DATABASE_SCHEMA_VERSION = DatabaseSchemaVersion.of(DatabaseSchemaVersion.INITIAL_VERSION);
+
     private static IIndexList<SchemaDataType> schemaDataTypes = IndexList.of(
 
             BooleanType.INSTANCE,
@@ -41,20 +52,36 @@ public abstract class BaseDBTest extends BaseTest {
             BlobType.INSTANCE,
             TextObjectType.INSTANCE);
 
-    protected static Table createTestTable(int tableId) {
+    protected static Table createTestTable(int tableId, StringStorer stringStorer) {
 
-        return createTestTable(tableId, "testtable");
+        Checks.isTableId(tableId);
+        Objects.requireNonNull(stringStorer);
+
+        return createTestTable(tableId, "testtable", stringStorer);
     }
 
-    protected static Table createTestTable(int tableId, String tableName) {
+    protected static Table createTestTable(int tableId, String tableName, StringStorer stringStorer) {
 
         Checks.isTableId(tableId);
         Checks.isTableName(tableName);
+        Objects.requireNonNull(stringStorer);
 
-        final TableBuilder tableBuilder = TableBuilder.create(tableName, tableId);
+        final TableBuilder tableBuilder = TableBuilder.create(tableName, tableId, stringStorer);
+
+        return createTestTable(tableBuilder).build();
+    }
+
+    protected static TableBuilder createTestTable(TableBuilder tableBuilder) {
+
+        Objects.requireNonNull(tableBuilder);
 
         schemaDataTypes.forEach(tableBuilder, (t, b) -> b.addColumn(t.getClass().getSimpleName().toLowerCase() + "_column", t));
 
-        return tableBuilder.build();
+        return tableBuilder;
+    }
+
+    protected static StringStorer createStringStorer() {
+
+        return new StringStorer(1, 0);
     }
 }

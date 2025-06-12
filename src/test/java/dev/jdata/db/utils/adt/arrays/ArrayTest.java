@@ -256,6 +256,25 @@ public final class ArrayTest extends BaseByIndexTest {
     }
 
     @Override
+    protected <T, P> boolean equals(T[] array1, P parameter1, T[] array2, P parameter2, IByIndexTestEqualityTester<T, P> byIndexEqualityTester) {
+
+        return Array.equals(array1, parameter1, array2, parameter2,
+                byIndexEqualityTester != null
+                        ? (e1, p1, e2, p2) -> byIndexEqualityTester.equals(e1, p1, e2, p2)
+                        : null);
+    }
+
+    @Override
+    protected <T, P> boolean equals(T[] array1, int startIndex1, P parameter1, T[] array2, int startIndex2, P parameter2, int numElements,
+            IByIndexTestEqualityTester<T, P> byIndexEqualityTester) {
+
+        return Array.equals(array1, startIndex1, parameter1, array2, startIndex2, parameter2, numElements,
+                byIndexEqualityTester != null
+                        ? (e1, p1, e2, p2) -> byIndexEqualityTester.equals(e1, p1, e2, p2)
+                        : null);
+    }
+
+    @Override
     protected <T> boolean containsInstance(T[] array, T instance) {
 
         return Array.containsInstance(array, instance);
@@ -264,7 +283,7 @@ public final class ArrayTest extends BaseByIndexTest {
     @Override
     protected <T> boolean containsInstanceRange(T[] array, int startIndex, int numElements, T instance) {
 
-        return Array.containsInstance(array, startIndex, numElements, instance);
+        return Array.containsInstance(array, instance, startIndex, numElements);
     }
 
     @Override

@@ -6,16 +6,19 @@ import java.util.function.IntFunction;
 import java.util.function.ToIntFunction;
 
 import org.jutils.io.strings.StringRef;
+import org.jutils.io.strings.StringResolver;
 
 import dev.jdata.db.DBNamedObjectMap;
 import dev.jdata.db.schema.DDLObjectTypeAllocators;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
+import dev.jdata.db.utils.adt.IContains;
 import dev.jdata.db.utils.adt.elements.IIterableElements;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.allocators.IAllocators;
+import dev.jdata.db.utils.allocators.IBuilder;
 import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
@@ -141,7 +144,7 @@ public final class SchemaMap<T extends SchemaObject> extends DBNamedObjectMap<T,
         return builderAllocator.allocateSchemaMapBuilder(initialCapacity);
     }
 
-    public static final class Builder<T extends SchemaObject> extends ObjectCacheNode {
+    public static final class Builder<T extends SchemaObject> extends ObjectCacheNode implements IBuilder<T, Builder<T>> {
 
         private IntFunction<T[]> createValuesArray;
         private IndexListAllocator<T> indexListAllocator;
@@ -182,6 +185,12 @@ public final class SchemaMap<T extends SchemaObject> extends DBNamedObjectMap<T,
             this.schemaObjectsBuilder = null;
         }
 
+        @Override
+        public boolean isEmpty() {
+
+            return schemaObjectsBuilder.isEmpty();
+        }
+
         public void add(T schemaObject) {
 
             Objects.requireNonNull(schemaObject);
@@ -198,13 +207,13 @@ public final class SchemaMap<T extends SchemaObject> extends DBNamedObjectMap<T,
 
         public SchemaMap<T> build() {
 
-            final SchemaMap<T> result = new SchemaMap<>(schemaObjectsBuilder.build(), createValuesArray, longToObjectMapAllocator);
-
-            return result;
+            return schemaObjectsBuilder.isEmpty()
+                    ? SchemaMap.empty()
+                    : new SchemaMap<>(AllocationType.HEAP, schemaObjectsBuilder.build(), createValuesArray, longToObjectMapAllocator);
         }
     }
 
-    private static final SchemaMap<?> emptySchemaMap = new SchemaMap<>();
+    private static final SchemaMap<?> emptySchemaMap = new SchemaMap<>(AllocationType.HEAP_CONSTANT);
 
     private final IIndexList<T> schemaObjects;
 
@@ -221,22 +230,24 @@ public final class SchemaMap<T extends SchemaObject> extends DBNamedObjectMap<T,
         Objects.requireNonNull(createValuesArray);
         Objects.requireNonNull(longToObjectMapAllocator);
 
-        return new SchemaMap<>(schemaObjects, createValuesArray, longToObjectMapAllocator);
+        return new SchemaMap<>(AllocationType.HEAP, schemaObjects, createValuesArray, longToObjectMapAllocator);
     }
 
-    private SchemaMap() {
+    private SchemaMap(AllocationType allocationType) {
+        super(allocationType);
 
         this.schemaObjects = null;
     }
 
-    private SchemaMap(IIndexList<T> schemaObjects, IntFunction<T[]> createValuesArray, ILongToObjectMaxDistanceMapAllocator<T> longToObjectMapAllocator) {
-        super(schemaObjects, createValuesArray, longToObjectMapAllocator);
+    private SchemaMap(AllocationType allocationType, IIndexList<T> schemaObjects, IntFunction<T[]> createValuesArray,
+            ILongToObjectMaxDistanceMapAllocator<T> longToObjectMapAllocator) {
+        super(allocationType, schemaObjects, createValuesArray, longToObjectMapAllocator);
 
         this.schemaObjects = Objects.requireNonNull(schemaObjects);
     }
 
-    private SchemaMap(SchemaMap<T> toCopy, ILongToObjectMaxDistanceMapAllocator<T> longToObjectMapAllocator) {
-        super(toCopy, longToObjectMapAllocator);
+    private SchemaMap(AllocationType allocationType, SchemaMap<T> toCopy, ILongToObjectMaxDistanceMapAllocator<T> longToObjectMapAllocator) {
+        super(allocationType, toCopy, longToObjectMapAllocator);
 
         this.schemaObjects = toCopy.schemaObjects;
     }
@@ -264,7 +275,7 @@ public final class SchemaMap<T extends SchemaObject> extends DBNamedObjectMap<T,
 
         final long numElements = schemaObjects.getNumElements();
 
-        for (long i = 0; i < numElements; ++ i) {
+        for (long i = 0L; i < numElements; ++ i) {
 
             forEach.each(schemaObjects.get(i), parameter1, parameter2);
         }
@@ -298,5 +309,96 @@ public final class SchemaMap<T extends SchemaObject> extends DBNamedObjectMap<T,
     public IIndexList<T> getSchemaObjects() {
 
         return schemaObjects;
+    }
+
+    @Override
+    public T[] toArray(IntFunction<T[]> createArray) {
+
+        return schemaObjects.toArray(createArray);
+    }
+
+    @Override
+    public boolean isEqualTo(StringResolver thisStringResolver, ISchemaMap<T> other, StringResolver otherStringResolver) {
+
+        Objects.requireNonNull(thisStringResolver);
+        Objects.requireNonNull(other);
+        Objects.requireNonNull(otherStringResolver);
+
+        final boolean result;
+
+        if (this == other) {
+
+            result = true;
+        }
+        else if (getClass() != other.getClass()) {
+
+            result = false;
+        }
+        else {
+            final SchemaMap<T> otherSchemaMap = (SchemaMap<T>)other;
+
+            final boolean schemaObjectsNullOrEmpty = IContains.isNullOrEmpty(schemaObjects);
+            final boolean otherNullOrEmpty = IContains.isNullOrEmpty(otherSchemaMap.schemaObjects);
+
+            if (schemaObjectsNullOrEmpty && otherNullOrEmpty) {
+
+                result = true;
+            }
+            else if (schemaObjectsNullOrEmpty || otherNullOrEmpty) {
+
+                result = false;
+            }
+            else {
+                result =    equalsIndexList(schemaObjects, thisStringResolver, otherSchemaMap.schemaObjects, otherStringResolver)
+                         && equalsMap(thisStringResolver, otherSchemaMap, otherStringResolver);
+            }
+        }
+
+        return result;
+    }
+
+    private static <T extends SchemaObject> boolean equalsIndexList(IIndexList<T> thisIndexList, StringResolver thisStringResolver,
+            IIndexList<T> otherIndexList, StringResolver otherStringResolver) {
+
+        return thisIndexList.equals(thisStringResolver, otherIndexList, otherStringResolver,
+                (e1, p1, e2, p2) -> e1.equalsName(thisStringResolver, e2, otherStringResolver, EQUALS_NAME_CASE_SENSITIVE));
+    }
+
+/*
+    private static boolean isEmpty(SchemaMap<?> schemaMap) {
+
+        final IIndexList<?> schemaObjects = schemaMap.schemaObjects;
+
+        return schemaObjects == null || schemaObjects.isEmpty();
+    }
+*/
+    @Override
+    public boolean equals(Object object) {
+
+        final boolean result;
+
+        if (this == object) {
+
+            result = true;
+        }
+        else if (object == null) {
+
+            result = false;
+        }
+        else if (getClass() != object.getClass()) {
+
+            result = false;
+        }
+        else if (!super.equals(object)) {
+
+            result = false;
+        }
+        else {
+            final SchemaMap<?> other = (SchemaMap<?>)object;
+
+            result = Objects.equals(schemaObjects, other.schemaObjects);
+        }
+
+        return result;
     }
 }

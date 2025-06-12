@@ -10,6 +10,7 @@ import dev.jdata.db.schema.model.objects.Procedure;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.model.objects.Trigger;
 import dev.jdata.db.schema.model.objects.View;
+
 public final class CompleteSchemaMaps extends BaseSchemaMaps<SchemaMap<?>> {
 
     public interface CompleteSchemaMapsBuilderAllocator {

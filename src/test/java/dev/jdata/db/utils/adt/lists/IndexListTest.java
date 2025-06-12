@@ -8,16 +8,21 @@ import java.util.function.ToLongFunction;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
+
 public final class IndexListTest extends BaseArrayListTest<IIndexList<Integer>, IndexList<String>> {
 
     @Test
     @Category(UnitTest.class)
     public void testConstructorArguments() {
 
-        assertThatThrownBy(() -> new IndexList<>(null)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> new IndexList<>(null, 1)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> new IndexList<>(String[]::new, -1)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new IndexList<>(String[]::new, 0)).isInstanceOf(IllegalArgumentException.class);
+        final AllocationType allocationType = AllocationType.HEAP;
+
+        assertThatThrownBy(() -> new IndexList<>(null, String[]::new)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> new IndexList<>(allocationType, null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> new IndexList<>(allocationType, null, 1)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> new IndexList<>(allocationType, String[]::new, -1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new IndexList<>(allocationType, String[]::new, 0)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -85,13 +90,13 @@ public final class IndexListTest extends BaseArrayListTest<IIndexList<Integer>, 
     @Override
     IndexList<String> createStringList() {
 
-        return new IndexList<>(String[]::new);
+        return new IndexList<>(AllocationType.HEAP, String[]::new);
     }
 
     @Override
     IndexList<String> createStringList(int initialCapacity) {
 
-        return new IndexList<>(String[]::new, initialCapacity);
+        return new IndexList<>(AllocationType.HEAP, String[]::new, initialCapacity);
     }
 
     @Override

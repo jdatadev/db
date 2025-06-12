@@ -59,7 +59,7 @@ public final class MutableObjectWithRemoveNonBucketObjectMapTest
     @Override
     boolean containsKey(MutableObjectWithRemoveNonBucketMap<String, StringBuilder> map, int key) {
 
-        return map.containsKey(stringKey(key));
+        throw new UnsupportedOperationException();
     }
 
     @Override

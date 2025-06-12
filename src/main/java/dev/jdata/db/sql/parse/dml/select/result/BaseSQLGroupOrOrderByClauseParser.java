@@ -1,15 +1,15 @@
 package dev.jdata.db.sql.parse.dml.select.result;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.list.IAddableList;
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.BaseSQLElement;
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.dml.SQLOrderByOrGroupByClause;
 import dev.jdata.db.sql.ast.statements.dml.SQLProjectionItem;
 import dev.jdata.db.sql.parse.BaseSQLParser;
@@ -21,17 +21,17 @@ public abstract class BaseSQLGroupOrOrderByClauseParser<T extends BaseSQLElement
 
     private final SQLProjectionItemParser projectionItemParser;
 
-    protected abstract T parseElement(SQLExpressionLexer lexer, Context context, SQLProjectionItem projectionItem) throws IOException;
-    protected abstract U createGroupOrOrderByClause(Context context, IListGetters<T> elements);
+    protected abstract <E extends Exception, I extends CharInput<E>> T parseElement(SQLExpressionLexer<E, I> lexer, Context context, SQLProjectionItem projectionItem) throws E;
+    protected abstract U createGroupOrOrderByClause(Context context, IIndexListGetters<T> elements);
 
     protected BaseSQLGroupOrOrderByClauseParser(SQLProjectionItemParser projectionItemParser) {
 
         this.projectionItemParser = Objects.requireNonNull(projectionItemParser);
     }
 
-    protected final U parseGroupByOrOrderBy(SQLExpressionLexer lexer) throws ParserException, IOException {
+    protected final <E extends Exception, I extends CharInput<E>> U parseGroupByOrOrderBy(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final U result;
 

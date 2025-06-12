@@ -1,11 +1,10 @@
 package dev.jdata.db.sql.parse.ddl.index;
 
-import java.io.IOException;
-
 import org.jutils.ast.objects.list.IAddableList;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.dml.SQLObjectName;
 import dev.jdata.db.sql.ast.statements.index.SQLCreateIndexStatement;
 import dev.jdata.db.sql.ast.statements.index.SQLIndexColumn;
@@ -17,7 +16,8 @@ import dev.jdata.db.sql.parse.SQLToken;
 
 public class SQLCreateIndexParser extends SQLStatementParser {
 
-    public SQLCreateIndexStatement parseCreateIndex(SQLExpressionLexer lexer, long createKeyword, long indexKeyword) throws ParserException, IOException {
+    public <E extends Exception, I extends CharInput<E>> SQLCreateIndexStatement parseCreateIndex(SQLExpressionLexer<E, I> lexer, long createKeyword, long indexKeyword)
+            throws ParserException, E {
 
         final long indexName = lexer.lexName();
 
@@ -27,7 +27,7 @@ public class SQLCreateIndexParser extends SQLStatementParser {
 
         final SQLObjectName objectName = parseObjectName(lexer);
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final IAddableList<SQLIndexColumn> columns = allocator.allocateList(10);
 
@@ -64,7 +64,7 @@ public class SQLCreateIndexParser extends SQLStatementParser {
         return result;
     }
 
-    protected SQLIndexTypeOptions parseIndexTypeOptions(SQLLexer lexer) throws IOException {
+    protected <E extends Exception, I extends CharInput<E>> SQLIndexTypeOptions parseIndexTypeOptions(SQLLexer<E, I> lexer) throws E {
 
         final SQLIndexTypeOptions result;
 

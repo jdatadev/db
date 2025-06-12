@@ -1,20 +1,19 @@
 package dev.jdata.db.engine.transactions.mvcc;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.utils.adt.lists.FreeList;
-import dev.jdata.db.utils.adt.lists.Lists;
+import dev.jdata.db.utils.adt.lists.MutableIndexList;
 import dev.jdata.db.utils.adt.sets.MutableLongBucketSet;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class MVCCTransactions {
 
-    private final List<MVCCTransaction> ongoingTransactions;
-    private final List<MVCCTransaction> ongoingOriginatingFromTransactions;
+    private final MutableIndexList<MVCCTransaction> ongoingTransactions;
+    private final MutableIndexList<MVCCTransaction> ongoingOriginatingFromTransactions;
 
     private final FreeList<MVCCTransaction> freeList;
 
@@ -23,14 +22,14 @@ public final class MVCCTransactions {
 
     MVCCTransactions() {
 
-        this.ongoingTransactions = new ArrayList<>();
-        this.ongoingOriginatingFromTransactions = new ArrayList<>();
+        this.ongoingTransactions = new MutableIndexList<>(AllocationType.HEAP);
+        this.ongoingOriginatingFromTransactions = new MutableIndexList<>(AllocationType.HEAP);
 
         this.freeList = new FreeList<>(MVCCTransaction[]::new);
     }
 
-    synchronized void select(TransactionSelect select, MVCCTransaction mvccTransaction, BufferedRows commitedRows, MutableLongBucketSet addedRowIdsDst, MutableLongBucketSet removedRowIdsDst,
-            List<MVCCTransaction> scratchTransansactionList) {
+    synchronized void select(TransactionSelect select, MVCCTransaction mvccTransaction, BufferedRows commitedRows, MutableLongBucketSet addedRowIdsDst,
+            MutableLongBucketSet removedRowIdsDst, MutableIndexList<MVCCTransaction> scratchTransansactionList) {
 
         Objects.requireNonNull(select);
         Objects.requireNonNull(mvccTransaction);
@@ -54,24 +53,24 @@ public final class MVCCTransactions {
 
                 this.scratchTransactionId = mvccTransaction.getOriginatingTransactionId();
 
-                final int index = Lists.findIndex(ongoingOriginatingFromTransactions, this, (o, t) -> o.getOriginatingTransactionId() == t.scratchTransactionId);
+                final long index = ongoingOriginatingFromTransactions.findIndex(this, (o, t) -> o.getOriginatingTransactionId() == t.scratchTransactionId);
 
                 if (index == -1) {
 
                     throw new IllegalStateException();
                 }
 
-                for (int i = index; i <= 0; -- i) {
+                for (long i = index; i <= 0; -- i) {
 
                     final MVCCTransaction originatingTransaction = ongoingOriginatingFromTransactions.get(i);
 
-                    scratchTransansactionList.add(originatingTransaction);
+                    scratchTransansactionList.addTail(originatingTransaction);
                 }
             }
 
-            final int numElements = scratchTransansactionList.size();
+            final long numElements = scratchTransansactionList.getNumElements();
 
-            for (int i = 0; i < numElements; ++ i) {
+            for (long i = 0L; i < numElements; ++ i) {
 
                 final MVCCTransaction originatingTransaction = scratchTransansactionList.get(i);
 
@@ -116,12 +115,12 @@ public final class MVCCTransactions {
             originatingTransactionId = DBConstants.NO_TRANSACTION_ID;
         }
         else {
-            originatingTransactionId = ongoingOriginatingFromTransactions.get(0).getOriginatingTransactionId();
+            originatingTransactionId = ongoingOriginatingFromTransactions.getHead().getOriginatingTransactionId();
         }
 
         mvccTransaction.initialize(transactionDescriptor, originatingTransactionId, isolationLevel);
 
-        ongoingTransactions.add(mvccTransaction);
+        ongoingTransactions.addTail(mvccTransaction);
     }
 
     synchronized void commit(MVCCTransaction mvccTransaction) {
@@ -145,12 +144,12 @@ public final class MVCCTransactions {
 
         mvccTransaction.setTransactionId(transactionId);
 
-        if (ongoingTransactions.contains(mvccTransaction)) {
+        if (ongoingTransactions.containsInstance(mvccTransaction)) {
 
             throw new IllegalArgumentException();
         }
 
-        if (ongoingOriginatingFromTransactions.contains(mvccTransaction)) {
+        if (ongoingOriginatingFromTransactions.containsInstance(mvccTransaction)) {
 
             throw new IllegalArgumentException();
         }
@@ -164,17 +163,17 @@ public final class MVCCTransactions {
 
         removeAnyExpiredOriginatingFrom();
 
-        ongoingOriginatingFromTransactions.add(mvccTransaction);
+        ongoingOriginatingFromTransactions.addTail(mvccTransaction);
 //        ongoingTransactions.remove(mvccTransaction);
     }
 
     private void removeAnyExpiredOriginatingFrom() {
 
-        final int numElements = ongoingOriginatingFromTransactions.size();
+        final long numElements = ongoingOriginatingFromTransactions.getNumElements();
 
-        int removeUpTo = -1;
+        long removeUpTo = -1L;
 
-        for (int i = 0; i < numElements; ++ i) {
+        for (long i = 0L; i < numElements; ++ i) {
 
             final MVCCTransaction originatingFromTransaction = ongoingOriginatingFromTransactions.get(i);
 
@@ -187,10 +186,7 @@ public final class MVCCTransactions {
             }
         }
 
-        for (int i = 0; i <= removeUpTo; ++ i) {
-
-            ongoingOriginatingFromTransactions.remove(0);
-        }
+        ongoingOriginatingFromTransactions.removeHead(removeUpTo);
     }
 
     private boolean nonThreadSafeHasReferringToOriginatingTransactionId(long transactionId) {
@@ -199,7 +195,7 @@ public final class MVCCTransactions {
 
         this.scratchTransactionId = transactionId;
 
-        return Lists.contains(ongoingTransactions, this, (o, t) -> o.getTransactionId() == t.scratchTransactionId);
+        return ongoingTransactions.contains(this, (o, t) -> o.getTransactionId() == t.scratchTransactionId);
     }
 
     private boolean nonThreadSafeHasOriginatingTransactionId(long transactionId) {
@@ -208,13 +204,13 @@ public final class MVCCTransactions {
 
         this.scratchTransactionId = transactionId;
 
-        return Lists.contains(ongoingOriginatingFromTransactions, this, (o, t) -> o.getTransactionId() == t.scratchTransactionId);
+        return ongoingOriginatingFromTransactions.contains(this, (o, t) -> o.getTransactionId() == t.scratchTransactionId);
     }
 
     private void releaseTransaction(MVCCTransaction mvccTransaction) {
 
         try {
-            if (!ongoingTransactions.remove(mvccTransaction)) {
+            if (!ongoingTransactions.removeInstance(mvccTransaction)) {
 
                 throw new IllegalStateException();
             }

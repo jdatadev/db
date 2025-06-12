@@ -3,7 +3,7 @@ package dev.jdata.db.sql.ast.statements.dml;
 import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.list.ASTList;
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.BaseSQLElement;
@@ -13,7 +13,7 @@ public abstract class SQLOrderByOrGroupByClause<T extends BaseSQLElement> extend
 
     private final ASTList<T> items;
 
-    SQLOrderByOrGroupByClause(Context context, IListGetters<T> items) {
+    SQLOrderByOrGroupByClause(Context context, IIndexListGetters<T> items) {
         super(context);
 
         this.items = makeList(items);

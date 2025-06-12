@@ -11,9 +11,9 @@ import dev.jdata.db.utils.adt.arrays.ILongArray;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.adt.lists.BaseList;
-import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadDoublyLinkedList;
 import dev.jdata.db.utils.adt.lists.ILongMultiList;
 import dev.jdata.db.utils.adt.lists.ILongMutableMultiList;
+import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadDoublyLinkedList;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
@@ -328,7 +328,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
         }
 
         try {
-            for (long i = 0; i < numRows; ++ i) {
+            for (long i = 0L; i < numRows; ++ i) {
 
                 final long key = makeHashKey(tableId, rowIds.get(i));
 
@@ -347,7 +347,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
 
             if (allLocksAquired) {
 
-                for (long i = 0; i < numRows; ++ i) {
+                for (long i = 0L; i < numRows; ++ i) {
 
                     lockRow(tableId, rowIds.get(i), transactionDescriptor, statementId, lockType, scratchLockIndices.get(i));
                 }

@@ -10,11 +10,11 @@ import java.util.function.IntFunction;
 public final class ArrayListImpl<T> extends BaseArrayList<T> implements List<T> {
 
     public ArrayListImpl(IntFunction<T[]> createArray) {
-        super(createArray);
+        super(AllocationType.HEAP, createArray);
     }
 
     public ArrayListImpl(IntFunction<T[]> createArray, int initialCapacity) {
-        super(createArray, initialCapacity);
+        super(AllocationType.HEAP, createArray, initialCapacity);
     }
 
     @Override

@@ -1,16 +1,16 @@
 package dev.jdata.db.sql.parse.expression;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.expression.ExpressionList;
 import org.jutils.ast.objects.list.IAddableList;
 import org.jutils.ast.operator.Operator;
+import org.jutils.io.strings.CharInput;
 import org.jutils.io.strings.StringResolver;
 import org.jutils.parse.ParserException;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.parse.BaseSQLParser;
 import dev.jdata.db.sql.parse.SQLExpressionLexer;
 import dev.jdata.db.sql.parse.SQLLexer;
@@ -18,19 +18,19 @@ import dev.jdata.db.sql.parse.SQLLexer;
 abstract class BaseSQLExpressionParser extends BaseSQLParser {
 
     @FunctionalInterface
-    interface ExpressionPartParser {
+    interface ExpressionPartParser<E extends Exception, I extends CharInput<E>> {
 
-        Expression parseExpressionPart(SQLExpressionLexer lexer) throws ParserException, IOException;
+        Expression parseExpressionPart(SQLExpressionLexer<E, I> lexer) throws ParserException, E;
     }
 
     @FunctionalInterface
-    interface OperatorParser<T extends Operator> {
+    interface OperatorParser<T extends Operator, E extends Exception, I extends CharInput<E>> {
 
-        T parseOperator(SQLLexer lexer, StringResolver stringResolver) throws ParserException, IOException;
+        T parseOperator(SQLLexer<E, I> lexer, StringResolver stringResolver) throws ParserException, E;
     }
 
-    static <T extends Operator> Expression parseExpressionList(SQLExpressionLexer lexer, ExpressionPartParser expressionPartParser, OperatorParser<T> operatorParser)
-            throws ParserException, IOException {
+    static <T extends Operator, E extends Exception, I extends CharInput<E>> Expression parseExpressionList(SQLExpressionLexer<E, I> lexer,
+            ExpressionPartParser<E, I> expressionPartParser, OperatorParser<T, E, I> operatorParser) throws ParserException, E {
 
         Objects.requireNonNull(lexer);
         Objects.requireNonNull(expressionPartParser);
@@ -42,7 +42,7 @@ abstract class BaseSQLExpressionParser extends BaseSQLParser {
 
         final StringResolver stringResolver = lexer.getStringResolver();
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final IAddableList<Expression> expressions = allocator.allocateList(initialCapacity);
         final IAddableList<Operator> operators = allocator.allocateList(initialCapacity - 1);

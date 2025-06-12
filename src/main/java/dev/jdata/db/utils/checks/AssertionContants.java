@@ -2,6 +2,10 @@ package dev.jdata.db.utils.checks;
 
 public class AssertionContants {
 
+    private static final boolean ASSERT_SCHEMA = Boolean.TRUE;
+
+    public static final boolean ASSERT_DB_NAMED_OBJECT_MAP = ASSERT_SCHEMA;
+
     private static final boolean ASSERT_SESSION = Boolean.TRUE;
 
     public static final boolean ASSERT_DB_SESSION = ASSERT_SESSION;
@@ -32,11 +36,14 @@ public class AssertionContants {
     public static final boolean ASSERT_BASE_MAP = ASSERT_MAPS;
     public static final boolean ASSERT_BASE_EXPONENT_MAP = ASSERT_MAPS;
 
+    public static final boolean ASSERT_BASE_INT_NON_BUCKET_MAP = ASSERT_MAPS;
     public static final boolean ASSERT_BASE_OBJECT_NON_CONTAINS_KEY_NON_BUCKET_MAP = ASSERT_MAPS;
     public static final boolean ASSERT_INT_TO_OBJECT_NON_BUCKET_MAP = ASSERT_MAPS;
 
     public static final boolean ASSERT_BASE_LONG_NON_BUCKET_MAP = ASSERT_MAPS;
     public static final boolean ASSERT_LONG_TO_OBJECT_NON_BUCKET_MAP = ASSERT_MAPS;
+
+    public static final boolean ASSERT_BASE_OBJECT_NON_BUCKET_MAP = ASSERT_MAPS;
 
     public static final boolean ASSERT_BITS_UTIL_GET_RANGE = ASSERT_BITS_UTIL;
 }

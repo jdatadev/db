@@ -22,7 +22,7 @@ import dev.jdata.db.sql.ast.statements.BaseSQLDDLOperationStatement;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLDMLUpdatingStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLSelectStatement;
-import dev.jdata.db.sql.parse.SQLParser.SQLString;
+import dev.jdata.db.sql.parse.SQLString;
 import dev.jdata.db.utils.State;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -61,7 +61,7 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
 
     private final String name;
     private final IDatabasesAllocators allocators;
-    private final StringManagement stringManagement;
+    private final DatabaseStringManagement stringManagement;
     private final DatabaseSchemaManager schemas;
     private final DataCache dataCache;
 //    private final TableDataStorageBackend tableDataStorageBackend;

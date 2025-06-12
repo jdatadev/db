@@ -42,6 +42,11 @@ public class MaxDistance {
         long put(T map, int[] hashArray, int key, int hashArrayIndex);
     }
 
+    public interface MaxDistanceObjectMapOperations<T, K, V> extends MaxDistanceMapOperations<T, K[], V> {
+
+        long put(T map, K[] hashArray, K key, int hashArrayIndex);
+    }
+
     public interface MaxDistanceLongMapOperations<T, V> extends MaxDistanceMapOperations<T, long[], V> {
 
         long put(T map, long[] hashArray, long key, int hashArrayIndex);
@@ -263,6 +268,84 @@ public class MaxDistance {
             final int hashArrayIndex = HashFunctions.hashArrayIndex(key, operations.getKeyMask(hashed));
 
             final long putResult = operations.put(hashed, operations.getHashArray(hashed), key, hashArrayIndex);
+            final int putIndex = IntPutResult.getPutIndex(putResult);
+            final boolean newAdded = IntPutResult.getPutNewAdded(putResult);
+
+            final int capacity = Integers.checkUnsignedLongToUnsignedInt(operations.getCapacity(hashed));
+
+            final int distance = computeDistance(putIndex, hashArrayIndex, capacity);
+
+            if (distance <= 255) {
+
+                operations.getMaxDistances(hashed)[putIndex] = Integers.checkUnsignedIntToUnsignedByte(distance);
+
+                result = IntPutResult.makePutResult(newAdded, putIndex);
+
+                if (newAdded) {
+
+                    operations.incrementNumElements(hashed);
+                }
+                break;
+            }
+
+            operations.increaseCapacityAndRehash(hashed);
+        }
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result, b -> b.add("key", key).add("operations", operations));
+        }
+
+        return result;
+    }
+
+    public static <T, K, V> V putMaxDistance(T hashed, K key, V value, V defaultPreviousValue, MaxDistanceObjectMapOperations<T, K, V[]> operations) {
+
+        Objects.requireNonNull(hashed);
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(operations);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
+        }
+
+        final long putResult = putMaxDistance(hashed, key, operations);
+
+        final V[] values = operations.getValues(hashed);
+        final int putIndex = IntPutResult.getPutIndex(putResult);
+
+        final V result = IntPutResult.getPutNewAdded(putResult) ? defaultPreviousValue : values[putIndex];
+
+        values[putIndex] = value;
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
+        }
+
+        return result;
+    }
+
+    private static <T, K> long putMaxDistance(T hashed, K key, MaxDistanceObjectMapOperations<T, K, ?> operations) {
+
+        Objects.requireNonNull(hashed);
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(operations);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("key", key).add("operations", operations));
+        }
+
+        long result = IntPutResult.makePutResult(false, HashArray.NO_INDEX);
+
+        for (;;) {
+
+            final int hashArrayIndex = HashFunctions.objectHashArrayIndex(key, operations.getKeyMask(hashed));
+
+            final long putResult = operations.put(hashed, operations.getHashArray(hashed), key, hashArrayIndex);
+
             final int putIndex = IntPutResult.getPutIndex(putResult);
             final boolean newAdded = IntPutResult.getPutNewAdded(putResult);
 

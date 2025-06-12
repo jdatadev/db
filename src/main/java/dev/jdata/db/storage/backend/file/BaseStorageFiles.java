@@ -85,7 +85,7 @@ public abstract class BaseStorageFiles<T extends FileAccess, U extends BaseStora
 
         final long numFiles = files.getNumElements();
 
-        for (long i = 0; i < numFiles; ++ i) {
+        for (long i = 0L; i < numFiles; ++ i) {
 
             final U file = files.get(i);
 

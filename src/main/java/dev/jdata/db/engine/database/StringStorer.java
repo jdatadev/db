@@ -3,25 +3,29 @@ package dev.jdata.db.engine.database;
 import java.util.Objects;
 
 import org.jutils.io.strings.StringRef;
-import org.jutils.io.strings.StringResolver.CharacterBuffer;
-import org.jutils.io.strings.StringResolver.CharacterBuffers;
+import org.jutils.io.strings.StringResolver;
 
+import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.arrays.LargeCharArray;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
+import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
 import dev.jdata.db.utils.adt.lists.BaseList;
 import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadSinglyLinkedList;
 import dev.jdata.db.utils.adt.lists.LongNodeSetter;
 import dev.jdata.db.utils.adt.maps.BaseLargeArrayMap;
+import dev.jdata.db.utils.adt.maps.Maps;
+import dev.jdata.db.utils.adt.maps.Maps.ILongAppendEachValue;
+import dev.jdata.db.utils.adt.maps.Maps.ILongForEachAppendCaller;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.CharMapper;
 import dev.jdata.db.utils.function.CharPredicate;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class StringStorer extends BaseLargeArrayMap<LargeLongArray, LargeLongArray> implements IStringStorer {
+public final class StringStorer extends BaseLargeArrayMap<LargeLongArray, LargeLongArray> implements IStringStorer, StringResolver {
 
-    private static final boolean DEBUG = Boolean.FALSE;
+    private static final boolean DEBUG = DebugConstants.DEBUG_STRING_STORER;
 
     private static final long NO_ELEMENT = -1L;
 
@@ -111,11 +115,28 @@ public final class StringStorer extends BaseLargeArrayMap<LargeLongArray, LargeL
         StringRef.checkIsString(stringRef);
         Objects.requireNonNull(predicate);
 
-        return charArray.containsOnly(stringRef, predicate);
+        if (DEBUG) {
+
+            enter(b -> b.add("stringRef", stringRef).add("predicate", predicate));
+        }
+
+        final boolean result = charArray.containsOnly(stringRef, predicate);
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
     }
 
     @Override
     public long toLowerCase(long stringRef) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("stringRef", stringRef));
+        }
 
         this.scratchCharSequence = scratchLargeCharArrayCharSequence;
 
@@ -123,13 +144,56 @@ public final class StringStorer extends BaseLargeArrayMap<LargeLongArray, LargeL
 
         scratchLargeCharArrayCharSequence.initialize(charArray, stringRef, length, (c, p) -> Character.toLowerCase(c));
 
-        return addNotAlreadyAdded(getHashed(), getValues(), buckets, scratchLargeCharArrayCharSequence, 0, length);
+        final long result = addNotAlreadyAdded(getHashed(), getValues(), buckets, scratchLargeCharArrayCharSequence, 0, length);
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
+    @Override
+    public long getOrAddLowerCaseStringRef(long stringRef) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("stringRef", stringRef));
+        }
+
+        this.scratchCharSequence = scratchLargeCharArrayCharSequence;
+
+        final int length = Integers.checkUnsignedLongToUnsignedInt(charArray.getStringLength(stringRef));
+
+        scratchLargeCharArrayCharSequence.initialize(charArray, stringRef, length, (c, p) -> Character.toLowerCase(c));
+
+        final long result = getOrAddStringRef(scratchLargeCharArrayCharSequence);
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
     }
 
     @Override
     public long getOrAddStringRef(CharSequence charSequence, int offset, int length) {
 
-        return getOrAdd(getHashed(), getValues(), buckets, charSequence, offset, length);
+        if (DEBUG) {
+
+            enter(b -> b.add("charSequence", charSequence).add("offset", offset).add("length", length));
+        }
+
+        final long result = getOrAdd(getHashed(), getValues(), buckets, charSequence, offset, length);
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
     }
 
     @Override
@@ -137,6 +201,11 @@ public final class StringStorer extends BaseLargeArrayMap<LargeLongArray, LargeL
 
         Checks.isNotEmpty(characterBuffers);
         Checks.isLengthAboveZero(numCharacterBuffers);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("characterBuffers", characterBuffers).add("numCharacterBuffers", numCharacterBuffers));
+        }
 
         final long result;
 
@@ -160,6 +229,11 @@ public final class StringStorer extends BaseLargeArrayMap<LargeLongArray, LargeL
 
             result = getOrAdd(getHashed(), getValues(), buckets, buffers, 0, buffers.length());
             break;
+        }
+
+        if (DEBUG) {
+
+            exit(result);
         }
 
         return result;
@@ -212,6 +286,84 @@ public final class StringStorer extends BaseLargeArrayMap<LargeLongArray, LargeL
         }
 
         return removed;
+    }
+
+    @Override
+    public String asString(long stringRef) {
+
+        StringRef.checkIsString(stringRef);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("stringRef", stringRef));
+        }
+
+        final String result = charArray.asString(stringRef);
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
+    @Override
+    public void asString(long stringRef, StringBuilder sb) {
+
+        StringRef.checkIsString(stringRef);
+        Objects.requireNonNull(sb);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("stringRef", stringRef).add("sb", sb));
+        }
+
+        charArray.asString(stringRef, sb);
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public boolean equals(long stringRef, StringResolver otherStringResolver, long otherStringRef, boolean caseSensitive) {
+
+        Checks.areNotSame(this, otherStringResolver);
+
+        if (!(otherStringResolver instanceof StringStorer)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        final StringStorer other = (StringStorer)otherStringResolver;
+
+        return charArray.equals(stringRef, other.charArray, otherStringRef, caseSensitive);
+    }
+
+    @Override
+    public <P, R, E extends Exception> R makeString(long stringRef, P parameter, ICharactersBufferAllocator charactersBufferAllocator,
+            CharactersToString<P, R, E> charactersToString) throws E {
+
+        StringRef.checkIsString(stringRef);
+        Objects.requireNonNull(charactersBufferAllocator);
+        Objects.requireNonNull(charactersToString);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("stringRef", stringRef).add("parameter", parameter).add("charactersBufferAllocator", charactersBufferAllocator)
+                    .add("charactersToString", charactersToString));
+        }
+
+        final R result = charArray.makeString(stringRef, parameter, charactersBufferAllocator, charactersToString);
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
     }
 
     private static final class LargeCharArrayCharSequence implements CharSequence {
@@ -272,22 +424,22 @@ public final class StringStorer extends BaseLargeArrayMap<LargeLongArray, LargeL
 
         clearSet(newKeys);
 
-        final LargeLongArray exitingValues = getValues();
+        final LargeLongArray existingValues = getValues();
         final LargeLongArray newValues = reallocateValues(newOuterCapacity);
 
-        final long setLength = keys.getCapacity();
+        final long hashArrayLength = keys.getCapacity();
 
         this.scratchCharSequence = scratchLargeCharArrayCharSequence;
 
         final LargeLongMultiHeadSinglyLinkedList<StringStorer> existingBuckets = buckets;
 
-        for (long i = 0; i < setLength; ++ i) {
+        for (long i = 0L; i < hashArrayLength; ++ i) {
 
             final long element = keys.get(i);
 
             if (element != NO_ELEMENT) {
 
-                final long bucketHeadNode = exitingValues.get(i);
+                final long bucketHeadNode = existingValues.get(i);
 
                 for (long node = bucketHeadNode; node != BaseList.NO_NODE; node = existingBuckets.getNextNode(node)) {
 
@@ -413,6 +565,76 @@ public final class StringStorer extends BaseLargeArrayMap<LargeLongArray, LargeL
         }
 
         return result;
+    }
+
+    @FunctionalInterface
+    public interface IForEachKeyAndValue<P> {
+
+        void each(long stringRef, LargeCharArray largeCharArray, P parameter);
+    }
+
+    private <P> void forEachKeyAndValue(P parameter, IForEachKeyAndValue<P> forEach) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("parameter", parameter).add("forEach", forEach));
+        }
+
+        forEachKeyAndValue(forEach, parameter, (k, ki, v, vi, p1, p2) -> p1.each(vi, v, p2));
+
+        if (DEBUG) {
+
+            exit(b -> b.add("parameter", parameter).add("forEach", forEach));
+        }
+    }
+
+    private <P1, P2> void forEachKeyAndValue(P1 parameter1, P2 parameter2, ForEachKeyAndValueWithKeysAndValues<LargeLongArray, LargeCharArray, P1, P2> forEach) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
+        }
+
+        final LargeLongArray hashArray = getHashed();
+
+        final long hashArrayLimit = hashArray.getLimit();
+
+        final LargeCharArray chars = charArray;
+
+        final LargeLongArray bucketHeadNodes = getValues();
+
+        final long noKey = NonBucket.NO_ELEMENT;
+
+        for (long i = 0; i < hashArrayLimit; ++ i) {
+
+            final long mapKey = hashArray.get(i);
+
+            if (mapKey != noKey) {
+
+                for (long node = bucketHeadNodes.get(i); node != BaseList.NO_NODE; node = buckets.getNextNode(node)) {
+
+                    final long stringIndex = buckets.getValue(node);
+
+                    forEach.each(hashArray, i, chars, stringIndex, parameter1, parameter2);
+                }
+            }
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public final String toString() {
+
+        final ILongForEachAppendCaller<LargeCharArray, StringStorer> forEachAppendCaller
+                = (b, i, f) -> i.forEachKeyAndValue(f, (stringRef, charArray, forEach) -> forEach.each(stringRef, charArray, b, i));
+
+        final ILongAppendEachValue<LargeCharArray, StringStorer> appendEachValue = (r, a, b, p) -> a.asString(r, b);
+
+        return Maps.longAppendToString(getClass().getSimpleName(), getNumElements(), this, forEachAppendCaller, appendEachValue);
     }
 
     private static void clearSet(LargeLongArray set) {

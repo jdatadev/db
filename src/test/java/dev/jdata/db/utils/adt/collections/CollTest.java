@@ -124,7 +124,7 @@ public final class CollTest extends BaseElementsAggregatesTest<Collection<Intege
     @Override
     protected long countWithClosure(Collection<Integer> elements, Predicate<Integer> predicate) {
 
-        return Coll.countWithClosure(elements, predicate);
+        return Coll.closureOrConstantCount(elements, predicate);
     }
 
     @Override

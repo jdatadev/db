@@ -132,7 +132,7 @@ public final class LargeLongArray extends LargeLimitArray<long[][], long[]> impl
         Objects.requireNonNull(sb);
         Objects.requireNonNull(appender);
 
-        ByIndex.largeToString(this, 0L, getLimit(), sb, null, appender, null, null, (instance, index, b, a) -> a.accept(b, instance.get(index)));
+        ByIndex.toString(this, 0L, getLimit(), sb, null, appender, null, null, (instance, index, b, a) -> a.accept(b, instance.get(index)));
     }
 
     public String toHexString() {

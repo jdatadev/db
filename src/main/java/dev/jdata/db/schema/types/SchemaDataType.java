@@ -6,7 +6,7 @@ public abstract class SchemaDataType {
 /*
     private final boolean nullable;
 */
-    public abstract <T, R> R visit(SchemaDataTypeVisitor<T, R> visitor, T parameter);
+    public abstract <T, R, E extends Exception> R visit(SchemaDataTypeVisitor<T, R, E> visitor, T parameter) throws E;
 
 /*
     SchemaDataType(boolean nullable) {
@@ -23,5 +23,11 @@ public abstract class SchemaDataType {
     public String toString() {
 
         return getClass().getSimpleName() + " []";
+    }
+
+    @Override
+    public boolean equals(Object object) {
+
+        return object != null && getClass().equals(object.getClass());
     }
 }

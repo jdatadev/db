@@ -3,7 +3,7 @@ package dev.jdata.db.common.storagebits;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.schema.types.SchemaDataTypeVisitor;
 
-abstract class BaseNumStorageBitsAdapter implements SchemaDataTypeVisitor<NumStorageBitsParameters, Integer> {
+abstract class BaseNumStorageBitsAdapter implements SchemaDataTypeVisitor<NumStorageBitsParameters, Integer, RuntimeException> {
 
     final int getNumStorageBits(SchemaDataType schemaDataType, NumStorageBitsParameters parameters) {
 

@@ -208,7 +208,7 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
 
         if (DEBUG) {
 
-            exit(newHashArray);
+            exit(newHashArray, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).hex("newKeyMask", newKeyMask));
         }
 
         return newHashArray;

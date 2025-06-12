@@ -1,18 +1,17 @@
 package dev.jdata.db.utils.adt.maps;
 
+import java.util.Objects;
+
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance.MaxDistanceIntMapOperations;
 import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
-import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucketMap implements IIntContainsKeyMap, IIntToIntBucketMapGetters {
+abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucketMap<IIntToIntDynamicMapCommon> implements IIntToIntDynamicMapCommon {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_TO_INT_MAX_DISTANCE_NON_BUCKET_MAP;
-
-    private static final Class<?> debugClass = BaseIntToIntMaxDistanceNonBucketMap.class;
 
     private byte[] maxDistances;
 
@@ -47,9 +46,7 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
             enter(b -> b.add("key", key));
         }
 
-        final int hashArrayIndex = HashFunctions.hashArrayIndex(key, getKeyMask());
-
-        final boolean result = getIndexScanHashArrayToMax(key, hashArrayIndex, maxDistances[hashArrayIndex]) != NO_INDEX;
+        final boolean result = getHashArrayIndex(key, getKeyMask()) != NO_INDEX;
 
         if (DEBUG) {
 
@@ -69,9 +66,7 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
             enter(b -> b.add("key", key).add("defaultValue", defaultValue));
         }
 
-        final int hashArrayIndex = HashFunctions.hashArrayIndex(key, getKeyMask());
-
-        final int index = getIndexScanHashArrayToMax(key, hashArrayIndex, maxDistances[hashArrayIndex]);
+        final int index = getHashArrayIndex(key, getKeyMask());
 
         final int result = index != NO_INDEX ? getValues()[index] : defaultValue;
 
@@ -84,11 +79,33 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
     }
 
     @Override
+    protected final int getHashArrayIndex(int key, int keyMask) {
+
+        NonBucket.checkIsHashArrayElement(key);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("key", key).add("keyMask", keyMask));
+        }
+
+        final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
+
+        final int result = getIndexScanHashArrayToMaxHashArrayIndex(key, hashArrayIndex, maxDistances[hashArrayIndex]);
+
+        if (DEBUG) {
+
+            exit(result, b -> b.add("key", key).add("keyMask", keyMask));
+        }
+
+        return result;
+    }
+
+    @Override
     protected final int[] rehash(int[] hashArray, int newCapacity, int newKeyMask) {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newKeyMask", newKeyMask));
+            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newKeyMask", newKeyMask));
         }
 
         this.maxDistances = new byte[newCapacity];
@@ -97,7 +114,7 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(result, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newKeyMask", newKeyMask));
         }
 
         return result;
@@ -197,6 +214,72 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
         if (DEBUG) {
 
             exit(result, b -> b.add("key", key).add("defaultValue", defaultValue));
+        }
+
+        return result;
+    }
+
+    @Override
+    public final <P1, P2> boolean equals(P1 thisParameter, IIntToIntDynamicMapCommon other, P2 otherParameter, IIntValueMapEqualityTester<P1, P2> equalityTester) {
+
+        Objects.requireNonNull(other);
+        Objects.requireNonNull(equalityTester);
+
+        final boolean result;
+
+        if (DEBUG) {
+
+            enter(b -> b.add("thisParameter", thisParameter).add("other", other).add("otherParameter", otherParameter).add("equalityTester", equalityTester));
+        }
+
+        if (other instanceof BaseIntToIntNonBucketMap) {
+
+            @SuppressWarnings("unchecked")
+            final BaseIntToIntNonBucketMap<IIntToIntDynamicMapCommon> otherMap = (BaseIntToIntNonBucketMap<IIntToIntDynamicMapCommon>)other;
+
+            result = equalsIntToIntNonBucketMap(thisParameter, otherMap, otherParameter, equalityTester);
+        }
+        else {
+            result = IIntToIntDynamicMapCommon.super.equals(thisParameter, other, otherParameter, equalityTester);
+        }
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
+    @Override
+    public final <P1, P2> boolean equalsParameters(IntValueMapScratchEqualsParameter<IIntToIntDynamicMapCommon, P1, P2> scratchEqualsParameter) {
+
+        Objects.requireNonNull(scratchEqualsParameter);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("scratchEqualsParameter", scratchEqualsParameter));
+        }
+
+        final boolean result;
+
+        final IIntToIntDynamicMapCommon other = scratchEqualsParameter.getOther();
+
+        if (other instanceof BaseIntToIntNonBucketMap) {
+
+            @SuppressWarnings("unchecked")
+            final BaseIntToIntNonBucketMap<IIntToIntDynamicMapCommon> otherMap = (BaseIntToIntNonBucketMap<IIntToIntDynamicMapCommon>)other;
+
+            result = equalsIntToIntNonBucketMap(scratchEqualsParameter.getThisParameter(), otherMap, scratchEqualsParameter.getOtherParameter(),
+                    scratchEqualsParameter.getEqualityTester());
+        }
+        else {
+            result = IIntToIntDynamicMapCommon.super.equalsParameters(scratchEqualsParameter);
+        }
+
+        if (DEBUG) {
+
+            exit(result);
         }
 
         return result;

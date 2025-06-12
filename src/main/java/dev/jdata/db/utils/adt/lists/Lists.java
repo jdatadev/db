@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 import dev.jdata.db.utils.adt.collections.BaseCollections;
 import dev.jdata.db.utils.adt.collections.Coll;
 import dev.jdata.db.utils.adt.elements.ByIndex;
+import dev.jdata.db.utils.adt.elements.ByIndex.IByIndexElementEqualityTester;
 
 public class Lists extends BaseCollections {
 
@@ -69,7 +70,7 @@ public class Lists extends BaseCollections {
 
         if (listSize != 0) {
 
-            result = ByIndex.containsInstance(list, list.size(), instance, List::get, IndexOutOfBoundsException::new);
+            result = ByIndex.containsInstance(list, list.size(), instance, (l, i) -> l.get((int)i), IndexOutOfBoundsException::new);
         }
         else {
             Objects.requireNonNull(instance);
@@ -80,9 +81,9 @@ public class Lists extends BaseCollections {
         return result;
     }
 
-    public static <T> boolean containsInstance(List<T> list, int startIndex, int numElements, T instance) {
+    public static <T> boolean containsInstance(List<T> list, T instance, int startIndex, int numElements) {
 
-        return ByIndex.containsInstance(list, list.size(), startIndex, numElements, instance, List::get, IndexOutOfBoundsException::new);
+        return ByIndex.containsInstance(list, list.size(), instance, startIndex, numElements, (l, i) -> l.get((int)i), IndexOutOfBoundsException::new);
     }
 
     public static <T, P> boolean contains(List<T> list, P parameter, BiPredicate<T, P> predicate) {
@@ -92,27 +93,27 @@ public class Lists extends BaseCollections {
 
     public static <T, P> boolean contains(List<T> list, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
 
-        return ByIndex.contains(list, list.size(), startIndex, numElements, parameter, List::get, predicate, IndexOutOfBoundsException::new);
+        return ByIndex.contains(list, list.size(), startIndex, numElements, parameter, (l, i) -> l.get((int)i), predicate, IndexOutOfBoundsException::new);
     }
 
     public static <T, P> int findIndex(List<T> list, P parameter, BiPredicate<T, P> predicate) {
 
-        return ByIndex.findIndex(list, list.size(), parameter, List::get, predicate, IndexOutOfBoundsException::new);
+        return (int)ByIndex.findIndex(list, list.size(), parameter, (l, i) -> l.get((int)i), predicate, IndexOutOfBoundsException::new);
     }
 
     public static <T> int closureOrConstantFindIndex(List<T> list, Predicate<T> predicate) {
 
-        return ByIndex.findIndex(list, list.size(), predicate, List::get, (e, p) -> p.test(e), IndexOutOfBoundsException::new);
+        return (int)ByIndex.findIndex(list, list.size(), predicate, (l, i) -> l.get((int)i), (e, p) -> p.test(e), IndexOutOfBoundsException::new);
     }
 
     public static <T, P> int findIndex(List<T> list, int byIndexLength, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
 
-        return ByIndex.findIndex(list, byIndexLength, startIndex, numElements, parameter, List::get, predicate, IndexOutOfBoundsException::new);
+        return (int)ByIndex.findIndex(list, byIndexLength, startIndex, numElements, parameter, (l, i) -> l.get((int)i), predicate, IndexOutOfBoundsException::new);
     }
 
     public static <T> int closureOrConstantFindIndex(List<T> list, int startIndex, int numElements, Predicate<T> predicate) {
 
-        return ByIndex.findIndex(list, list.size(), startIndex, numElements, predicate, List::get, predicate != null ? (e, p) -> p.test(e) : null,
+        return (int)ByIndex.findIndex(list, list.size(), startIndex, numElements, predicate, (l, i) -> l.get((int)i), predicate != null ? (e, p) -> p.test(e) : null,
                 IndexOutOfBoundsException::new);
     }
 
@@ -135,5 +136,34 @@ public class Lists extends BaseCollections {
         }
 
         return numRemoved;
+    }
+
+    @FunctionalInterface
+    public interface IListEqualityTester<T, P1, P2> extends IByIndexElementEqualityTester<T, P1, P2> {
+
+    }
+
+    public static <T, P1, P2> boolean equals(List<T> list1, P1 parameter1, List<T> list2, P2 parameter2, IListEqualityTester<T, P1, P2> equalityTester) {
+
+        final boolean result;
+
+        final int array1Length = list1.size();
+
+        if (array1Length == list2.size()) {
+
+            result = equals(list1, 0, parameter1, list2, 0, parameter2, array1Length, equalityTester);
+        }
+        else {
+            result = false;
+        }
+
+        return result;
+    }
+
+    public static <T, P1, P2> boolean equals(List<T> list1, int startIndex1, P1 parameter1, List<T> list2, int startIndex2, P2 parameter2, int numElements,
+            IListEqualityTester<T, P1, P2> equalityTester) {
+
+        return ByIndex.equals(list1, startIndex1, parameter1, list2, startIndex2, parameter2, numElements, equalityTester,
+                (l1, i1, p1, l2, i2, p2, predicate) -> predicate.equals(l1.get((int)i1), p1, l2.get((int)i2), p2));
     }
 }

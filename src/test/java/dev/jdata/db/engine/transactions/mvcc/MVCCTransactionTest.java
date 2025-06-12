@@ -14,6 +14,7 @@ import dev.jdata.db.dml.DMLInsertUpdateRows;
 import dev.jdata.db.dml.DMLInsertUpdateRows.InsertUpdateRow;
 import dev.jdata.db.dml.DMLUpdateRows;
 import dev.jdata.db.dml.DMLUpdateRows.UpdateRow;
+import dev.jdata.db.engine.database.StringStorer;
 import dev.jdata.db.engine.transactions.RowValue;
 import dev.jdata.db.engine.transactions.SelectColumn;
 import dev.jdata.db.engine.transactions.StringLookup;
@@ -21,13 +22,13 @@ import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.engine.transactions.mvcc.MVCCTransaction.MVCCTransactionState;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.types.IntegerType;
-import dev.jdata.db.test.unit.BaseTest;
+import dev.jdata.db.test.unit.BaseDBTest;
 import dev.jdata.db.test.unit.TableBuilder;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.adt.arrays.ObjectArray;
 import dev.jdata.db.utils.adt.sets.MutableLongBucketSet;
 
-public final class MVCCTransactionTest extends BaseTest {
+public final class MVCCTransactionTest extends BaseDBTest {
 
     @Test
     @Category(UnitTest.class)
@@ -55,14 +56,11 @@ public final class MVCCTransactionTest extends BaseTest {
 
         mvccTransaction.initialize(transactionDescriptor, originatingTransactionId, isolationLevel);
 
-        final String tableName = "tableName";
         final int statementId = 234;
         final long rowId = 345L;
         final int intValue = 56;
 
-        final Table table = TableBuilder.create(tableName, tableId)
-                .addColumn("testcolumn", IntegerType.INSTANCE)
-                .build();
+        final Table table = createTestTable(tableId);
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
@@ -118,14 +116,11 @@ public final class MVCCTransactionTest extends BaseTest {
 
         mvccTransaction.initialize(transactionDescriptor, originatingTransactionId, isolationLevel);
 
-        final String tableName = "tableName";
         final int statementId = 234;
         final long rowId = 345L;
         final int intValue = 56;
 
-        final Table table = TableBuilder.create(tableName, tableId)
-                .addColumn("testcolumn", IntegerType.INSTANCE)
-                .build();
+        final Table table = createTestTable(tableId);
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
@@ -221,14 +216,11 @@ public final class MVCCTransactionTest extends BaseTest {
 
         mvccTransaction.initialize(transactionDescriptor, originatingTransactionId, isolationLevel);
 
-        final String tableName = "tableName";
         final int statementId = 234;
         final long rowId = 345L;
         final int intValue = 56;
 
-        final Table table = TableBuilder.create(tableName, tableId)
-                .addColumn("testcolumn", IntegerType.INSTANCE)
-                .build();
+        final Table table = createTestTable(tableId);
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
@@ -275,14 +267,11 @@ public final class MVCCTransactionTest extends BaseTest {
 
         mvccTransaction.initialize(transactionDescriptor, originatingTransactionId, isolationLevel);
 
-        final String tableName = "tableName";
         final int statementId = 234;
         final long rowId = 345L;
         final int intValue = 56;
 
-        final Table table = TableBuilder.create(tableName, tableId)
-                .addColumn("testcolumn", IntegerType.INSTANCE)
-                .build();
+        final Table table = createTestTable(tableId);
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
@@ -436,5 +425,16 @@ public final class MVCCTransactionTest extends BaseTest {
         select.initialize(tableId, null, selectColumns, rowIdsToFilter, stringLookup);
 
         return select;
+    }
+
+    private static Table createTestTable(int tableId) {
+
+        final String tableName = "tableName";
+
+        final StringStorer stringStorer = createStringStorer();
+
+        return TableBuilder.create(tableName, tableId, stringStorer)
+                .addColumn("testcolumn", IntegerType.INSTANCE)
+                .build();
     }
 }

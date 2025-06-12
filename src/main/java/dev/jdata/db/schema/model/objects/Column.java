@@ -41,20 +41,75 @@ public final class Column extends DBNamedIdentifiableObject {
         return checkCondition;
     }
 
-    public String toString(StringResolver stringResolver) {
+    public final boolean equals(StringResolver thisStringResolver, Column other, StringResolver otherStringResolver, boolean caseSensitive) {
+
+        Objects.requireNonNull(thisStringResolver);
+        Objects.requireNonNull(other);
+        Objects.requireNonNull(otherStringResolver);
+
+        final boolean result;
+
+        if (this == other) {
+
+            result = true;
+        }
+        else if (!super.equals(thisStringResolver, other, otherStringResolver, caseSensitive)) {
+
+            result = false;
+        }
+        else if (getClass() != other.getClass()) {
+
+            result = false;
+        }
+        else {
+            result = equalsInstanceVariables(other);
+        }
+
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+
+        final boolean result;
+
+        if (this == object) {
+
+            result = true;
+        }
+        else if (!super.equals(object)) {
+
+            result = false;
+        }
+        else if (getClass() != object.getClass()) {
+
+            result = false;
+        }
+        else {
+            final Column other = (Column)object;
+
+            result = equalsInstanceVariables(other);
+        }
+
+        return result;
+    }
+
+    private boolean equalsInstanceVariables(Column other) {
+
+        return schemaType.equals(other.schemaType) && nullable == other.nullable && Objects.equals(checkCondition, other.checkCondition);
+    }
+
+    @Override
+    public void toString(StringResolver stringResolver, StringBuilder sb) {
 
         Objects.requireNonNull(stringResolver);
-
-        final StringBuilder sb = new StringBuilder(100);
+        Objects.requireNonNull(sb);
 
         sb.append(getClass().getSimpleName());
 
         sb.append(" [super=");
+        super.toString(stringResolver, sb);
 
-        toString(stringResolver, sb);
-
-        sb.append(", schemaType=").append(schemaType).append(", nullable=").append(nullable).append(", checkCondition").append(checkCondition).append(']');
-
-        return sb.toString();
+        sb.append(", schemaType=").append(schemaType).append(", nullable=").append(nullable).append(", checkCondition=").append(checkCondition).append(']');
     }
 }

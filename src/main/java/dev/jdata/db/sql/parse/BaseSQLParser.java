@@ -1,13 +1,13 @@
 package dev.jdata.db.sql.parse;
 
-import java.io.IOException;
 import java.util.Objects;
 
+import org.jutils.io.strings.CharInput;
 import org.jutils.io.strings.StringResolver;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.dml.SQLObjectName;
 import dev.jdata.db.sql.ast.statements.dml.SQLTableName;
 import dev.jdata.db.sql.ast.statements.table.SQLColumnNames;
@@ -15,7 +15,7 @@ import dev.jdata.db.utils.adt.arrays.LongArray;
 
 public abstract class BaseSQLParser extends BaseParser {
 
-    protected static int parseUnsignedInt(SQLLexer lexer, StringResolver stringResolver) throws ParserException, IOException {
+    protected static <E extends Exception, I extends CharInput<E>> int parseUnsignedInt(SQLLexer<E, I> lexer, StringResolver stringResolver) throws ParserException, E {
 
         final long stringRef = lexer.lexStringRef(SQLToken.INTEGER_NUMBER);
 
@@ -28,26 +28,27 @@ public abstract class BaseSQLParser extends BaseParser {
 //        throw new UnsupportedOperationException();
     }
 
-    protected static SQLObjectName parseObjectName(SQLLexer lexer) throws ParserException, IOException {
+    protected static <E extends Exception, I extends CharInput<E>> SQLObjectName parseObjectName(SQLLexer<E, I> lexer) throws ParserException, E {
 
         final long objectName = lexer.lexName();
 
         return new SQLObjectName(makeContext(), objectName);
     }
 
-    protected static SQLTableName parseTableName(SQLLexer lexer) throws ParserException, IOException {
+    protected static <E extends Exception, I extends CharInput<E>> SQLTableName parseTableName(SQLLexer<E, I> lexer) throws ParserException, E {
 
         final long tableName = lexer.lexName();
 
         return new SQLTableName(makeContext(), tableName);
     }
 
-    protected static SQLColumnNames parseColumnNames(SQLLexer lexer, SQLAllocator allocator) throws ParserException, IOException {
+    protected static <E extends Exception, I extends CharInput<E>> SQLColumnNames parseColumnNames(SQLLexer<E, I> lexer, ISQLAllocator allocator) throws ParserException, E {
 
         return parseColumnNames(lexer, allocator, true);
     }
 
-    protected static SQLColumnNames parseColumnNames(SQLLexer lexer, SQLAllocator allocator, boolean hasParenthesis) throws ParserException, IOException {
+    protected static <E extends Exception, I extends CharInput<E>> SQLColumnNames parseColumnNames(SQLLexer<E, I> lexer, ISQLAllocator allocator, boolean hasParenthesis)
+            throws ParserException, E {
 
         Objects.requireNonNull(lexer);
         Objects.requireNonNull(allocator);
@@ -67,7 +68,7 @@ public abstract class BaseSQLParser extends BaseParser {
         return new SQLColumnNames(makeContext(), names);
     }
 
-    protected static LongArray parseNames(SQLLexer lexer, SQLAllocator allocator) throws ParserException, IOException {
+    protected static <E extends Exception, I extends CharInput<E>> LongArray parseNames(SQLLexer<E, I> lexer, ISQLAllocator allocator) throws ParserException, E {
 
         Objects.requireNonNull(lexer);
         Objects.requireNonNull(allocator);

@@ -14,9 +14,9 @@ public final class DiffDatabaseSchema extends BaseDatabaseSchema<DiffSchemaMaps>
 
     private final DroppedSchemaObjects droppedSchemaObjects;
 
-    private DiffDatabaseSchema(DatabaseId databaseId, DatabaseSchemaVersion version, DiffSchemaMaps schemaMaps, DroppedSchemaObjects droppedSchemaObjects,
-            IDatabaseSchemasAllocator databaseSchemasAllocator) {
-        super(databaseId, version, schemaMaps);
+    private DiffDatabaseSchema(AllocationType allocationType, DatabaseId databaseId, DatabaseSchemaVersion version, DiffSchemaMaps schemaMaps,
+            DroppedSchemaObjects droppedSchemaObjects, IDatabaseSchemasAllocator databaseSchemasAllocator) {
+        super(allocationType, databaseId, version, schemaMaps);
 
         this.droppedSchemaObjects = droppedSchemaObjects != null
                 ? databaseSchemasAllocator.copyDroppedSchemaObjects(droppedSchemaObjects)

@@ -1,8 +1,8 @@
 package dev.jdata.db.sql.parse.where;
 
-import java.io.IOException;
 import java.util.Objects;
 
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.sql.ast.clauses.SQLWhereClause;
@@ -17,7 +17,7 @@ public final class SQLWhereClauseParser extends BaseSQLConditionClauseParser {
         super(conditionParser);
     }
 
-    public SQLWhereClause parseWhereClause(SQLExpressionLexer lexer) throws ParserException, IOException {
+    public <E extends Exception, I extends CharInput<E>> SQLWhereClause parseWhereClause(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         Objects.requireNonNull(lexer);
 

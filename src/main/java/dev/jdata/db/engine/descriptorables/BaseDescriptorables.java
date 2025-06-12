@@ -8,13 +8,13 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.State;
-import dev.jdata.db.utils.adt.Contains;
+import dev.jdata.db.utils.adt.IContains;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.elements.BaseNumElements;
 import dev.jdata.db.utils.allocators.IFreeing;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends BaseDescriptorable<T>, V extends IFreeing<U> & Contains> extends BaseNumElements {
+public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends BaseDescriptorable<T>, V extends IFreeing<U> & IContains> extends BaseNumElements {
 
     @FunctionalInterface
     protected interface DescriptorableFactory<T, R> {

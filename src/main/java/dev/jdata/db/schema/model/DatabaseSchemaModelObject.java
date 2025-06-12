@@ -5,7 +5,7 @@ import dev.jdata.db.schema.DatabaseSchemaObject;
 
 public abstract class DatabaseSchemaModelObject extends DatabaseSchemaObject {
 
-    protected DatabaseSchemaModelObject(DatabaseId databaseId) {
-        super(databaseId);
+    protected DatabaseSchemaModelObject(AllocationType allocationType, DatabaseId databaseId) {
+        super(allocationType, databaseId);
     }
 }

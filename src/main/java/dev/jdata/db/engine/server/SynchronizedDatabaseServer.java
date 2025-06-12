@@ -12,7 +12,7 @@ import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
 import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.sql.parse.SQLParser.SQLString;
+import dev.jdata.db.sql.parse.SQLString;
 
 @Deprecated // does this make sense?
 final class SynchronizedDatabaseServer implements IDatabaseServer {

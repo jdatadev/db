@@ -1,13 +1,13 @@
 package dev.jdata.db.sql.parse.dml.update;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.IAddableList;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.clauses.SQLWhereClause;
 import dev.jdata.db.sql.ast.statements.dml.SQLColumnValueUpdateValue;
 import dev.jdata.db.sql.ast.statements.dml.SQLColumnValueUpdateValues;
@@ -30,7 +30,7 @@ public class SQLUpdateParser extends SQLStatementParser {
         this.whereClauseParser = Objects.requireNonNull(whereClauseParser);
     }
 
-    public SQLUpdateStatement parseUpdate(SQLExpressionLexer lexer, long updateKeyword) throws ParserException, IOException {
+    public <E extends Exception, I extends CharInput<E>> SQLUpdateStatement parseUpdate(SQLExpressionLexer<E, I> lexer, long updateKeyword) throws ParserException, E {
 
         Objects.requireNonNull(lexer);
         checkIsKeyword(updateKeyword);
@@ -46,9 +46,9 @@ public class SQLUpdateParser extends SQLStatementParser {
         return new SQLUpdateStatement(makeContext(), updateKeyword, tableName, setKeyword, updateValues, whereClause);
     }
 
-    private SQLUpdateValues parseUpdateValues(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLUpdateValues parseUpdateValues(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final IAddableList<SQLColumnValueUpdateValue> updateValues = allocator.allocateList(100);
 

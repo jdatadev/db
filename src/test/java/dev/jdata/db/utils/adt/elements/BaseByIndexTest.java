@@ -12,6 +12,17 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
 
     protected abstract <T, R> R[] map(T[] array, IntFunction<R[]> createMappedArray, Function<T, R> mapper);
 
+    @FunctionalInterface
+    public interface IByIndexTestEqualityTester<T, P> {
+
+        boolean equals(T element1, P parameter1, T element2, P parameter2);
+    }
+
+    protected abstract <T, P> boolean equals(T[] array1, P parameter1, T[] array2, P parameter2, IByIndexTestEqualityTester<T, P> byIndexEqualityTester);
+
+    protected abstract <T, P> boolean equals(T[] array1, int startIndex1, P parameter1, T[] array2, int startIndex2, P parameter2, int numElements,
+            IByIndexTestEqualityTester<T, P> byIndexEqualityTester);
+
     protected abstract <T> boolean containsInstance(T[] array, T instance);
     protected abstract <T> boolean containsInstanceRange(T[] array, int startIndex, int numElements, T instance);
     protected abstract <T, P> int findIndex(T[] array, P parameter, BiPredicate<T, P> predicate);
@@ -38,6 +49,88 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
 
         final String[] threeMapped = map(create(1, 2, 3), String[]::new, String::valueOf);
         assertThat(threeMapped).containsExactly("1", "2", "3");
+    }
+    @Test
+    @Category(UnitTest.class)
+    public final void testEquals() {
+
+        final IByIndexTestEqualityTester<Integer, Void> byIndexEqualityTester = (e1, p1, e2, p2) -> true;
+
+        assertThatThrownBy(() -> equals(null, null, create(1), null, byIndexEqualityTester)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> equals(create(1), null, null, null, byIndexEqualityTester)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> equals(create(1), null, create(1), null, null)).isInstanceOf(NullPointerException.class);
+
+        checkEquals(create(1), create(1), true);
+
+        checkEquals(create(1, 2, 3), create(), false);
+        checkEquals(create(1, 2, 3), create(1), false);
+        checkEquals(create(1, 2, 3), create(1, 2), false);
+
+        checkEquals(create(), create(1, 2, 3), false);
+        checkEquals(create(1), create(1, 2, 3), false);
+        checkEquals(create(1, 2), create(1, 2, 3), false);
+
+        checkEquals(create(1, 2, 3), create(1, 2, 3), true);
+    }
+
+    private <T> void checkEquals(T[] array1, T[] array2, boolean expectedResult) {
+
+        final Object parameter1 = new Object();
+        final Object parameter2 = new Object();
+
+        assertThat(equals(array1, parameter1, array2, parameter2, (e1, p1, e2, p2) -> {
+
+            assertThat(p1).isSameAs(parameter1);
+            assertThat(p2).isSameAs(parameter2);
+
+            return e1.equals(e2);
+
+        })).isEqualTo(expectedResult);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public final void testEqualsRange() {
+
+        final IByIndexTestEqualityTester<Integer, Void> byIndexEqualityTester = (e1, p1, e2, p2) -> true;
+
+        assertThatThrownBy(() -> equals(null, 0, null, create(1), 0, null, 1, byIndexEqualityTester)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> equals(create(1), 0, null, null, 0, null, 1, byIndexEqualityTester)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> equals(create(1), 0, null, create(1), 0, null, 1, null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> equals(create(1), -1, null, create(1), 0, null, 1, byIndexEqualityTester)).isInstanceOf(indexOutOfBoundsExceptionClass);
+        assertThatThrownBy(() -> equals(create(1), 1, null, create(1), 0, null, 1, byIndexEqualityTester)).isInstanceOf(indexOutOfBoundsExceptionClass);
+        assertThatThrownBy(() -> equals(create(1), 0, null, create(1), -1, null, 1, byIndexEqualityTester)).isInstanceOf(indexOutOfBoundsExceptionClass);
+        assertThatThrownBy(() -> equals(create(1), 0, null, create(1), 1, null, 1, byIndexEqualityTester)).isInstanceOf(indexOutOfBoundsExceptionClass);
+        assertThatThrownBy(() -> equals(create(1), 0, null, create(1), 0, null, 0, byIndexEqualityTester)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> equals(create(1), 0, null, create(1), 0, null, 2, byIndexEqualityTester)).isInstanceOf(indexOutOfBoundsExceptionClass);
+
+        assertThat(equals(create(1), 0, null, create(1), 0, null, 1, byIndexEqualityTester)).isTrue();
+
+        checkEquals(create(1), 0, create(1), 0, 1, true);
+        checkEquals(create(1, 2, 3), 0, create(1, 2, 3), 0, 1, true);
+        checkEquals(create(1, 2, 3), 0, create(1, 2, 3), 0, 2, true);
+        checkEquals(create(1, 2, 3), 0, create(1, 2, 3), 0, 3, true);
+
+        checkEquals(create(1, 2, 3), 0, create(1, 2, 3), 1, 1, false);
+        checkEquals(create(1, 2, 3), 0, create(1, 2, 3), 1, 2, false);
+
+        checkEquals(create(1, 2, 3), 1, create(1, 2, 3), 0, 1, false);
+        checkEquals(create(1, 2, 3), 2, create(1, 2, 3), 0, 2, false);
+    }
+
+    private <T> void checkEquals(T[] array1, int startIndex1, T[] array2, int startIndex2, int numElements, boolean expectedResult) {
+
+        final Object parameter1 = new Object();
+        final Object parameter2 = new Object();
+
+        assertThat(equals(array1, startIndex1, parameter1, array2, startIndex2, parameter2, numElements, (e1, p1, e2, p2) -> {
+
+            assertThat(p1).isSameAs(parameter1);
+            assertThat(p2).isSameAs(parameter2);
+
+            return e1.equals(e2);
+
+        })).isEqualTo(expectedResult);
     }
 
     @Test

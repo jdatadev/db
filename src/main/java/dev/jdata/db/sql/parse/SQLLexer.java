@@ -1,32 +1,36 @@
 package dev.jdata.db.sql.parse;
 
-import java.io.IOException;
+import java.util.function.Function;
 
 import org.jutils.io.strings.CharInput;
 import org.jutils.parse.Lexer;
 import org.jutils.parse.ParserException;
 
-public class SQLLexer extends BaseLexer<SQLToken> {
+public class SQLLexer<E extends Exception, INPUT extends CharInput<E>> extends BaseLexer<SQLToken, E, INPUT> {
 
-    SQLLexer(CharInput data) {
-        super(createLexer(data));
+    SQLLexer() {
+
     }
 
-    public final long lexName() throws ParserException, IOException {
+    final void initialize(INPUT input, Function<String, E> createEOFException) {
+
+        super.initialize(createLexer(input, createEOFException));
+    }
+
+    public final long lexName() throws ParserException, E {
 
         return lexStringRef(SQLToken.NAME);
     }
 
-    private static Lexer<SQLToken, CharInput> createLexer(CharInput data) {
+    private static <E extends Exception, I extends CharInput<E>> Lexer<SQLToken, E, I> createLexer(I input, Function<String, E> createEOFException) {
 
-        final Lexer<SQLToken, CharInput> lexer = new Lexer<>(
-                data,
+        return new Lexer<>(
+                input,
                 SQLToken.class,
                 SQLToken.NONE,
                 SQLToken.EOF,
                 new SQLToken [] { SQLToken.WS },
-                new SQLToken [] { SQLToken.SQL_COMMENT });
-
-        return lexer;
+                new SQLToken [] { SQLToken.SQL_COMMENT },
+                createEOFException);
     }
 }

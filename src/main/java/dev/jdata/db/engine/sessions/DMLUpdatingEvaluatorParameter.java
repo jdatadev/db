@@ -6,7 +6,7 @@ import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.dml.DMLInsertRows.InsertRow;
 import dev.jdata.db.engine.database.SQLExpressionEvaluator;
 import dev.jdata.db.engine.transactions.TransactionSelect.TransactionSelectAllocator;
-import dev.jdata.db.utils.adt.maps.ILongToIntMapGetters;
+import dev.jdata.db.utils.adt.maps.ILongToIntCommonMapGetters;
 import dev.jdata.db.utils.adt.sets.MutableLargeLongBucketSet;
 import dev.jdata.db.utils.allocators.IArrayAllocator;
 import dev.jdata.db.utils.allocators.IByteArrayByteBufferAllocator;
@@ -29,7 +29,7 @@ public final class DMLUpdatingEvaluatorParameter extends BaseDMLUpdatingEvaluato
     @Deprecated
     private SQLExpressionEvaluator expressionEvaluator;
 
-    private ILongToIntMapGetters columnIndexByColumnName;
+    private ILongToIntCommonMapGetters columnIndexByColumnName;
 
     private long numUpdated;
 

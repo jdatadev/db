@@ -7,7 +7,7 @@ import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
 
 @Deprecated // necessary?
-abstract class BaseIntArrayNonBucketMap<T> extends BaseIntNonBucketMap<T> {
+abstract class BaseIntArrayNonBucketMap<T> extends BaseIntKeyNonBucketMap<T> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_NON_BUCKET_ARRAY_MAP;
 

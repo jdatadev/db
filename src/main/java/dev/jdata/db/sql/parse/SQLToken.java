@@ -30,15 +30,20 @@ public enum SQLToken implements IToken {
 
     SEMI_COLON(';'),
 
+    BOOLEAN("boolean"),
     SMALLINT("smallint"),
     INTEGER("integer"),
     BIGINT("bigint"),
     CHAR("char"),
     VARCHAR("varchar"),
     DATE("date"),
+    TIME("time"),
+    TIMESTAMP("timestamp"),
     FLOAT("float"),
     DOUBLE("double"),
     DECIMAL("decimal"),
+    BLOB("blob"),
+    TEXT("text"),
 
     CREATE("create"),
     TABLE("table"),

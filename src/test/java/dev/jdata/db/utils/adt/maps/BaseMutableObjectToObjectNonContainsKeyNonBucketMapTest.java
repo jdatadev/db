@@ -2,13 +2,11 @@ package dev.jdata.db.utils.adt.maps;
 
 import java.util.List;
 
-import dev.jdata.db.utils.adt.IClearable;
-
 abstract class BaseMutableObjectToObjectNonContainsKeyNonBucketMapTest<
 
                 K,
                 V,
-                M extends IMutableMap<K, V> & IClearable & IObjectMapMutators<K, V> & IObjectMapGetters<K, V> & IObjectNonContainsKeyNonBucketMapGetters<K, V>>
+                M extends IMutableCommonMap<K, V, M> & IObjectToObjectCommonMapMutators<K, V> & IObjectToObjectCommonMapGetters<K, V> & IObjectStaticMapGetters<K, V>>
 
         extends BaseMutableIntegerToIntegerOrObjectMapTest<K[], V[], M> {
 

@@ -6,11 +6,10 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
-import dev.jdata.db.utils.adt.maps.IToObjectMapGetters.ForEachValue;
+import dev.jdata.db.utils.adt.maps.Maps.IIntForEachAppend;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseIntToObjectNonBucketMap<T> extends BaseIntArrayNonBucketMap<T[]> implements IIntToObjectMap<T> {
+abstract class BaseIntToObjectNonBucketMap<T, M extends IBaseIntToObjectMapCommon<T, M>> extends BaseIntArrayNonBucketMap<T[]> implements IBaseIntToObjectMapCommon<T, M> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_TO_OBJECT_NON_BUCKET_MAP;
 
@@ -24,7 +23,7 @@ abstract class BaseIntToObjectNonBucketMap<T> extends BaseIntArrayNonBucketMap<T
         if (DEBUG) {
 
             enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createMap", createValuesArray));
+                    .add("createValuesArray", createValuesArray));
         }
 
         if (DEBUG) {
@@ -33,24 +32,65 @@ abstract class BaseIntToObjectNonBucketMap<T> extends BaseIntArrayNonBucketMap<T
         }
     }
 
-    BaseIntToObjectNonBucketMap(BaseIntToObjectNonBucketMap<T> toCopy) {
+    BaseIntToObjectNonBucketMap(BaseIntToObjectNonBucketMap<T, M> toCopy) {
         super(toCopy, (a1, a2) -> System.arraycopy(a1, 0, a2, 0, a1.length));
     }
 
     @Override
-    public final <P> void forEachValue(P parameter, ForEachValue<T, P> forEachValue) {
+    public final <P> void forEachValue(P parameter, IForEachValue<T, P> forEach) {
 
-        Objects.requireNonNull(forEachValue);
+        Objects.requireNonNull(forEach);
 
-        forEachKeyAndValue(parameter, forEachValue, (keys, keyIndex, values, valueIndex, p1, p2) -> p2.each(values[valueIndex], p1));
+        if (DEBUG) {
+
+            enter(b -> b.add("parameter", parameter).add("forEach", forEach));
+        }
+
+        forEachKeyAndValue(parameter, forEach, (keys, keyIndex, values, valueIndex, p1, p2) -> p2.each(values[valueIndex], p1));
+
+        if (DEBUG) {
+
+            exit(b -> b.add("parameter", parameter).add("forEach", forEach));
+        }
     }
 
     @Override
-    public final <P> void forEachKeyAndValue(P parameter, ForEachKeyAndValue<T, P> forEachKeyAndValue) {
+    public final <P> void forEachKeyAndValue(P parameter, IForEachKeyAndValue<T, P> forEach) {
 
-        Objects.requireNonNull(forEachKeyAndValue);
+        Objects.requireNonNull(forEach);
 
-        forEachKeyAndValue(parameter, forEachKeyAndValue, (keys, keyIndex, values, valueIndex, p1, p2) -> p2.each(keys[keyIndex], values[valueIndex], p1));
+        if (DEBUG) {
+
+            enter(b -> b.add("parameter", parameter).add("forEach", forEach));
+        }
+
+        forEachKeyAndValue(parameter, forEach, (keys, keyIndex, values, valueIndex, p1, p2) -> p2.each(keys[keyIndex], values[valueIndex], p1));
+
+        if (DEBUG) {
+
+            exit(b -> b.add("parameter", parameter).add("forEach", forEach));
+        }
+    }
+
+    @Override
+    public final <P, DELEGATE, R> R forEachKeyAndValueWithResult(R defaultResult, P parameter, DELEGATE delegate, IForEachKeyAndValueWithResult<T, P, DELEGATE, R> forEach) {
+
+        Objects.requireNonNull(forEach);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("defaultResult", defaultResult).add("parameter", parameter).add("delegate", delegate).add("forEach", forEach));
+        }
+
+        final R result = forEachKeyAndValueWithResult(defaultResult, parameter, forEach, delegate,
+                (keys, keyIndex, values, valueIndex, p1, p2, d) -> p2.each(keys[keyIndex], values[valueIndex], p1, d));
+
+        if (DEBUG) {
+
+            exit(result, b -> b.add("defaultResult", defaultResult).add("parameter", parameter).add("delegate", delegate).add("forEach", forEach));
+        }
+
+        return result;
     }
 
     @Override
@@ -91,27 +131,33 @@ abstract class BaseIntToObjectNonBucketMap<T> extends BaseIntArrayNonBucketMap<T
         }
     }
 
+    final <P1, P2, DELEGATE> boolean equalsIntToObjectNonBucketMap(P1 parameter1, BaseIntToObjectNonBucketMap<T, M> other, P2 parameter2,
+            IObjectValueMapEqualityTester<T, P1, P2> equalityTester) {
+
+        Objects.requireNonNull(other);
+        Objects.requireNonNull(equalityTester);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("parameter1", parameter1).add("other", other).add("parameter2", parameter2).add("equalityTester", equalityTester));
+        }
+
+        final boolean result = equalsIntKeyNonBucketMapWithIndex(parameter1, other, parameter2, equalityTester,
+                (v1, i1, p1, v2, i2, p2, d) -> d.equals(v1[i1], p1, v2[i2], p2));
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
     @Override
     public final String toString() {
 
-        final StringBuilder sb = new StringBuilder(Integers.checkUnsignedLongToUnsignedInt(getNumElements() * 100));
-
-        sb.append(getClass().getSimpleName()).append(" {");
-
-        final int prefixLength = sb.length();
-
-        forEachKeyAndValue(sb, (k, v, b) -> {
-
-            if (b.length() > prefixLength) {
-
-                b.append(',');
-            }
-
-            b.append(k).append('=').append(v);
-        });
-
-        sb.append('}');
-
-        return sb.toString();
+        return Maps.intToObjectMapToString(getClass().getSimpleName(), getNumElements(), this,
+                (StringBuilder b, BaseIntToObjectNonBucketMap<T, M> i, IIntForEachAppend<T, BaseIntToObjectNonBucketMap<T, M>> f)
+                        -> i.forEachKeyAndValue(b, (key, value, stringBuilder) -> f.each(key, value, stringBuilder, null)));
     }
 }

@@ -4,10 +4,10 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import dev.jdata.db.utils.adt.IClearable;
-import dev.jdata.db.utils.adt.Contains;
+import dev.jdata.db.utils.adt.IContains;
 import dev.jdata.db.utils.checks.Checks;
 
-public class RowDataNumBits implements RowDataNumBitsGetter, Contains, IClearable {
+public class RowDataNumBits implements RowDataNumBitsGetter, IContains, IClearable {
 
     public interface RowDataNumBitsAllocator {
 

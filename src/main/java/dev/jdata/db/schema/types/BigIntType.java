@@ -21,7 +21,7 @@ public final class BigIntType extends BaseIntegerType {
     }
 
     @Override
-    public <T, R> R visit(SchemaDataTypeVisitor<T, R> visitor, T parameter) {
+    public <T, R, E extends Exception> R visit(SchemaDataTypeVisitor<T, R, E> visitor, T parameter) throws E {
 
         return visitor.onBigIntType(this, parameter);
     }

@@ -3,6 +3,7 @@ package dev.jdata.db.schema.model.databaseschema;
 import java.util.Objects;
 
 import org.jutils.io.strings.StringRef;
+import org.jutils.io.strings.StringResolver;
 
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
@@ -20,8 +21,8 @@ public abstract class BaseDatabaseSchema<T extends BaseSchemaMaps<?>> extends Da
     private final T schemaMaps;
     private final DatabaseSchemaVersion version;
 
-    protected BaseDatabaseSchema(DatabaseId databaseId, DatabaseSchemaVersion version, T schemaMaps) {
-        super(databaseId);
+    protected BaseDatabaseSchema(AllocationType allocationType, DatabaseId databaseId, DatabaseSchemaVersion version, T schemaMaps) {
+        super(allocationType, databaseId);
 
         this.schemaMaps = Objects.requireNonNull(schemaMaps);
         this.version = Objects.requireNonNull(version);
@@ -75,6 +76,66 @@ public abstract class BaseDatabaseSchema<T extends BaseSchemaMaps<?>> extends Da
     final T getSchemaMaps() {
 
         return schemaMaps;
+    }
+
+    @Override
+    public final boolean isEqualTo(StringResolver thisStringResolver, IDatabaseSchema other, StringResolver otherStringResolver) {
+
+        final boolean result;
+
+        final Object object = other;
+
+        if (this == other) {
+
+            result = true;
+        }
+        else if (!super.equals(object)) {
+
+            result = false;
+        }
+        else if (getClass() != other.getClass()) {
+
+            result = false;
+        }
+        else {
+            final BaseDatabaseSchema<?> otherDatabaseSchema = (BaseDatabaseSchema<?>)other;
+
+            @SuppressWarnings("unchecked")
+            final BaseSchemaMaps<ISchemaMap<?>> maps = (BaseSchemaMaps<ISchemaMap<?>>)schemaMaps;
+
+            @SuppressWarnings("unchecked")
+            final BaseSchemaMaps<ISchemaMap<?>> otherMaps = (BaseSchemaMaps<ISchemaMap<?>>)otherDatabaseSchema.schemaMaps;
+
+            result = version.equals(otherDatabaseSchema.version) && maps.isEqualTo(thisStringResolver, otherMaps, otherStringResolver);
+        }
+
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+
+        final boolean result;
+
+        if (this == object) {
+
+            result = true;
+        }
+        else if (!super.equals(object)) {
+
+            result = false;
+        }
+        else if (getClass() != object.getClass()) {
+
+            result = false;
+        }
+        else {
+            final BaseDatabaseSchema<?> other = (BaseDatabaseSchema<?>)object;
+
+            result = version.equals(other.version) && schemaMaps.equals(other.schemaMaps);
+        }
+
+        return result;
     }
 
     @Override

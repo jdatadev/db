@@ -1,9 +1,9 @@
 package dev.jdata.db.sql.parse;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
 
@@ -25,8 +25,8 @@ public abstract class BaseSQLConditionClauseParser extends BaseSQLParser {
         this.conditionParser = Objects.requireNonNull(conditionParser);
     }
 
-    protected final <T extends SQLConditionClause> T parseConditionClause(SQLExpressionLexer lexer, SQLToken keywordToken, ConditionClauseFactory<T> conditionClauseFactory)
-            throws ParserException, IOException {
+    protected final <T extends SQLConditionClause, E extends Exception, I extends CharInput<E>> T parseConditionClause(SQLExpressionLexer<E, I> lexer, SQLToken keywordToken,
+            ConditionClauseFactory<T> conditionClauseFactory) throws ParserException, E {
 
         Objects.requireNonNull(lexer);
         Objects.requireNonNull(keywordToken);

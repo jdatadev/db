@@ -1,9 +1,9 @@
 package dev.jdata.db.sql.parse.dml.select.projection;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.sql.ast.expressions.SQLAggregateFunctionCallExpression;
@@ -19,7 +19,6 @@ import dev.jdata.db.sql.parse.BaseSQLParser;
 import dev.jdata.db.sql.parse.SQLExpressionLexer;
 import dev.jdata.db.sql.parse.SQLToken;
 import dev.jdata.db.sql.parse.expression.SQLExpressionParser;
-
 public class SQLProjectionItemParser extends BaseSQLParser {
 
     private final SQLExpressionParser expressionParser;
@@ -29,7 +28,7 @@ public class SQLProjectionItemParser extends BaseSQLParser {
         this.expressionParser = Objects.requireNonNull(expressionParser);
     }
 
-    public final SQLProjectionItem parseProjectionItem(SQLExpressionLexer lexer) throws ParserException, IOException {
+    public final <E extends Exception, I extends CharInput<E>> SQLProjectionItem parseProjectionItem(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         final SQLProjectionElement projectionElement = parseProjectionElement(lexer);
 
@@ -48,7 +47,7 @@ public class SQLProjectionItemParser extends BaseSQLParser {
         return result;
     }
 
-    private SQLProjectionElement parseProjectionElement(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLProjectionElement parseProjectionElement(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         final Expression expression = expressionParser.parseExpression(lexer);
 

@@ -1,5 +1,6 @@
 package dev.jdata.db.sql.parse.expression;
 
+import org.jutils.ast.objects.list.IIndexListGetters;
 import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.context.Context;
 
@@ -16,7 +17,7 @@ public final class SQLSubSelectParser extends BaseSQLSelectParser<SQLSubSelectSt
     }
 
     @Override
-    protected SQLSubSelectStatement createSelectStatement(Context context, IListGetters<SQLSelectStatementPart> parts, IListGetters<SQLUnion> unions) {
+    protected SQLSubSelectStatement createSelectStatement(Context context, IIndexListGetters<SQLSelectStatementPart> parts, IIndexListGetters<SQLUnion> unions) {
 
         return new SQLSubSelectStatement(context, parts, unions);
     }

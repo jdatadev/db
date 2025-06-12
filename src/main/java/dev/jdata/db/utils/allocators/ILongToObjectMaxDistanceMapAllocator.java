@@ -8,7 +8,14 @@ public interface ILongToObjectMaxDistanceMapAllocator<T> {
 
     MutableLongToObjectMaxDistanceNonBucketMap<T> allocateLongToObjectMap(int initialCapacityExponent, IntFunction<T[]> createValuesArray);
 
-    MutableLongToObjectMaxDistanceNonBucketMap<T> copyLongToObjectMap(MutableLongToObjectMaxDistanceNonBucketMap<T> toCopy);
-
     void freeLongToObjectMap(MutableLongToObjectMaxDistanceNonBucketMap<T> longToObjectMap);
+
+    default MutableLongToObjectMaxDistanceNonBucketMap<T> copyLongToObjectMap(MutableLongToObjectMaxDistanceNonBucketMap<T> toCopy) {
+
+        final MutableLongToObjectMaxDistanceNonBucketMap<T> copy = allocateLongToObjectMap(toCopy.getCapacityExponent(), toCopy.getCreateValues());
+
+        toCopy.forEachKeyAndValue(copy, (k, v, c) -> copy.put(k, v));
+
+        return copy;
+    }
 }

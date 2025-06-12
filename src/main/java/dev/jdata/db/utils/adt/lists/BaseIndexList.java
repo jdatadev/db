@@ -6,31 +6,31 @@ import dev.jdata.db.utils.adt.elements.ICapacity;
 
 abstract class BaseIndexList<T> extends BaseArrayList<T> implements ICapacity, IIndexListGetters<T> {
 
-    BaseIndexList() {
-
+    BaseIndexList(AllocationType allocationType) {
+        super(allocationType);
     }
 
-    BaseIndexList(IntFunction<T[]> createArray, IIndexList<T> toCopy) {
-        super(createArray, toCopy);
+    BaseIndexList(AllocationType allocationType, IntFunction<T[]> createArray, IIndexList<T> toCopy) {
+        super(allocationType, createArray, toCopy);
     }
 
-    BaseIndexList(IntFunction<T[]> createArray, int initialCapacity) {
-        super(createArray, initialCapacity);
+    BaseIndexList(AllocationType allocationType, IntFunction<T[]> createArray, int initialCapacity) {
+        super(allocationType, createArray, initialCapacity);
     }
 
-    BaseIndexList(IntFunction<T[]> createArray, T[] instances) {
-        super(createArray, instances);
+    BaseIndexList(AllocationType allocationType, IntFunction<T[]> createArray, T[] instances) {
+        super(allocationType, createArray, instances);
     }
 
-    BaseIndexList(IntFunction<T[]> createArray, T[] instances, int numElements) {
-        super(createArray, instances, numElements);
+    BaseIndexList(AllocationType allocationType, IntFunction<T[]> createArray, T[] instances, int numElements) {
+        super(allocationType, createArray, instances, numElements);
     }
 
-    BaseIndexList(IntFunction<T[]> createArray) {
-        super(createArray);
+    BaseIndexList(AllocationType allocationType, IntFunction<T[]> createArray) {
+        super(allocationType, createArray);
     }
 
-    BaseIndexList(T[] instances) {
-        super(instances);
+    BaseIndexList(AllocationType allocationType, T[] instances) {
+        super(allocationType, instances);
     }
 }

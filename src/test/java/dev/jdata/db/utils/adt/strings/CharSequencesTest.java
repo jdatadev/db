@@ -41,4 +41,26 @@ public final class CharSequencesTest extends BaseCharSequencesTest {
 
         assertThat(CharSequences.startsWith(charSequence, otherCharSequence)).isEqualTo(expectedResult);
     }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testHasFirstCharacterAndRemaining() {
+
+        checkHasFirstCharacterAndRemaining("", 0, false);
+        checkHasFirstCharacterAndRemaining("a", 0, false);
+        checkHasFirstCharacterAndRemaining("a", 1, true);
+        checkHasFirstCharacterAndRemaining("0", 1, false);
+        checkHasFirstCharacterAndRemaining("9", 1, false);
+        checkHasFirstCharacterAndRemaining("a1", 2, true);
+        checkHasFirstCharacterAndRemaining("a ", 1, true);
+        checkHasFirstCharacterAndRemaining("a ", 2, false);
+        checkHasFirstCharacterAndRemaining("abc ", 4, false);
+    }
+
+    private void checkHasFirstCharacterAndRemaining(String charSequenceString, int numCharaters, boolean expectedResult) {
+
+        assertThat(CharSequences.hasFirstCharacterAndRemaining(charSequenceString, numCharaters, Character::isAlphabetic,
+                c -> Character.isAlphabetic(c) || Character.isDigit(c)))
+            .isEqualTo(expectedResult);
+    }
 }

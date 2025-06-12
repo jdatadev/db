@@ -1,6 +1,5 @@
 package dev.jdata.db.sql.parse;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.io.strings.CharInput;
@@ -8,13 +7,36 @@ import org.jutils.parse.IToken;
 import org.jutils.parse.Lexer;
 import org.jutils.parse.ParserException;
 
-abstract class BaseLexer<T extends Enum<T> & IToken> {
+import dev.jdata.db.utils.adt.IResettable;
+import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
-    private final Lexer<T, CharInput> lexer;
+abstract class BaseLexer<TOKEN extends Enum<TOKEN> & IToken, E extends Exception, INPUT extends CharInput<E>> extends ObjectCacheNode implements IResettable {
 
-    BaseLexer(Lexer<T, CharInput> lexer) {
+    private Lexer<TOKEN, E, INPUT> lexer;
+
+    BaseLexer() {
+
+    }
+
+    final void initialize(Lexer<TOKEN, E, INPUT> lexer) {
+
+        if (this.lexer != null) {
+
+            throw new IllegalStateException();
+        }
 
         this.lexer = Objects.requireNonNull(lexer);
+    }
+
+    @Override
+    public void reset() {
+
+        if (lexer == null) {
+
+            throw new IllegalStateException();
+        }
+
+        this.lexer = null;
     }
 
     public final long getStringRef() {
@@ -27,12 +49,12 @@ abstract class BaseLexer<T extends Enum<T> & IToken> {
         return lexer.getStringRef(startPos, endSkip);
     }
 
-    public final ParserException unexpectedToken(T expectedToken) {
+    public final ParserException unexpectedToken(TOKEN expectedToken) {
 
         return lexer.unexpectedToken(expectedToken);
     }
 
-    public final ParserException unexpectedToken(T[] expectedTokens) {
+    public final ParserException unexpectedToken(TOKEN[] expectedTokens) {
 
         return lexer.unexpectedToken(expectedTokens);
     }
@@ -42,42 +64,42 @@ abstract class BaseLexer<T extends Enum<T> & IToken> {
         return lexer.getTokenLength();
     }
 
-    public final long lexKeyword(T toFind) throws ParserException, IOException {
+    public final long lexKeyword(TOKEN toFind) throws ParserException, E {
 
         return LexerUtil.lexKeyword(lexer, toFind);
     }
 
-    public final long lexStringRef(T toFind) throws ParserException, IOException {
+    public final long lexStringRef(TOKEN toFind) throws ParserException, E {
 
         return LexerUtil.lexStringRef(lexer, toFind);
     }
 
-    public final void lexSkip(T toFind) throws ParserException, IOException {
+    public final void lexSkip(TOKEN toFind) throws ParserException, E {
 
         LexerUtil.lexSkip(lexer, toFind);
     }
 
-    public final void lexExpect(T toFind) throws ParserException, IOException {
+    public final void lexExpect(TOKEN toFind) throws ParserException, E {
 
         LexerUtil.lexExpect(lexer, toFind);
     }
 
-    public final boolean lex(T toFind) throws IOException {
+    public final boolean lex(TOKEN toFind) throws E {
 
         return LexerUtil.lex(lexer, toFind);
     }
 
-    public final T lex(T[] toFind) throws IOException {
+    public final TOKEN lex(TOKEN[] toFind) throws E {
 
         return LexerUtil.lex(lexer, toFind);
     }
 
-    public final boolean peek(T toFind) throws IOException {
+    public final boolean peek(TOKEN toFind) throws E {
 
         return LexerUtil.peek(lexer, toFind);
     }
 
-    public final T peek(T[] toFind) throws IOException {
+    public final TOKEN peek(TOKEN[] toFind) throws E {
 
         return LexerUtil.peek(lexer, toFind);
     }

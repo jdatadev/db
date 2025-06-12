@@ -43,6 +43,7 @@ public abstract class SQLParserFactory {
 
     private static final SQLToken[] SCHEMA_DATATYPE_TOKENS = new SQLToken[] {
 
+            SQLToken.BOOLEAN,
             SQLToken.SMALLINT,
             SQLToken.INTEGER,
             SQLToken.BIGINT,
@@ -51,7 +52,11 @@ public abstract class SQLParserFactory {
             SQLToken.DECIMAL,
             SQLToken.CHAR,
             SQLToken.VARCHAR,
-            SQLToken.DATE
+            SQLToken.DATE,
+            SQLToken.TIME,
+            SQLToken.TIMESTAMP,
+            SQLToken.BLOB,
+            SQLToken.TEXT
     };
 
     private static final SQLToken[] ADD_CONSTRAINT_TOKENS = new SQLToken[] {

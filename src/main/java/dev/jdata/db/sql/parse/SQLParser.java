@@ -1,18 +1,18 @@
 package dev.jdata.db.sql.parse;
 
-import java.io.DataOutput;
-import java.io.IOException;
-import java.nio.CharBuffer;
 import java.util.Objects;
+import java.util.function.Function;
 
 import org.jutils.ast.objects.list.IAddable;
 import org.jutils.ast.objects.list.IAddableList;
-import org.jutils.ast.objects.list.IImutableList;
-import org.jutils.io.buffers.StringBuffers;
+import org.jutils.ast.objects.list.IImmutableIndexList;
+import org.jutils.io.buffers.BaseStringBuffers;
+import org.jutils.io.buffers.LoadStreamStringBuffers;
 import org.jutils.io.loadstream.LoadStream;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.parse.ddl.index.SQLCreateIndexParser;
 import dev.jdata.db.sql.parse.ddl.index.SQLDropIndexParser;
@@ -31,29 +31,10 @@ import dev.jdata.db.sql.parse.expression.SQLSubSelectParser;
 import dev.jdata.db.sql.parse.trigger.SQLCreateTriggerParser;
 import dev.jdata.db.sql.parse.trigger.SQLDropTriggerParser;
 import dev.jdata.db.sql.parse.where.SQLWhereClauseParser;
+import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.checks.Checks;
 
 public abstract class SQLParser extends BaseSQLParser {
-
-    public interface SQLString {
-
-        void append(Appendable appendable);
-
-        default String asString() {
-
-            final StringBuilder sb = new StringBuilder(10000);
-
-            append(sb);
-
-            return sb.toString();
-        }
-
-        long getLength();
-
-        void write(DataOutput dataOutput) throws IOException;
-
-        long writeToCharBuffer(CharBuffer dst, long offset);
-    }
 
     private final SQLToken[] statementTokens;
     private final SQLToken[] createOrDropTokens;
@@ -73,6 +54,8 @@ public abstract class SQLParser extends BaseSQLParser {
 
     private final SQLCreateTriggerParser createTriggerParser;
     private final SQLDropTriggerParser dropTriggerParser;
+
+    private final NodeObjectCache<SQLExpressionLexer<?, ?>> sqlExpressionLexerCache;
 
     public SQLParser(SQLToken[] statementTokens, SQLToken[] createOrDropTokens, SQLToken[] alterTokens, SQLParserFactory parserFactory) {
 
@@ -106,20 +89,23 @@ public abstract class SQLParser extends BaseSQLParser {
 
         this.createTriggerParser = parserFactory.createCreateTriggerParser(conditionParser, insertParser, updateParser, deleteParser);
         this.dropTriggerParser = parserFactory.createDropTriggerParser();
+
+        this.sqlExpressionLexerCache = new NodeObjectCache<>(SQLExpressionLexer::new);
     }
 
-    private IImutableList<BaseSQLStatement> parse(LoadStream loadStream, SQLAllocator allocator, SQLScratchExpressionValues scratchExpressionValues) throws ParserException, IOException {
+    private <E extends Exception> IImmutableIndexList<BaseSQLStatement> parse(LoadStream<E> loadStream, Function<String, E> createEOFException, ISQLAllocator allocator,
+            SQLScratchExpressionValues scratchExpressionValues) throws ParserException, E {
 
-        final IImutableList<BaseSQLStatement> result;
+        final IImmutableIndexList<BaseSQLStatement> result;
 
         final IAddableList<BaseSQLStatement> sqlStatements = allocator.allocateList(1);
 
         try {
-            parse(loadStream, allocator, scratchExpressionValues, sqlStatements, null);
+            parse(loadStream, createEOFException, allocator, scratchExpressionValues, sqlStatements, null);
         }
         finally {
 
-            result = sqlStatements.toImmutableList();
+            result = sqlStatements.toImmutableIndexList();
 
             allocator.freeList(sqlStatements);
         }
@@ -127,31 +113,47 @@ public abstract class SQLParser extends BaseSQLParser {
         return result;
     }
 
-    public void parse(LoadStream loadStream, SQLAllocator allocator, SQLScratchExpressionValues scratchExpressionValues, IAddable<BaseSQLStatement> sqlStatementDst,
-            IAddable<SQLString> sqlStringsDst) throws ParserException, IOException {
+    private <E extends Exception> void parse(LoadStream<E> loadStream, Function<String, E> createEOFException, ISQLAllocator allocator,
+            SQLScratchExpressionValues scratchExpressionValues, IAddable<BaseSQLStatement> sqlStatementDst, IAddable<SQLString> sqlStringsDst) throws ParserException, E {
 
-        Objects.requireNonNull(loadStream);
+        final LoadStreamStringBuffers<E> buffer = new LoadStreamStringBuffers<>(loadStream);
+
+        parse(buffer, createEOFException, allocator, scratchExpressionValues, sqlStatementDst, sqlStringsDst);
+    }
+
+    public <E extends Exception, BUFFER extends BaseStringBuffers<E>> void parse(BUFFER buffer, Function<String, E> createEOFException, ISQLAllocator allocator,
+            SQLScratchExpressionValues scratchExpressionValues, IAddable<BaseSQLStatement> sqlStatementDst, IAddable<SQLString> sqlStringsDst) throws ParserException, E {
+
+        Objects.requireNonNull(buffer);
+        Objects.requireNonNull(createEOFException);
         Objects.requireNonNull(scratchExpressionValues);
         Objects.requireNonNull(sqlStatementDst);
         Objects.requireNonNull(sqlStringsDst);
 
-        final StringBuffers buffer = new StringBuffers(loadStream);
+        @SuppressWarnings("unchecked")
+        final SQLExpressionLexer<E, BUFFER> lexer = (SQLExpressionLexer<E, BUFFER>)sqlExpressionLexerCache.allocate();
 
-        final SQLExpressionLexer lexer = new SQLExpressionLexer(buffer, allocator, buffer, scratchExpressionValues);
+        try {
+            lexer.initialize(buffer, createEOFException, allocator, buffer, scratchExpressionValues);
 
-        if (!skipEmptyStatements(lexer)) {
+            if (!skipEmptyStatements(lexer)) {
 
-            for (;;) {
+                for (;;) {
 
-                final BaseSQLStatement sqlStatement = parseStatement(lexer);
+                    final BaseSQLStatement sqlStatement = parseStatement(lexer);
 
-                sqlStatementDst.add(sqlStatement);
+                    sqlStatementDst.add(sqlStatement);
 
-                if (skipEmptyStatements(lexer)) {
+                    if (skipEmptyStatements(lexer)) {
 
-                    break;
+                        break;
+                    }
                 }
             }
+        }
+        finally {
+
+            sqlExpressionLexerCache.free(lexer);
         }
     }
 
@@ -161,7 +163,7 @@ public abstract class SQLParser extends BaseSQLParser {
             SQLToken.EOF
     };
 
-    private boolean skipEmptyStatements(SQLLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> boolean skipEmptyStatements(SQLLexer<E, I> lexer) throws ParserException, E {
 
         boolean isEOF = false;
 
@@ -186,7 +188,7 @@ public abstract class SQLParser extends BaseSQLParser {
         return isEOF;
     }
 
-    private BaseSQLStatement parseStatement(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> BaseSQLStatement parseStatement(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         final BaseSQLStatement result;
 
@@ -205,7 +207,8 @@ public abstract class SQLParser extends BaseSQLParser {
         return result;
     }
 
-    BaseSQLStatement processStatement(SQLExpressionLexer lexer, SQLToken statementToken, long statementKeyword) throws ParserException, IOException {
+    <E extends Exception, I extends CharInput<E>> BaseSQLStatement processStatement(SQLExpressionLexer<E, I> lexer, SQLToken statementToken, long statementKeyword)
+            throws ParserException, E {
 
         Objects.requireNonNull(lexer);
         Objects.requireNonNull(statementToken);

@@ -41,7 +41,7 @@ abstract class BaseLargeLongNonBucketMap<T> extends BaseLargeIntegerMap<LargeLon
 
         final long setLength = hashed.getCapacity();
 
-        for (long i = 0; i < setLength; ++ i) {
+        for (long i = 0L; i < setLength; ++ i) {
 
             final long element = hashed.get(i);
 

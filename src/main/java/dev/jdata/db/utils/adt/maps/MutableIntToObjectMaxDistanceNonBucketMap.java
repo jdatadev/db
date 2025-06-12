@@ -5,7 +5,7 @@ import java.util.function.IntFunction;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 
-public final class MutableIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntToObjectMaxDistanceNonBucketMap<T> implements IMutableIntToObjectMap<T> {
+public final class MutableIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntToObjectMaxDistanceNonBucketMap<T> implements IMutableIntToObjectDynamicMap<T> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_INT_TO_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP;
 

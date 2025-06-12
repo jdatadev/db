@@ -10,7 +10,7 @@ import java.util.function.Predicate;
 
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.utils.adt.Contains;
+import dev.jdata.db.utils.adt.IContains;
 import dev.jdata.db.utils.adt.arrays.IArray;
 import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.adt.lists.IIndexList;
@@ -149,6 +149,14 @@ public class Checks {
         }
 
         return value;
+    }
+
+    public static <T> void areNotSame(T object1, T object2) {
+
+        if (object1 == object2) {
+
+            throw new IllegalArgumentException();
+        }
     }
 
     public static void isLessThan(long value1, long value2) {
@@ -347,7 +355,7 @@ public class Checks {
 
             result = false;
         }
-        else if (!CharSequences.hasFirstCharacterAndRemaining(dbName, Character::isAlphabetic, c -> Characters.isASCIIAlphaNumeric(c) || c == '_')) {
+        else if (!CharSequences.hasFirstCharacterAndRemaining(dbName, Characters::isASCIIAlpha, c -> Characters.isASCIIAlphaNumeric(c) || c == '_')) {
 
             result = false;
         }
@@ -509,7 +517,7 @@ public class Checks {
         return array;
     }
 
-    public static <T extends Contains> T isEmpty(T contains) {
+    public static <T extends IContains> T isEmpty(T contains) {
 
         if (contains.isEmpty()) {
 
@@ -519,7 +527,7 @@ public class Checks {
         return contains;
     }
 
-    public static <T extends Contains> T isNotEmpty(T contains) {
+    public static <T extends IContains> T isNotEmpty(T contains) {
 
         if (contains.isEmpty()) {
 
@@ -568,7 +576,7 @@ public class Checks {
 
         final long numElements = list.getNumElements();
 
-        for (long i = 0; i < numElements; ++ i) {
+        for (long i = 0L; i < numElements; ++ i) {
 
             if (!predicate.test(list.get(i), parameter)) {
 
@@ -741,6 +749,16 @@ public class Checks {
     public static int isLengthAboveOrAtZero(int length) {
 
         if (length < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return length;
+    }
+
+    public static long isLengthAboveOrAtZero(long length) {
+
+        if (length < 0L) {
 
             throw new IllegalArgumentException();
         }

@@ -7,7 +7,7 @@ import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
 
-public final class MutableObjectWithRemoveNonBucketMap<K, V> extends BaseObjectWithRemoveNonBucketMap<K, V> implements IMutableObjectWithRemoveNonBucketMap<K, V> {
+public final class MutableObjectWithRemoveNonBucketMap<K, V> extends BaseObjectWithRemoveNonBucketMap<K, V> implements IMutableObjectStaticMap<K, V> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_OBJECT_WITH_REMOVE_NON_BUCKET_MAP;
 

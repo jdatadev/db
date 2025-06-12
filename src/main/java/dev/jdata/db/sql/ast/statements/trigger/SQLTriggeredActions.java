@@ -4,14 +4,14 @@ import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.BaseASTElement;
 import org.jutils.ast.objects.list.ASTList;
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
 import org.jutils.parse.context.Context;
 
 public abstract class SQLTriggeredActions extends BaseASTElement {
 
     private final ASTList<SQLTriggeredAction> actions;
 
-    SQLTriggeredActions(Context context, IListGetters<SQLTriggeredAction> actions) {
+    SQLTriggeredActions(Context context, IIndexListGetters<SQLTriggeredAction> actions) {
         super(context);
 
         this.actions = makeList(actions);

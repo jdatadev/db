@@ -3,7 +3,7 @@ package dev.jdata.db.utils.adt.maps;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 
-public final class MutableIntToIntMaxDistanceNonBucketMap extends BaseIntToIntMaxDistanceNonBucketMap implements IMutableIntToIntMap {
+public final class MutableIntToIntMaxDistanceNonBucketMap extends BaseIntToIntMaxDistanceNonBucketMap implements IMutableIntToIntDynamicMap {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_INT_TO_INT_MAX_DISTANCE_NON_BUCKET_MAP;
 

@@ -12,7 +12,8 @@ import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 
 import dev.jdata.db.utils.adt.elements.ByIndex;
-import dev.jdata.db.utils.adt.elements.ByIndex.ByIndexStringAdder;
+import dev.jdata.db.utils.adt.elements.ByIndex.IByIndexElementEqualityTester;
+import dev.jdata.db.utils.adt.elements.ByIndex.IntByIndexStringAdder;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.BiObjToIntFunction;
 import dev.jdata.db.utils.function.IntToByteFunction;
@@ -20,6 +21,32 @@ import dev.jdata.db.utils.function.IntToIntFunction;
 import dev.jdata.db.utils.scalars.Integers;
 
 public class Array {
+
+    private static <T, P> long count(T[] array, P parameter, BiPredicate<T, P> predicate) {
+
+        Objects.requireNonNull(array);
+        Objects.requireNonNull(predicate);
+
+        long count = 0;
+
+        for (T element : array) {
+
+            if (predicate.test(element, parameter)) {
+
+                ++ count;
+            }
+        }
+
+        return count;
+    }
+
+    private static <T> long closureOrConstantCount(T[] array, Predicate<T> predicate) {
+
+        Objects.requireNonNull(array);
+        Objects.requireNonNull(predicate);
+
+        return count(array, predicate, (e, p) -> p.test(e));
+    }
 
     public static int sum(int[] array) {
 
@@ -74,42 +101,42 @@ public class Array {
 
     public static <T> boolean containsInstance(T[] array, T instance) {
 
-        return ByIndex.containsInstance(array, array.length, instance, (b, i) -> b[i], ArrayIndexOutOfBoundsException::new);
+        return ByIndex.containsInstance(array, array.length, instance, (b, i) -> b[(int)i], ArrayIndexOutOfBoundsException::new);
     }
 
-    public static <T> boolean containsInstance(T[] array, int startIndex, int numElements, T instance) {
+    public static <T> boolean containsInstance(T[] array, T instance, int startIndex, int numElements) {
 
-        return ByIndex.containsInstance(array, array.length, startIndex, numElements, instance, (b, i) -> b[i], ArrayIndexOutOfBoundsException::new);
+        return ByIndex.containsInstance(array, array.length, instance, startIndex, numElements, (b, i) -> b[(int)i], ArrayIndexOutOfBoundsException::new);
     }
 
     public static <T, P> boolean contains(T[] array, P parameter, BiPredicate<T, P> predicate) {
 
-        return ByIndex.contains(array, array.length, parameter, (b, i) -> b[i], predicate, ArrayIndexOutOfBoundsException::new);
+        return ByIndex.contains(array, array.length, parameter, (b, i) -> b[(int)i], predicate, ArrayIndexOutOfBoundsException::new);
     }
 
     public static <T> boolean closureOrConstantContains(T[] array, Predicate<T> predicate) {
 
-        return ByIndex.contains(array, array.length, predicate, (b, i) -> b[i], (e, p) -> p.test(e), ArrayIndexOutOfBoundsException::new);
+        return ByIndex.contains(array, array.length, predicate, (b, i) -> b[(int)i], (e, p) -> p.test(e), ArrayIndexOutOfBoundsException::new);
     }
 
     public static <T, P> int findIndex(T[] array, P parameter, BiPredicate<T, P> predicate) {
 
-        return ByIndex.findIndex(array, array.length, parameter, (b, i) -> b[i], predicate, ArrayIndexOutOfBoundsException::new);
+        return (int)ByIndex.findIndex(array, array.length, parameter, (b, i) -> b[(int)i], predicate, ArrayIndexOutOfBoundsException::new);
     }
 
     public static <T> int closureOrConstantFindIndex(T[] array, Predicate<T> predicate) {
 
-        return ByIndex.findIndex(array, array.length, predicate, (b, i) -> b[i], (e, p) -> p.test(e), ArrayIndexOutOfBoundsException::new);
+        return (int)ByIndex.findIndex(array, array.length, predicate, (b, i) -> b[(int)i], (e, p) -> p.test(e), ArrayIndexOutOfBoundsException::new);
     }
 
     public static <T, P> int findIndex(T[] array, P parameter, int startIndex, int numElements, BiPredicate<T, P> predicate) {
 
-        return ByIndex.findIndex(array, array.length, startIndex, numElements, parameter, (b, i) -> b[i], predicate, ArrayIndexOutOfBoundsException::new);
+        return (int)ByIndex.findIndex(array, array.length, startIndex, numElements, parameter, (b, i) -> b[(int)i], predicate, ArrayIndexOutOfBoundsException::new);
     }
 
     public static <T> int closureOrConstantFindIndex(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
 
-        return ByIndex.findIndex(array, array.length, startIndex, numElements, predicate, (b, i) -> b[i], predicate != null ? (e, p) -> p.test(e) : null,
+        return (int)ByIndex.findIndex(array, array.length, startIndex, numElements, predicate, (b, i) -> b[(int)i], predicate != null ? (e, p) -> p.test(e) : null,
                 ArrayIndexOutOfBoundsException::new);
     }
 
@@ -218,7 +245,7 @@ public class Array {
 
         final R[] mapped = createMappedArray.apply(arrayLength);
 
-        ByIndex.map(toMap, arrayLength, (a, i) -> a[i], mapper, (a, i, e) -> a[i] = e, mapped);
+        ByIndex.map(toMap, arrayLength, (a, i) -> a[(int)i], mapper, (a, i, e) -> a[(int)i] = e, mapped);
 
         return mapped;
     }
@@ -282,12 +309,41 @@ public class Array {
         return result;
     }
 
+    @FunctionalInterface
+    public interface IArrayEqualityTester<T, P1, P2> extends IByIndexElementEqualityTester<T, P1, P2> {
+
+    }
+
+    public static <T, P1, P2> boolean equals(T[] array1, P1 parameter1, T[] array2, P2 parameter2, IArrayEqualityTester<T, P1, P2> equalityTester) {
+
+        final boolean result;
+
+        final int array1Length = array1.length;
+
+        if (array1Length == array2.length) {
+
+            result = equals(array1, 0, parameter1, array2, 0, parameter2, array1Length, equalityTester);
+        }
+        else {
+            result = false;
+        }
+
+        return result;
+    }
+
+    public static <T, P1, P2> boolean equals(T[] array1, int startIndex1, P1 parameter1, T[] array2, int startIndex2, P2 parameter2, int numElements,
+            IArrayEqualityTester<T, P1, P2> equalityTester) {
+
+        return ByIndex.equals(array1, startIndex1, parameter1, array2, startIndex2, parameter2, numElements, equalityTester,
+                (a1, i1, p1, a2, i2, p2, predicate) -> predicate.equals(a1[(int)i1], p1, a2[(int)i2], p2));
+    }
+
     public static String toString(byte[] array, int startIndex, int numElements) {
 
         Objects.requireNonNull(array);
         Objects.checkFromToIndex(startIndex, numElements, array.length);
 
-        return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[i]));
+        return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[(int)i]));
     }
 
     public static String toString(int[] array, int startIndex, int numElements) {
@@ -295,7 +351,7 @@ public class Array {
         Objects.requireNonNull(array);
         Objects.checkFromToIndex(startIndex, numElements, array.length);
 
-        return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[i]));
+        return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[(int)i]));
     }
 
     public static String toString(int[] array, int startIndex, int numElements, IntPredicate predicate) {
@@ -304,7 +360,7 @@ public class Array {
         Objects.checkFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(predicate);
 
-        return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
+        return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[(int)i]), (a, i, b) -> b.append(a[(int)i]));
     }
 
     public static void toString(int[] array, int startIndex, int numElements, StringBuilder sb, IntPredicate predicate) {
@@ -314,17 +370,18 @@ public class Array {
         Objects.requireNonNull(sb);
         Objects.requireNonNull(predicate);
 
-        ByIndex.closureOrConstantToString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
+        ByIndex.closureOrConstantToString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[(int)i]), (a, i, b) -> b.append(a[(int)i]));
     }
 
-    public static void toString(int[] array, int startIndex, int numElements, StringBuilder sb, IntPredicate predicate, ByIndexStringAdder<int[]> byIndexStringAdder) {
+    public static void toString(int[] array, int startIndex, int numElements, StringBuilder sb, IntPredicate predicate, IntByIndexStringAdder<int[]> byIndexStringAdder) {
 
         Objects.requireNonNull(array);
         Objects.checkFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(sb);
         Objects.requireNonNull(predicate);
 
-        ByIndex.closureOrConstantToString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[i]), byIndexStringAdder);
+        ByIndex.closureOrConstantToString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[(int)i]),
+                (a, i, b) -> byIndexStringAdder.addString(a, (int)i, b));
     }
 
     public static String toString(long[] array, int startIndex, int numElements, LongPredicate predicate) {
@@ -333,7 +390,7 @@ public class Array {
         Objects.checkFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(predicate);
 
-        return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
+        return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[(int)i]), (a, i, b) -> b.append(a[(int)i]));
     }
 
     public static void toString(long[] array, int startIndex, int numElements, StringBuilder sb, LongPredicate predicate) {
@@ -343,6 +400,6 @@ public class Array {
         Objects.requireNonNull(sb);
         Objects.requireNonNull(predicate);
 
-        ByIndex.closureOrConstantToString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[i]), (a, i, b) -> b.append(a[i]));
+        ByIndex.closureOrConstantToString(array, startIndex, numElements, sb, null, (a, i) -> predicate.test(a[(int)i]), (a, i, b) -> b.append(a[(int)i]));
     }
 }

@@ -6,13 +6,10 @@ import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance.MaxDistanceIntSetOperations;
 import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
-import dev.jdata.db.utils.debug.PrintDebug;
 
 abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_TO_INT_MAX_DISTANCE_NON_BUCKET_MAP;
-
-    private static final Class<?> debugClass = BaseIntMaxDistanceNonBucketSet.class;
 
     private byte[] maxDistances;
 
@@ -53,7 +50,7 @@ abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newKeyMask", newKeyMask));
+            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newKeyMask", newKeyMask));
         }
 
         this.maxDistances = new byte[newCapacity];
@@ -62,7 +59,7 @@ abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(result);
         }
 
         return result;

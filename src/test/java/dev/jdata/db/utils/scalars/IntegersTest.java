@@ -119,4 +119,33 @@ public final class IntegersTest extends BaseTest {
             assertThatThrownBy(() -> Integers.checkUnsignedLongToUnsignedInt(1L << closureI)).isInstanceOf(IllegalArgumentException.class);
         }
     }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testToChars() {
+
+        assertThatThrownBy(() -> Integers.toChars(1L, new StringBuilder(), null)).isInstanceOf(NullPointerException.class);
+
+        checkToChars(Long.MIN_VALUE, Long.toString(Long.MIN_VALUE));
+        checkToChars(Long.MIN_VALUE + 1, Long.toString(Long.MIN_VALUE + 1));
+        checkToChars(-1L, "-1");
+        checkToChars(0L, "0");
+        checkToChars(1L, "1");
+        checkToChars(12L, "12");
+        checkToChars(123L, "123");
+        checkToChars(10L, "10");
+        checkToChars(100L, "100");
+        checkToChars(101L, "101");
+        checkToChars(1010L, "1010");
+        checkToChars(Long.MAX_VALUE, Long.toString(Long.MAX_VALUE));
+    }
+
+    private void checkToChars(long integer, String expectedValue) {
+
+        final StringBuilder sb = new StringBuilder(30);
+
+        Integers.toChars(integer, sb, (c, p) -> p.append(c));
+
+        assertThat(sb.toString()).isEqualTo(expectedValue);
+    }
 }

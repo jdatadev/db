@@ -10,6 +10,7 @@ public interface IStringStorer extends IClearable {
     boolean containsOnly(long stringRef, CharPredicate predicate);
 
     long toLowerCase(long stringRef);
+    long getOrAddLowerCaseStringRef(long stringRef);
 
     long getOrAddStringRef(CharSequence charSequence, int offset, int length);
 

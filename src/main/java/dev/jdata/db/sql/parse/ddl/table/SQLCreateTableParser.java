@@ -1,12 +1,12 @@
 package dev.jdata.db.sql.parse.ddl.table;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.list.IAddableList;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.table.SQLCreateTableStatement;
 import dev.jdata.db.sql.ast.statements.table.SQLTableColumnDefinition;
 import dev.jdata.db.sql.parse.SQLExpressionLexer;
@@ -24,11 +24,14 @@ public class SQLCreateTableParser extends SQLStatementParser {
         this.schemaDataTypeTokens = Objects.requireNonNull(schemaDataTypeTokens);
     }
 
-    public SQLCreateTableStatement parseCreateTable(SQLExpressionLexer lexer, long createKeyword, long tableKeyword) throws ParserException, IOException {
+    public <E extends Exception, I extends CharInput<E>> SQLCreateTableStatement parseCreateTable(SQLExpressionLexer<E, I> lexer, long createKeyword, long tableKeyword)
+            throws ParserException, E {
+
+        final SQLCreateTableStatement result;
 
         final long tableName = lexer.lexName();
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final IAddableList<SQLTableColumnDefinition> columnDefinitions = allocator.allocateList(100);
 
@@ -54,9 +57,11 @@ public class SQLCreateTableParser extends SQLStatementParser {
         }
         finally {
 
+            result = new SQLCreateTableStatement(makeContext(), createKeyword, tableKeyword, tableName, columnDefinitions);
+
             allocator.freeList(columnDefinitions);
         }
 
-        return new SQLCreateTableStatement(makeContext(), createKeyword, tableKeyword, tableName, columnDefinitions);
+        return result;
     }
 }

@@ -9,7 +9,7 @@ import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.expression.ExpressionAdapter;
 import org.jutils.ast.objects.expression.ExpressionList;
 import org.jutils.ast.objects.list.ASTList;
-import org.jutils.ast.objects.list.IImutableList;
+import org.jutils.ast.objects.list.IImmutableIndexList;
 import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.ast.operator.Arithmetic;
 import org.jutils.ast.operator.Operator;
@@ -53,7 +53,7 @@ public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressio
 
     private SQLExpressionEvaluatorParameter parameter;
 
-    private IImutableList<Operator> operators;
+    private IImmutableIndexList<Operator> operators;
     private int numOperators;
 
     SQLExpressionEvaluator() {
@@ -1128,7 +1128,7 @@ public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressio
             }
 
             this.parameter = parameter;
-            this.operators = operators.toImmutableList();
+            this.operators = operators.toImmutableIndexList();
             this.numOperators = Integers.checkUnsignedLongToUnsignedInt(numOperators);
 
             expressions.foreachWithIndexAndParameter(this, (e, i, p) -> {
@@ -1140,7 +1140,7 @@ public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressio
                     p.evaluate(e, param);
                 }
                 else {
-                    final IListGetters<Operator> ops = p.operators;
+                    final org.jutils.ast.objects.list.IIndexListGetters<Operator> ops = p.operators;
                     final int numOps = p.numOperators;
 
                     final SQLExpressionEvaluator subExpressionEvaluator = param.allocateEvaluator();

@@ -1,6 +1,5 @@
 package dev.jdata.db.utils.adt.lists;
 
-public interface IIndexListMutators<T> extends ITailListMutators<T> {
+public interface IIndexListMutators<T> extends IHeadListMutators<T>, ITailListMutators<T>, IListMutators<T> {
 
-    void addHead(T instance);
 }

@@ -3,27 +3,27 @@ package dev.jdata.db.sql.ast.statements.table;
 import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.list.ASTList;
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
 import org.jutils.parse.context.Context;
 
 public final class SQLAddColumnsOperation extends SQLColumnOperation {
 
     private final long addKeyword;
-    private final ASTList<SQLAddColumnDefinition> columnDefinition;
+    private final ASTList<SQLAddColumnDefinition> columnDefinitions;
 
-    public SQLAddColumnsOperation(Context context, long addKeyword, IListGetters<SQLAddColumnDefinition> addColumnOperation) {
+    public SQLAddColumnsOperation(Context context, long addKeyword, IIndexListGetters<SQLAddColumnDefinition> addColumnDefinitions) {
         super(context);
 
         this.addKeyword = checkIsKeyword(addKeyword);
-        this.columnDefinition = makeList(addColumnOperation);
+        this.columnDefinitions = makeList(addColumnDefinitions);
     }
 
     public long getAddKeyword() {
         return addKeyword;
     }
 
-    public ASTList<SQLAddColumnDefinition> getColumnDefinition() {
-        return columnDefinition;
+    public ASTList<SQLAddColumnDefinition> getColumnDefinitions() {
+        return columnDefinitions;
     }
 
     @Override
@@ -35,6 +35,6 @@ public final class SQLAddColumnsOperation extends SQLColumnOperation {
     @Override
     protected void doRecurse(ASTRecurseMode recurseMode, ASTIterator iterator) {
 
-        doIterate(columnDefinition, recurseMode, iterator);
+        doIterate(columnDefinitions, recurseMode, iterator);
     }
 }

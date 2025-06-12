@@ -1,8 +1,8 @@
 package dev.jdata.db.sql.parse.dml.select.result.having;
 
-import java.io.IOException;
 import java.util.Objects;
 
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.sql.ast.statements.dml.SQLHavingClause;
@@ -17,7 +17,7 @@ public class SQLHavingClauseParser extends BaseSQLConditionClauseParser {
         super(conditionParser);
     }
 
-    public final SQLHavingClause parseHavingClause(SQLExpressionLexer lexer) throws ParserException, IOException {
+    public final <E extends Exception, I extends CharInput<E>> SQLHavingClause parseHavingClause(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         Objects.requireNonNull(lexer);
 

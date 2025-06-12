@@ -22,7 +22,7 @@ public final class BooleanType extends ScalarType {
     }
 
     @Override
-    public <T, R> R visit(SchemaDataTypeVisitor<T, R> visitor, T parameter) {
+    public <T, R, E extends Exception> R visit(SchemaDataTypeVisitor<T, R, E> visitor, T parameter) throws E {
 
         return visitor.onBooleanType(this, parameter);
     }

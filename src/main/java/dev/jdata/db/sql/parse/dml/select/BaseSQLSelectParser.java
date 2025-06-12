@@ -1,14 +1,14 @@
 package dev.jdata.db.sql.parse.dml.select;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.list.IAddableList;
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.clauses.SQLWhereClause;
 import dev.jdata.db.sql.ast.statements.dml.BaseSQLSelectStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLFromClause;
@@ -41,7 +41,7 @@ public abstract class BaseSQLSelectParser<T extends BaseSQLSelectStatement> exte
     private final SQLHavingClauseParser havingClauseParser;
     private final SQLOrderByClauseParser orderByClauseParser;
 
-    protected abstract T createSelectStatement(Context context, IListGetters<SQLSelectStatementPart> parts, IListGetters<SQLUnion> unions);
+    protected abstract T createSelectStatement(Context context, IIndexListGetters<SQLSelectStatementPart> parts, IIndexListGetters<SQLUnion> unions);
 
     protected BaseSQLSelectParser(SQLExpressionParser expressionParser, SQLConditionParser conditionParser, SQLWhereClauseParser whereClauseParser) {
 
@@ -64,11 +64,11 @@ public abstract class BaseSQLSelectParser<T extends BaseSQLSelectStatement> exte
             SQLToken.UNION
     };
 
-    public final T parseSelect(SQLExpressionLexer lexer, long selectKeyword) throws ParserException, IOException {
+    public final <E extends Exception, I extends CharInput<E>> T parseSelect(SQLExpressionLexer<E, I> lexer, long selectKeyword) throws ParserException, E {
 
         final int selectPartsInitialCapacity = 10;
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final T result;
 
@@ -130,7 +130,8 @@ public abstract class BaseSQLSelectParser<T extends BaseSQLSelectStatement> exte
         return result;
     }
 
-    private SQLSelectStatementPart parseSelectStatementPart(SQLExpressionLexer lexer, long selectKeyword) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLSelectStatementPart parseSelectStatementPart(SQLExpressionLexer<E, I> lexer, long selectKeyword)
+            throws ParserException, E {
 
         final SQLProjectionClause projectionClause = projectionClauseParser.parseProjectionClause(lexer);
 

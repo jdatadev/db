@@ -6,16 +6,16 @@ import dev.jdata.db.utils.adt.elements.IIterableElements;
 
 public final class MutableIndexList<T> extends BaseIndexList<T> implements IMutableIndexList<T> {
 
-    public MutableIndexList() {
-
+    public MutableIndexList(AllocationType allocationType) {
+        super(allocationType);
     }
 
-    public MutableIndexList(IntFunction<T[]> createArray, int initialCapacity) {
-        super(createArray, initialCapacity);
+    public MutableIndexList(AllocationType allocationType, IntFunction<T[]> createArray, int initialCapacity) {
+        super(allocationType, createArray, initialCapacity);
     }
 
-    MutableIndexList(IntFunction<T[]> createArray, IIndexList<T> toCopy) {
-        super(createArray, toCopy);
+    MutableIndexList(AllocationType allocationType, IntFunction<T[]> createArray, IIndexList<T> toCopy) {
+        super(allocationType, createArray, toCopy);
     }
 
     @Override
@@ -35,11 +35,11 @@ public final class MutableIndexList<T> extends BaseIndexList<T> implements IMuta
 
     IndexList<T> swapToImmutable() {
 
-        return swapToOther(false, IndexList::new);
+        return swapToOther(false, (c, a, n) -> new IndexList<T>(AllocationType.HEAP, c, a, n));
     }
 
     IndexList<T> swapToImmutableAndClear() {
 
-        return swapToOther(true, IndexList::new);
+        return swapToOther(true, (c, a, n) -> new IndexList<T>(AllocationType.HEAP, c, a, n));
     }
 }

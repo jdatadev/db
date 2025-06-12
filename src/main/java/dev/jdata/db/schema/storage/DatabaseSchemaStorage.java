@@ -13,10 +13,11 @@ import dev.jdata.db.DBConstants;
 import dev.jdata.db.engine.database.IStringCache;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
+import dev.jdata.db.schema.storage.sqloutputter.ISQLOutputter;
+import dev.jdata.db.schema.storage.sqloutputter.TextToByteOutputPrerequisites;
 import dev.jdata.db.sql.ast.statements.BaseSQLDDLOperationStatement;
-import dev.jdata.db.sql.parse.SQLParser.SQLString;
+import dev.jdata.db.sql.parse.SQLString;
 import dev.jdata.db.storage.file.FileStorage;
-import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.adt.strings.CharacterEncodingUtil;
 import dev.jdata.db.utils.allocators.ByteArrayByteBufferAllocator;
 import dev.jdata.db.utils.allocators.CharBufferAllocator;
@@ -27,7 +28,6 @@ import dev.jdata.db.utils.file.access.IFileSystemAccess.OpenMode;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.function.CheckedExceptionBiConsumer;
 
 public final class DatabaseSchemaStorage implements IDatabaseSchemaStorageFactory<IOException> {
 
@@ -38,24 +38,20 @@ public final class DatabaseSchemaStorage implements IDatabaseSchemaStorageFactor
 
     private final IStringCache stringCache;
 
-    private CharsetEncoder charsetEncoder;
+    private TextToByteOutputPrerequisites textOutputPrerequisites;
     private final IRelativeFileSystemAccess fileSystemAccess;
-    private CharBufferAllocator charBufferAllocator;
-    private ByteArrayByteBufferAllocator byteBufferAllocator;
 
     private final NodeObjectCache<Storage> storageCache;
 
-    private static final class Storage extends FileStorage implements IDatabaseSchemaStorage<IOException>, IResettable {
+    private static final class Storage extends FileStorage implements IDatabaseSchemaStorage<IOException> {
 
-        private DatabaseSchemaVersion schemaVersion;
         private RelativeDirectoryPath schemaDirectoryPath;
         private DatabaseSchemaStorage schemaStorage;
 
         private int diffSequenceNo;
 
-        void initialize(DatabaseSchemaVersion schemaVersion, RelativeDirectoryPath schemaDirectoryPath, DatabaseSchemaStorage schemaStorage) {
+        void initialize(RelativeDirectoryPath schemaDirectoryPath, DatabaseSchemaStorage schemaStorage) {
 
-            this.schemaVersion = Objects.requireNonNull(schemaVersion);
             this.schemaDirectoryPath = Objects.requireNonNull(schemaDirectoryPath);
             this.schemaStorage = Objects.requireNonNull(schemaStorage);
 
@@ -65,7 +61,6 @@ public final class DatabaseSchemaStorage implements IDatabaseSchemaStorageFactor
         @Override
         public void reset() {
 
-            this.schemaVersion = null;
             this.schemaDirectoryPath = null;
             this.schemaStorage = null;
             this.diffSequenceNo = DIFF_NO_SEQUENCE_NO;
@@ -84,19 +79,21 @@ public final class DatabaseSchemaStorage implements IDatabaseSchemaStorageFactor
 
             final RelativeFilePath filePath = constructPath(fileSystemAccess, schemaDirectoryPath, SCHEMA_DIFF_PREFIX, sequenceNo);
 
-            final CharsetEncoder encoder = schemaStorage.charsetEncoder;
-            final CharBufferAllocator charBufferAllocator = schemaStorage.charBufferAllocator;
-            final ByteArrayByteBufferAllocator byteBufferAllocator = schemaStorage.byteBufferAllocator;
+            final TextToByteOutputPrerequisites textOutputPrerequisites = schemaStorage.textOutputPrerequisites;
+
+            final CharsetEncoder charsetEncoder = textOutputPrerequisites.getCharsetEncoder();
+            final CharBufferAllocator charBufferAllocator = textOutputPrerequisites.getCharBufferAllocator();
+            final ByteArrayByteBufferAllocator byteBufferAllocator = textOutputPrerequisites.getByteBufferAllocator();
 
             final int numCharacters = 1000;
-            final int numBytes = CharacterEncodingUtil.calculateNumEncodedBytes(encoder, numCharacters);
+            final int numBytes = CharacterEncodingUtil.calculateNumEncodedBytes(charsetEncoder, numCharacters);
 
             final CharBuffer charBuffer = charBufferAllocator.allocateForEncodeCharacters(numCharacters);
             final ByteBuffer byteBuffer = byteBufferAllocator.allocateByteArrayByteBuffer(numBytes);
 
             try (FileChannel fileChannel = fileSystemAccess.openFileChannel(filePath, OpenMode.WRITE_ONLY_CREATE_FAIL_IF_EXISTS)) {
 
-                writeSQLString(sqlString, fileChannel, encoder, charBuffer, byteBuffer, FileChannel::write);
+                sqlString.writeSQLString(fileChannel, charsetEncoder, charBuffer, byteBuffer, FileChannel::write);
             }
             finally {
 
@@ -105,46 +102,16 @@ public final class DatabaseSchemaStorage implements IDatabaseSchemaStorageFactor
             }
         }
 
-        private static <T, E extends Exception> void writeSQLString(SQLString sqlString, T output, CharsetEncoder charsetEncoder, CharBuffer charBuffer, ByteBuffer byteBuffer,
-                CheckedExceptionBiConsumer<T, ByteBuffer, E> consumer) throws E {
-
-            long sqlStringOffset = 0L;
-
-            final int charBufferCapacity = charBuffer.capacity();
-
-            for (;;) {
-
-                charBuffer.clear();
-
-                final long numCharactersRetrieved = sqlString.writeToCharBuffer(charBuffer, sqlStringOffset);
-
-                if (numCharactersRetrieved <= 0L) {
-
-                    break;
-                }
-
-                byteBuffer.clear();
-
-                final boolean endOfInput = numCharactersRetrieved < charBufferCapacity;
-
-                if (charsetEncoder.encode(charBuffer, byteBuffer, endOfInput).isError()) {
-
-                    throw new IllegalArgumentException();
-                }
-
-                consumer.accept(output, byteBuffer);
-
-                sqlStringOffset += numCharactersRetrieved;
-            }
-        }
-
         @Override
-        public void completeSchemaDiff(IEffectiveDatabaseSchema completeEffectiveDatabaseSchema, IDatabaseSchemaSerializer<IOException> schemaSerializer) throws IOException {
+        public void completeSchemaDiff(IEffectiveDatabaseSchema completeEffectiveDatabaseSchema, IDatabaseSchemaSerializer schemaSerializer,
+                StringResolver stringResolver, ISQLOutputter<IOException> sqlOutputter) throws IOException {
 
             Objects.requireNonNull(completeEffectiveDatabaseSchema);
             Objects.requireNonNull(schemaSerializer);
+            Objects.requireNonNull(stringResolver);
+            Objects.requireNonNull(sqlOutputter);
 
-            schemaSerializer.serialize(completeEffectiveDatabaseSchema);
+            schemaSerializer.serialize(completeEffectiveDatabaseSchema, stringResolver, sqlOutputter);
 
             schemaStorage.onSchemaComplete(this);
         }
@@ -188,7 +155,7 @@ public final class DatabaseSchemaStorage implements IDatabaseSchemaStorageFactor
             storage = storageCache.allocate();
         }
 
-        storage.initialize(databaseSchemaVersion, directoryPath, this);
+        storage.initialize(directoryPath, this);
 
         return storage;
     }

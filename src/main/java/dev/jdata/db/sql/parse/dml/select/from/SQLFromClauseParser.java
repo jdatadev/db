@@ -1,14 +1,14 @@
 package dev.jdata.db.sql.parse.dml.select.from;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.IAddableList;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.dml.SQLFromClause;
 import dev.jdata.db.sql.ast.statements.dml.SQLFromTable;
 import dev.jdata.db.sql.ast.statements.dml.SQLJoin;
@@ -33,11 +33,11 @@ public class SQLFromClauseParser extends BaseSQLParser {
         this.conditionParser = Objects.requireNonNull(conditionParser);
     }
 
-    public final SQLFromClause parseFromClause(SQLExpressionLexer lexer) throws ParserException, IOException {
+    public final <E extends Exception, I extends CharInput<E>> SQLFromClause parseFromClause(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         Objects.requireNonNull(lexer);
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final IAddableList<SQLFromTable> fromTables = allocator.allocateList(10);
 
@@ -62,14 +62,14 @@ public class SQLFromClauseParser extends BaseSQLParser {
         return new SQLFromClause(makeContext(), fromTables);
     }
 
-    private SQLFromTable parseFromTable(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLFromTable parseFromTable(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         final long tableName = lexer.lexName();
 
         return parseFromTable(lexer, new SQLObjectName(makeContext(), tableName));
     }
 
-    private SQLFromTable parseFromTable(SQLExpressionLexer lexer, SQLObjectName tableObjectName) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLFromTable parseFromTable(SQLExpressionLexer<E, I> lexer, SQLObjectName tableObjectName) throws ParserException, E {
 
         final SQLFromTable fromTable;
 
@@ -92,7 +92,8 @@ public class SQLFromClauseParser extends BaseSQLParser {
         return fromTable;
     }
 
-    private SQLObjectNameAndAlias parseObjectNameAndAlias(SQLExpressionLexer lexer, SQLObjectName tableObjectName) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLObjectNameAndAlias parseObjectNameAndAlias(SQLExpressionLexer<E, I> lexer, SQLObjectName tableObjectName)
+            throws ParserException, E {
 
         final SQLObjectNameAndAlias result;
 
@@ -118,9 +119,10 @@ public class SQLFromClauseParser extends BaseSQLParser {
             SQLToken.JOIN
     };
 
-    private SQLJoinFromTable parseJoinFromTable(SQLExpressionLexer lexer, SQLObjectNameAndAlias tableNameAndAlias) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLJoinFromTable parseJoinFromTable(SQLExpressionLexer<E, I> lexer, SQLObjectNameAndAlias tableNameAndAlias)
+            throws ParserException, E {
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final SQLJoinFromTable result;
 
@@ -153,7 +155,7 @@ public class SQLFromClauseParser extends BaseSQLParser {
         return result;
     }
 
-    private SQLTableJoin parseTableJoin(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLTableJoin parseTableJoin(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         final SQLJoin join = parseJoin(lexer);
 
@@ -167,7 +169,7 @@ public class SQLFromClauseParser extends BaseSQLParser {
         return new SQLTableJoin(makeContext(), join, joinFromTable);
     }
 
-    private static SQLJoin parseJoin(SQLLexer lexer) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> SQLJoin parseJoin(SQLLexer<E, I> lexer) throws ParserException, E {
 
         final SQLToken[] expectedTokens = AFTER_FROM_TABLE_TOKENS;
 

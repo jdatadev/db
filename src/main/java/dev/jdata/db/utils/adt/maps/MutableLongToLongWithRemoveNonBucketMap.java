@@ -5,7 +5,7 @@ import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
 import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLongWithRemoveNonBucketMap implements IMutableLongToLongWithRemoveNonBucketMap {
+public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLongWithRemoveNonBucketMap implements IMutableLongToLongStaticMap {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_LONG_TO_LONG_NON_BUCKET_MAP;
 

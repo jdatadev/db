@@ -5,7 +5,7 @@ import java.util.Objects;
 import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.list.ASTList;
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.statements.SQLStatementVisitor;
@@ -15,7 +15,7 @@ public abstract class BaseSQLSelectStatement extends SQLDMLStatement {
     private final ASTList<SQLSelectStatementPart> parts;
     private final ASTList<SQLUnion> unions;
 
-    public BaseSQLSelectStatement(Context context, IListGetters<SQLSelectStatementPart> parts, IListGetters<SQLUnion> unions) {
+    public BaseSQLSelectStatement(Context context, IIndexListGetters<SQLSelectStatementPart> parts, IIndexListGetters<SQLUnion> unions) {
         super(context);
 
         Objects.requireNonNull(parts);

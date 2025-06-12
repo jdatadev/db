@@ -143,7 +143,7 @@ class EffectiveSchemaHelper {
 
                 final long numDiffSchemaObjects = diffSchemaObjects.getNumElements();
 
-                for (long i = 0; i < numDiffSchemaObjects; ++ i) {
+                for (long i = 0L; i < numDiffSchemaObjects; ++ i) {
 
                     final T diffSchemaObject = diffSchemaObjects.get(i);
 

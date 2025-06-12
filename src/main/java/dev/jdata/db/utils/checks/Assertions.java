@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.checks;
 
-import dev.jdata.db.utils.adt.Contains;
+import dev.jdata.db.utils.adt.IContains;
 import dev.jdata.db.utils.adt.arrays.IArray;
 import dev.jdata.db.utils.adt.elements.IElements;
 
@@ -17,6 +17,14 @@ public class Assertions {
     public static void isFalse(boolean value) {
 
         if (value) {
+
+            throwAssertion();
+        }
+    }
+
+    public static void isNull(Object object) {
+
+        if (object != null) {
 
             throwAssertion();
         }
@@ -78,7 +86,7 @@ public class Assertions {
         }
     }
 
-    public static void isEmpty(Contains contains) {
+    public static void isEmpty(IContains contains) {
 
         if (!contains.isEmpty()) {
 

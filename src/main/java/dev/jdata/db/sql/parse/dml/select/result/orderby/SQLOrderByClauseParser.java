@@ -1,9 +1,9 @@
 package dev.jdata.db.sql.parse.dml.select.result.orderby;
 
-import java.io.IOException;
 import java.util.Objects;
 
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
 
@@ -24,7 +24,7 @@ public class SQLOrderByClauseParser extends BaseSQLGroupOrOrderByClauseParser<SQ
         super(projectionItemParser);
     }
 
-    public final SQLOrderByClause parseOrderBy(SQLExpressionLexer lexer) throws ParserException, IOException {
+    public final <E extends Exception, I extends CharInput<E>> SQLOrderByClause parseOrderBy(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         Objects.requireNonNull(lexer);
 
@@ -38,7 +38,8 @@ public class SQLOrderByClauseParser extends BaseSQLGroupOrOrderByClauseParser<SQ
     };
 
     @Override
-    protected SQLOrderByItem parseElement(SQLExpressionLexer lexer, Context context, SQLProjectionItem projectionItem) throws IOException {
+    protected <E extends Exception, I extends CharInput<E>> SQLOrderByItem parseElement(SQLExpressionLexer<E, I> lexer, Context context, SQLProjectionItem projectionItem)
+            throws E {
 
         final SQLProjectionItemOrderByOrGroupByItem projectionItemOrderByOrGroupByItem = new SQLProjectionItemOrderByOrGroupByItem(context, projectionItem);
 
@@ -81,7 +82,7 @@ public class SQLOrderByClauseParser extends BaseSQLGroupOrOrderByClauseParser<SQ
     }
 
     @Override
-    protected SQLOrderByClause createGroupOrOrderByClause(Context context, IListGetters<SQLOrderByItem> elements) {
+    protected SQLOrderByClause createGroupOrOrderByClause(Context context, IIndexListGetters<SQLOrderByItem> elements) {
 
         return new SQLOrderByClause(context, elements);
     }

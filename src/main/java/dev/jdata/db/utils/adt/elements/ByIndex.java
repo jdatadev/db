@@ -6,32 +6,37 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import dev.jdata.db.utils.adt.elements.IElements.IElementEqualityTester;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
 public class ByIndex {
 
     @FunctionalInterface
-    public interface ByIndexGetter<T, U> {
+    public interface IByIndexElementEqualityTester<T, P1, P2> extends IElementEqualityTester<T, P1, P2> {
 
-        T get(U byIndex, int index);
     }
 
     @FunctionalInterface
-    public interface ByIndexSetter<T, U> {
+    public interface IByIndexGetter<T, U> {
 
-       void set(U byIndex, int index, T value);
+        T get(U byIndex, long index);
     }
 
-    public static <T, U> boolean containsInstance(U byIndex, int byIndexLength, T instance, ByIndexGetter<T, U> getter,
+    @FunctionalInterface
+    public interface IByIndexSetter<T, U> {
+
+       void set(U byIndex, long index, T value);
+    }
+
+    public static <T, U> boolean containsInstance(U byIndex, long byIndexLength, T instance, IByIndexGetter<T, U> getter,
             Supplier<IndexOutOfBoundsException> exceptionSupplier) {
 
         Objects.requireNonNull(instance);
 
-        return findIndex(byIndex, byIndexLength, 0, byIndexLength, instance, getter, (e, p) -> e == p, exceptionSupplier) != -1;
+        return findIndex(byIndex, byIndexLength, 0L, byIndexLength, instance, getter, (e, p) -> e == p, exceptionSupplier) != -1;
     }
 
-    public static <T, U> boolean containsInstance(U byIndex, int byIndexLength, int startIndex, int numElements, T instance, ByIndexGetter<T, U> getter,
+    public static <T, U> boolean containsInstance(U byIndex, long byIndexLength, T instance, long startIndex, long numElements, IByIndexGetter<T, U> getter,
             Supplier<IndexOutOfBoundsException> exceptionSupplier) {
 
         Objects.requireNonNull(instance);
@@ -39,19 +44,19 @@ public class ByIndex {
         return findIndex(byIndex, byIndexLength, startIndex, numElements, instance, (b, i) -> getter.get(b, i), (e, p) -> e == p, exceptionSupplier) != -1;
     }
 
-    public static <T, U, P> boolean contains(U byIndex, int byIndexLength, P parameter, ByIndexGetter<T, U> getter, BiPredicate<T, P> predicate,
+    public static <T, U, P> boolean contains(U byIndex, long byIndexLength, P parameter, IByIndexGetter<T, U> getter, BiPredicate<T, P> predicate,
             Supplier<IndexOutOfBoundsException> exceptionSupplier) {
 
-        return findIndex(byIndex, byIndexLength, 0, byIndexLength, parameter, getter, predicate, exceptionSupplier) != -1;
+        return findIndex(byIndex, byIndexLength, 0L, byIndexLength, parameter, getter, predicate, exceptionSupplier) != -1;
     }
 
-    public static <T, U, P> boolean contains(U byIndex, int byIndexLength, int startIndex, int numElements, P parameter, ByIndexGetter<T, U> getter, BiPredicate<T, P> predicate,
-            Supplier<IndexOutOfBoundsException> exceptionSupplier) {
+    public static <T, U, P> boolean contains(U byIndex, long byIndexLength, long startIndex, long numElements, P parameter, IByIndexGetter<T, U> getter,
+            BiPredicate<T, P> predicate, Supplier<IndexOutOfBoundsException> exceptionSupplier) {
 
         return findIndex(byIndex, byIndexLength, startIndex, numElements, parameter, getter, predicate, exceptionSupplier) != -1;
     }
 
-    public static <T, U, P> int findIndex(U byIndex, int byIndexLength, P parameter, ByIndexGetter<T, U> getter, BiPredicate<T, P> predicate,
+    public static <T, U, P> long findIndex(U byIndex, long byIndexLength, P parameter, IByIndexGetter<T, U> getter, BiPredicate<T, P> predicate,
             Supplier<IndexOutOfBoundsException> exceptionSupplier) {
 
         Objects.requireNonNull(byIndex);
@@ -63,13 +68,13 @@ public class ByIndex {
         return findIndex(byIndex, byIndexLength, 0, byIndexLength, parameter, getter, predicate, exceptionSupplier);
     }
 
-    public static <T, U, P> int findIndex(U byIndex, int byIndexLength, int startIndex, int numElements, P parameter, ByIndexGetter<T, U> getter, BiPredicate<T, P> predicate,
-            Supplier<IndexOutOfBoundsException> exceptionSupplier) {
+    public static <T, U, P> long findIndex(U byIndex, long byIndexLength, long startIndex, long numElements, P parameter, IByIndexGetter<T, U> getter,
+            BiPredicate<T, P> predicate, Supplier<IndexOutOfBoundsException> exceptionSupplier) {
 
         Objects.requireNonNull(byIndex);
         Checks.isLengthAboveOrAtZero(byIndexLength);
 
-        final int endIndex;
+        final long endIndex;
 
         if (startIndex < 0) {
 
@@ -88,9 +93,9 @@ public class ByIndex {
         Objects.requireNonNull(predicate);
         Objects.requireNonNull(exceptionSupplier);
 
-        int foundIndex = -1;
+        long foundIndex = -1L;
 
-        for (int i = startIndex; i < endIndex; ++ i) {
+        for (long i = startIndex; i < endIndex; ++ i) {
 
             final T element = getter.get(byIndex, i);
 
@@ -104,15 +109,16 @@ public class ByIndex {
         return foundIndex;
     }
 
-    @FunctionalInterface
-    public interface ByIndexStringAdderPredicate<T> {
+    public static <T, U, V, R> void map(U byIndex, long numElements, IByIndexGetter<T, U> getter, Function<T, R> mapper, IByIndexSetter<R, V> setter, V dst) {
 
-        boolean test(T instance, int index);
-    }
+        Objects.requireNonNull(byIndex);
+        Checks.isNumElements(numElements);
+        Objects.requireNonNull(getter);
+        Objects.requireNonNull(mapper);
+        Objects.requireNonNull(setter);
+        Objects.requireNonNull(dst);
 
-    public static <T, U, V, R> void map(U byIndex, int numElements, ByIndexGetter<T, U> getter, Function<T, R> mapper, ByIndexSetter<R, V> setter, V dst) {
-
-        for (int i = 0; i < numElements; ++ i) {
+        for (long i = 0L; i < numElements; ++ i) {
 
             final T value = getter.get(byIndex, i);
 
@@ -123,81 +129,111 @@ public class ByIndex {
     }
 
     @FunctionalInterface
-    public interface ByIndexStringAdder<T> {
+    public interface IByIndexEqualityTester<T, P1, P2, DELEGATE> {
+
+        boolean equals(T byIndex1, long startIndex1, P1 parameter1, T byIndex2, long startIndex2, P2 parameter2, DELEGATE delegate);
+    }
+
+    private static <T, P1, P2, DELEGATE> boolean equals(T byIndex1, long startIndex1, P1 parameter1, T byIndex2, long startIndex2, P2 parameter2, long numElements,
+            IByIndexEqualityTester<T, P1, P2, DELEGATE> equalityTester) {
+
+        return equals(byIndex1, startIndex1, parameter1, byIndex2, startIndex2, parameter2, numElements, null, equalityTester);
+    }
+
+    public static <T, P1, P2, DELEGATE> boolean equals(T byIndex1, long startIndex1, P1 parameter1, T byIndex2, long startIndex2, P2 parameter2, long numElements,
+            DELEGATE delegate, IByIndexEqualityTester<T, P1, P2, DELEGATE> equalityTester) {
+
+        Objects.requireNonNull(byIndex1);
+        Objects.requireNonNull(byIndex2);
+        Checks.isAboveZero(numElements);
+
+        boolean equals = true;
+
+        for (long i = 0L; i < numElements; ++ i) {
+
+            if (!equalityTester.equals(byIndex1, startIndex1 + i, parameter1, byIndex2, startIndex2 + i, parameter2, delegate)) {
+
+                equals = false;
+                break;
+            }
+        }
+
+        return equals;
+    }
+
+    @FunctionalInterface
+    public interface IntByIndexStringAdderPredicate<T> {
+
+        boolean test(T instance, int index);
+    }
+
+    @FunctionalInterface
+    public interface IntByIndexStringAdder<T> {
 
         void addString(T instance, int index, StringBuilder sb);
     }
 
-    public static <T> String closureOrConstantToString(T byIndex, int startIndex, int numElements, BiConsumer<T, StringBuilder> prefixAdder, ByIndexStringAdder<T> byIndexStringAdder) {
+    @FunctionalInterface
+    public interface ByIndexStringAdderPredicate<T> {
 
-        return closureOrConstantLargeToString(byIndex, (long)startIndex, (long)numElements, prefixAdder, null, (a, i, b) -> byIndexStringAdder.addString(a, (int)i, b));
+        boolean test(T instance, long index);
     }
 
-    public static <T> String closureOrConstantToString(T byIndex, int startIndex, int numElements, BiConsumer<T, StringBuilder> prefixAdder,
+    @FunctionalInterface
+    public interface ByIndexStringAdder<T> {
+
+        void addString(T instance, long index, StringBuilder sb);
+    }
+
+    public static <T> String closureOrConstantToString(T byIndex, long startIndex, long numElements, BiConsumer<T, StringBuilder> prefixAdder,
+            ByIndexStringAdder<T> byIndexStringAdder) {
+
+        return closureOrConstantToString(byIndex, startIndex, numElements, prefixAdder, null, (a, i, b) -> byIndexStringAdder.addString(a, (int)i, b));
+    }
+
+    public static <T> String closureOrConstantToString(T byIndex, long startIndex, long numElements, BiConsumer<T, StringBuilder> prefixAdder,
             ByIndexStringAdderPredicate<T> byIndexStringAdderPredicate, ByIndexStringAdder<T> byIndexStringAdder) {
 
-        return closureOrConstantLargeToString(byIndex, (long)startIndex, (long)numElements, prefixAdder, (a, i) -> byIndexStringAdderPredicate.test(a, (int)i),
+        return closureOrConstantToString(byIndex, startIndex, numElements, prefixAdder, (a, i) -> byIndexStringAdderPredicate.test(a, (int)i),
                 (a, i, b) -> byIndexStringAdder.addString(a, (int)i, b));
     }
 
     public static <T> void closureOrConstantToString(T byIndex, int startIndex, int numElements, StringBuilder sb, BiConsumer<T, StringBuilder> prefixAdder,
             ByIndexStringAdderPredicate<T> byIndexStringAdderPredicate, ByIndexStringAdder<T> byIndexStringAdder) {
 
-        closureOrConstantLargeToString(byIndex, (long)startIndex, (long)numElements, sb, prefixAdder, (a, i) -> byIndexStringAdderPredicate.test(a, (int)i),
+        closureOrConstantToString(byIndex, (long)startIndex, (long)numElements, sb, prefixAdder, (a, i) -> byIndexStringAdderPredicate.test(a, (int)i),
                 (a, i, b) -> byIndexStringAdder.addString(a, (int)i, b));
     }
 
-    @FunctionalInterface
-    public interface LargeByIndexStringAdderPredicate<T> {
-
-        boolean test(T instance, long index);
-    }
-
-    @FunctionalInterface
-    public interface LargeByIndexStringAdder<T> {
-
-        void addString(T instance, long index, StringBuilder sb);
-    }
-
     public static <T> String closureOrConstantLargeToString(T byIndex, long startIndex, long numElements, BiConsumer<T, StringBuilder> prefixAdder,
-            LargeByIndexStringAdder<T> byIndexStringAdder) {
+            ByIndexStringAdder<T> byIndexStringAdder) {
 
-        return closureOrConstantLargeToString(byIndex, startIndex, numElements, prefixAdder, null, byIndexStringAdder);
+        return closureOrConstantToString(byIndex, startIndex, numElements, prefixAdder, null, byIndexStringAdder);
     }
 
-    public static <T> String closureOrConstantLargeToString(T byIndex, long startIndex, long numElements, BiConsumer<T, StringBuilder> prefixAdder,
-            LargeByIndexStringAdderPredicate<T> byIndexStringAdderPredicate, LargeByIndexStringAdder<T> byIndexStringAdder) {
+    public static <T> void closureOrConstantToString(T byIndex, long startIndex, long numElements, StringBuilder sb, BiConsumer<T, StringBuilder> prefixAdder,
+            ByIndexStringAdderPredicate<T> byIndexStringAdderPredicate, ByIndexStringAdder<T> byIndexStringAdder) {
 
-        final StringBuilder sb = new StringBuilder(Integers.checkUnsignedLongToUnsignedInt(numElements * 10));
-
-        closureOrConstantLargeToString(byIndex, startIndex, numElements, sb, prefixAdder, byIndexStringAdderPredicate, byIndexStringAdder);
-
-        return sb.toString();
-    }
-
-    public static <T> void closureOrConstantLargeToString(T byIndex, long startIndex, long numElements, StringBuilder sb, BiConsumer<T, StringBuilder> prefixAdder,
-            LargeByIndexStringAdderPredicate<T> byIndexStringAdderPredicate, LargeByIndexStringAdder<T> byIndexStringAdder) {
-
-        largeToString(byIndex, startIndex, numElements, sb, byIndexStringAdderPredicate, byIndexStringAdder, prefixAdder,
+        toString(byIndex, startIndex, numElements, sb, byIndexStringAdderPredicate, byIndexStringAdder, prefixAdder,
                 byIndexStringAdderPredicate != null ? (instance, index, parameter) -> parameter.test(instance, index) : null,
                 (instance, index, b, parameter) -> parameter.addString(instance, index, b));
     }
 
     @FunctionalInterface
-    public interface LargeByIndexStringAdderParameterPredicate<T, P> {
+    public interface ByIndexStringAdderParameterPredicate<T, P> {
 
         boolean test(T instance, long index, P parameter);
     }
 
     @FunctionalInterface
-    public interface LargeByIndexStringParameterAdder<T, P> {
+    public interface ByIndexStringParameterAdder<T, P> {
 
         void addString(T instance, long index, StringBuilder sb, P parameter);
     }
 
-    public static <T, U, V> void largeToString(T byIndex, long startIndex, long numElements, StringBuilder sb, U predicateParameter, V adderParameter,
-            BiConsumer<T, StringBuilder> prefixAdder, LargeByIndexStringAdderParameterPredicate<T, U> byIndexStringAdderParameterPredicate,
-            LargeByIndexStringParameterAdder<T, V> byIndexStringParameterAdder) {
+    public static <T, U, V> void toString(T byIndex, long startIndex, long numElements, StringBuilder sb, U predicateParameter, V adderParameter,
+            BiConsumer<T, StringBuilder> prefixAdder, ByIndexStringAdderParameterPredicate<T, U> byIndexStringAdderParameterPredicate,
+            ByIndexStringParameterAdder<T, V> byIndexStringParameterAdder) {
 
         Objects.requireNonNull(byIndex);
         Checks.isIndex(startIndex);
@@ -218,7 +254,7 @@ public class ByIndex {
 
         final int prefixLength = sb.length();
 
-        for (long i = 0; i < numElements; ++ i) {
+        for (long i = 0L; i < numElements; ++ i) {
 
             final long index = startIndex + i;
 

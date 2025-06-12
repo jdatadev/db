@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.SchemaObject;
-import dev.jdata.db.utils.adt.maps.IMutableIntToObjectWithRemoveNonBucketMap;
+import dev.jdata.db.utils.adt.maps.IMutableIntToObjectStaticMap;
 import dev.jdata.db.utils.adt.maps.MutableIntToObjectWithRemoveNonBucketMap;
 import dev.jdata.db.utils.adt.sets.MutableIntBucketSet;
 import dev.jdata.db.utils.allocators.IIntSetAllocator;
@@ -148,7 +148,7 @@ final class DroppedElements extends ObjectCacheNode implements IDroppedElements 
         addDroppedColumns(droppedColumnsToAdd, intToObjectMapAllocator, intSetAllocator);
     }
 
-    private void addDroppedColumns(IMutableIntToObjectWithRemoveNonBucketMap<MutableIntBucketSet> droppedColumnsToAdd,
+    private void addDroppedColumns(IMutableIntToObjectStaticMap<MutableIntBucketSet> droppedColumnsToAdd,
             IIntToObjectMapAllocator<MutableIntBucketSet> intToObjectMapAllocator, IIntSetAllocator intSetAllocator) {
 
         this.scratchIntSetAllocator = intSetAllocator;

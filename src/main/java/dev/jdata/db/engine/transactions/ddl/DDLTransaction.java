@@ -1,33 +1,34 @@
 package dev.jdata.db.engine.transactions.ddl;
 
-import java.util.Arrays;
+import java.io.IOException;
 import java.util.Objects;
 
-import org.jutils.ast.objects.BaseASTElement;
-import org.jutils.ast.objects.list.ASTList;
 import org.jutils.io.strings.StringResolver;
 
-import dev.jdata.db.DBConstants;
+import dev.jdata.db.ddl.DDLAlterTableSchemasHelper;
+import dev.jdata.db.ddl.DDLCreateTableSchemasHelper;
+import dev.jdata.db.ddl.DDLSchemasHelper.DDLSchemaCachedObjects;
+import dev.jdata.db.engine.database.DatabaseStringManagement;
 import dev.jdata.db.engine.database.SQLValidationException;
 import dev.jdata.db.engine.database.StringManagement;
 import dev.jdata.db.engine.database.TableAlreadyExistsException;
 import dev.jdata.db.schema.DatabaseSchemaManager;
-import dev.jdata.db.schema.model.SchemaMap;
-import dev.jdata.db.schema.model.SchemaMap.SchemaMapBuilderAllocators;
-import dev.jdata.db.schema.model.diff.DiffDatabaseSchema;
+import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.model.diff.schemamaps.DiffSchemaMaps;
 import dev.jdata.db.schema.model.diff.schemamaps.DiffSchemaMaps.DiffSchemaMapsBuilderAllocator;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
-import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
-import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.types.IntegerType;
-import dev.jdata.db.schema.types.SchemaDataType;
+import dev.jdata.db.schema.model.schemamaps.SchemaMapBuilders;
+import dev.jdata.db.schema.storage.DatabaseSchemaStorage;
+import dev.jdata.db.schema.storage.IDatabaseSchemaSerializer;
+import dev.jdata.db.schema.storage.IDatabaseSchemaStorageFactory.IDatabaseSchemaStorage;
+import dev.jdata.db.schema.storage.sqloutputter.ISQLOutputter;
 import dev.jdata.db.sql.ast.statements.BaseSQLDDLOperationStatement;
 import dev.jdata.db.sql.ast.statements.SQLStatementAdapter;
+import dev.jdata.db.sql.ast.statements.table.SQLAlterTableStatement;
 import dev.jdata.db.sql.ast.statements.table.SQLCreateTableStatement;
-import dev.jdata.db.sql.ast.statements.table.SQLTableColumnDefinition;
+import dev.jdata.db.sql.parse.SQLString;
 import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.lists.IndexList;
@@ -36,117 +37,214 @@ import dev.jdata.db.utils.allocators.Allocatable;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
-final class DDLTransaction extends Allocatable implements IResettable {
+final class DDLTransaction extends Allocatable {
 
-    static final class DDLCachedObjects {
+    static final class DDLTransactionCachedObjects {
 
-        private final IndexListAllocator<Column> columnListAllocator;
+        private final IndexListAllocator<DDLTransactionStatement> ddlTransactionStatementListAllocator;
         private final DiffSchemaMapsBuilderAllocator diffSchemaMapsBuilderAllocator;
-        private final SchemaMapBuilderAllocators schemaMapBuilderAllocators;
+        private final DDLSchemaCachedObjects ddlSchemaCachedObjects;
 
-        private final NodeObjectCache<ProcessCreateTableScratchObject> processCreateTableScratchCache;
+        private final NodeObjectCache<DDLTransactionStatement> ddlTransactionStatementCache;
 
-        DDLCachedObjects(IndexListAllocator<Column> columnListAllocator, DiffSchemaMapsBuilderAllocator diffSchemaMapsBuilderAllocator,
-                SchemaMapBuilderAllocators schemaMapBuilderAllocators) {
+        DDLTransactionCachedObjects(IndexListAllocator<DDLTransactionStatement> ddlTransactionStatementListAllocator,
+                DiffSchemaMapsBuilderAllocator diffSchemaMapsBuilderAllocator, DDLSchemaCachedObjects ddlSchemaCachedObjects) {
 
-            this.columnListAllocator = Objects.requireNonNull(columnListAllocator);
+            this.ddlTransactionStatementListAllocator = Objects.requireNonNull(ddlTransactionStatementListAllocator);
             this.diffSchemaMapsBuilderAllocator = Objects.requireNonNull(diffSchemaMapsBuilderAllocator);
-            this.schemaMapBuilderAllocators = Objects.requireNonNull(schemaMapBuilderAllocators);
+            this.ddlSchemaCachedObjects = Objects.requireNonNull(ddlSchemaCachedObjects);
 
-            this.processCreateTableScratchCache = new NodeObjectCache<>(ProcessCreateTableScratchObject::new);
+            this.ddlTransactionStatementCache = new NodeObjectCache<>(DDLTransactionStatement::new);
         }
     }
-/*
-    private static final class SchemaBuilders extends DDLObjectTypeInstances<SchemaMap.Builder<?>> {
 
-        public SchemaBuilders(IntFunction<Builder<?>[]> createArray, BiFunction<DDLObjectType, Function<DDLObjectType, Builder<?>>, Builder<?>> createElement) {
-            super(SchemaMap.Builder[]::new, createElement);
+    private static final class DDLTransactionStatement extends ObjectCacheNode implements IResettable {
+
+        private BaseSQLDDLOperationStatement sqlStatement;
+        private SQLString sqlString;
+        private StringResolver stringResolver;
+
+        void initialize(BaseSQLDDLOperationStatement sqlStatement, SQLString sqlString, StringResolver stringResolver) {
+
+            this.sqlStatement = Objects.requireNonNull(sqlStatement);
+            this.sqlString = Objects.requireNonNull(sqlString);
+            this.stringResolver = Objects.requireNonNull(stringResolver);
         }
-    }
-*/
-    private final SQLStatementAdapter<StringResolver, Void, SQLValidationException> ddlStatementVisitor
-            = new SQLStatementAdapter<StringResolver, Void, SQLValidationException>() {
 
         @Override
-        public Void onCreateTable(SQLCreateTableStatement createTableStatement, StringResolver parameter) throws TableAlreadyExistsException {
+        public void reset() {
+
+            this.sqlStatement = null;
+            this.sqlString = null;
+            this.stringResolver = null;
+        }
+    }
+
+    private final SQLStatementAdapter<StringManagement, Void, SQLValidationException> ddlStatementVisitor
+            = new SQLStatementAdapter<StringManagement, Void, SQLValidationException>() {
+
+        @Override
+        public Void onCreateTable(SQLCreateTableStatement createTableStatement, StringManagement parameter) throws TableAlreadyExistsException {
 
             DDLTransaction.this.processCreateTable(createTableStatement, parameter);
 
             return null;
         }
+
+        @Override
+        public Void onAlterTable(SQLAlterTableStatement alterTableStatement, StringManagement parameter) throws SQLValidationException {
+
+            DDLTransaction.this.processAlterTable(alterTableStatement, parameter);
+
+            return null;
+        }
     };
 
-    private final SchemaMap.Builder<?>[] schemaMapBuilders;
-
-    private StringManagement stringManagement;
-    private DDLCachedObjects ddlCachedObjects;
+    private DatabaseStringManagement databaseStringManagement;
+    private DDLTransactionCachedObjects ddlTransactionCachedObjects;
     private DatabaseSchemaManager databaseSchemaManager;
+    private IDatabaseSchemaSerializer databaseSchemaSerializer;
 
     private IEffectiveDatabaseSchema currentSchema;
 
-//    private final IndexList.Builder<BaseSQLDDLOperationStatement> ddlStatements;
+    private SchemaMapBuilders schemaMapBuilders;
 
+    private IndexList.Builder<DDLTransactionStatement> ddlTransactionStatements;
     private DiffSchemaMaps.Builder diffSchemaMapsBuilder;
 
-    DDLTransaction() {
-
-        this.schemaMapBuilders = new SchemaMap.Builder<?>[DDLObjectType.getNumObjectTypes()];
+    DDLTransaction(AllocationType allocationType) {
+        super(allocationType);
     }
 
-    void initialize(IEffectiveDatabaseSchema currentSchema, StringManagement stringManagement, DDLCachedObjects ddlCachedObjects, DatabaseSchemaManager databaseSchemaManager) {
+    void initialize(IEffectiveDatabaseSchema currentSchema, DatabaseStringManagement stringManagement, DDLTransactionCachedObjects ddlCachedObjects,
+            DatabaseSchemaManager databaseSchemaManager, IDatabaseSchemaSerializer databaseSchemaSerializer) {
 
         Objects.requireNonNull(currentSchema);
         Objects.requireNonNull(stringManagement);
         Objects.requireNonNull(ddlCachedObjects);
         Objects.requireNonNull(databaseSchemaManager);
+        Objects.requireNonNull(databaseSchemaSerializer);
 
         checkIsNotAllocated();
 
         this.currentSchema = currentSchema;
-        this.stringManagement = stringManagement;
-        this.ddlCachedObjects = ddlCachedObjects;
+        this.databaseStringManagement = stringManagement;
+        this.ddlTransactionCachedObjects = ddlCachedObjects;
         this.databaseSchemaManager = databaseSchemaManager;
+        this.databaseSchemaSerializer = databaseSchemaSerializer;
 
         this.diffSchemaMapsBuilder = DiffSchemaMaps.createBuilder(ddlCachedObjects.diffSchemaMapsBuilderAllocator);
 
-        for (DDLObjectType ddlObjectType : DDLObjectType.values()) {
+        this.schemaMapBuilders = ddlCachedObjects.ddlSchemaCachedObjects.allocateSchemaMapBuilders();
 
-            schemaMapBuilders[ddlObjectType.ordinal()] = SchemaMap.createBuilder(0, ddlCachedObjects.schemaMapBuilderAllocators.getAllocator(ddlObjectType));
-        }
-
-//        this.ddlStatements = IndexList.createBuilder(BaseSQLDDLOperationStatement[]::new);
+        this.ddlTransactionStatements = IndexList.createBuilder(ddlCachedObjects.ddlTransactionStatementListAllocator);
     }
 
-    @Override
-    public void reset() {
+    public void reset(DDLTransactionCachedObjects ddlCachedObjects) {
+
+        Objects.requireNonNull(ddlCachedObjects);
 
         checkIsAllocated();
 
         this.currentSchema = null;
-        this.stringManagement = null;
-        this.ddlCachedObjects = null;
+        this.databaseStringManagement = null;
+        this.ddlTransactionCachedObjects = null;
         this.databaseSchemaManager = null;
+        this.databaseSchemaSerializer = null;
 
         this.diffSchemaMapsBuilder = null;
 
-        Arrays.fill(schemaMapBuilders, null);
+        ddlCachedObjects.ddlSchemaCachedObjects.freeSchemaMapBuilders(schemaMapBuilders);
     }
 
-    void addDDLStatement(BaseSQLDDLOperationStatement ddlStatement, StringResolver parserStringResolver) throws SQLValidationException {
+    public void commit(DatabaseSchemaVersion databaseSchemaVersion, DatabaseSchemaStorage databaseSchemaStorage, ISQLOutputter<IOException> sqlOutputter) throws IOException {
+
+        Objects.requireNonNull(databaseSchemaVersion);
+        Objects.requireNonNull(databaseSchemaStorage);
+        Objects.requireNonNull(sqlOutputter);
+
+        final IDatabaseSchemaStorage<IOException> storage = databaseSchemaStorage.storeSchemaDiff(databaseSchemaVersion);
+
+        try {
+            final IIndexList<DDLTransactionStatement> ddlTransactionStatementsList = makeDDLTransactionStatementsList();
+
+            final long numDDLTransactionStatements = ddlTransactionStatementsList.getNumElements();
+
+            try {
+                for (int i = 0; i < numDDLTransactionStatements; ++ i) {
+
+                    final DDLTransactionStatement ddlTransactionStatement = ddlTransactionStatementsList.get(i);
+
+                    storage.storeSchemaDiffStatement(ddlTransactionStatement.sqlStatement, ddlTransactionStatement.sqlString, ddlTransactionStatement.stringResolver);
+                }
+            }
+            finally {
+
+                clearTransactionStatements(ddlTransactionStatementsList);
+            }
+
+            storage.completeSchemaDiff(currentSchema, databaseSchemaSerializer, databaseStringManagement.getStringResolver(), sqlOutputter);
+        }
+        finally {
+
+            storage.reset();
+        }
+    }
+
+    void rollback() {
+
+        final IIndexList<DDLTransactionStatement> ddlTransactionStatementsList = makeDDLTransactionStatementsList();
+
+        clearTransactionStatements(ddlTransactionStatementsList);
+    }
+
+    private IIndexList<DDLTransactionStatement> makeDDLTransactionStatementsList() {
+
+        final IIndexList<DDLTransactionStatement> result = ddlTransactionStatements.build();
+
+        ddlTransactionCachedObjects.ddlTransactionStatementListAllocator.freeIndexListBuilder(ddlTransactionStatements);
+
+        this.ddlTransactionStatements = null;
+
+        return result;
+    }
+
+    private void clearTransactionStatements(IIndexList<DDLTransactionStatement> ddlTransactionStatementsList) {
+
+        final long numDDLTransactionStatements = ddlTransactionStatementsList.getNumElements();
+
+        for (int i = 0; i < numDDLTransactionStatements; ++ i) {
+
+            final DDLTransactionStatement ddlTransactionStatement = ddlTransactionStatementsList.get(i);
+
+            ddlTransactionStatement.reset();
+
+            ddlTransactionCachedObjects.ddlTransactionStatementCache.free(ddlTransactionStatement);
+        }
+    }
+
+    void addDDLStatement(BaseSQLDDLOperationStatement ddlStatement, SQLString sqlString, StringManagement stringManagement, StringResolver stringResolver)
+            throws SQLValidationException {
 
         Objects.requireNonNull(ddlStatement);
-        Objects.requireNonNull(parserStringResolver);
+        Objects.requireNonNull(sqlString);
+        Objects.requireNonNull(stringManagement);
+        Objects.requireNonNull(stringResolver);
 
         checkIsAllocated();
 
-        ddlStatement.visit(ddlStatementVisitor, parserStringResolver);
+        ddlStatement.visit(ddlStatementVisitor, stringManagement);
 
-//        ddlStatements.addTail(ddlStatement);
+        final DDLTransactionStatement ddlTransactionStatement = ddlTransactionCachedObjects.ddlTransactionStatementCache.allocate();
+
+        ddlTransactionStatement.initialize(ddlStatement, sqlString, stringResolver);
+
+        ddlTransactionStatements.addTail(ddlTransactionStatement);
     }
 
-    private void processCreateTable(SQLCreateTableStatement sqlCreateTableStatement, StringResolver parserStringResolver) throws TableAlreadyExistsException {
+    private void processCreateTable(SQLCreateTableStatement sqlCreateTableStatement, StringManagement stringManagement) throws TableAlreadyExistsException {
 
-        final long parsedTableName = stringManagement.resolveParsedStringRef(parserStringResolver, sqlCreateTableStatement.getName());
+        final long parsedTableName = stringManagement.resolveParsedStringRef(sqlCreateTableStatement.getName());
 
         final DDLObjectType objectType = DDLObjectType.TABLE;
 
@@ -155,153 +253,25 @@ final class DDLTransaction extends Allocatable implements IResettable {
             throw new TableAlreadyExistsException();
         }
 
-        final IndexListAllocator<Column> columnIndexListAllocator = ddlCachedObjects.columnListAllocator;
-
-        final IndexList.Builder<Column> columnsBuilder = IndexList.createBuilder(sqlCreateTableStatement.getColumns().size(), columnIndexListAllocator);
-
-        final ProcessCreateTableScratchObject processCreateTableScratchObject = ddlCachedObjects.processCreateTableScratchCache.allocate();
-
-        IIndexList<Column> columns = null;
-
-        final DiffDatabaseSchema newDatabaseSchema;
-
-        try {
-            processCreateTableScratchObject.initialize(stringManagement, parserStringResolver, columnsBuilder);
-
-            convertColumns(sqlCreateTableStatement, processCreateTableScratchObject);
-
-            final int tableId = databaseSchemaManager.allocateTableId();
-
-            columns = columnsBuilder.build();
-
-            final long hashTableName = stringManagement.getHashStringRef(parsedTableName);
-
-            final Table table = new Table(parsedTableName, hashTableName, tableId, columns);
-
-            addToSchemaMapBuilder(DDLObjectType.TABLE, table);
-        }
-        finally {
-
-            if (columns != null) {
-
-                columnIndexListAllocator.freeIndexList(columns);
-            }
-
-            ddlCachedObjects.processCreateTableScratchCache.free(processCreateTableScratchObject);
-
-            columnIndexListAllocator.freeIndexListBuilder(columnsBuilder);
-        }
+        DDLCreateTableSchemasHelper.processCreateTable(sqlCreateTableStatement, stringManagement, schemaMapBuilders, ddlTransactionCachedObjects.ddlSchemaCachedObjects,
+                databaseSchemaManager, m -> m.allocateTableId());
     }
 
-    private <T extends SchemaObject> void addToSchemaMapBuilder(DDLObjectType ddlObjectType, T schemaObject) {
+    private void processAlterTable(SQLAlterTableStatement sqlAlterTableStatement, StringManagement stringManagement) throws TableAlreadyExistsException {
 
-        @SuppressWarnings("unchecked")
-        final SchemaMap.Builder<T> tableSchemaMapBuilder = (SchemaMap.Builder<T>)schemaMapBuilders[ddlObjectType.ordinal()];
+        final long parsedTableName = stringManagement.resolveParsedStringRef(sqlAlterTableStatement.getName());
 
-        tableSchemaMapBuilder.add(schemaObject);
-    }
+        final DDLObjectType objectType = DDLObjectType.TABLE;
 
-    private static DiffSchemaMaps buildDiffSchemaMaps(DiffSchemaMaps.Builder diffSchemaMapsBuilder, SchemaMap.Builder<?>[] schemaMapBuilders) {
+        if (currentSchema.containsSchemaObjectName(objectType, parsedTableName)) {
 
-        for (DDLObjectType ddlObjectType : DDLObjectType.values()) {
-
-            final SchemaMap<?> schemaMap = schemaMapBuilders[ddlObjectType.ordinal()].build();
-
-            diffSchemaMapsBuilder.setSchemaMap(ddlObjectType, schemaMap);
+            throw new TableAlreadyExistsException();
         }
 
-        return diffSchemaMapsBuilder.build();
-    }
+        final long schemaTableName = stringManagement.getHashStringRef(parsedTableName);
 
-    private static void convertColumns(SQLCreateTableStatement sqlCreateTableStatement, ProcessCreateTableScratchObject scratchObject) {
+        final Table existingTable = currentSchema.getTableMap().getSchemaObjectByName(schemaTableName);
 
-        final ASTList<SQLTableColumnDefinition> sqlTableColumnDefinitions = sqlCreateTableStatement.getColumns();
-
-        sqlTableColumnDefinitions.foreachWithIndexAndParameter(scratchObject, (c, i, s) -> {
-
-            final Column column = convertToColumn(c, s.allocateColumnId(), s.getStringManagement(), s.getParserStringResolver());
-
-            s.columnsBuilder.addTail(column);
-        });
-    }
-
-    private static Column convertToColumn(SQLTableColumnDefinition sqlTableColumnDefinition, int columnId, StringManagement stringManagement,
-            StringResolver parserStringResolver) {
-
-        final long columnName = stringManagement.resolveParsedStringRef(parserStringResolver, sqlTableColumnDefinition.getName());
-        final long hashColumnName = stringManagement.getHashStringRef(columnName);
-
-        final boolean nullable =    sqlTableColumnDefinition.getNotKeyword() != BaseASTElement.NO_KEYWORD
-                                 && sqlTableColumnDefinition.getNullKeyword() != BaseASTElement.NO_KEYWORD;
-
-        final SchemaDataType schemaDataType = convertDataType(sqlTableColumnDefinition, stringManagement, parserStringResolver);
-
-        return new Column(columnName, hashColumnName, columnId, schemaDataType, nullable);
-    }
-
-    private static SchemaDataType convertDataType(SQLTableColumnDefinition sqlTableColumnDefinition, StringManagement stringManagement, StringResolver parserStringResolver) {
-
-        final long typeName = stringManagement.resolveParsedStringRef(parserStringResolver, sqlTableColumnDefinition.getTypeName());
-
-        final SchemaDataType result;
-
-        final String lowerCaseTypeName = stringManagement.getLowerCaseString(typeName);
-
-        switch (lowerCaseTypeName) {
-
-        case "integer":
-
-            result = IntegerType.INSTANCE;
-            break;
-
-        default:
-            throw new UnsupportedOperationException();
-        }
-
-        return result;
-    }
-
-    private static abstract class ProcessParsedScratchObject extends ObjectCacheNode {
-
-        private StringManagement stringManagement;
-        private StringResolver parserStringResolver;
-
-        void initialize(StringManagement stringManagement, StringResolver parserStringResolver) {
-
-            this.stringManagement = Objects.requireNonNull(stringManagement);
-            this.parserStringResolver = Objects.requireNonNull(parserStringResolver);
-        }
-
-        final StringManagement getStringManagement() {
-            return stringManagement;
-        }
-
-        final StringResolver getParserStringResolver() {
-            return parserStringResolver;
-        }
-
-        final long getParsedStringRef(long stringRef) {
-
-            return stringManagement.resolveParsedStringRef(parserStringResolver, stringRef);
-        }
-    }
-
-    private static final class ProcessCreateTableScratchObject extends ProcessParsedScratchObject {
-
-        private IndexList.Builder<Column> columnsBuilder;
-        private int columnIdSequenceNo;
-
-        void initialize(StringManagement stringManagement, StringResolver parserStringResolver, IndexList.Builder<Column> columnsBuilder) {
-
-            super.initialize(stringManagement, parserStringResolver);
-
-            this.columnsBuilder = Objects.requireNonNull(columnsBuilder);
-            this.columnIdSequenceNo = DBConstants.INITIAL_COLUMN_ID;
-        }
-
-        int allocateColumnId() {
-
-            return columnIdSequenceNo ++;
-        }
+        DDLAlterTableSchemasHelper.processAlterTable(sqlAlterTableStatement, existingTable, stringManagement, schemaMapBuilders, ddlTransactionCachedObjects.ddlSchemaCachedObjects);
     }
 }

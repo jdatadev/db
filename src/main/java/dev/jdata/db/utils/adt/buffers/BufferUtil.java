@@ -36,7 +36,7 @@ public class BufferUtil {
         Checks.isOffset(offset);
         Checks.isLengthAboveOrAtZero(length);
 
-        toString(byteBuffer, offset, length, 1, sb, (b, i, s) -> s.append(b.get(i)));
+        toString(byteBuffer, offset, length, 1, sb, (b, i, s) -> s.append(b.get((int)i)));
     }
 
     private static <T extends Buffer> String toString(T buffer, int numCharactersPerElement, ByIndexStringAdder<T> stringAdder) {

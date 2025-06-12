@@ -4,7 +4,7 @@ import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.ASTList;
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
 import org.jutils.parse.context.Context;
 
 public abstract class BaseSQLFunctionCallExpression extends BaseSQLExpression {
@@ -12,7 +12,7 @@ public abstract class BaseSQLFunctionCallExpression extends BaseSQLExpression {
     private final long functionName;
     private final ASTList<Expression> parameters;
 
-    BaseSQLFunctionCallExpression(Context context, long functionName, IListGetters<Expression> parameters) {
+    BaseSQLFunctionCallExpression(Context context, long functionName, IIndexListGetters<Expression> parameters) {
         super(context);
 
         this.functionName = functionName;

@@ -1,8 +1,8 @@
 package dev.jdata.db.sql.parse.dml.delete;
 
-import java.io.IOException;
 import java.util.Objects;
 
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.sql.ast.clauses.SQLWhereClause;
@@ -22,7 +22,7 @@ public class SQLDeleteParser extends SQLStatementParser {
         this.whereClauseParser = Objects.requireNonNull(whereClauseParser);
     }
 
-    public SQLDeleteStatement parseDelete(SQLExpressionLexer lexer, long deleteKeyword) throws ParserException, IOException {
+    public <E extends Exception, I extends CharInput<E>> SQLDeleteStatement parseDelete(SQLExpressionLexer<E, I> lexer, long deleteKeyword) throws ParserException, E {
 
         Objects.requireNonNull(lexer);
         checkIsKeyword(deleteKeyword);

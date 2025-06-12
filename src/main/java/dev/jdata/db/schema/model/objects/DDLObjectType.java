@@ -41,11 +41,11 @@ public enum DDLObjectType {
 
     public static int getNumObjectTypes() {
 
-        final int num = numObjectTypes;
+        int num = numObjectTypes;
 
         if (num == -1) {
 
-            numObjectTypes = DDLObjectType.values().length;
+            num = numObjectTypes = DDLObjectType.values().length;
         }
 
         return num;

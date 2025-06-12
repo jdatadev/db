@@ -105,7 +105,7 @@ public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDa
         final IndexList.Builder<FileTableStorageFile> fileTableStorageFileListBuilder = IndexList.createBuilder(initialCapacity, indexListAllocator);
 
         try {
-            for (long i = 0; i < numElements; ++ i) {
+            for (long i = 0L; i < numElements; ++ i) {
 
                 final RelativeFilePath tableFilePath = tableFilePaths.get(i);
 

@@ -90,7 +90,6 @@ abstract class LargeArray<O, I> extends LargeExponentArray {
     final <P> I checkCapacity(long numAdditional, P parameter, ArrayClearer<I, P> arrayClearer) {
 
         Checks.isLengthAboveZero(numAdditional);
-        Objects.requireNonNull(arrayClearer);
 
         int numOuterAllocatedEntries = getNumOuterAllocatedEntries();
         int numOuterUtilizedEntries = getNumOuterUtilizedEntries();

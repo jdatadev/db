@@ -5,7 +5,7 @@ import java.util.Objects;
 import dev.jdata.db.engine.descriptorables.BaseSingleTypeDescriptorables;
 import dev.jdata.db.engine.sessions.PreparedStatement.PreparedStatementState;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.sql.parse.SQLParser.SQLString;
+import dev.jdata.db.sql.parse.SQLString;
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.checks.Checks;
 

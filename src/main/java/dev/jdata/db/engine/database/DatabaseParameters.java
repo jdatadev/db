@@ -14,7 +14,7 @@ import dev.jdata.db.utils.checks.Checks;
 public final class DatabaseParameters implements IClearable {
 
     private IDatabasesAllocators allocators;
-    private StringManagement stringManagement;
+    private DatabaseStringManagement stringManagement;
     private LargeObjectStorer<IOException> largeObjectStorer;
     private TransactionFactory transactionFactory;
 
@@ -39,7 +39,7 @@ public final class DatabaseParameters implements IClearable {
         this.initialRowIds = null;
     }
 
-    public void initializeStatic(IDatabasesAllocators allocators, StringManagement stringManagement, LargeObjectStorer<IOException> largeObjectStorer,
+    public void initializeStatic(IDatabasesAllocators allocators, DatabaseStringManagement stringManagement, LargeObjectStorer<IOException> largeObjectStorer,
             TransactionFactory transactionFactory) {
 
         this.allocators = Objects.requireNonNull(allocators);
@@ -60,7 +60,7 @@ public final class DatabaseParameters implements IClearable {
         return allocators;
     }
 
-    public StringManagement getStringManagement() {
+    public DatabaseStringManagement getStringManagement() {
         return stringManagement;
     }
 

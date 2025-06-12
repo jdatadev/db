@@ -13,19 +13,18 @@ public class CompleteDatabaseSchema extends BaseDatabaseSchema<CompleteSchemaMap
         Objects.requireNonNull(databaseId);
         Objects.requireNonNull(version);
 
-        return new CompleteDatabaseSchema(databaseId, version, CompleteSchemaMaps.EMPTY);
+        return new CompleteDatabaseSchema(AllocationType.HEAP, databaseId, version, CompleteSchemaMaps.EMPTY);
     }
 
-    @Deprecated
     public static CompleteDatabaseSchema of(DatabaseId databaseId, DatabaseSchemaVersion version, CompleteSchemaMaps schemaMaps) {
 
         Objects.requireNonNull(databaseId);
         Objects.requireNonNull(version);
 
-        return new CompleteDatabaseSchema(databaseId, version, schemaMaps);
+        return new CompleteDatabaseSchema(AllocationType.HEAP, databaseId, version, schemaMaps);
     }
 
-    protected CompleteDatabaseSchema(DatabaseId databaseId, DatabaseSchemaVersion version, CompleteSchemaMaps schemaMaps) {
-        super(databaseId, version, schemaMaps);
+    protected CompleteDatabaseSchema(AllocationType allocationType, DatabaseId databaseId, DatabaseSchemaVersion version, CompleteSchemaMaps schemaMaps) {
+        super(allocationType, databaseId, version, schemaMaps);
     }
 }

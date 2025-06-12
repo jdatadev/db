@@ -4,7 +4,7 @@ import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.list.ASTList;
 import org.jutils.ast.objects.list.ASTSingle;
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.statements.SQLStatementVisitor;
@@ -18,7 +18,7 @@ public final class SQLCreateIndexStatement extends SQLIndexStatement {
     private final ASTList<SQLIndexColumn> columns;
 
     public SQLCreateIndexStatement(Context context, long createKeyword, SQLIndexTypeOptions indexTypeOptions, long indexKeyword, long indexName, long onKeyword,
-            SQLObjectName objectName, IListGetters<SQLIndexColumn> columns) {
+            SQLObjectName objectName, IIndexListGetters<SQLIndexColumn> columns) {
         super(context, createKeyword, indexKeyword, indexName);
 
         this.indexTypeOptions = safeMakeSingle(indexTypeOptions);

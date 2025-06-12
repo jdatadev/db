@@ -89,18 +89,6 @@ public class SQLStatementAdapter<P, R, E extends Exception> implements SQLStatem
     }
 
     @Override
-    public R onCreateProcedure(SQLCreateProcedureStatement createProcedureStatement, P parameter) throws E {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public R onDropProcedure(SQLDropProcedureStatement dropProcedureStatement, P parameter) throws E {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public R onCreateFunction(SQLCreateFunctionStatement createFunctionStatement, P parameter) throws E {
 
         throw new UnsupportedOperationException();
@@ -108,6 +96,18 @@ public class SQLStatementAdapter<P, R, E extends Exception> implements SQLStatem
 
     @Override
     public R onDropFunction(SQLDropFunctionStatement dropFunctionStatement, P parameter) throws E {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public R onCreateProcedure(SQLCreateProcedureStatement createProcedureStatement, P parameter) throws E {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public R onDropProcedure(SQLDropProcedureStatement dropProcedureStatement, P parameter) throws E {
 
         throw new UnsupportedOperationException();
     }

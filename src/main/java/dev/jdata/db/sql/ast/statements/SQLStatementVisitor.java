@@ -33,9 +33,9 @@ public interface SQLStatementVisitor<P, R, E extends Exception> {
     R onCreateTrigger(SQLCreateTriggerStatement createTriggerStatement, P parameter) throws E;
     R onDropTrigger(SQLDropTriggerStatement dropTriggerStatement, P parameter) throws E;
 
-    R onCreateProcedure(SQLCreateProcedureStatement createProcedureStatement, P parameter) throws E;
-    R onDropProcedure(SQLDropProcedureStatement dropProcedureStatement, P parameter) throws E;
-
     R onCreateFunction(SQLCreateFunctionStatement createFunctionStatement, P parameter) throws E;
     R onDropFunction(SQLDropFunctionStatement dropFunctionStatement, P parameter) throws E;
+
+    R onCreateProcedure(SQLCreateProcedureStatement createProcedureStatement, P parameter) throws E;
+    R onDropProcedure(SQLDropProcedureStatement dropProcedureStatement, P parameter) throws E;
 }

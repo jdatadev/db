@@ -14,13 +14,14 @@ import dev.jdata.db.DBConstants;
 import dev.jdata.db.common.storagebits.BaseMaxNumStorageBitsAdapter;
 import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.common.storagebits.NumStorageBitsParameters;
+import dev.jdata.db.custom.ansi.sql.parser.ANSISQLParserFactory;
 import dev.jdata.db.engine.database.DatabaseParameters;
 import dev.jdata.db.engine.database.Databases;
 import dev.jdata.db.engine.database.DatabasesAllocators;
 import dev.jdata.db.engine.database.ExecuteException;
 import dev.jdata.db.engine.database.IDatabaseExecuteOperations.SelectResultWriter;
 import dev.jdata.db.engine.database.StringCache;
-import dev.jdata.db.engine.database.StringManagement;
+import dev.jdata.db.engine.database.DatabaseStringManagement;
 import dev.jdata.db.engine.server.DatabaseServer;
 import dev.jdata.db.engine.server.SQLDatabaseServer;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
@@ -35,9 +36,7 @@ import dev.jdata.db.schema.SchemaManagementAllocators;
 import dev.jdata.db.schema.model.databaseschema.CompleteDatabaseSchema;
 import dev.jdata.db.schema.types.SchemaCustomType;
 import dev.jdata.db.schema.types.SchemaDataType;
-import dev.jdata.db.sql.parse.SQLParser;
 import dev.jdata.db.sql.parse.SQLParserFactory;
-import dev.jdata.db.sql.parse.SQLToken;
 import dev.jdata.db.test.unit.BaseTest;
 import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
 import dev.jdata.db.utils.allocators.IntBucketSetAllocator;
@@ -47,9 +46,9 @@ public class SQLDatabaseServerTest extends BaseTest {
 
     @Test
     @Category(UnitTest.class)
-    public void testCRUD() throws ParserException, ExecuteException {
+    public void testCRUD() throws ParserException, ExecuteException, IOException {
 
-        final SQLParserFactory parserFactory = new ANSISQLParserFactory();
+        final SQLParserFactory parserFactory = ANSISQLParserFactory.INSTANCE;
 
         final StringCache stringCache = new StringCache();
         final boolean cacheStatements = false;
@@ -97,7 +96,7 @@ public class SQLDatabaseServerTest extends BaseTest {
             this.sessionId = Checks.isSessionDescriptor(sessionId);
         }
 
-        final void executeSQL(String sql) throws ParserException, ExecuteException {
+        final void executeSQL(String sql) throws ParserException, ExecuteException, IOException {
 
             final CharBuffer charBuffer = CharBuffer.wrap(sql);
 
@@ -122,7 +121,7 @@ public class SQLDatabaseServerTest extends BaseTest {
         final DatabasesAllocators databasesAllocators = new DatabasesAllocators(numStorageBitsGetter);
 
         final CharacterBuffersAllocator characterBuffersAllocator = new CharacterBuffersAllocator();
-        final StringManagement stringManagement = new StringManagement(characterBuffersAllocator);
+        final DatabaseStringManagement stringManagement = new DatabaseStringManagement(characterBuffersAllocator);
         final LargeObjectStorer<IOException> largeObjectStorer = makeLargeObjectStorer();
 
         final TransactionFactory transactionFactory = makeTransactionFactory();
@@ -201,21 +200,5 @@ public class SQLDatabaseServerTest extends BaseTest {
     private static TransactionFactory makeTransactionFactory() {
 
         return () -> new Transaction(new MVCCTransaction());
-    }
-
-    private static final class ANSISQLParser extends SQLParser {
-
-        ANSISQLParser(SQLToken[] statementTokens, SQLToken[] createOrDropTokens, SQLToken[] alterTokens, SQLParserFactory parserFactory) {
-            super(statementTokens, createOrDropTokens, alterTokens, parserFactory);
-        }
-    }
-
-    private static final class ANSISQLParserFactory extends SQLParserFactory {
-
-        @Override
-        public SQLParser createParser() {
-
-            return new ANSISQLParser(getSQLstatementTokens(), getSQLCreateOrDropTokens(), getSQLAlterTokens(), this);
-        }
     }
 }

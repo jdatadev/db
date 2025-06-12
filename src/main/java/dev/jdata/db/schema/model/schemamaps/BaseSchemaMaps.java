@@ -1,11 +1,14 @@
 package dev.jdata.db.schema.model.schemamaps;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import org.jutils.io.strings.StringRef;
+import org.jutils.io.strings.StringResolver;
 
+import dev.jdata.db.DBNamedObject;
 import dev.jdata.db.schema.model.ISchemaMap;
 import dev.jdata.db.schema.model.SchemaMap;
 import dev.jdata.db.schema.model.objects.DBFunction;
@@ -20,7 +23,7 @@ import dev.jdata.db.schema.model.objects.View;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseSchemaMaps<T> {
+public abstract class BaseSchemaMaps<T extends ISchemaMap<? extends DBNamedObject>> {
 
     public static abstract class BaseBuilder<T extends BaseBuilder<T>> extends ObjectCacheNode {
 
@@ -214,5 +217,94 @@ public abstract class BaseSchemaMaps<T> {
         Objects.requireNonNull(objectType);
 
         return getSchemaMap(objectType).maxInt(defaultValue, DBNamedIdentifiableObject::getId);
+    }
+
+    public final boolean isEqualTo(StringResolver thisStringResolver, BaseSchemaMaps<T> other, StringResolver otherStringResolver) {
+
+        Objects.requireNonNull(thisStringResolver);
+        Objects.requireNonNull(other);
+        Objects.requireNonNull(otherStringResolver);
+
+        final boolean result;
+
+        if (this == other) {
+
+            result = true;
+        }
+        else if (getClass() != other.getClass()) {
+
+            result = false;
+        }
+        else {
+
+            result = isEqualTo(schemaObjectStates, thisStringResolver, other.schemaObjectStates, otherStringResolver);
+        }
+
+        return result;
+    }
+
+    private static <T extends ISchemaMap<?>> boolean isEqualTo(T[] thisSchemaObjectStates, StringResolver thisStringResolver, T[] otherSchemaObjectStates,
+            StringResolver otherStringResolver) {
+
+        boolean result;
+
+        final int num = thisSchemaObjectStates.length;
+
+        if (num != otherSchemaObjectStates.length) {
+
+            result = false;
+        }
+        else {
+            result = true;
+
+            for (int i = 0; i < num; ++ i) {
+
+                @SuppressWarnings("unchecked")
+                final ISchemaMap<DBNamedObject> thisSchemaMap = (ISchemaMap<DBNamedObject>)thisSchemaObjectStates[i];
+                @SuppressWarnings("unchecked")
+                final ISchemaMap<DBNamedObject> otherSchemaMap = (ISchemaMap<DBNamedObject>)otherSchemaObjectStates[i];
+
+                if (!thisSchemaMap.isEqualTo(thisStringResolver, otherSchemaMap, otherStringResolver)) {
+
+                    result = false;
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public final boolean equals(Object object) {
+
+        final boolean result;
+
+        if (this == object) {
+
+            result = true;
+        }
+        else if (object == null) {
+
+            result = false;
+        }
+        else if (getClass() != object.getClass()) {
+
+            result = false;
+        }
+        else {
+            final BaseSchemaMaps<?> other = (BaseSchemaMaps<?>)object;
+
+            result = Arrays.equals(schemaObjectStates, other.schemaObjectStates);
+        }
+
+        return result;
+    }
+
+    @Override
+    public String toString() {
+
+        return getClass().getSimpleName() + " [createObjectState=" + createObjectState + ", getSchemaMap=" + getSchemaMap
+                + ", schemaObjectStates=" + Arrays.toString(schemaObjectStates) + "]";
     }
 }

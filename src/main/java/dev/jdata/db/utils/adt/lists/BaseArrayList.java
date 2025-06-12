@@ -6,13 +6,14 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
+import dev.jdata.db.utils.adt.elements.IElementsToString;
 import dev.jdata.db.utils.adt.elements.IIterableElements.ForEach;
 import dev.jdata.db.utils.adt.elements.IIterableElements.ForEach2;
 import dev.jdata.db.utils.allocators.Allocatable;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-public abstract class BaseArrayList<T> extends Allocatable {
+public abstract class BaseArrayList<T> extends Allocatable implements IElementsToString<T> {
 
     static final int DEFAULT_INITIAL_CAPACITY = 10;
 
@@ -47,24 +48,26 @@ public abstract class BaseArrayList<T> extends Allocatable {
         return result;
     }
 
-    BaseArrayList() {
+    BaseArrayList(AllocationType allocationType) {
+        super(allocationType);
 
         this.createArray = null;
         this.array = null;
         this.numElements = 0;
     }
 
-    BaseArrayList(IntFunction<T[]> createArray) {
-        this(createArray, DEFAULT_INITIAL_CAPACITY);
+    BaseArrayList(AllocationType allocationType, IntFunction<T[]> createArray) {
+        this(allocationType, createArray, DEFAULT_INITIAL_CAPACITY);
     }
 
-    BaseArrayList(IntFunction<T[]> createArray, T[] instances) {
-        this(createArray, instances.length);
+    BaseArrayList(AllocationType allocationType, IntFunction<T[]> createArray, T[] instances) {
+        this(allocationType, createArray, instances.length);
 
         addTail(instances);
     }
 
-    BaseArrayList(IntFunction<T[]> createArray, T[] instances, int numElements) {
+    BaseArrayList(AllocationType allocationType, IntFunction<T[]> createArray, T[] instances, int numElements) {
+        super(allocationType);
 
         Objects.requireNonNull(createArray);
         Objects.requireNonNull(instances);
@@ -80,7 +83,8 @@ public abstract class BaseArrayList<T> extends Allocatable {
         this.numElements = numElements;
     }
 
-    protected BaseArrayList(IntFunction<T[]> createArray, T instance) {
+    protected BaseArrayList(AllocationType allocationType, IntFunction<T[]> createArray, T instance) {
+        super(allocationType);
 
         Objects.requireNonNull(createArray);
         Objects.requireNonNull(instance);
@@ -95,21 +99,24 @@ public abstract class BaseArrayList<T> extends Allocatable {
         this.numElements = numElements;
     }
 
-    protected BaseArrayList(T[] instances) {
+    protected BaseArrayList(AllocationType allocationType, T[] instances) {
+        super(allocationType);
 
         this.createArray = null;
         this.array = dev.jdata.db.utils.adt.arrays.Array.copyOf(instances);
         this.numElements = instances.length;
     }
 
-    protected BaseArrayList(BaseArrayList<T> toCopy) {
+    protected BaseArrayList(AllocationType allocationType, BaseArrayList<T> toCopy) {
+        super(allocationType);
 
         this.createArray = toCopy.createArray;
 
         copy(createArray, toCopy);
     }
 
-    BaseArrayList(IntFunction<T[]> createArray, IIndexList<T> toCopy) {
+    BaseArrayList(AllocationType allocationType, IntFunction<T[]> createArray, IIndexList<T> toCopy) {
+        super(allocationType);
 
         this.createArray = createArray;
 
@@ -134,7 +141,8 @@ public abstract class BaseArrayList<T> extends Allocatable {
         }
     }
 
-    protected BaseArrayList(IntFunction<T[]> createArray, int initialCapacity) {
+    protected BaseArrayList(AllocationType allocationType, IntFunction<T[]> createArray, int initialCapacity) {
+        super(allocationType);
 
         Objects.requireNonNull(createArray);
         Checks.isInitialCapacity(initialCapacity);
@@ -184,6 +192,26 @@ public abstract class BaseArrayList<T> extends Allocatable {
         return array[numElements - 1];
     }
 
+    public final long findInstanceIndex(T instance) {
+
+        Objects.requireNonNull(instance);
+
+        int foundIndex = -1;
+
+        final int num = numElements;
+
+        for (int i = 0; i < num; ++ i) {
+
+            if (array[i] == instance) {
+
+                foundIndex = i;
+                break;
+            }
+        }
+
+        return foundIndex;
+    }
+
     public final void addHead(T instance) {
 
         if (instance == null) {
@@ -210,7 +238,7 @@ public abstract class BaseArrayList<T> extends Allocatable {
 
         thisArray[0] = instance;
 
-        ++ this.numElements;
+        ++ numElements;
     }
 
     public final void addTail(T instance) {
@@ -232,7 +260,7 @@ public abstract class BaseArrayList<T> extends Allocatable {
             thisArray = this.array = newArray;
         }
 
-        thisArray[this.numElements ++] = instance;
+        thisArray[numElements ++] = instance;
     }
 
     final void addTail(BaseArrayList<T> baseArrayList) {
@@ -300,6 +328,115 @@ public abstract class BaseArrayList<T> extends Allocatable {
         Objects.checkIndex(index, numElements);
 
         array[(int)index] = instance;
+    }
+
+    public final T removeHead() {
+
+        return remove(0);
+    }
+
+    public final void removeHead(long numElements) {
+
+        Checks.isNumElements(numElements);
+
+        if (numElements != 0L) {
+
+            if (numElements == 1) {
+
+                remove(0);
+            }
+            else {
+                final int numToRemove = Integers.checkUnsignedLongToUnsignedInt(numElements);
+
+                final int num = this.numElements;
+
+                if (numToRemove == num) {
+
+                    clear();
+                }
+                else {
+                    final T[] a = array;
+
+                    final int remaining = num - numToRemove;
+
+                    System.arraycopy(a, numToRemove, a, 0, remaining);
+
+                    this.numElements = remaining;
+                }
+            }
+        }
+    }
+
+    public final T remove(long index) {
+
+        final int num = numElements;
+
+        Objects.checkIndex(index, num);
+
+        final int intIndex = Integers.checkUnsignedLongToUnsignedInt(index);
+
+        final T result;
+
+        switch (num) {
+
+        case 0:
+            throw new IllegalStateException();
+
+        case 1:
+
+            if (index != 0) {
+
+                throw new IllegalArgumentException();
+            }
+
+            result = array[intIndex];
+
+            clear();
+            break;
+
+        default:
+
+            final T[] a = array;
+
+            result = a[intIndex];
+
+            if (index == 0) {
+
+                System.arraycopy(a, 1, a, 0, num - 1);
+            }
+            else if (index == num - 1) {
+
+            }
+            else {
+                System.arraycopy(a, intIndex + 1, a, intIndex, num - intIndex - 1);
+            }
+            break;
+        }
+
+        -- numElements;
+
+        return result;
+    }
+
+    public final boolean removeInstance(T instance) {
+
+        Objects.requireNonNull(instance);
+
+        final long index = findInstanceIndex(instance);
+
+        final boolean removed;
+
+        if (index == -1L) {
+
+            removed = false;
+        }
+        else {
+            remove(index);
+
+            removed = true;
+        }
+
+        return removed;
     }
 
     public final void sort(Comparator<? super T> comparator) {
@@ -433,7 +570,7 @@ public abstract class BaseArrayList<T> extends Allocatable {
 
     private void copy(IntFunction<T[]> createArray, BaseArrayList<T> toCopy) {
 
-        final int toCopyNumElements = this.numElements = toCopy.numElements;
+        final int toCopyNumElements = numElements = toCopy.numElements;
 
         this.array = createArray.apply(toCopyNumElements);
 
@@ -448,5 +585,62 @@ public abstract class BaseArrayList<T> extends Allocatable {
     private static int allocateLength(int requiredLength) {
 
         return requiredLength << 1;
+    }
+
+    @Override
+    public final <P> void toString(StringBuilder sb, P parameter, ElementsToStringAdder<T, P> elementsToStringAdder) {
+
+        Objects.requireNonNull(sb);
+        Objects.requireNonNull(elementsToStringAdder);
+
+        sb.append('[');
+
+        final int num = numElements;
+
+        for (int i = 0; i < num; ++ i) {
+
+            if (i > 0) {
+
+                sb.append(',');
+            }
+
+            elementsToStringAdder.addString(array[i], sb, parameter);
+        }
+
+        sb.append(']');
+    }
+
+    @Override
+    public final int hashCode() {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+
+        final boolean result;
+
+        if (this == object) {
+
+            result = true;
+        }
+        else if (object == null) {
+
+            result = false;
+        }
+        else if (getClass() != object.getClass()) {
+
+            result = false;
+        }
+        else {
+            final BaseArrayList<?> other = (BaseArrayList<?>)object;
+
+            final int num = numElements;
+
+            result = num == other.numElements && Arrays.equals(array, 0, num, other.array, 0, num);
+        }
+
+        return result;
     }
 }

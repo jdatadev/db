@@ -36,12 +36,12 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
         Objects.requireNonNull(completeDatabaseSchema);
         Objects.requireNonNull(databasesSchemaManagerAllocator);
 
-        return new DatabaseSchemaManager(databaseId, completeDatabaseSchema, IIndexList.empty(), databasesSchemaManagerAllocator);
+        return new DatabaseSchemaManager(AllocationType.HEAP, databaseId, completeDatabaseSchema, IIndexList.empty(), databasesSchemaManagerAllocator);
     }
 
-    DatabaseSchemaManager(DatabaseId databaseId, CompleteDatabaseSchema initialCompleteSchema, IIndexList<DiffDatabaseSchema> diffSchemas,
+    DatabaseSchemaManager(AllocationType allocationType, DatabaseId databaseId, CompleteDatabaseSchema initialCompleteSchema, IIndexList<DiffDatabaseSchema> diffSchemas,
             DatabasesSchemaManagerAllocator databasesSchemaManagerAllocator) {
-        super(databaseId);
+        super(allocationType, databaseId);
 
         Objects.requireNonNull(initialCompleteSchema);
         Checks.areNotEqual(databaseId, initialCompleteSchema.getDatabaseId());
@@ -200,7 +200,7 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
                 ? initialCompleteSchema.getVersion()
                 : diffSchemas.getTail().getVersion();
 
-        return new EffectiveDatabaseSchema(getDatabaseId(), latestVersion, schemaMaps);
+        return EffectiveDatabaseSchema.of(getDatabaseId(), latestVersion, schemaMaps);
     }
 
     private synchronized DiffDatabaseSchema getCurrentSchema() {

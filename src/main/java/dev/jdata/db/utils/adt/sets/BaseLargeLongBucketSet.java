@@ -78,7 +78,7 @@ abstract class BaseLargeLongBucketSet extends BaseLargeIntegerBucketSet<LargeLon
 
         final long noNode = BaseList.NO_NODE;
 
-        for (long i = 0; i < bucketHeadNodesLength; ++ i) {
+        for (long i = 0L; i < bucketHeadNodesLength; ++ i) {
 
             for (long n = bucketHeadNodesHashArray.get(i); n != noNode; n = b.getNextNode(n)) {
 
@@ -142,7 +142,7 @@ abstract class BaseLargeLongBucketSet extends BaseLargeIntegerBucketSet<LargeLon
         final long noLongNode = NO_LONG_NODE;
         final long noNode = BaseList.NO_NODE;
 
-        for (long i = 0; i < hashArrayLength; ++ i) {
+        for (long i = 0L; i < hashArrayLength; ++ i) {
 
             final long bucketHeadNode = hashArray.get(i);
 
@@ -296,7 +296,7 @@ abstract class BaseLargeLongBucketSet extends BaseLargeIntegerBucketSet<LargeLon
 
         final LargeLongArray bucketHeadNodeHashArray = getHashed();
 
-        ByIndex.closureOrConstantLargeToString(bucketHeadNodeHashArray, 0L, numElements, sb, null, (s, i) -> s.get(i) != NO_LONG_NODE, (s, i, b) -> b.append(s.get(i)));
+        ByIndex.closureOrConstantToString(bucketHeadNodeHashArray, 0L, numElements, sb, null, (s, i) -> s.get(i) != NO_LONG_NODE, (s, i, b) -> b.append(s.get(i)));
 
         sb.append(']');
 

@@ -1,8 +1,28 @@
 package dev.jdata.db.utils.allocators;
 
+import java.util.Objects;
+
 public abstract class Allocatable {
 
+    public static enum AllocationType {
+
+        HEAP,
+        HEAP_CONSTANT,
+        HEAP_ALLOCATOR,
+        CACHING_ALLOCATOR,
+        ARRAY_ALLOCATOR
+    }
+
+    private final AllocationType allocationType;
+
     private boolean allocated;
+
+    protected Allocatable(AllocationType allocationType) {
+
+        this.allocationType = Objects.requireNonNull(allocationType);
+
+        this.allocated = allocationType == AllocationType.HEAP || allocationType == AllocationType.HEAP_ALLOCATOR;
+    }
 
     final boolean isAllocated() {
         return allocated;
@@ -40,5 +60,11 @@ public abstract class Allocatable {
 
             throw new IllegalStateException();
         }
+    }
+
+    @Override
+    public String toString() {
+
+        return getClass().getSimpleName() + " [allocationType=" + allocationType + ", allocated=" + allocated + "]";
     }
 }

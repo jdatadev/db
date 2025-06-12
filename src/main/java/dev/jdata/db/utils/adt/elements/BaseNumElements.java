@@ -80,4 +80,30 @@ public abstract class BaseNumElements extends BaseElements implements PrintDebug
             exit(numElements);
         }
     }
+
+    @Override
+    public boolean equals(Object object) {
+
+        final boolean result;
+
+        if (this == object) {
+
+            result = true;
+        }
+        else if (object == null) {
+
+            result = false;
+        }
+        else if (getClass() != object.getClass()) {
+
+            result = false;
+        }
+        else {
+            final BaseNumElements other = (BaseNumElements)object;
+
+            result = numElements == other.numElements;
+        }
+
+        return result;
+    }
 }

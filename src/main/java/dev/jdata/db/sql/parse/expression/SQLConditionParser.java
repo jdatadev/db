@@ -1,12 +1,12 @@
 package dev.jdata.db.sql.parse.expression;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.expression.ExpressionList;
 import org.jutils.ast.operator.Logical;
 import org.jutils.ast.operator.Relational;
+import org.jutils.io.strings.CharInput;
 import org.jutils.io.strings.StringResolver;
 import org.jutils.parse.ParserException;
 
@@ -23,17 +23,17 @@ public final class SQLConditionParser extends BaseSQLExpressionParser {
         this.expressionParser = Objects.requireNonNull(expressionParser);
     }
 
-    public Expression parseCondition(SQLExpressionLexer lexer) throws ParserException, IOException {
+    public <E extends Exception, I extends CharInput<E>> Expression parseCondition(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         return parseConditionList(lexer);
     }
 
-    private Expression parseConditionList(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> Expression parseConditionList(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         return parseExpressionList(lexer, this::parseRelationalListOrNestedCondition, SQLConditionParser::parseLogicalOperator);
     }
 
-    private Expression parseRelationalListOrNestedCondition(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> Expression parseRelationalListOrNestedCondition(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         final Expression result;
 
@@ -50,7 +50,7 @@ public final class SQLConditionParser extends BaseSQLExpressionParser {
         return result;
     }
 
-    private Expression parseRelationalList(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> Expression parseRelationalList(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         final Expression expression = parseExpressionList(lexer, expressionParser::parseExpression, SQLConditionParser::parseRelationalOperator);
 
@@ -68,7 +68,7 @@ public final class SQLConditionParser extends BaseSQLExpressionParser {
             SQLToken.OR
     };
 
-    private static Logical parseLogicalOperator(SQLLexer lexer, StringResolver stringResolver) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> Logical parseLogicalOperator(SQLLexer<E, I> lexer, StringResolver stringResolver) throws ParserException, E {
 
         final SQLToken[] expectedTokens = LOGICAL_OPERATOR_TOKENS;
 
@@ -102,7 +102,8 @@ public final class SQLConditionParser extends BaseSQLExpressionParser {
             SQLToken.GTE
     };
 
-    private static Relational parseRelationalOperator(SQLLexer lexer, StringResolver stringResolver) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> Relational parseRelationalOperator(SQLLexer<E, I> lexer, StringResolver stringResolver)
+            throws ParserException, E {
 
         final SQLToken[] expectedTokens = RELATIONAL_OPERATOR_TOKENS;
 

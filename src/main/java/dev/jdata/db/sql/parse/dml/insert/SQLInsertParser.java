@@ -1,13 +1,13 @@
 package dev.jdata.db.sql.parse.dml.insert;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.IAddableList;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.dml.SQLInsertStatement;
 import dev.jdata.db.sql.ast.statements.table.SQLColumnNames;
 import dev.jdata.db.sql.parse.SQLExpressionLexer;
@@ -24,7 +24,7 @@ public final class SQLInsertParser extends SQLStatementParser {
         this.expressionParser = Objects.requireNonNull(expressionParser);
     }
 
-    public SQLInsertStatement parseInsert(SQLExpressionLexer lexer, long insertKeyword) throws ParserException, IOException {
+    public <E extends Exception, I extends CharInput<E>> SQLInsertStatement parseInsert(SQLExpressionLexer<E, I> lexer, long insertKeyword) throws ParserException, E {
 
         Objects.requireNonNull(lexer);
         checkIsKeyword(insertKeyword);
@@ -37,7 +37,7 @@ public final class SQLInsertParser extends SQLStatementParser {
 
         final long valuesKeyword = lexer.lexKeyword(SQLToken.VALUES);
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final IAddableList<Expression> expressions = allocator.allocateList(100);
 

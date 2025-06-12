@@ -1,14 +1,16 @@
 package dev.jdata.db.sql.parse.ddl.table;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.types.StringRef;
+import org.jutils.io.strings.CharInput;
 import org.jutils.io.strings.StringResolver;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.schema.types.BigIntType;
+import dev.jdata.db.schema.types.BlobType;
+import dev.jdata.db.schema.types.BooleanType;
 import dev.jdata.db.schema.types.CharType;
 import dev.jdata.db.schema.types.DateType;
 import dev.jdata.db.schema.types.DecimalType;
@@ -17,6 +19,9 @@ import dev.jdata.db.schema.types.FloatType;
 import dev.jdata.db.schema.types.IntegerType;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.schema.types.SmallIntType;
+import dev.jdata.db.schema.types.TextObjectType;
+import dev.jdata.db.schema.types.TimeType;
+import dev.jdata.db.schema.types.TimestampType;
 import dev.jdata.db.schema.types.VarCharType;
 import dev.jdata.db.sql.ast.statements.table.SQLTableColumnDefinition;
 import dev.jdata.db.sql.parse.BaseSQLParser;
@@ -46,7 +51,8 @@ public final class SQLColumnDefinitionParser extends BaseSQLParser {
         this.expressionParser = Objects.requireNonNull(expressionParser);
     }
 
-    public SQLTableColumnDefinition parseTableColumnDefinition(SQLExpressionLexer lexer, SQLToken[] schemaDataTypeTokens) throws ParserException, IOException {
+    public <E extends Exception, I extends CharInput<E>> SQLTableColumnDefinition parseTableColumnDefinition(SQLExpressionLexer<E, I> lexer, SQLToken[] schemaDataTypeTokens)
+            throws ParserException, E {
 
         final long columnName = lexer.lexName();
 
@@ -106,12 +112,17 @@ public final class SQLColumnDefinitionParser extends BaseSQLParser {
         return new SQLTableColumnDefinition(makeContext(), columnName, schemaTypeName, schemaDataType, notKeyword, nullKeyword, defaultKeyword, defaultExpression);
     }
 
-    private static SchemaDataType parseSchemaType(SQLLexer lexer, StringResolver stringResolver, SQLToken schemaTypeToken, SQLToken[] schemaDataTypeTokens)
-            throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> SchemaDataType parseSchemaType(SQLLexer<E, I> lexer, StringResolver stringResolver, SQLToken schemaTypeToken,
+            SQLToken[] schemaDataTypeTokens) throws ParserException, E {
 
         final SchemaDataType result;
 
         switch (schemaTypeToken) {
+
+        case BOOLEAN:
+
+            result = BooleanType.INSTANCE;
+            break;
 
         case SMALLINT:
 
@@ -140,6 +151,8 @@ public final class SQLColumnDefinitionParser extends BaseSQLParser {
 
         case DECIMAL:
 
+            lexer.lexExpect(SQLToken.LPAREN);
+
             final int precision = parseUnsignedInt(lexer, stringResolver);
 
             lexer.lexExpect(SQLToken.COMMA);
@@ -147,11 +160,8 @@ public final class SQLColumnDefinitionParser extends BaseSQLParser {
             final int scale = parseUnsignedInt(lexer, stringResolver);
 
             result = DecimalType.of(precision, scale);
-            break;
 
-        case DATE:
-
-            result = DateType.INSTANCE;
+            lexer.lexExpect(SQLToken.RPAREN);
             break;
 
         case CHAR:
@@ -180,6 +190,31 @@ public final class SQLColumnDefinitionParser extends BaseSQLParser {
             }
 
             lexer.lexExpect(SQLToken.RPAREN);
+            break;
+
+        case DATE:
+
+            result = DateType.INSTANCE;
+            break;
+
+        case TIME:
+
+            result = TimeType.INSTANCE;
+            break;
+
+        case TIMESTAMP:
+
+            result = TimestampType.INSTANCE;
+            break;
+
+        case BLOB:
+
+            result = BlobType.INSTANCE;
+            break;
+
+        case TEXT:
+
+            result = TextObjectType.INSTANCE;
             break;
 
         default:

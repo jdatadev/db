@@ -3,7 +3,7 @@ package dev.jdata.db.utils.adt.maps;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
 
-public final class MutableIntToIntNonRemoveNonBucketMap extends BaseIntToIntNonRemoveNonBucketMap implements IMutableIntToIntNonRemoveNonBucketMap {
+public final class MutableIntToIntNonRemoveNonBucketMap extends BaseIntToIntNonRemoveNonBucketMap implements IMutableIntToIntNonRemoveStaticMap {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_INT_TO_INT_NON_REMOVE_NON_BUCKET_MAP;
 

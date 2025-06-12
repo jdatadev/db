@@ -3,14 +3,14 @@ package dev.jdata.db.sql.ast.statements.dml;
 import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.list.ASTList;
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
 import org.jutils.parse.context.Context;
 
 public final class SQLColumnValueUpdateValues extends SQLUpdateValues {
 
     private final ASTList<SQLColumnValueUpdateValue> values;
 
-    public SQLColumnValueUpdateValues(Context context, IListGetters<SQLColumnValueUpdateValue> values) {
+    public SQLColumnValueUpdateValues(Context context, IIndexListGetters<SQLColumnValueUpdateValue> values) {
         super(context);
 
         this.values = makeNonEmptyList(values);

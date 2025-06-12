@@ -53,7 +53,7 @@ public final class FreeList<T> implements IFreeing<T>, IElements {
 
         Objects.requireNonNull(instance);
 
-        if (Array.containsInstance(list, 0, numElements, instance)) {
+        if (Array.containsInstance(list, instance, 0, numElements)) {
 
             throw new IllegalArgumentException();
         }

@@ -1,18 +1,18 @@
 package dev.jdata.db.sql.parse.expression;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.IAddableList;
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
 import org.jutils.ast.operator.Arithmetic;
 import org.jutils.ast.operator.Operator;
+import org.jutils.io.strings.CharInput;
 import org.jutils.io.strings.StringResolver;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.expressions.BaseSQLFunctionCallExpression;
 import dev.jdata.db.sql.ast.expressions.SQLAggregateFunctionCallExpression;
 import dev.jdata.db.sql.ast.expressions.SQLDecimalLiteral;
@@ -37,18 +37,17 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
         this.subSelectParser = Objects.requireNonNull(subSelectParser);
     }
 
-    public Expression parseExpression(SQLExpressionLexer lexer)
-            throws ParserException, IOException {
+    public <E extends Exception, I extends CharInput<E>> Expression parseExpression(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         return parseExpressionList(lexer);
     }
 
-    private Expression parseExpressionList(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> Expression parseExpressionList(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         return parseExpressionList(lexer, this::parseExpressionPart, SQLExpressionParser::parseArithmeticOperator);
     }
 
-    private <T extends Operator> Expression parseExpressionPart(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <T extends Operator, E extends Exception, I extends CharInput<E>> Expression parseExpressionPart(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         return parseExpressionPart(lexer, SQLExpressionParser::parseArithmeticOperator);
     }
@@ -69,11 +68,12 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
             SQLToken.NAME
     };
 
-    private <T extends Operator> Expression parseExpressionPart(SQLExpressionLexer lexer, OperatorParser<T> operatorParser) throws ParserException, IOException {
+    private <T extends Operator, E extends Exception, I extends CharInput<E>> Expression parseExpressionPart(SQLExpressionLexer<E, I> lexer,
+            OperatorParser<T, E, I> operatorParser) throws ParserException, E {
 
         final SQLToken[] expectedTokens = EXPRESSION_TOKENS;
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final StringResolver stringResolver = lexer.getStringResolver();
         final SQLScratchExpressionValues scratchExpressionValues = lexer.getScratchExpressionValues();
@@ -135,13 +135,13 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
     @FunctionalInterface
     private interface FunctionFactory<T extends BaseSQLFunctionCallExpression> {
 
-        T createFunction(Context context, long functionName, IListGetters<Expression> parameters);
+        T createFunction(Context context, long functionName, IIndexListGetters<Expression> parameters);
     }
 
-    private <T extends BaseSQLFunctionCallExpression> T parseFunction(SQLExpressionLexer lexer, long functionName, FunctionFactory<T> functionFactory)
-            throws ParserException, IOException {
+    private <T extends BaseSQLFunctionCallExpression, E extends Exception, I extends CharInput<E>> T parseFunction(SQLExpressionLexer<E, I> lexer, long functionName,
+            FunctionFactory<T> functionFactory) throws ParserException, E {
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final IAddableList<Expression> parameters = allocator.allocateList(10);
 
@@ -156,7 +156,7 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
         return functionFactory.createFunction(makeContext(), functionName, parameters);
     }
 
-    private void parseParameters(SQLExpressionLexer lexer, IAddableList<Expression> dst) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> void parseParameters(SQLExpressionLexer<E, I> lexer, IAddableList<Expression> dst) throws ParserException, E {
 
         lexer.lexExpect(SQLToken.LPAREN);
 
@@ -175,7 +175,8 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
         lexer.lexExpect(SQLToken.RPAREN);
     }
 
-    private <T extends Operator> Expression parseNestedExpression(SQLExpressionLexer lexer, OperatorParser<T> operatorParser) throws ParserException, IOException {
+    private <T extends Operator, E extends Exception, I extends CharInput<E>> Expression parseNestedExpression(SQLExpressionLexer<E, I> lexer,
+            OperatorParser<T, E, I> operatorParser) throws ParserException, E {
 
         final Expression result;
 
@@ -194,15 +195,16 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
         return result;
     }
 
-    private SQLSubSelectExpression parseSubSelectExpression(SQLExpressionLexer lexer, long selectKeyword) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLSubSelectExpression parseSubSelectExpression(SQLExpressionLexer<E, I> lexer, long selectKeyword)
+            throws ParserException, E {
 
         final SQLSubSelectStatement subSelectStatement = subSelectParser.parseSelect(lexer, selectKeyword);
 
         return new SQLSubSelectExpression(makeContext(), subSelectStatement);
     }
 
-    private static SQLLiteral parseIntegerOrDecimal(SQLLexer lexer, SQLAllocator allocator, StringResolver stringResolver, SQLScratchExpressionValues scratchExpressionValues,
-            boolean isNegative) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> SQLLiteral parseIntegerOrDecimal(SQLLexer<E, I> lexer, ISQLAllocator allocator, StringResolver stringResolver,
+            SQLScratchExpressionValues scratchExpressionValues, boolean isNegative) throws ParserException, E {
 
         final SQLScratchIntegerValue scratchIntegerValue = scratchExpressionValues.getIntegerValue();
 
@@ -211,8 +213,8 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
         return parseIntegerOrDecimal(lexer, allocator, stringResolver, scratchIntegerValue, scratchExpressionValues.getFractionValue());
     }
 
-    private static SQLLiteral parseIntegerOrDecimal(SQLLexer lexer, SQLAllocator allocator, StringResolver stringResolver, SQLScratchIntegerValue scratchIntegerValue,
-            SQLScratchIntegerValue scratchFractionValue) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> SQLLiteral parseIntegerOrDecimal(SQLLexer<E, I> lexer, ISQLAllocator allocator, StringResolver stringResolver,
+            SQLScratchIntegerValue scratchIntegerValue, SQLScratchIntegerValue scratchFractionValue) throws ParserException, E {
 
         final SQLLiteral result;
 
@@ -262,7 +264,8 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
 
     private static final int MIN_LONG_DIGITS = Math.min(MAX_NEGATIVE_LONG_DIGITS, MAX_POSITIVE_LONG_DIGITS);
 
-    private static void parseInteger(SQLLexer lexer, StringResolver stringResolver, SQLScratchIntegerValue scratchIntegerValue, boolean isNegative) {
+    private static <E extends Exception, I extends CharInput<E>> void parseInteger(SQLLexer<E, I> lexer, StringResolver stringResolver,
+            SQLScratchIntegerValue scratchIntegerValue, boolean isNegative) {
 
         final long stringRef = lexer.getStringRef();
 
@@ -296,7 +299,8 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
             SQLToken.MODULUS
     };
 
-    private static Arithmetic parseArithmeticOperator(SQLLexer lexer, StringResolver stringResolver) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> Arithmetic parseArithmeticOperator(SQLLexer<E, I> lexer, StringResolver stringResolver)
+            throws ParserException, E {
 
         final SQLToken[] expectedTokens = ARITHMETIC_OPERATOR_TOKENS;
 

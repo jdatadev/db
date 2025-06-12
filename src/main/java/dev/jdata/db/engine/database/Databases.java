@@ -11,7 +11,7 @@ import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
 import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.sql.parse.SQLParser.SQLString;
+import dev.jdata.db.sql.parse.SQLString;
 import dev.jdata.db.utils.adt.maps.MutableObjectWithRemoveNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
 

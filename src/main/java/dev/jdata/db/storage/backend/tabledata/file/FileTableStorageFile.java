@@ -15,9 +15,9 @@ import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.file.access.IFilePath;
 import dev.jdata.db.utils.file.access.IFileSystemAccess.OpenMode;
+import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RandomFileAccess;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.scalars.Integers;
 
 public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess> implements PrintDebug {
@@ -574,7 +574,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
             long inputByteBufferBitOffset = 0;
             long outputByteBufferBitOffset = 0;
 
-            for (long i = 0; i < maxBatchRows && remainingRows != 0L; ++ i, -- remainingRows) {
+            for (long i = 0L; i < maxBatchRows && remainingRows != 0L; ++ i, -- remainingRows) {
 
                 BitBufferUtil.copyBits(inputTempByteBuffer, inputByteBufferBitOffset, numInputRowIdBits, outputTempByteBuffer, outputByteBufferBitOffset, numOutputRowIdBits);
 

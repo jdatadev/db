@@ -3,7 +3,7 @@ package dev.jdata.db.sql.ast.statements.dml;
 import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.list.ASTList;
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.clauses.SQLClause;
@@ -12,7 +12,7 @@ public final class SQLFromClause extends SQLClause {
 
     private final ASTList<SQLFromTable> fromTables;
 
-    public SQLFromClause(Context context, IListGetters<SQLFromTable> fromTables) {
+    public SQLFromClause(Context context, IIndexListGetters<SQLFromTable> fromTables) {
         super(context);
 
         this.fromTables = makeNonEmptyList(fromTables);

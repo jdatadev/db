@@ -130,7 +130,7 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
 
         final long numLockedRows = lockedTableRows.getLimit();
 
-        for (long i = 0; i <  numLockedRows; ++ i) {
+        for (long i = 0L; i < numLockedRows; ++ i) {
 
             final long encodedRowLock = lockedTableRows.get(i);
 

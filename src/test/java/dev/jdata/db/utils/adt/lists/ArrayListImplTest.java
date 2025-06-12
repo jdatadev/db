@@ -120,7 +120,7 @@ public final class ArrayListImplTest extends BaseArrayListTest<ArrayListImpl<Int
     @Override
     protected long countWithClosure(ArrayListImpl<Integer> elements, Predicate<Integer> predicate) {
 
-        return Coll.countWithClosure(elements, predicate);
+        return Coll.closureOrConstantCount(elements, predicate);
     }
 
     @Override

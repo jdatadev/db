@@ -3,11 +3,11 @@ package dev.jdata.db.data.locktable;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
 import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
-import dev.jdata.db.utils.adt.maps.BaseLongNonBucketMap;
+import dev.jdata.db.utils.adt.maps.BaseLongKeyNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-final class LockTableRowsMap extends BaseLongNonBucketMap<LockTableRowsMap.RowsMapValues> implements ILockTableRowsMap {
+final class LockTableRowsMap extends BaseLongKeyNonBucketMap<LockTableRowsMap.RowsMapValues> implements ILockTableRowsMap {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_LOCK_TABLE_ROWS;
 
@@ -170,5 +170,11 @@ final class LockTableRowsMap extends BaseLongNonBucketMap<LockTableRowsMap.RowsM
     @Override
     protected void clearValues(RowsMapValues values) {
 
+    }
+
+    @Override
+    protected int getHashArrayIndex(long key, int keyMask) {
+
+        throw new UnsupportedOperationException();
     }
 }

@@ -4,7 +4,7 @@ import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.ASTList;
-import org.jutils.ast.objects.list.IListGetters;
+import org.jutils.ast.objects.list.IIndexListGetters;
 import org.jutils.parse.context.Context;
 
 abstract class BaseSQLInCondition extends BaseSQLCondition {
@@ -12,7 +12,7 @@ abstract class BaseSQLInCondition extends BaseSQLCondition {
     private final long inKeyword;
     private final ASTList<Expression> expressions;
 
-    BaseSQLInCondition(Context context, long inKeyword, IListGetters<Expression> expressions) {
+    BaseSQLInCondition(Context context, long inKeyword, IIndexListGetters<Expression> expressions) {
         super(context);
 
         this.inKeyword = checkIsKeyword(inKeyword);

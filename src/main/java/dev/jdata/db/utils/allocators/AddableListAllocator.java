@@ -4,20 +4,23 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 
 import org.jutils.ast.objects.list.IAddableList;
-import org.jutils.ast.objects.list.IImutableList;
+import org.jutils.ast.objects.list.IImmutableIndexList;
 
+import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.adt.lists.BaseArrayList;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
 public final class AddableListAllocator extends BaseArrayAllocator<AddableListAllocator.AddableList<?>> implements IAddableListAllocator {
 
-    public static final class AddableList<T> extends BaseArrayList<T> implements IAddableList<T>, IImutableList<T> {
+    public static final class AddableList<T> extends BaseArrayList<T> implements IAddableList<T>, IImmutableIndexList<T>, IResettable {
+
+        private boolean initialized;
 
         @SuppressWarnings("unchecked")
         public static <T> IAddableList<T> of(T instance) {
 
-            return (AddableList<T>)new AddableList<>(Object[]::new, instance);
+            return (AddableList<T>)new AddableList<>(AllocationType.HEAP, Object[]::new, instance);
         }
 
         @SafeVarargs
@@ -25,29 +28,52 @@ public final class AddableListAllocator extends BaseArrayAllocator<AddableListAl
 
             Checks.checkElements(instances, Objects::requireNonNull);
 
-            return new AddableList<>(instances);
+            return new AddableList<>(AllocationType.HEAP, instances);
         }
 
         AddableList(IntFunction<T[]> createArray, int initialCapacity) {
-            super(createArray, initialCapacity);
+            super(AllocationType.HEAP, createArray, initialCapacity);
+
+            this.initialized = false;
         }
 
-        private AddableList(AddableList<T> toCopy) {
-            super(toCopy);
+        private AddableList(AllocationType allocationType, AddableList<T> toCopy) {
+            super(allocationType, toCopy);
+
+            if (!toCopy.initialized) {
+
+                throw new IllegalArgumentException();
+            }
+
+            initialize();
         }
 
-        private AddableList(IntFunction<T[]> createArray, T instance) {
-            super(createArray, instance);
+        private AddableList(AllocationType allocationType, IntFunction<T[]> createArray, T instance) {
+            super(allocationType, createArray, instance);
+
+            initialize();
         }
 
-        private AddableList(T[] instances) {
-            super(instances);
+        private AddableList(AllocationType allocationType, T[] instances) {
+            super(allocationType, instances);
+
+            initialize();
+        }
+
+        void initialize() {
+
+            if (initialized) {
+
+                throw new IllegalStateException();
+            }
+
+            this.initialized = true;
         }
 
         @Override
-        public IImutableList<T> toImmutableList() {
+        public IImmutableIndexList<T> toImmutableIndexList() {
 
-            return new AddableList<>(this);
+            return new AddableList<>(AllocationType.HEAP, this);
         }
 
         @Override
@@ -56,6 +82,19 @@ public final class AddableListAllocator extends BaseArrayAllocator<AddableListAl
             Objects.requireNonNull(instance);
 
             addTail(instance);
+        }
+
+        @Override
+        public void reset() {
+
+            if (!initialized) {
+
+                throw new IllegalStateException();
+            }
+
+            clear();
+
+            this.initialized = false;
         }
     }
 
@@ -67,12 +106,20 @@ public final class AddableListAllocator extends BaseArrayAllocator<AddableListAl
     @SuppressWarnings("unchecked")
     public <T> IAddableList<T> allocateList(int minimumCapacity) {
 
-        return (IAddableList<T>)allocateArrayInstance(minimumCapacity);
+        final AddableList<T> result = (AddableList<T>)allocateArrayInstance(minimumCapacity);
+
+        result.initialize();
+
+        return result;
     }
 
     @Override
     public void freeList(IAddableList<?> list) {
 
-        freeArrayInstance((AddableList<?>)list);
+        final AddableList<?> addableList = (AddableList<?>)list;
+
+        addableList.reset();
+
+        freeArrayInstance(addableList);
     }
 }

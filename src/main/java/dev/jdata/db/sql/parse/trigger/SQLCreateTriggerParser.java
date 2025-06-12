@@ -1,16 +1,16 @@
 package dev.jdata.db.sql.parse.trigger;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.BaseASTElement;
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.IAddable;
 import org.jutils.ast.objects.list.IAddableList;
-import org.jutils.ast.objects.list.IImutableList;
+import org.jutils.ast.objects.list.IImmutableIndexList;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.dml.SQLTableName;
 import dev.jdata.db.sql.ast.statements.table.SQLColumnNames;
 import dev.jdata.db.sql.ast.statements.trigger.BaseSQLTrigger;
@@ -68,7 +68,8 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
         this.deleteParser = Objects.requireNonNull(deleteParser);
     }
 
-    public SQLCreateTriggerStatement parseCreateTrigger(SQLExpressionLexer lexer, long createKeyword, long triggerKeyword) throws ParserException, IOException {
+    public <E extends Exception, I extends CharInput<E>> SQLCreateTriggerStatement parseCreateTrigger(SQLExpressionLexer<E, I> lexer, long createKeyword, long triggerKeyword)
+            throws ParserException, E {
 
         Objects.requireNonNull(lexer);
         checkIsKeyword(createKeyword);
@@ -81,7 +82,7 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
         return new SQLCreateTriggerStatement(makeContext(), createKeyword, triggerKeyword, triggerName, trigger);
     }
 
-    private BaseSQLTrigger<?> parseTrigger(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> BaseSQLTrigger<?> parseTrigger(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         final SQLToken dmlStatementToken = lexer.lex(EVENT_DML_STATEMENT_TOKENS);
 
@@ -124,7 +125,7 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
         return result;
     }
 
-    private SQLSelectTrigger parseSelectTrigger(SQLExpressionLexer lexer, long selectKeyword) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLSelectTrigger parseSelectTrigger(SQLExpressionLexer<E, I> lexer, long selectKeyword) throws ParserException, E {
 
         final SQLSelectTriggerEvent event = parseSelectTriggerEvent(lexer, selectKeyword);
 
@@ -133,7 +134,8 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
         return new SQLSelectTrigger(makeContext(), event, actionClause);
     }
 
-    private static SQLSelectTriggerEvent parseSelectTriggerEvent(SQLAllocatorLexer lexer, long selectKeyword) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> SQLSelectTriggerEvent parseSelectTriggerEvent(SQLAllocatorLexer<E, I> lexer, long selectKeyword)
+            throws ParserException, E {
 
         final long ofKeyword;
         final SQLColumnNames columnNames;
@@ -156,7 +158,7 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
         return new SQLSelectTriggerEvent(makeContext(), selectKeyword, ofKeyword, columnNames, onKeyword, tableName);
     }
 
-    private SQLInsertTrigger parseInsertTrigger(SQLExpressionLexer lexer, long insertKeyword) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLInsertTrigger parseInsertTrigger(SQLExpressionLexer<E, I> lexer, long insertKeyword) throws ParserException, E {
 
         final SQLInsertTriggerEvent event = parseInsertTriggerEvent(lexer, insertKeyword);
 
@@ -179,7 +181,8 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
 
     }
 
-    private static SQLInsertTriggerEvent parseInsertTriggerEvent(SQLAllocatorLexer lexer, long insertKeyword) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> SQLInsertTriggerEvent parseInsertTriggerEvent(SQLAllocatorLexer<E, I> lexer, long insertKeyword)
+            throws ParserException, E {
 
         final long onKeyword = lexer.lexKeyword(SQLToken.ON);
 
@@ -188,7 +191,8 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
         return new SQLInsertTriggerEvent(makeContext(), insertKeyword, onKeyword, tableName);
     }
 
-    private SQLUpdateTrigger parseUpdateTrigger(SQLExpressionLexer lexer, long updateKeyword) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLUpdateTrigger parseUpdateTrigger(SQLExpressionLexer<E, I> lexer, long updateKeyword)
+            throws ParserException, E {
 
         final SQLUpdateTriggerEvent event = parseUpdateTriggerEvent(lexer, updateKeyword);
 
@@ -214,7 +218,8 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
         return new SQLUpdateTrigger(makeContext(), event, actionClause);
     }
 
-    private static SQLUpdateTriggerEvent parseUpdateTriggerEvent(SQLAllocatorLexer lexer, long updateKeyword) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> SQLUpdateTriggerEvent parseUpdateTriggerEvent(SQLAllocatorLexer<E, I> lexer, long updateKeyword)
+            throws ParserException, E {
 
         final long ofKeyword;
         final SQLColumnNames columnNames;
@@ -237,7 +242,7 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
         return new SQLUpdateTriggerEvent(makeContext(), updateKeyword, ofKeyword, columnNames, onKeyword, tableName);
     }
 
-    private SQLDeleteTrigger parseDeleteTrigger(SQLExpressionLexer lexer, long deleteKeyword) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLDeleteTrigger parseDeleteTrigger(SQLExpressionLexer<E, I> lexer, long deleteKeyword) throws ParserException, E {
 
         final SQLDeleteTriggerEvent event = parseDeleteTriggerEvent(lexer, deleteKeyword);
 
@@ -246,7 +251,8 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
         return new SQLDeleteTrigger(makeContext(), event, actionClause);
     }
 
-    private static SQLDeleteTriggerEvent parseDeleteTriggerEvent(SQLAllocatorLexer lexer, long deleteKeyword) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> SQLDeleteTriggerEvent parseDeleteTriggerEvent(SQLAllocatorLexer<E, I> lexer, long deleteKeyword)
+            throws ParserException, E {
 
         final long onKeyword = lexer.lexKeyword(SQLToken.ON);
 
@@ -255,7 +261,7 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
         return new SQLDeleteTriggerEvent(makeContext(), deleteKeyword, onKeyword, tableName);
     }
 
-    private static SQLOldTriggerCorrelation parseOldTriggerCorrelation(SQLLexer lexer) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> SQLOldTriggerCorrelation parseOldTriggerCorrelation(SQLLexer<E, I> lexer) throws ParserException, E {
 
         final long oldKeyword = lexer.lexKeyword(SQLToken.OLD);
         final long asKeyword = lexer.lexKeyword(SQLToken.AS);
@@ -265,7 +271,7 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
         return new SQLOldTriggerCorrelation(makeContext(), oldKeyword, asKeyword, correlationName);
     }
 
-    private static SQLNewTriggerCorrelation parseNewTriggerCorrelation(SQLLexer lexer) throws ParserException, IOException {
+    private static <E extends Exception, I extends CharInput<E>> SQLNewTriggerCorrelation parseNewTriggerCorrelation(SQLLexer<E, I> lexer) throws ParserException, E {
 
         final long newKeyword = lexer.lexKeyword(SQLToken.NEW);
         final long asKeyword = lexer.lexKeyword(SQLToken.AS);
@@ -275,14 +281,15 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
         return new SQLNewTriggerCorrelation(makeContext(), newKeyword, asKeyword, correlationName);
     }
 
-    private BaseSQLTriggerActionClause parseSelectOrDeleteAction(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> BaseSQLTriggerActionClause parseSelectOrDeleteAction(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         return lexer.peek(SQLToken.REFERENCING)
                 ? parseSelectOrDeleteActionClause(lexer)
                 : parseActionClause(lexer);
     }
 
-    private SQLTriggerSelectOrDeleteActionClause parseSelectOrDeleteActionClause(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLTriggerSelectOrDeleteActionClause parseSelectOrDeleteActionClause(SQLExpressionLexer<E, I> lexer)
+            throws ParserException, E {
 
         final long referencingKeyword = lexer.lexKeyword(SQLToken.REFERENCING);
 
@@ -292,19 +299,20 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
                 parseForEachRowTriggeredActions(lexer), parseAfterTriggeredActions(lexer));
     }
 
-    private SQLTriggerActionClause parseActionClause(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLTriggerActionClause parseActionClause(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         return new SQLTriggerActionClause(makeContext(), parseBeforeTriggeredActions(lexer), parseForEachRowTriggeredActions(lexer), parseAfterTriggeredActions(lexer));
     }
 
-    private SQLBeforeTriggeredActions parseBeforeTriggeredActions(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLBeforeTriggeredActions parseBeforeTriggeredActions(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         return lexer.peek(SQLToken.BEFORE)
                 ? new SQLBeforeTriggeredActions(makeContext(), lexer.lexKeyword(SQLToken.BEFORE), parseTriggeredActions(lexer))
                 : null;
     }
 
-    private SQLForEachRowTriggeredActions parseForEachRowTriggeredActions(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLForEachRowTriggeredActions parseForEachRowTriggeredActions(SQLExpressionLexer<E, I> lexer)
+            throws ParserException, E {
 
         return lexer.peek(SQLToken.FOR)
                 ? new SQLForEachRowTriggeredActions(makeContext(), lexer.lexKeyword(SQLToken.FOR), lexer.lexKeyword(SQLToken.EACH), lexer.lexKeyword(SQLToken.ROW),
@@ -312,7 +320,7 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
                 : null;
     }
 
-    private SQLAfterTriggeredActions parseAfterTriggeredActions(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> SQLAfterTriggeredActions parseAfterTriggeredActions(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         return lexer.peek(SQLToken.AFTER)
                 ? new SQLAfterTriggeredActions(makeContext(), lexer.lexKeyword(SQLToken.AFTER), parseTriggeredActions(lexer))
@@ -326,13 +334,14 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
             SQLToken.DELETE
     };
 
-    private IImutableList<SQLTriggeredAction> parseTriggeredActions(SQLExpressionLexer lexer) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> IImmutableIndexList<SQLTriggeredAction> parseTriggeredActions(SQLExpressionLexer<E, I> lexer)
+            throws ParserException, E {
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final IAddableList<SQLTriggeredAction> list = allocator.allocateList(100);
 
-        final IImutableList<SQLTriggeredAction> result;
+        final IImmutableIndexList<SQLTriggeredAction> result;
 
         try {
             for (;;) {
@@ -405,7 +414,7 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
 
             lexer.lexExpect(SQLToken.RPAREN);
 
-            result = list.toImmutableList();
+            result = list.toImmutableIndexList();
         }
         finally {
 
@@ -415,7 +424,8 @@ public class SQLCreateTriggerParser extends SQLStatementParser {
         return result;
     }
 
-    private void parseTriggeredStatements(SQLExpressionLexer lexer, IAddable<SQLTriggeredStatement> dst) throws ParserException, IOException {
+    private <E extends Exception, I extends CharInput<E>> void parseTriggeredStatements(SQLExpressionLexer<E, I> lexer, IAddable<SQLTriggeredStatement> dst)
+            throws ParserException, E {
 
         for (;;) {
 

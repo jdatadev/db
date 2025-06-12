@@ -5,7 +5,7 @@ import java.util.function.IntFunction;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.lists.BaseList;
 
-public final class MutableLongToObjectBucketMap<T> extends BaseLongToObjectBucketMap<T, MutableLongToObjectBucketMap<T>> implements IMutableLongToObjectMap<T> {
+public final class MutableLongToObjectBucketMap<T> extends BaseLongToObjectBucketMap<T, MutableLongToObjectBucketMap<T>> implements IMutableLongToObjectDynamicMap<T> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_LONG_TO_INT_BUCKET_MAP;
 

@@ -17,6 +17,10 @@ public final class SQLAlterTableStatement extends SQLTableStatement {
         this.operation = makeSingle(operation);
     }
 
+    public SQLAlterTableOperation getOperation() {
+        return operation.get();
+    }
+
     @Override
     public <P, R, E extends Exception> R visit(SQLStatementVisitor<P, R, E> visitor, P parameter) throws E {
 

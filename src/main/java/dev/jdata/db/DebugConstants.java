@@ -2,6 +2,8 @@ package dev.jdata.db;
 
 public class DebugConstants {
 
+    public static final boolean DEBUG_STRING_STORER = Boolean.FALSE;
+
     private static final boolean DEBUG_SESSION_MANAGEMENT = Boolean.FALSE;
 
     public static final boolean DEBUG_DB_SESSION = DEBUG_SESSION_MANAGEMENT;
@@ -29,6 +31,7 @@ public class DebugConstants {
     public static final boolean DEBUG_BIT_BUFFER = Boolean.FALSE;
 
     public static final boolean DEBUG_TWO_DIMENSIONAL_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_LARGE_CHAR_ARRAY = DEBUG_ARRAYS;
 
     public static final boolean DEBUG_HASH_ARRAY = DEBUG_HASHED;
     public static final boolean DEBUG_MAX_DISTANCE = DEBUG_HASHED;
@@ -76,8 +79,13 @@ public class DebugConstants {
     public static final boolean DEBUG_BASE_LONG_TO_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_MUTABLE_LONG_TO_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
 
+    public static final boolean DEBUG_BASE_OBJECT_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_OBJECT_TO_OBJECT_NON_BUCKET_MAP = DEBUG_MAPS;
+
     public static final boolean DEBUG_BASE_OBJECT_NON_CONTAINS_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_OBJECT_WITH_REMOVE_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_MUTABLE_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
 
     public static final boolean DEBUG_BASE_LARGE_LONG_NON_BUCKET_MAP = DEBUG_MAPS;
 

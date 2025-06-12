@@ -116,7 +116,7 @@ public class CharSequences {
             }
             else {
                 result = numCharacters > 1
-                        ? containsOnly(charSequence, 0, numCharacters - 1, remainingCharacterspredicate)
+                        ? containsOnly(charSequence, 1, numCharacters - 1, remainingCharacterspredicate)
                         : true;
             }
         }

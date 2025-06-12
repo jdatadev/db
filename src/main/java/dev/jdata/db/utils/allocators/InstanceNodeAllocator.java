@@ -6,9 +6,9 @@ abstract class InstanceNodeAllocator<T, N extends InstanceNodeAllocator.Instance
 
         T instance;
 
-        void init(N next, boolean allocated, T instance) {
+        void init(N next, boolean setAllocated , boolean allocated, T instance) {
 
-            super.init(next, allocated);
+            super.init(next, setAllocated, allocated);
 
             this.instance = instance;
         }

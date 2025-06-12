@@ -10,13 +10,8 @@ import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
 import dev.jdata.db.utils.checks.AssertionContants;
-import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
-public abstract class BaseObjectNonContainsKeyNonBucketMap<K, V>
-
-        extends BaseIntCapacityExponentMap<K[]>
-        implements IObjectContainsKeyMap<K>, IToObjectMapGetters<V>, IObjectMapGetters<K, V>, IObjectNonContainsKeyNonBucketMapGetters<K, V> {
+abstract class BaseObjectNonContainsKeyNonBucketMap<K, V> extends BaseObjectToObjectNonBucketMap<K, V, IObjectToObjectStaticMapCommon<K, V>> implements IObjectToObjectStaticMapCommon<K, V> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_OBJECT_NON_CONTAINS_KEY_NON_BUCKET_MAP;
 
@@ -34,18 +29,18 @@ public abstract class BaseObjectNonContainsKeyNonBucketMap<K, V>
     }
 
     BaseObjectNonContainsKeyNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<K[]> createKeyArray,
-            IntFunction<V[]> createValues) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createKeyArray, BaseObjectNonContainsKeyNonBucketMap::clearHashArray);
+            IntFunction<V[]> createValuesArray) {
+        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createKeyArray, createValuesArray);
 
         if (DEBUG) {
 
             enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createValues", createValues));
+                    .add("createValues", createValuesArray));
         }
 
-        this.createValues = Objects.requireNonNull(createValues);
+        this.createValues = Objects.requireNonNull(createValuesArray);
 
-        this.values = createValues.apply(computeCapacity());
+        this.values = createValuesArray.apply(computeCapacity());
 
         clearValues(values);
 
@@ -56,7 +51,7 @@ public abstract class BaseObjectNonContainsKeyNonBucketMap<K, V>
     }
 
     BaseObjectNonContainsKeyNonBucketMap(BaseObjectNonContainsKeyNonBucketMap<K, V> toCopy, BiConsumer<V[], V[]> copyValuesContent) {
-        super(toCopy, (a1, a2) -> System.arraycopy(a1, 0, a2, 0, a1.length));
+        super(toCopy);
 
         final IntFunction<V[]> createValues = this.createValues = toCopy.createValues;
 
@@ -66,56 +61,7 @@ public abstract class BaseObjectNonContainsKeyNonBucketMap<K, V>
     }
 
     @Override
-    public final boolean containsKey(K key) {
-
-        Objects.requireNonNull(key);
-
-        if (DEBUG) {
-
-            enter(b -> b.add("key", key));
-        }
-
-        final int index = getIndex(key);
-
-        final boolean result = index != NO_INDEX;
-
-        if (DEBUG) {
-
-            exit(result, b -> b.add("key", key));
-        }
-
-        return result;
-    }
-
-    @Override
-    public final K[] keys() {
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(getNumElements());
-
-        final K[] result = createHashedNonCleared(numElements);
-
-        keys(result);
-
-        if (DEBUG) {
-
-            exit();
-        }
-
-        return result;
-    }
-
-    public final int keys(K[] dst) {
-
-        return keysAndValues(dst, null, null, null);
-    }
-
-    @Override
-    public V get(K key) {
+    public final V get(K key) {
 
         Objects.requireNonNull(key);
 
@@ -140,54 +86,31 @@ public abstract class BaseObjectNonContainsKeyNonBucketMap<K, V>
     }
 
     @Override
-    public final <P> void forEachValue(P parameter, ForEachValue<V, P> forEachValue) {
+    protected final int getHashArrayIndex(K key, int keyMask) {
 
-        Objects.requireNonNull(forEachValue);
+        Objects.requireNonNull(key);
 
-        forEachKeyAndValue(parameter, forEachValue, (keys, keyIndex, values, valueIndex, p1, p2) -> p2.each(values[valueIndex], p1));
+        if (DEBUG) {
+
+            enter(b -> b.add("key", key).add("keyMask", keyMask));
+        }
+
+        final int result = getIndexScanEntireHashArray(key, keyMask);
+
+        if (DEBUG) {
+
+            exit(result, b -> b.add("key", key).add("keyMask", keyMask));
+        }
+
+        return result;
     }
 
     @Override
-    public final <P> void forEachKeyAndValue(P parameter, ForEachKeyAndValue<K, V, P> forEachKeyAndValue) {
-
-        Objects.requireNonNull(forEachKeyAndValue);
+    protected final K[] rehash(K[] hashArray, int newCapacity, int newKeyMask) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("parameter", parameter).add("forEachKeyAndValue", forEachKeyAndValue));
-        }
-
-        forEachKeyAndValue(parameter, forEachKeyAndValue, (keys, keyIndex, values, valueIndex, p1, p2) -> p2.each(keys[keyIndex], values[valueIndex], p1));
-    }
-
-    @Override
-    public final void keysAndValues(K[] keysDst, V[] valuesDst) {
-
-        final long numElements = getNumElements();
-
-        Checks.isGreaterThanOrEqualTo(keysDst.length, numElements);
-        Checks.isGreaterThanOrEqualTo(valuesDst.length, numElements);
-        Checks.areEqual(keysDst.length, valuesDst.length);
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        keysAndValues(keysDst, getValues(), valuesDst, (src, srcIndex, dst, dstIndex) -> dst[dstIndex] = src[srcIndex]);
-
-        if (DEBUG) {
-
-            exit(b -> b.add("keyDst", keysDst).add("valueDst", valuesDst));
-        }
-    }
-
-    @Override
-    protected final K[] rehash(K[] hashArray, int newCapacity, int keyMask) {
-
-        if (DEBUG) {
-
-            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).hex("keyMask", keyMask));
+            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).hex("newKeyMask", newKeyMask));
         }
 
         final K[] newHashArray = createHashedNonCleared(newCapacity);
@@ -219,83 +142,10 @@ public abstract class BaseObjectNonContainsKeyNonBucketMap<K, V>
 
         if (DEBUG) {
 
-            exit(newHashArray);
+            exit(newHashArray, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).hex("newKeyMask", newKeyMask));
         }
 
         return newHashArray;
-    }
-
-    protected final <P1, P2> void forEachKeyAndValue(P1 parameter1, P2 parameter2, ForEachKeyAndValueWithKeysAndValues<K[], V[], P1, P2> forEachKeyAndValue) {
-
-        if (DEBUG) {
-
-            enter(b -> b.add("parameter1", parameter1).add("parameter2", parameter2).add("forEachKeyAndValue", forEachKeyAndValue));
-        }
-
-        final K[] hashArray = getHashed();
-
-        final int hashArrayLength = hashArray.length;
-
-        final V[] values = getValues();
-
-        @SuppressWarnings("unchecked")
-        final V[] noKey = (V[])NO_KEY;
-
-        for (int i = 0; i < hashArrayLength; ++ i) {
-
-            final K mapKey = hashArray[i];
-
-            if (mapKey != noKey) {
-
-                forEachKeyAndValue.each(hashArray, i, values, i, parameter1, parameter2);
-            }
-        }
-
-        if (DEBUG) {
-
-            exit();
-        }
-    }
-
-    protected final <S, D> int keysAndValues(K[] keysDst, S src, D dst, ValueSetter<S, D> valueSetter) {
-
-        if (DEBUG) {
-
-            enter(b -> b.add("keysDst.length", keysDst.length));
-        }
-
-        final K[] hashArray = getHashed();
-
-        final int hashArrayLength = hashArray.length;
-
-        @SuppressWarnings("unchecked")
-        final V noKey = (V)NO_KEY;
-
-        int dstIndex = 0;
-
-        for (int i = 0; i < hashArrayLength; ++ i) {
-
-            final K mapKey = hashArray[i];
-
-            if (mapKey != noKey) {
-
-                keysDst[dstIndex] = mapKey;
-
-                if (dst != null) {
-
-                    valueSetter.setValue(src, i, dst, dstIndex);
-                }
-
-                ++ dstIndex;
-            }
-        }
-
-        if (DEBUG) {
-
-            exit(dstIndex);
-        }
-
-        return dstIndex;
     }
 
     protected final int getIndex(K key) {
@@ -351,42 +201,6 @@ public abstract class BaseObjectNonContainsKeyNonBucketMap<K, V>
         return found;
     }
 
-    protected final V[] getValues() {
-        return values;
-    }
-
-    protected final int put(K key) {
-
-        Objects.requireNonNull(key);
-
-        if (DEBUG) {
-
-            enter(b -> b.add("key", key));
-        }
-
-        checkCapacity(1);
-
-        final K[] hashArray = getHashed();
-
-        final long putResult = put(hashArray, key);
-
-        final int index = IntPutResult.getPutIndex(putResult);
-
-        final boolean newAdded = IntPutResult.getPutNewAdded(putResult);
-
-        if (newAdded) {
-
-            incrementNumElements();
-        }
-
-        if (DEBUG) {
-
-            exit(index, b -> b.add("key", key).add("newAdded", newAdded).add("getNumElements()", getNumElements()));
-        }
-
-        return index;
-    }
-
     final int removeAndReturnIndex(K key) {
 
         Objects.requireNonNull(key);
@@ -396,94 +210,11 @@ public abstract class BaseObjectNonContainsKeyNonBucketMap<K, V>
             enter(b -> b.add("key", key));
         }
 
-        final int hashArrayIndex = HashFunctions.objectHashArrayIndex(key, getKeyMask());
+        final int removedIndex = removeAndReturnIndexIfExists(key);
 
-        if (DEBUG) {
+        if (removedIndex == NO_INDEX) {
 
-            debugFormatln("lookup hashArrayIndex=%d key=%s keyMask=0x%08x", hashArrayIndex, key.toString(), getKeyMask());
-        }
-
-        final K[] hashArray = getHashed();
-
-        final int hashArrayLength = hashArray.length;
-
-        int removedIndex = NO_INDEX;
-
-        boolean done = false;
-
-        for (int i = hashArrayIndex; i < hashArrayLength; ++ i) {
-
-            final K mapKey = hashArray[i];
-
-            if (mapKey == NO_KEY) {
-
-                done = true;
-
-                break;
-            }
-            else if (mapKey.equals(key)) {
-
-                if (DEBUG) {
-
-                    debug("remove from map foundIndex=" + i);
-                }
-
-                @SuppressWarnings("unchecked")
-                final K noKey = (K)NO_KEY;
-
-                hashArray[i] = noKey;
-
-                removedIndex = i;
-                break;
-            }
-        }
-
-        if (removedIndex == NO_INDEX && !done) {
-
-            for (int i = 0; i < hashArrayIndex; ++ i) {
-
-                final K mapKey = hashArray[i];
-
-                if (mapKey == NO_KEY) {
-
-                    if (ASSERT) {
-
-                        done = true;
-                    }
-
-                    break;
-                }
-                else if (mapKey.equals(key)) {
-
-                    if (DEBUG) {
-
-                        debug("remove from map foundIndex=" + i);
-                    }
-
-                    @SuppressWarnings("unchecked")
-                    final K noKey = (K)NO_KEY;
-
-                    hashArray[i] = noKey;
-
-                    removedIndex = i;
-                    break;
-                }
-            }
-        }
-
-        final boolean removed = removedIndex != NO_INDEX;
-
-        if (ASSERT) {
-
-            if (!removed && !done) {
-
-                throw new IllegalStateException();
-            }
-        }
-
-        if (removed) {
-
-            decrementNumElements();
+            throw new IllegalArgumentException();
         }
 
         if (DEBUG) {
@@ -617,18 +348,74 @@ public abstract class BaseObjectNonContainsKeyNonBucketMap<K, V>
         return result;
     }
 
-    private void put(V[] values, int index, V[] newValues, int newIndex) {
-
-        newValues[newIndex] = values[index];
-    }
-
-    private void clearValues(V[] values) {
-
-        Arrays.fill(values, null);
-    }
-
     private static <K> void clearHashArray(K[] hashArray) {
 
         Arrays.fill(hashArray, NO_KEY);
+    }
+
+    @Override
+    public final <P1, P2> boolean equals(P1 thisParameter, IObjectToObjectStaticMapCommon<K, V> other, P2 otherParameter, IObjectValueMapEqualityTester<V, P1, P2> equalityTester) {
+
+        Objects.requireNonNull(other);
+        Objects.requireNonNull(equalityTester);
+
+        final boolean result;
+
+        if (DEBUG) {
+
+            enter(b -> b.add("thisParameter", thisParameter).add("other", other).add("otherParameter", otherParameter).add("equalityTester", equalityTester));
+        }
+
+        if (other instanceof BaseObjectToObjectNonBucketMap) {
+
+            @SuppressWarnings("unchecked")
+            final BaseObjectToObjectNonBucketMap<K, V, IObjectToObjectStaticMapCommon<K, V>> otherMap = (BaseObjectToObjectNonBucketMap<K, V, IObjectToObjectStaticMapCommon<K, V>>)other;
+
+            result = equalsObjectToObjectNonBucketMap(thisParameter, otherMap, otherParameter, equalityTester);
+        }
+        else {
+            result = IObjectToObjectStaticMapCommon.super.equals(thisParameter, other, otherParameter, equalityTester);
+        }
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
+    @Override
+    public final <P1, P2> boolean equalsParameters(ObjectValueMapScratchEqualsParameter<V, IObjectToObjectStaticMapCommon<K, V>, P1, P2> scratchEqualsParameter) {
+
+        Objects.requireNonNull(scratchEqualsParameter);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("scratchEqualsParameter", scratchEqualsParameter));
+        }
+
+        final boolean result;
+
+        final IObjectToObjectStaticMapCommon<K, V> other = scratchEqualsParameter.getOther();
+
+        if (other instanceof BaseObjectToObjectNonBucketMap) {
+
+            @SuppressWarnings("unchecked")
+            final BaseObjectToObjectNonBucketMap<K, V, IObjectToObjectStaticMapCommon<K, V>> otherMap = (BaseObjectToObjectNonBucketMap<K, V, IObjectToObjectStaticMapCommon<K, V>>)other;
+
+            result = equalsObjectToObjectNonBucketMap(scratchEqualsParameter.getThisParameter(), otherMap, scratchEqualsParameter.getOtherParameter(),
+                    scratchEqualsParameter.getEqualityTester());
+        }
+        else {
+            result = IObjectToObjectStaticMapCommon.super.equalsParameters(scratchEqualsParameter);
+        }
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
     }
 }

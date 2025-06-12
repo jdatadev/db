@@ -229,7 +229,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
                     deleteRowsBitOffset += Long.SIZE;
 
-                    for (long i = 0; i < numRowIds; ++ i) {
+                    for (long i = 0L; i < numRowIds; ++ i) {
 
                         final long rowId = deleteRows.getUnsignedLong(deleteRowsBitOffset);
 

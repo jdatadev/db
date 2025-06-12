@@ -10,6 +10,7 @@ import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.common.storagebits.NumStorageBitsParameters;
 import dev.jdata.db.common.storagebits.ParameterizedNumStorageBitsGetter;
 import dev.jdata.db.common.storagebits.StorageMode;
+import dev.jdata.db.engine.database.StringStorer;
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
@@ -78,11 +79,17 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
 
         TestData(int sequenceNo, long startRowId, long initialTransactionId) {
 
+            Checks.isSequenceNo(sequenceNo);
+            Checks.isRowId(startRowId);
+            Checks.isTransactionId(initialTransactionId);
+
             final DatabaseSchemaVersion databaseSchemaVersion = DatabaseSchemaVersion.of(DatabaseSchemaVersion.INITIAL_VERSION);
 
             final int tableId = Table.INITIAL_TABLE_ID;
 
-            final Table table = createTestTable(tableId);
+            final StringStorer stringStorer = createStringStorer();
+
+            final Table table = createTestTable(tableId, stringStorer);
 
             final HeapIndexListAllocator<Table> tableIndexListAllocator = new HeapIndexListAllocator<>(Table[]::new);
             final HeapIndexListAllocator<IDatabaseSchema> databaseSchemaIndexListAllocator = new HeapIndexListAllocator<>(IDatabaseSchema[]::new);
@@ -91,9 +98,10 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
             final TestAllocators testAllocators = new TestAllocators(tableIndexListAllocator, longToObjectMapAllocator, databaseSchemaIndexListAllocator);
 
             this.dbSchemas = prepareStorageTableSchemas(databaseSchemaVersion, testAllocators, table);
-            this.sequenceNo = Checks.isSequenceNo(sequenceNo);
-            this.startRowId = Checks.isRowId(startRowId);
-            this.initialTransactionId = Checks.isTransactionId(initialTransactionId);
+
+            this.sequenceNo = sequenceNo;
+            this.startRowId = startRowId;
+            this.initialTransactionId = initialTransactionId;
 
             this.fileName = FileTableStorageFile.constructTableFileName(sequenceNo);
 
@@ -277,9 +285,9 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
             assertThat(fileTableStorageFile.getLastRowId()).isEqualTo(testData.startRowId + numRowsParameter - 1);
         });
 
-        long bitOffset = 0;
+        long bitOffset = 0L;
 
-        for (long i = 0; i < numRows; ++ i) {
+        for (long i = 0L; i < numRows; ++ i) {
 
             final long rowId = testData.startRowId + i;
 

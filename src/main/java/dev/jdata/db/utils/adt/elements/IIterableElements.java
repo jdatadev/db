@@ -7,10 +7,13 @@ import java.util.function.ToIntFunction;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
+import dev.jdata.db.utils.function.CheckedExceptionConsumer;
 
 public interface IIterableElements<T> extends IElements {
 
     int maxInt(int defaultValue, ToIntFunction<? super T> mapper);
+
+    T[] toArray(IntFunction<T[]> createArray);
 
     @FunctionalInterface
     public interface ForEach<T, P, E extends Exception> {
@@ -19,6 +22,11 @@ public interface IIterableElements<T> extends IElements {
     }
 
     <P, E extends Exception> void forEach(P parameter, ForEach<T, P, E> forEach) throws E;
+
+    default <P, E extends Exception> void closureOrConstantForEach(CheckedExceptionConsumer<T, E> forEach) throws E {
+
+        forEach(forEach, (e, p) -> p.accept(e));
+    }
 
     @FunctionalInterface
     public interface ForEach2<T, P1, P2, E extends Exception> {

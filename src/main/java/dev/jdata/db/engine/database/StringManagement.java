@@ -5,47 +5,70 @@ import java.util.Objects;
 import org.jutils.io.strings.StringRef;
 import org.jutils.io.strings.StringResolver;
 
-import dev.jdata.db.utils.adt.strings.Strings;
-import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
-import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.adt.IResettable;
+import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
-public final class StringManagement {
+public final class StringManagement extends ObjectCacheNode implements IResettable {
 
-    public static String getHashNameString(String parsedName) {
+    private DatabaseStringManagement databaseStringManagement;
+    private StringResolver parserStringResolver;
 
-        Checks.isDBName(parsedName);
+    public StringManagement() {
 
-        return Strings.isAllLowerCase(parsedName) ? parsedName : parsedName.toLowerCase();
     }
 
-    private final StringStorer stringStorer;
-    private final CharacterBuffersAllocator characterBuffersAllocator;
+    public void initialize(DatabaseStringManagement databaseStringManagement, StringResolver parserStringResolver) {
 
-    public StringManagement(CharacterBuffersAllocator characterBuffersAllocator) {
+        if (this.databaseStringManagement != null) {
 
-        this.stringStorer = new StringStorer(1, 10);
-        this.characterBuffersAllocator = Objects.requireNonNull(characterBuffersAllocator);
+            throw new IllegalStateException();
+        }
+
+        this.databaseStringManagement = Objects.requireNonNull(databaseStringManagement);
+        this.parserStringResolver = Objects.requireNonNull(parserStringResolver);
     }
 
-    public long resolveParsedStringRef(StringResolver parserStringResolver, long stringRef) {
+    @Override
+    public void reset() {
 
-        Objects.requireNonNull(parserStringResolver);
+        if (databaseStringManagement == null) {
+
+            throw new IllegalStateException();
+        }
+
+        this.databaseStringManagement = null;
+        this.parserStringResolver = null;
+    }
+
+    public boolean parsedEqualsStored(long parsedStringRef, long storedStringRef, boolean caseSensitive) {
+
+        StringRef.checkIsString(parsedStringRef);
+        StringRef.checkIsString(storedStringRef);
+
+        return databaseStringManagement.getStringResolver().equals(storedStringRef, parserStringResolver, parsedStringRef);
+    }
+
+    public long resolveParsedStringRef(long stringRef) {
+
         StringRef.checkIsString(stringRef);
 
-        return parserStringResolver.makeStringRef(stringRef, this, characterBuffersAllocator, (b, n, i) -> i.stringStorer.getOrAddStringRef(b, n));
+        return databaseStringManagement.resolveParsedStringRef(parserStringResolver, stringRef);
     }
 
     public long getHashStringRef(long parsedStringRef) {
 
         StringRef.checkIsString(parsedStringRef);
 
-        return stringStorer.containsOnly(parsedStringRef, Character::isLowerCase)
-                ? parsedStringRef
-                : stringStorer.toLowerCase(parsedStringRef);
+        return databaseStringManagement.getHashStringRef(parsedStringRef);
     }
 
     public String getLowerCaseString(long stringRef) {
 
-        throw new UnsupportedOperationException();
+        return databaseStringManagement.getLowerCaseString(stringRef);
+    }
+
+    private StringResolver getStringResolver() {
+
+        return databaseStringManagement.getStringResolver();
     }
 }

@@ -4,7 +4,7 @@ import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseMutableLongToIntegerOrObjectMaxDistanceTest<V, M extends ILongContainsKeyMap & IClearable & ILongKeyMapRemovalMutators>
+abstract class BaseMutableLongToIntegerOrObjectMaxDistanceTest<V, M extends ILongContainsKeyMap & IClearable & ILongKeyDynamicMapRemovalMutators>
 
         extends BaseMutableIntegerToIntegerOrObjectMapTest<long[], V, M> {
 

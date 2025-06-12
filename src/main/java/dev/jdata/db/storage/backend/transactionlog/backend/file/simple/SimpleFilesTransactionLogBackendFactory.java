@@ -67,7 +67,7 @@ public final class SimpleFilesTransactionLogBackendFactory
         final IndexList.Builder<FileTransactionLogFile> fileTransactionLogFileList = IndexList.createBuilder(initialCapacity, indexListAllocator);
 
         try {
-            for (long i = 0; i < numElements; ++ i) {
+            for (long i = 0L; i < numElements; ++ i) {
 
                 final RelativeFilePath transactionLogFilePath = transactionLogFilePaths.get(i);
 

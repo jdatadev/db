@@ -1,12 +1,12 @@
 package dev.jdata.db.sql.parse.dml.select.projection;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.jutils.ast.objects.list.IAddableList;
+import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 
-import dev.jdata.db.sql.ast.SQLAllocator;
+import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.dml.SQLProjectionClause;
 import dev.jdata.db.sql.ast.statements.dml.SQLProjectionItem;
 import dev.jdata.db.sql.parse.BaseSQLParser;
@@ -28,14 +28,13 @@ public final class SQLProjectionClauseParser extends BaseSQLParser {
             SQLToken.FROM
     };
 
-    public SQLProjectionClause parseProjectionClause(SQLExpressionLexer lexer)
-            throws ParserException, IOException {
+    public <E extends Exception, I extends CharInput<E>> SQLProjectionClause parseProjectionClause(SQLExpressionLexer<E, I> lexer) throws ParserException, E {
 
         final SQLToken[] expectedTokens = COMMA_OR_FROM_TOKENS;
 
         boolean done = false;
 
-        final SQLAllocator allocator = lexer.getAllocator();
+        final ISQLAllocator allocator = lexer.getAllocator();
 
         final IAddableList<SQLProjectionItem> projectionItems = allocator.allocateList(100);
 

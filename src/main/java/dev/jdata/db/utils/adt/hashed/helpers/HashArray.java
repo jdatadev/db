@@ -83,7 +83,54 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("element", element));
+            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
+        }
+
+        return found;
+    }
+
+    public static <K> int getIndexScanHashArrayToMaxHashArrayIndex(K[] hashArray, K element, int hashArrayIndex, int max) {
+
+        Objects.requireNonNull(hashArray);
+        Objects.requireNonNull(element);
+        Checks.isIndex(hashArrayIndex);
+        Checks.isLengthAboveOrAtZero(max);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
+        }
+
+        int remaining = max + 1;
+
+        final int hashArrayLength = hashArray.length;
+
+        int found = NO_INDEX;
+
+        for (int i = hashArrayIndex; remaining != 0 && i < hashArrayLength; ++ i, -- remaining) {
+
+            if (element.equals(hashArray[i])) {
+
+                found = i;
+                break;
+            }
+        }
+
+        if (found == NO_INDEX) {
+
+            for (int i = 0; remaining != 0 && i < hashArrayIndex; ++ i, -- remaining) {
+
+                if (hashArray[i].equals(element)) {
+
+                    found = i;
+                    break;
+                }
+            }
+        }
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         return found;
@@ -189,6 +236,56 @@ public class HashArray {
             for (int i = 0; i < hashArrayIndex; ++ i) {
 
                 if (hashArray[i] == key) {
+
+                    found = i;
+                    break;
+                }
+            }
+        }
+
+        if (found == NO_INDEX) {
+
+            throw new IllegalStateException();
+        }
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+        }
+
+        return found;
+    }
+
+    public static <K> int getIndexScanEntireHashArray(K[] hashArray, K key, int keyMask) {
+
+        Checks.isNotEmpty(hashArray);
+        Objects.requireNonNull(key);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+        }
+
+        final int hashArrayIndex = HashFunctions.objectHashArrayIndex(key, keyMask);
+
+        final int hashArrayLength = hashArray.length;
+
+        int found = NO_INDEX;
+
+        for (int i = hashArrayIndex; i < hashArrayLength; ++ i) {
+
+            if (hashArray[i].equals(key)) {
+
+                found = i;
+                break;
+            }
+        }
+
+        if (found == NO_INDEX) {
+
+            for (int i = 0; i < hashArrayIndex; ++ i) {
+
+                if (hashArray[i].equals(key)) {
 
                     found = i;
                     break;

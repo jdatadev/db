@@ -63,7 +63,7 @@ public final class VersionedDatabaseSchemas {
 
         final IIndexList<IDatabaseSchema> sorted = schemas.sorted((s1, s2) -> s1.getVersion().compareTo(s2.getVersion()), IDatabaseSchema[]::new, indexListAllocator);
 
-        for (long i = 0; i < numElements; ++ i) {
+        for (long i = 0L; i < numElements; ++ i) {
 
             final IDatabaseSchema schema = sorted.get(i);
 
