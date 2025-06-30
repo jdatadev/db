@@ -22,6 +22,13 @@ public class CapacityExponents {
         return computeCapacityExponent(numElements, Long.SIZE);
     }
 
+    public static int computeArrayOuterCapacity(int initialCapacity, int innerCapacityExponent) {
+
+        final int innerCapacity = CapacityExponents.computeCapacity(innerCapacityExponent);
+
+        return Capacity.computeArrayOuterCapacity(initialCapacity, innerCapacity);
+    }
+
     private static int computeCapacityExponent(long numElements, int typeNumBits) {
 
         Checks.isNumElements(numElements);

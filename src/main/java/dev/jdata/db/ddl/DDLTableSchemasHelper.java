@@ -1,67 +1,25 @@
 package dev.jdata.db.ddl;
 
 import java.util.Objects;
-import java.util.function.Function;
 
 import org.jutils.ast.objects.BaseASTElement;
-import org.jutils.ast.objects.list.ASTList;
 
 import dev.jdata.db.engine.database.StringManagement;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.sql.ast.statements.table.SQLTableColumnDefinition;
-import dev.jdata.db.utils.Initializable;
-import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.checks.Checks;
 
 class DDLTableSchemasHelper extends DDLSchemasHelper {
-
-    static abstract class ProcessTableScratchObject<T> extends ProcessParsedScratchObject {
-
-        private int columnIdSequenceNo;
-        private IndexList.Builder<Column> columnsBuilder;
-        private Function<T, SQLTableColumnDefinition> columnDefinitionMapper;
-
-        final void initialize(StringManagement stringManagement, int initialColumnIdSequenceNo, IndexList.Builder<Column> columnsBuilder,
-                Function<T, SQLTableColumnDefinition> columnDefinitionMapper) {
-
-            initialize(stringManagement);
-
-            this.columnIdSequenceNo = Checks.isColumnId(initialColumnIdSequenceNo);
-            this.columnsBuilder = Initializable.checkNotYetInitialized(this.columnsBuilder, columnsBuilder);
-            this.columnDefinitionMapper = Initializable.checkNotYetInitialized(this.columnDefinitionMapper, columnDefinitionMapper);
-        }
-
-        @Override
-        public void reset() {
-
-            super.reset();
-
-            this.columnsBuilder = Initializable.checkResettable(columnsBuilder);
-            this.columnDefinitionMapper = Initializable.checkResettable(columnDefinitionMapper);
-        }
-
-        final int allocateColumnId() {
-
-            return columnIdSequenceNo ++;
-        }
-
-        final void addColumn(Column column) {
-
-            Objects.requireNonNull(column);
-
-            columnsBuilder.addTail(column);
-        }
-    }
-
-    static <T extends BaseASTElement> void convertColumns(ASTList<T> sqlTableColumnDefinitions, ProcessTableScratchObject<T> scratchObject) {
+/*
+    private static <T extends BaseASTElement> void convertColumnsMapped(ASTList<T> sqlTableColumnDefinitions, ProcessTableColumnsScratchObject scratchObject) {
 
         Objects.requireNonNull(sqlTableColumnDefinitions);
         Objects.requireNonNull(scratchObject);
 
-        sqlTableColumnDefinitions.foreachWithIndexAndParameter(scratchObject, (c, i, s) -> {
+        sqlTableColumnDefinitions.forEachWithIndexAndParameter(scratchObject, (c, i, s) -> {
 
-            final Column column = convertToColumn(c, s.allocateColumnId(), s.getStringManagement(), s.columnDefinitionMapper);
+            final Column column = convertToColumn(c, s.allocateColumnId(), s.getStringManagement());
 
             s.addColumn(column);
         });
@@ -74,7 +32,7 @@ class DDLTableSchemasHelper extends DDLSchemasHelper {
 
         return convertToColumn(sqlTableColumnDefinition, columnId, stringManagement);
     }
-
+*/
     static <T extends BaseASTElement> Column convertToColumn(SQLTableColumnDefinition sqlTableColumnDefinition, int columnId, StringManagement stringManagement) {
 
         Objects.requireNonNull(sqlTableColumnDefinition);

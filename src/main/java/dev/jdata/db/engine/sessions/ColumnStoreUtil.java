@@ -114,7 +114,7 @@ class ColumnStoreUtil {
 
         evaluatorParameter.clearTotalNumRowBits();
 
-        updateValues.foreachWithIndexAndParameter(evaluatorParameter, (v, i, p) -> {
+        updateValues.forEachWithIndexAndParameter(evaluatorParameter, (v, i, p) -> {
 
             final int numColumnBits = setTableColumn(tableId, i, v.getColumnName(), p.getUpdateRows(), p.getTableAndColumnNames(), p.getNumStorageBitsGetter());
 

@@ -235,7 +235,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
                         deleteRowsBitOffset += Long.SIZE;
 
-                        addedRowIdsDst.remove(rowId);
+                        addedRowIdsDst.removeAtMostOne(rowId);
                         removedRowIdsDst.add(rowId);
                     }
                     break;
@@ -500,7 +500,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
         this.transactionId = DBConstants.NO_TRANSACTION_ID;
         this.originatingTransactionId = DBConstants.NO_TRANSACTION_ID;
 
-        rowOperationBySequenceNo.reset();
+        rowOperationBySequenceNo.clear();
 
         final LongNodeSetter<MVCCTransaction> noop = (i, n) -> { };
 

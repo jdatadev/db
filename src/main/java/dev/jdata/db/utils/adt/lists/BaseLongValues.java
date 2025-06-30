@@ -3,8 +3,8 @@ package dev.jdata.db.utils.adt.lists;
 import java.util.Arrays;
 import java.util.Objects;
 
+import dev.jdata.db.utils.adt.elements.ILongElements.IContainsOnlyPredicate;
 import dev.jdata.db.utils.adt.elements.ILongElements.LongElementPredicate;
-import dev.jdata.db.utils.adt.lists.ILongList.ContainsOnlyPredicate;
 import dev.jdata.db.utils.checks.Checks;
 
 public abstract class BaseLongValues<LIST extends BaseInnerOuterList<long[], LIST, U>, U extends BaseValues<long[], LIST, U>> extends BaseValues<long[], LIST, U> {
@@ -63,7 +63,7 @@ public abstract class BaseLongValues<LIST extends BaseInnerOuterList<long[], LIS
         return containsOnlyValue(list, value, headNode, (i, l) -> i == l);
     }
 
-    final boolean containsOnlyValue(BaseInnerOuterList<long[], LIST, U> list, long value, long headNode, ContainsOnlyPredicate containsOnlyPredicate) {
+    final boolean containsOnlyValue(BaseInnerOuterList<long[], LIST, U> list, long value, long headNode, IContainsOnlyPredicate containsOnlyPredicate) {
 
         boolean containsOnly = false;
 

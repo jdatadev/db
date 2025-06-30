@@ -25,10 +25,10 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
 
     protected abstract <T> boolean containsInstance(T[] array, T instance);
     protected abstract <T> boolean containsInstanceRange(T[] array, int startIndex, int numElements, T instance);
-    protected abstract <T, P> int findIndex(T[] array, P parameter, BiPredicate<T, P> predicate);
-    protected abstract <T> int closureOrConstantFindIndex(T[] array, Predicate<T> predicate);
-    protected abstract <T, P> int findIndexInRange(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate);
-    protected abstract <T> int closureOrConstantFindIndexInRange(T[] array, int startIndex, int numElements, Predicate<T> predicate);
+    protected abstract <T, P> int findAtMostOneIndex(T[] array, P parameter, BiPredicate<T, P> predicate);
+    protected abstract <T> int closureOrConstantFindAtMostOneIndex(T[] array, Predicate<T> predicate);
+    protected abstract <T, P> int findAtMostOneIndexInRange(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate);
+    protected abstract <T> int closureOrConstantFindAtMostOneIndexInRange(T[] array, int startIndex, int numElements, Predicate<T> predicate);
 
     private final Class<? extends IndexOutOfBoundsException> indexOutOfBoundsExceptionClass;
 
@@ -215,14 +215,14 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
 
     @Test
     @Category(UnitTest.class)
-    public final void testFindIndex() {
+    public final void testFindAtMostOneIndex() {
 
         final Object parameter = new Object();
 
-        assertThatThrownBy(() -> findIndex(null, parameter, (e, p) -> true)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> findIndex(new Integer[] { 1, 2, 3 }, parameter, null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> findAtMostOneIndex(null, parameter, (e, p) -> true)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> findAtMostOneIndex(new Integer[] { 1, 2, 3 }, parameter, null)).isInstanceOf(NullPointerException.class);
 
-        assertThat(findIndex(new Integer[] { 123, 234 }, parameter, (e, p) -> {
+        assertThat(findAtMostOneIndex(new Integer[] { 123, 234 }, parameter, (e, p) -> {
 
             assertThat(p).isSameAs(parameter);
 
@@ -230,17 +230,17 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
         }))
         .isEqualTo(1);
 
-        checkFindIndex((a, p) -> findIndex(a, parameter, p));
+        checkFindIndex((a, p) -> findAtMostOneIndex(a, parameter, p));
     }
 
     @Test
     @Category(UnitTest.class)
-    public final void testClosureOrConstantFindIndex() {
+    public final void testClosureOrConstantFindAtMostOneIndex() {
 
-        assertThatThrownBy(() -> closureOrConstantFindIndex(null, e -> true)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> closureOrConstantFindIndex(new Integer[] { 1, 2, 3 }, null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> closureOrConstantFindAtMostOneIndex(null, e -> true)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> closureOrConstantFindAtMostOneIndex(new Integer[] { 1, 2, 3 }, null)).isInstanceOf(NullPointerException.class);
 
-        checkFindIndex((a, p) -> closureOrConstantFindIndex(a, e -> p.test(e, null)));
+        checkFindIndex((a, p) -> closureOrConstantFindAtMostOneIndex(a, e -> p.test(e, null)));
     }
 
     @FunctionalInterface
@@ -250,6 +250,8 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
     }
 
     private static <P> void checkFindIndex(FindIndex<Integer, P> findIndex) {
+
+        assertThatThrownBy(() -> findIndex.apply(new Integer[] { 0, 1, 2, 1 }, (e, p) -> e == 1)).isInstanceOf(IllegalStateException.class);
 
         assertThat(findIndex.apply(new Integer[0], (e, p) -> true)).isEqualTo(-1);
 
@@ -265,31 +267,31 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
         assertThat(findIndex.apply(new Integer[] { 1, 2 ,0 },           (e, p) -> e == 2)).isEqualTo(1);
         assertThat(findIndex.apply(new Integer[] { 1, 2 ,0 },           (e, p) -> e == 0)).isEqualTo(2);
         assertThat(findIndex.apply(new Integer[] { 1, 2 ,0 },           (e, p) -> e == 3)).isEqualTo(-1);
-        assertThat(findIndex.apply(new Integer[] { 1, 0, -2, 0 },       (e, p) -> e == 0)).isEqualTo(1);
-        assertThat(findIndex.apply(new Integer[] { -1, 0, -3, -3, -1 }, (e, p) -> e == -3)).isEqualTo(2);
+        assertThat(findIndex.apply(new Integer[] { 1, 0, -2, 1 },       (e, p) -> e == 0)).isEqualTo(1);
+        assertThat(findIndex.apply(new Integer[] { -1, 0, -3, -2, -1 }, (e, p) -> e == -3)).isEqualTo(2);
         assertThat(findIndex.apply(new Integer[] { 1, null ,0 },        (e, p) -> e == null)).isEqualTo(1);
     }
 
     @Test
     @Category(UnitTest.class)
-    public final void testFindIndexInRange() {
+    public final void testFindAtMostOneIndexInRange() {
 
         final Object object1 = new Object();
 
         final Object parameter = new Object();
 
-        assertThatThrownBy(() -> findIndexInRange(null, 0, 0, parameter, (e, p) -> e == object1)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> findAtMostOneIndexInRange(null, 0, 0, parameter, (e, p) -> e == object1)).isInstanceOf(NullPointerException.class);
 
-        final FindIndexInRange<Object, Object> findIndexInRange = (a, s, n, p) -> findIndexInRange(a, s, n, parameter, p);
+        final FindIndexInRange<Object, Object> findIndexInRange = (a, s, n, p) -> findAtMostOneIndexInRange(a, s, n, parameter, p);
 
-        checkFindIndexInRangeExceptions(indexOutOfBoundsExceptionClass, findIndexInRange);
+        checkFindAtMostOneIndexInRangeExceptions(indexOutOfBoundsExceptionClass, findIndexInRange);
 
-        assertThatThrownBy(() -> findIndexInRange(new Object[0], 0, 0, parameter, null)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> findIndexInRange(new Object[] { object1 }, 0, 1, parameter, null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> findAtMostOneIndexInRange(new Object[0], 0, 0, parameter, null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> findAtMostOneIndexInRange(new Object[] { object1 }, 0, 1, parameter, null)).isInstanceOf(NullPointerException.class);
 
         final Integer[] array = new Integer[] { 123, 234 };
 
-        assertThat(findIndexInRange(array, 0, array.length, parameter, (e, p) -> {
+        assertThat(findAtMostOneIndexInRange(array, 0, array.length, parameter, (e, p) -> {
 
             assertThat(p).isSameAs(parameter);
 
@@ -297,25 +299,25 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
         }))
         .isSameAs(1);
 
-        checkFindIndexInRange((a, s, n, p) -> findIndexInRange(a, s, n, parameter, p));
+        checkFindAtMostOneIndexInRange((a, s, n, p) -> findAtMostOneIndexInRange(a, s, n, parameter, p));
     }
 
     @Test
     @Category(UnitTest.class)
-    public final void testClosureOrConstantFindIndexInRange() {
+    public final void testClosureOrConstantFindAtMostOneIndexInRange() {
 
         final Object object1 = new Object();
 
-        assertThatThrownBy(() -> closureOrConstantFindIndexInRange(null, 0, 0, e -> e == object1)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> closureOrConstantFindAtMostOneIndexInRange(null, 0, 0, e -> e == object1)).isInstanceOf(NullPointerException.class);
 
-        final FindIndexInRange<Object, Object> findIndexInRange = (a, s, n, p) -> closureOrConstantFindIndexInRange(a, s, n, e -> p.test(e, null));
+        final FindIndexInRange<Object, Object> findIndexInRange = (a, s, n, p) -> closureOrConstantFindAtMostOneIndexInRange(a, s, n, e -> p.test(e, null));
 
-        checkFindIndexInRangeExceptions(indexOutOfBoundsExceptionClass, findIndexInRange);
+        checkFindAtMostOneIndexInRangeExceptions(indexOutOfBoundsExceptionClass, findIndexInRange);
 
-        assertThatThrownBy(() -> closureOrConstantFindIndexInRange(new Object[0], 0, 0, null)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> closureOrConstantFindIndexInRange(new Object[] { object1 }, 0, 1, null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> closureOrConstantFindAtMostOneIndexInRange(new Object[0], 0, 0, null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> closureOrConstantFindAtMostOneIndexInRange(new Object[] { object1 }, 0, 1, null)).isInstanceOf(NullPointerException.class);
 
-        checkFindIndexInRange(findIndexInRange);
+        checkFindAtMostOneIndexInRange(findIndexInRange);
     }
 
     @FunctionalInterface
@@ -324,10 +326,12 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
         int apply(T[] array, int startIndex, int numElements, BiPredicate<T, P> predicate);
     }
 
-    private static <P> void checkFindIndexInRangeExceptions(Class<? extends IndexOutOfBoundsException> indexOutOfBoundsExceptionClass,
+    private static <P> void checkFindAtMostOneIndexInRangeExceptions(Class<? extends IndexOutOfBoundsException> indexOutOfBoundsExceptionClass,
             FindIndexInRange<Object, P> findIndexInRange) {
 
         final Object object1 = new Object();
+
+        assertThatThrownBy(() -> findIndexInRange.apply(new Object[] { 0, object1, 2, object1 }, 0, 4, (e, p) -> e == object1)).isInstanceOf(IllegalStateException.class);
 
         assertThatThrownBy(() -> findIndexInRange.apply(new Object[0], -1, 0, (e, p) -> e == object1)).isInstanceOf(indexOutOfBoundsExceptionClass);
         assertThatThrownBy(() -> findIndexInRange.apply(new Object[0], 0, 1, (e, p) -> e == object1)).isInstanceOf(indexOutOfBoundsExceptionClass);
@@ -336,7 +340,7 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
         assertThatThrownBy(() -> findIndexInRange.apply(new Object[] { object1 }, 0, 2, (e, p) -> e == object1)).isInstanceOf(indexOutOfBoundsExceptionClass);
     }
 
-    private static <P> void checkFindIndexInRange(FindIndexInRange<Object, P> findIndexInRange) {
+    private static <P> void checkFindAtMostOneIndexInRange(FindIndexInRange<Object, P> findIndexInRange) {
 
         final Object object1 = new Object();
         final Object object2 = new Object();

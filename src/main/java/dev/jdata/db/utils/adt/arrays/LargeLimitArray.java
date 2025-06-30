@@ -1,6 +1,7 @@
 package dev.jdata.db.utils.adt.arrays;
 
 import java.util.function.IntFunction;
+import java.util.function.ToIntFunction;
 
 import dev.jdata.db.utils.checks.Checks;
 
@@ -8,16 +9,18 @@ abstract class LargeLimitArray<O, I> extends LargeArray<O, I> implements IArray 
 
     private long limit;
 
-    LargeLimitArray(int initialOuterCapacity, int innerCapacityExponent, int innerArrayLengthNumElements, IntFunction<O> createOuterArray) {
-        super(initialOuterCapacity, innerCapacityExponent, innerArrayLengthNumElements, createOuterArray);
+    LargeLimitArray(int initialOuterCapacity, IntFunction<O> createOuterArray, ToIntFunction<O> getOuterArrayLength, int innerCapacityExponent) {
+        super(initialOuterCapacity, createOuterArray, getOuterArrayLength, innerCapacityExponent);
 
         this.limit = 0L;
     }
 
     @Override
-    public final boolean isEmpty() {
+    public void clear() {
 
-        return limit == 0L;
+        super.clear();
+
+        this.limit = 0L;
     }
 
     @Override
@@ -27,11 +30,9 @@ abstract class LargeLimitArray<O, I> extends LargeArray<O, I> implements IArray 
     }
 
     @Override
-    public final void reset() {
+    final long getRemainderOfLastInnerArray(int outerIndex) {
 
-        this.limit = 0L;
-
-        super.reset();
+        return getRemainderOfLastInnerArrayWithLimit(outerIndex, limit);
     }
 
     final long getAndIncrementLimit() {
@@ -39,34 +40,16 @@ abstract class LargeLimitArray<O, I> extends LargeArray<O, I> implements IArray 
         return this.limit ++;
     }
 
+    int ensureCapacityAndLimit(long index) {
+
+        return ensureCapacityAndLimit(index, null, null);
+    }
+
     final <P> int ensureCapacityAndLimit(long index, P parameter, ArrayClearer<I, P> arrayClearer) {
 
         Checks.isIndex(index);
 
-        final long capacity = getCapacity();
-
-        final long limit = getLimit();
-
-        if (index >= limit) {
-
-            if (index >= capacity) {
-
-                checkCapacity(index - capacity + 1, parameter, arrayClearer);
-            }
-
-            increaseLimit(index - limit + 1);
-        }
-
-        final int outerIndex = getOuterIndex(index);
-
-        final int numOuterUtilizedEntries = getNumOuterUtilizedEntries();
-
-        if (outerIndex >= numOuterUtilizedEntries) {
-
-            incrementNumOuterUtilizedEntries(outerIndex - numOuterUtilizedEntries + 1);
-        }
-
-        return outerIndex;
+        return ensureCapacityAndLimit(index, getLimit(), this, parameter, (t, i) -> t.increaseLimit(i), arrayClearer);
     }
 
     final void increaseLimit(long numElements) {

@@ -69,14 +69,14 @@ public final class MutableLargeLongBucketSet extends BaseLargeLongBucketSet impl
     }
 
     @Override
-    public boolean remove(long value) {
+    public boolean removeAtMostOne(long value) {
 
         if (DEBUG) {
 
             enter(b -> b.add("value", value));
         }
 
-        final boolean result = removeValue(value);
+        final boolean result = removeAtMostOneValue(value);
 
         if (DEBUG) {
 

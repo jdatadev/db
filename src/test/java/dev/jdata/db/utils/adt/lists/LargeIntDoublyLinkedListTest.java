@@ -3,34 +3,34 @@ package dev.jdata.db.utils.adt.lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public final class LargeIntDoublyLinkedListTest extends BaseLargeIntListTest<LargeIntDoublyLinkedList> {
+public final class LargeIntDoublyLinkedListTest extends BaseLargeIntListTest<MutableLargeIntDoublyLinkedList> {
 
     @Override
-    LargeIntDoublyLinkedList createLargeList(int initialOuterCapacity, int innerCapacity) {
+    MutableLargeIntDoublyLinkedList createLargeList(int initialOuterCapacity, int innerCapacity) {
 
-        return new LargeIntDoublyLinkedList(initialOuterCapacity, innerCapacity);
+        return new MutableLargeIntDoublyLinkedList(initialOuterCapacity, innerCapacity);
     }
 
     @Override
-    long removeTailNode(LargeIntDoublyLinkedList list, long newTailNode) {
+    long removeTailNode(MutableLargeIntDoublyLinkedList list, long newTailNode) {
 
         return list.removeTailNodeAndReturnNode();
     }
 
     @Override
-    void removeNode(LargeIntDoublyLinkedList list, long node, long previousNode) {
+    void removeNode(MutableLargeIntDoublyLinkedList list, long node, long previousNode) {
 
         list.removeNode(node);
     }
 
     @Override
-    long removeTail(LargeIntDoublyLinkedList list) {
+    long removeTail(MutableLargeIntDoublyLinkedList list) {
 
         return list.removeTail();
     }
 
     @Override
-    void clear(LargeIntDoublyLinkedList list) {
+    void clear(MutableLargeIntDoublyLinkedList list) {
 
         list.clear();
     }

@@ -7,6 +7,9 @@ import dev.jdata.db.DBConstants;
 import dev.jdata.db.storage.backend.file.BaseStorageFiles;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexListGetters;
+import dev.jdata.db.utils.adt.lists.IMutableIndexList;
+import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.allocators.IByteArrayAllocator;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
@@ -20,8 +23,9 @@ public final class FileTableStorageFiles extends BaseStorageFiles<RandomFileAcce
 
     private int sequenceNoAllocator;
 
-    FileTableStorageFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath tableDirectoryPath, IIndexList<FileTableStorageFile> files) {
-        super(fileSystemAccess, tableDirectoryPath, files);
+    FileTableStorageFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath tableDirectoryPath, IIndexList<FileTableStorageFile> files,
+            IndexListAllocator<FileTableStorageFile, ? extends IndexList<FileTableStorageFile>, ?, ? extends IMutableIndexList<FileTableStorageFile>> indexListAllocator) {
+        super(fileSystemAccess, tableDirectoryPath, files, indexListAllocator);
 
         this.sequenceNoAllocator = files.maxInt(INITIAL_SEQUENCE_NO, FileTableStorageFile::getSequenceNo);
     }

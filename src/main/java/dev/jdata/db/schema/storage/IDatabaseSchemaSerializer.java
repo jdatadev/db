@@ -12,10 +12,10 @@ import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.schemamaps.CompleteSchemaMaps;
 import dev.jdata.db.schema.storage.sqloutputter.ISQLOutputter;
 
-public interface IDatabaseSchemaSerializer {
+public interface IDatabaseSchemaSerializer<T extends CompleteSchemaMaps<?>> {
 
     <E extends Exception> void serialize(IEffectiveDatabaseSchema databaseSchema, StringResolver stringResolver, ISQLOutputter<E> sqlOutputter) throws E;
 
-    <E extends Exception, BUFFER extends BaseStringBuffers<E>, P> CompleteSchemaMaps deserialize(BUFFER buffer, Function<String, E> createEOFException,
+    <E extends Exception, BUFFER extends BaseStringBuffers<E>, P> T deserialize(BUFFER buffer, Function<String, E> createEOFException,
             StringManagement stringManagement, SchemaObjectIdAllocator<P> schemaObjectIdAllocator) throws ParserException, E;
 }

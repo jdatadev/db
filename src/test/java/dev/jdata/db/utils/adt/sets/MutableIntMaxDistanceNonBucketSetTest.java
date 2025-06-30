@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.adt.sets;
 
-import dev.jdata.db.utils.adt.elements.IIntElements.ForEach;
+import dev.jdata.db.utils.adt.elements.IIntIterableElements.IForEach;
 
 public final class MutableIntMaxDistanceNonBucketSetTest extends BaseMutableIntegerSetTest<MutableIntMaxDistanceNonBucketSet> {
 
@@ -11,7 +11,7 @@ public final class MutableIntMaxDistanceNonBucketSetTest extends BaseMutableInte
     }
 
     @Override
-    <P> void forEach(MutableIntMaxDistanceNonBucketSet set, P parameter, ForEach<P, RuntimeException> forEach) {
+    <P> void forEach(MutableIntMaxDistanceNonBucketSet set, P parameter, IForEach<P, RuntimeException> forEach) {
 
         set.forEach(parameter, forEach);
     }

@@ -7,10 +7,11 @@ import java.util.function.ToIntFunction;
 
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.engine.database.StringStorer;
-import dev.jdata.db.schema.model.SchemaMap;
+import dev.jdata.db.schema.model.HeapSchemaMap;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.model.schemamaps.CompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.HeapCompleteSchemaMaps;
+import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 import dev.jdata.db.utils.allocators.LongToObjectMaxDistanceMapAllocator;
@@ -40,7 +41,7 @@ abstract class BaseSchemaBuilder<T extends BaseSchemaBuilder<T>> {
     private final ILongToObjectMaxDistanceMapAllocator<Table> longToObjectMapAllocator;
     private final ToIntFunction<DDLObjectType> schemaObjectIdAllocator;
 
-    private final IndexList.Builder<Table> tablesBuilder;
+    private final HeapIndexListBuilder<Table> tablesBuilder;
 
     BaseSchemaBuilder(StringStorer stringStorer, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
         this(stringStorer, new LongToObjectMaxDistanceMapAllocator<>(Table[]::new), schemaObjectIdAllocator);
@@ -77,11 +78,11 @@ abstract class BaseSchemaBuilder<T extends BaseSchemaBuilder<T>> {
         return getThis();
     }
 
-    final CompleteSchemaMaps buildCompleteSchemaMaps() {
+    final HeapCompleteSchemaMaps buildCompleteSchemaMaps() {
 
-        final SchemaMap<Table> tableSchemaMap = SchemaMap.of(tablesBuilder.build(), Table[]::new, longToObjectMapAllocator);
+        final HeapSchemaMap<Table> tableSchemaMap = HeapSchemaMap.of(tablesBuilder.build(), Table[]::new, longToObjectMapAllocator);
 
-        return new CompleteSchemaMaps(tableSchemaMap, SchemaMap.empty(), SchemaMap.empty(), SchemaMap.empty(), SchemaMap.empty(), SchemaMap.empty());
+        return new HeapCompleteSchemaMaps(tableSchemaMap, HeapSchemaMap.empty(), HeapSchemaMap.empty(), HeapSchemaMap.empty(), HeapSchemaMap.empty(), HeapSchemaMap.empty());
     }
 
     @SuppressWarnings("unchecked")

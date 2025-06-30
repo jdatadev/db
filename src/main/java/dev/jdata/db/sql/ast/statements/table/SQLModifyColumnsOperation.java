@@ -27,7 +27,7 @@ public final class SQLModifyColumnsOperation extends SQLAlterTableOperation {
     }
 
     @Override
-    public <T, R> R visit(SQLAlterTableOperationVisitor<T, R> visitor, T parameter) {
+    public <T, R, E extends Exception> R visit(SQLAlterTableOperationVisitor<T, R, E> visitor, T parameter) throws E {
 
         return visitor.onModifyColumns(this, parameter);
     }

@@ -6,20 +6,30 @@ import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.parse.context.Context;
 
-import dev.jdata.db.utils.adt.arrays.LongArray;
+import dev.jdata.db.sql.ast.ISQLAllocator;
+import dev.jdata.db.utils.adt.lists.LongIndexList;
+import dev.jdata.db.utils.allocators.IFreeable;
 
-public final class SQLDropConstraintOperation extends SQLAlterTableConstraintOperation {
+public final class SQLDropConstraintOperation extends SQLAlterTableConstraintOperation implements IFreeable<ISQLAllocator> {
 
-    private final LongArray names;
+    private final LongIndexList names;
 
-    public SQLDropConstraintOperation(Context context, long dropKeyword, long constraintKeyword, LongArray names) {
+    public SQLDropConstraintOperation(Context context, long dropKeyword, long constraintKeyword, LongIndexList names) {
         super(context, dropKeyword, constraintKeyword);
 
         this.names = Objects.requireNonNull(names);
     }
 
     @Override
-    public <T, R> R visit(SQLAlterTableOperationVisitor<T, R> visitor, T parameter) {
+    public void free(ISQLAllocator allocator) {
+
+        Objects.requireNonNull(allocator);
+
+        allocator.freeLongIndexList(names);
+    }
+
+    @Override
+    public <T, R, E extends Exception> R visit(SQLAlterTableOperationVisitor<T, R, E> visitor, T parameter) throws E {
 
         return visitor.onDropConstraint(this, parameter);
     }

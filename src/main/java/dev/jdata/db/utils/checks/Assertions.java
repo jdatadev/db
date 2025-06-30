@@ -22,6 +22,14 @@ public class Assertions {
         }
     }
 
+    public static void areEqual(boolean value1, boolean value2) {
+
+        if (value1 != value2) {
+
+            throwAssertion();
+        }
+    }
+
     public static void isNull(Object object) {
 
         if (object != null) {

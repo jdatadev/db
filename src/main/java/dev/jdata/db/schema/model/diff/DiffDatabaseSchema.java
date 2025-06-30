@@ -2,8 +2,8 @@ package dev.jdata.db.schema.model.diff;
 
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.schema.IDatabaseSchemasAllocator;
 import dev.jdata.db.schema.IDatabaseSchemasFreeable;
+import dev.jdata.db.schema.allocators.schemas.IDatabaseSchemasAllocator;
 import dev.jdata.db.schema.model.databaseschema.BaseDatabaseSchema;
 import dev.jdata.db.schema.model.diff.dropped.DroppedSchemaObjects;
 import dev.jdata.db.schema.model.diff.dropped.IDroppedSchemaObjects;

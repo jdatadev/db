@@ -1,23 +1,16 @@
 package dev.jdata.db.utils.adt.arrays;
 
 import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.IResettable;
+import dev.jdata.db.utils.adt.IClearable;
 
-public final class LongArray implements ILongArray, ILongArrayMutators, IResettable {
+public final class LongArray implements ILongArray, IClearable, ILongArrayMutators {
 
     private static final int DEFAULT_INNER_CAPACITY_EXPONENT = 10;
 
     private final LargeLongArray delegate;
 
     public LongArray(int initialCapacity) {
-        this(getOuterCapacity(initialCapacity, DEFAULT_INNER_CAPACITY_EXPONENT), DEFAULT_INNER_CAPACITY_EXPONENT);
-    }
-
-    private static int getOuterCapacity(int initialCapacity, int innerCapacityExponent) {
-
-        final int innerCapacity = CapacityExponents.computeCapacity(innerCapacityExponent);
-
-        return ((initialCapacity - 1) / innerCapacity) + 1;
+        this(CapacityExponents.computeArrayOuterCapacity(initialCapacity, DEFAULT_INNER_CAPACITY_EXPONENT), DEFAULT_INNER_CAPACITY_EXPONENT);
     }
 
     public LongArray(int initialOuterCapacity, int innerCapacityExponent) {
@@ -29,6 +22,12 @@ public final class LongArray implements ILongArray, ILongArrayMutators, IResetta
     public long getCapacity() {
 
         return delegate.getCapacity();
+    }
+
+    @Override
+    public void clear() {
+
+        delegate.clear();
     }
 
     @Override
@@ -65,12 +64,6 @@ public final class LongArray implements ILongArray, ILongArrayMutators, IResetta
     public void set(int index, long value) {
 
         delegate.set(index, value);
-    }
-
-    @Override
-    public void reset() {
-
-        delegate.reset();
     }
 
     @Override

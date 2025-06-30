@@ -7,13 +7,13 @@ import org.jutils.ast.objects.list.IAddableList;
 import org.jutils.ast.objects.list.IImmutableIndexList;
 
 import dev.jdata.db.utils.adt.IResettable;
-import dev.jdata.db.utils.adt.lists.BaseArrayList;
+import dev.jdata.db.utils.adt.lists.BaseObjectArrayList;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
 public final class AddableListAllocator extends BaseArrayAllocator<AddableListAllocator.AddableList<?>> implements IAddableListAllocator {
 
-    public static final class AddableList<T> extends BaseArrayList<T> implements IAddableList<T>, IImmutableIndexList<T>, IResettable {
+    public static final class AddableList<T> extends BaseObjectArrayList<T> implements IAddableList<T>, IImmutableIndexList<T>, IResettable {
 
         private boolean initialized;
 
@@ -81,7 +81,7 @@ public final class AddableListAllocator extends BaseArrayAllocator<AddableListAl
 
             Objects.requireNonNull(instance);
 
-            addTail(instance);
+            addTailElement(instance);
         }
 
         @Override
@@ -95,6 +95,11 @@ public final class AddableListAllocator extends BaseArrayAllocator<AddableListAl
             clear();
 
             this.initialized = false;
+        }
+
+        int getCapacity() {
+
+            return getElementsCapacity();
         }
     }
 

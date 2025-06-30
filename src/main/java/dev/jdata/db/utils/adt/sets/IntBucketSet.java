@@ -7,6 +7,10 @@ public final class IntBucketSet extends BaseIntBucketSet {
         return new IntBucketSet(values);
     }
 
+    IntBucketSet(BaseIntBucketSet toCopy) {
+        super(toCopy);
+    }
+
     private IntBucketSet(int[] values) {
         super(values);
     }

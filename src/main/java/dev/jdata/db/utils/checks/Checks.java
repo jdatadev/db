@@ -75,6 +75,16 @@ public class Checks {
         return value;
     }
 
+    public static long isNotZero(long value) {
+
+        if (value == 0L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return value;
+    }
+
     public static long isExactlyZero(long value) {
 
         if (value != 0L) {
@@ -537,6 +547,30 @@ public class Checks {
         return contains;
     }
 
+    public static <T> void checkNumElements(int numElements, int length) {
+
+        if (numElements < 0) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (numElements > length) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static <T> void checkNumElements(long[] array, int numElements) {
+
+        if (numElements < 0) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (numElements > array.length) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
     public static <T> void checkNumElements(T[] array, int numElements) {
 
         if (numElements < 0) {
@@ -607,6 +641,16 @@ public class Checks {
         return index;
     }
 
+    public static long isIndexNotOutOfBounds(long index) {
+
+        if (index < 0L) {
+
+            throw new IndexOutOfBoundsException();
+        }
+
+        return index;
+    }
+
     public static int isNumElements(int numElements) {
 
         if (numElements < 0) {
@@ -625,6 +669,16 @@ public class Checks {
         }
 
         return numElements;
+    }
+
+    public static long isArrayLimit(long limit) {
+
+        if (limit < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return limit;
     }
 
     public static void areSameNumElements(IElements elements1, IElements elements2) {

@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.lists.IIntList.ContainsOnlyPredicate;
+import dev.jdata.db.utils.adt.elements.IIntElements.IContainsOnlyPredicate;
 
 abstract class BaseLargeIntDoublyLinkedList<
                 INSTANCE,
@@ -27,7 +27,7 @@ abstract class BaseLargeIntDoublyLinkedList<
         return getValues().containsOnlyValue(this, value, headNode);
     }
 
-    final boolean containsOnlyValue(int value, long headNode, ContainsOnlyPredicate containsOnlyPredicate) {
+    final boolean containsOnlyValue(int value, long headNode, IContainsOnlyPredicate containsOnlyPredicate) {
 
         return getValues().containsOnlyValue(this, value, headNode, containsOnlyPredicate);
     }

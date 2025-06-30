@@ -8,6 +8,8 @@ import dev.jdata.db.storage.file.FileStorage;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexListGetters;
 import dev.jdata.db.utils.adt.lists.IMutableIndexList;
+import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.file.access.FileAccess;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
@@ -31,7 +33,8 @@ public abstract class BaseStorageFiles<T extends FileAccess, U extends BaseStora
 
     protected abstract String getFileNamePrefix();
 
-    protected BaseStorageFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath directoryPath, IIndexList<U> files) {
+    protected BaseStorageFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath directoryPath, IIndexList<U> files,
+            IndexListAllocator<U, ? extends IndexList<U>, ?, ? extends IMutableIndexList<U>> indexListAllocator) {
 
         Objects.requireNonNull(fileSystemAccess);
         Objects.requireNonNull(directoryPath);
@@ -39,7 +42,7 @@ public abstract class BaseStorageFiles<T extends FileAccess, U extends BaseStora
 
         this.fileSystemAccess = Objects.requireNonNull(fileSystemAccess);
         this.directoryPath = Objects.requireNonNull(directoryPath);
-        this.files = files.copyToMutable();
+        this.files = files.copyToMutable(indexListAllocator);
     }
 
     protected final IRelativeFileSystemAccess getFileSystemAccess() {

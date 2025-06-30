@@ -1,206 +1,83 @@
 package dev.jdata.db.utils.adt.arrays;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseLargeByteArray extends LargeExponentArray implements IClearable {
+public abstract class BaseLargeByteArray extends LargeExponentArray<byte[][], byte[]> implements IClearable {
 
-    protected static final int NUM_INNER_ELEMENTS_NUM_BYTES = 4;
-
-    private byte[][] buffers;
-
-    protected BaseLargeByteArray(int innerCapacityExponent) {
-        this(0, innerCapacityExponent);
+    protected BaseLargeByteArray(int innerCapacityExponent, boolean requiresInnerArrayNumElements) {
+        this(0, innerCapacityExponent, requiresInnerArrayNumElements);
     }
 
-    protected BaseLargeByteArray(int initialOuterCapacity, int innerCapacityExponent) {
-        super(innerCapacityExponent, initialOuterCapacity, NUM_INNER_ELEMENTS_NUM_BYTES);
+    BaseLargeByteArray(int initialOuterCapacity, int innerCapacityExponent, boolean requiresInnerArrayNumElements) {
+        super(initialOuterCapacity, byte[][]::new, a -> a.length, innerCapacityExponent, initialOuterCapacity, requiresInnerArrayNumElements);
 
         Checks.isCapacity(initialOuterCapacity);
 
         if (initialOuterCapacity > 0) {
 
-            this.buffers = new byte[1][];
+            setInnerArray(0, new byte[getInnerNumAllocateElements()]);
+            setNumInnerElements(0, 0);
+        }
+    }
 
-            final byte[] buffer = buffers[0] = new byte[getInnerNumAllocateElements()];
+    final byte[] getByteArrayByOffset(long byteOffset) {
 
-            setNumElements(buffer, 0);
+        Checks.isOffset(byteOffset);
+
+        return getOuterArray()[getOuterIndex(byteOffset)];
+    }
+
+    protected final byte[] getByteArrayByOuterIndex(int outerIndex) {
+
+        Checks.isIndex(outerIndex);
+
+        return getOuterArray()[outerIndex];
+    }
+
+    protected final int getLastByteArrayIndexOrAllocateForOneAppendedElement() {
+
+        final int numOuter = getNumOuterUtilizedEntries();
+
+        final int result;
+
+        if (numOuter != 0) {
+
+            result = numOuter - 1;
         }
         else {
-            this.buffers = null;
+            result = checkCapacityForOneAppendedElementAndReturnOuterIndex();
         }
+
+        return result;
     }
 
     @Override
-    public void clear() {
+    protected final byte[] abstractCreateAndSetInnerArray(byte[][] outerArray, int index, int innerArrayLength) {
 
-        if (buffers != null) {
-
-            final int numOuter = getNumOuterUtilizedEntries();
-
-            for (int i = 0; i < numOuter; ++ i) {
-
-                setNumElements(buffers[i], 0);
-            }
-        }
-
-        super.reset();
+        return outerArray[index] = new byte[innerArrayLength];
     }
 
-    protected final byte[] getBuffer(long byteOffset) {
+    @Override
+    protected final byte[] getInnerArray(byte[][] outerArray, int index) {
 
-        Checks.isNotNegative(byteOffset);
-
-        return buffers[getOuterIndex(byteOffset)];
+        return outerArray[index];
     }
 
-    protected final byte[] getLastBufferOrAllocate() {
+    @Override
+    protected final byte[][] copyOuterArray(byte[][] outerArray, int newCapacity) {
 
-        return getNumOuterUtilizedEntries() != 0 ? getLastBuffer() : allocate();
+        return Arrays.copyOf(outerArray, newCapacity);
     }
 
-    private byte[] getLastBuffer() {
+    private void setInnerArray(int outerIndex, byte[] innerArray) {
 
-        return buffers[getNumOuterUtilizedEntries() - 1];
-    }
+        Checks.isIndex(outerIndex);
+        Objects.requireNonNull(innerArray);
 
-    final byte[] checkCapacity() {
-
-        final int numOuterAllocatedEntries = getNumOuterAllocatedEntries();
-        final int numOuterUtilizedEntries = getNumOuterUtilizedEntries();
-
-        final byte[] result;
-
-        if (numOuterAllocatedEntries == 0) {
-
-            result = initializeBuffers();
-        }
-        else if (numOuterUtilizedEntries == 0) {
-
-            result = reallocateFirstOuterBuffer();
-        }
-        else {
-            final byte[] buffer = buffers[numOuterUtilizedEntries - 1];
-
-            final int numInnerElements = getInnerArrayNumElements(buffer);
-
-            if (numInnerElements == buffer.length - NUM_INNER_ELEMENTS_NUM_BYTES) {
-
-                if (numOuterUtilizedEntries < numOuterAllocatedEntries) {
-
-                    result = buffers[numOuterUtilizedEntries];
-
-                    setNumElements(result, 0);
-
-                    incrementNumOuterUtilizedEntries();
-                }
-                else {
-                    result = allocateNewOuter(numOuterUtilizedEntries);
-                }
-            }
-            else {
-                result = buffer;
-            }
-        }
-
-        return result;
-    }
-
-    protected final byte[] allocate() {
-
-        final int numOuterAllocatedEntries = getNumOuterAllocatedEntries();
-        final int numOuterUtilizedEntries = getNumOuterUtilizedEntries();
-
-        final byte[] result;
-
-        if (numOuterAllocatedEntries == 0) {
-
-            result = initializeBuffers();
-        }
-        else if (numOuterUtilizedEntries == 0) {
-
-            result = reallocateFirstOuterBuffer();
-        }
-        else {
-            result = allocateNewOuter(numOuterUtilizedEntries);
-        }
-
-        return result;
-    }
-
-    private byte[] initializeBuffers() {
-
-        this.buffers = new byte[1][];
-
-        final byte[] result = buffers[0] = new byte[getInnerNumAllocateElements()];
-
-        setNumElements(result, 0);
-
-        incrementNumOuterAllocatedEntries();
-        incrementNumOuterUtilizedEntries();
-
-        return result;
-    }
-
-    private byte[] reallocateFirstOuterBuffer() {
-
-        final byte[] result = buffers[0];
-
-        setNumElements(result, 0);
-
-        incrementNumOuterUtilizedEntries();
-
-        return result;
-    }
-
-    private byte[] allocateNewOuter(int numOuterUtilizedEntries) {
-
-        final int outerArrayLength = buffers.length;
-
-        final byte[][] updateBuffers;
-
-        if (numOuterUtilizedEntries == outerArrayLength) {
-
-            final byte[][] newBuffers = Arrays.copyOf(buffers, outerArrayLength << 2);
-
-            this.buffers = newBuffers;
-
-            updateBuffers = newBuffers;
-        }
-        else {
-            updateBuffers = buffers;
-        }
-
-        final byte[] result = updateBuffers[numOuterUtilizedEntries] = new byte[getInnerNumAllocateElements()];
-
-        setNumElements(result, 0);
-
-        incrementNumOuterAllocatedEntries();
-        incrementNumOuterUtilizedEntries();
-
-        return result;
-    }
-
-    protected static int getInnerArrayNumElements(byte[] innerArray) {
-
-        return    (Byte.toUnsignedInt(innerArray[0]) << 24)
-                | (Byte.toUnsignedInt(innerArray[1]) << 16)
-                | (Byte.toUnsignedInt(innerArray[2]) << 8)
-                | Byte.toUnsignedInt(innerArray[3]);
-    }
-
-    static void incrementNumElements(byte[] innerArray) {
-
-        setNumElements(innerArray, getInnerArrayNumElements(innerArray) + 1);
-    }
-
-    protected static void setNumElements(byte[] innerArray, int numElements) {
-
-        innerArray[0] = (byte)(numElements >>> 24);
-        innerArray[1] = (byte)((numElements & 0x00FF0000) >>> 16);
-        innerArray[2] = (byte)((numElements & 0x0000FF00) >>> 8);
-        innerArray[3] = (byte)(numElements & 0x000000FF);
+        getOuterArray()[outerIndex] = innerArray;
     }
 }

@@ -8,13 +8,17 @@ public interface ILongElements {
         boolean test(long value, P parameter);
     }
 
-    @FunctionalInterface
-    public interface ForEach<P, E extends Exception> {
+    boolean contains(long value);
 
-        void each(long element, P parameter) throws E;
+    boolean containsOnly(long value);
+
+    @FunctionalInterface
+    public interface IContainsOnlyPredicate {
+
+        boolean test(long inputValue, long listValue);
     }
 
-    <P, E extends Exception> void forEach(P parameter, ForEach<P, E> forEach) throws E;
+    boolean containsOnly(long value, IContainsOnlyPredicate predicate);
 
-    boolean contains(long value);
+    long[] toArray();
 }

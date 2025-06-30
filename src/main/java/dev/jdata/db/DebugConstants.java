@@ -18,10 +18,14 @@ public class DebugConstants {
     public static final boolean DEBUG_MVCC_TRANSACTION = DEBUG_MVCC;
     public static final boolean DEBUG_MVCC_ROW_BUFFER_COMPARER = DEBUG_MVCC;
 
-    private static final boolean DEBUG_LOCKING = Boolean.TRUE;
+    private static final boolean DEBUG_LOCKING = Boolean.FALSE;
 
     public static final boolean DEBUG_LOCK_TABLE = DEBUG_LOCKING;
     public static final boolean DEBUG_LOCK_TABLE_ROWS = DEBUG_LOCKING;
+
+    private static final boolean DEBUG_DDL = Boolean.FALSE;
+
+    public static final boolean DEBUG_DDL_ALTER_TABLE_SCHEMAS_HELPER = DEBUG_DDL;
 
     private static final boolean DEBUG_ARRAYS = Boolean.FALSE;
     private static final boolean DEBUG_HASHED = Boolean.FALSE;
@@ -96,6 +100,7 @@ public class DebugConstants {
 
     public static final boolean DEBUG_BASE_INT_NON_BUCKET_SET = DEBUG_SETS;
 
+    public static final boolean DEBUG_BASE_INT_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
     public static final boolean DEBUG_MUTABLE_INT_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
 
     public static final boolean DEBUG_BASE_INT_BUCKET_SET = DEBUG_SETS;

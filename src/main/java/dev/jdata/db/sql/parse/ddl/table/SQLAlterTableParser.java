@@ -19,7 +19,7 @@ import dev.jdata.db.sql.ast.statements.table.SQLAlterTableAddConstraintOperation
 import dev.jdata.db.sql.ast.statements.table.SQLAlterTableOperation;
 import dev.jdata.db.sql.ast.statements.table.SQLAlterTableStatement;
 import dev.jdata.db.sql.ast.statements.table.SQLColumnNames;
-import dev.jdata.db.sql.ast.statements.table.SQLDropColumnOperation;
+import dev.jdata.db.sql.ast.statements.table.SQLDropColumnsOperation;
 import dev.jdata.db.sql.ast.statements.table.SQLDropConstraintOperation;
 import dev.jdata.db.sql.ast.statements.table.SQLModifyColumn;
 import dev.jdata.db.sql.ast.statements.table.SQLModifyColumnsOperation;
@@ -28,7 +28,7 @@ import dev.jdata.db.sql.ast.statements.table.SQLTableColumnDefinition;
 import dev.jdata.db.sql.parse.SQLExpressionLexer;
 import dev.jdata.db.sql.parse.SQLStatementParser;
 import dev.jdata.db.sql.parse.SQLToken;
-import dev.jdata.db.utils.adt.arrays.LongArray;
+import dev.jdata.db.utils.adt.lists.LongIndexList;
 
 public class SQLAlterTableParser extends SQLStatementParser {
 
@@ -289,7 +289,7 @@ public class SQLAlterTableParser extends SQLStatementParser {
 
         final boolean hasParenthesis = lexer.lex(SQLToken.LPAREN);
 
-        final LongArray constraintNames = parseNames(lexer, lexer.getAllocator());
+        final LongIndexList constraintNames = parseNames(lexer, lexer.getAllocator());
 
         if (hasParenthesis) {
 
@@ -299,12 +299,12 @@ public class SQLAlterTableParser extends SQLStatementParser {
         return new SQLDropConstraintOperation(makeContext(), dropKeyword, constraintsKeyword, constraintNames);
     }
 
-    private static <E extends Exception, I extends CharInput<E>> SQLDropColumnOperation parseDropColumn(SQLExpressionLexer<E, I> lexer, long dropKeyword)
+    private static <E extends Exception, I extends CharInput<E>> SQLDropColumnsOperation parseDropColumn(SQLExpressionLexer<E, I> lexer, long dropKeyword)
             throws ParserException, E {
 
         final boolean hasParenthesis = lexer.lex(SQLToken.LPAREN);
 
-        final LongArray names;
+        final LongIndexList names;
 
         if (hasParenthesis) {
 
@@ -313,13 +313,11 @@ public class SQLAlterTableParser extends SQLStatementParser {
             lexer.lexExpect(SQLToken.RPAREN);
         }
         else {
-            names = lexer.getAllocator().allocateLongArray(1);
-
-            names.add(lexer.lexName());
+            names = LongIndexList.of(lexer.lexName(), lexer.getAllocator());
         }
 
         final SQLColumnNames dropColumnNames = new SQLColumnNames(makeContext(), names);
 
-        return new SQLDropColumnOperation(makeContext(), dropKeyword, dropColumnNames);
+        return new SQLDropColumnsOperation(makeContext(), dropKeyword, dropColumnNames);
     }
 }

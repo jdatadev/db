@@ -1,9 +1,9 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.lists.ILongList.ContainsOnlyPredicate;
+import dev.jdata.db.utils.adt.elements.ILongElements.IContainsOnlyPredicate;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseLargeIntListTest<T extends BaseLargeList<?, ?, ?> & LargeIntList> extends BaseLargeListTest<T> {
+abstract class BaseLargeIntListTest<T extends BaseLargeList<?, ?, ?> & IMutableLargeIntList> extends BaseLargeListTest<T> {
 
     @Override
     final long getValue(T list, long node) {
@@ -24,7 +24,7 @@ abstract class BaseLargeIntListTest<T extends BaseLargeList<?, ?, ?> & LargeIntL
     }
 
     @Override
-    final boolean containsOnly(T list, long value, ContainsOnlyPredicate predicate) {
+    final boolean containsOnly(T list, long value, IContainsOnlyPredicate predicate) {
 
         return list.containsOnly(Integers.checkLongToInt(value), (i, l) -> predicate.test(i, l));
     }

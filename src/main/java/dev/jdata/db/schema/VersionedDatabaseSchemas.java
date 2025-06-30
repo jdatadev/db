@@ -7,10 +7,10 @@ import java.util.Objects;
 
 import dev.jdata.db.schema.model.IDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.utils.adt.ForEachSequenceElement;
+import dev.jdata.db.utils.adt.IForEachSequenceElement;
 import dev.jdata.db.utils.adt.arrays.TwoDimensionalArray;
+import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.scalars.Integers;
 
 public final class VersionedDatabaseSchemas {
@@ -35,7 +35,7 @@ public final class VersionedDatabaseSchemas {
         }
     }
 
-    public static VersionedDatabaseSchemas of(DatabaseId databaseId, IIndexList<IDatabaseSchema> schemas, IndexListAllocator<IDatabaseSchema> indexListAllocator) {
+    public static VersionedDatabaseSchemas of(DatabaseId databaseId, IIndexList<IDatabaseSchema> schemas, HeapIndexListAllocator<IDatabaseSchema> indexListAllocator) {
 
         Objects.requireNonNull(databaseId);
         Objects.requireNonNull(schemas);
@@ -48,7 +48,7 @@ public final class VersionedDatabaseSchemas {
     private final LinkedHashMap<DatabaseSchemaVersion, IDatabaseSchema> schemasByVersion;
     private final TwoDimensionalArray<VersionedTable> tableSchemasOrderedByVersion;
 
-    VersionedDatabaseSchemas(DatabaseId databaseId, IIndexList<IDatabaseSchema> schemas, IndexListAllocator<IDatabaseSchema> indexListAllocator) {
+    VersionedDatabaseSchemas(DatabaseId databaseId, IIndexList<IDatabaseSchema> schemas, HeapIndexListAllocator<IDatabaseSchema> indexListAllocator) {
 
         Objects.requireNonNull(databaseId);
         Objects.requireNonNull(schemas);
@@ -61,7 +61,7 @@ public final class VersionedDatabaseSchemas {
         this.schemasByVersion = new LinkedHashMap<>(numElements);
         this.tableSchemasOrderedByVersion = new TwoDimensionalArray<>(100, VersionedTable[][]::new, 10, VersionedTable[]::new);
 
-        final IIndexList<IDatabaseSchema> sorted = schemas.sorted((s1, s2) -> s1.getVersion().compareTo(s2.getVersion()), IDatabaseSchema[]::new, indexListAllocator);
+        final IIndexList<IDatabaseSchema> sorted = schemas.sorted((s1, s2) -> s1.getVersion().compareTo(s2.getVersion()), indexListAllocator);
 
         for (long i = 0L; i < numElements; ++ i) {
 
@@ -113,7 +113,7 @@ public final class VersionedDatabaseSchemas {
         return tableSchemasOrderedByVersion.getNumOuterElements();
     }
 
-    public synchronized void forEachVersionedTable(ForEachSequenceElement<VersionedTable> forEach) {
+    public synchronized void forEachVersionedTable(IForEachSequenceElement<VersionedTable> forEach) {
 
         Objects.requireNonNull(forEach);
 

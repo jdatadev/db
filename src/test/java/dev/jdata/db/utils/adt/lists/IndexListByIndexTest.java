@@ -18,7 +18,7 @@ public final class IndexListByIndexTest extends BaseByIndexTest {
     @Override
     protected <T, R> R[] map(T[] array, IntFunction<R[]> createMappedArray, Function<T, R> mapper) {
 
-        final LongFunction<IIndexListBuildable<R>> createIndexListAddable = l -> IndexList.createBuilder(createMappedArray);
+        final LongFunction<IIndexListBuildable<R, ?, ?>> createIndexListAddable = l -> IndexList.createBuilder(createMappedArray);
 
         return makeList(array).map(createIndexListAddable, mapper).toArray(createMappedArray);
     }
@@ -61,27 +61,27 @@ public final class IndexListByIndexTest extends BaseByIndexTest {
     }
 
     @Override
-    protected <T, P> int findIndex(T[] array, P parameter, BiPredicate<T, P> predicate) {
+    protected <T, P> int findAtMostOneIndex(T[] array, P parameter, BiPredicate<T, P> predicate) {
 
-        return Integers.checkLongToInt(makeList(array).findIndex(parameter, predicate));
+        return Integers.checkLongToInt(makeList(array).findAtMostOneIndex(parameter, predicate));
     }
 
     @Override
-    protected <T> int closureOrConstantFindIndex(T[] array, Predicate<T> predicate) {
+    protected <T> int closureOrConstantFindAtMostOneIndex(T[] array, Predicate<T> predicate) {
 
-        return Integers.checkLongToInt(makeList(array).closureOrConstantFindIndex(predicate));
+        return Integers.checkLongToInt(makeList(array).closureOrConstantFindAtMostOneIndex(predicate));
     }
 
     @Override
-    protected <T, P> int findIndexInRange(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
+    protected <T, P> int findAtMostOneIndexInRange(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
 
-        return Integers.checkLongToInt(makeList(array).findIndexInRange(startIndex, numElements, parameter, predicate));
+        return Integers.checkLongToInt(makeList(array).findAtMostOneIndexInRange(startIndex, numElements, parameter, predicate));
     }
 
     @Override
-    protected <T> int closureOrConstantFindIndexInRange(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
+    protected <T> int closureOrConstantFindAtMostOneIndexInRange(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
 
-        return Integers.checkLongToInt(makeList(array).closureOrConstantFindIndexInRange(startIndex, numElements, predicate));
+        return Integers.checkLongToInt(makeList(array).closureOrConstantFindAtMostOneIndexInRange(startIndex, numElements, predicate));
     }
 
     private static <T> IIndexListGetters<T> makeList(T[] array) {

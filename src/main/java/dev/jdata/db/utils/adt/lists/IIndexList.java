@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.lists;
 
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
+
 public interface IIndexList<T> extends IIndexListGetters<T> {
 
     public static <T> IIndexList<T> empty() {
@@ -7,5 +9,5 @@ public interface IIndexList<T> extends IIndexListGetters<T> {
         return IndexList.empty();
     }
 
-    IMutableIndexList<T> copyToMutable();
+    <U extends MutableIndexList<T>> U copyToMutable(IndexListAllocator<T, ? extends IndexList<T>, ?, U> indexListAllocator);
 }

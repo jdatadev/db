@@ -3,8 +3,8 @@ package dev.jdata.db.utils.adt.lists;
 import java.util.Arrays;
 import java.util.Objects;
 
-import dev.jdata.db.utils.adt.elements.IIntElements.IntElementPredicate;
-import dev.jdata.db.utils.adt.lists.IIntList.ContainsOnlyPredicate;
+import dev.jdata.db.utils.adt.elements.IIntElements.IContainsOnlyPredicate;
+import dev.jdata.db.utils.adt.elements.IIntElements.IIntElementPredicate;
 import dev.jdata.db.utils.checks.Checks;
 
 public abstract class BaseIntValues<LIST extends BaseInnerOuterList<int[], LIST, U>, U extends BaseValues<int[], LIST, U>> extends BaseValues<int[], LIST, U> {
@@ -53,7 +53,7 @@ public abstract class BaseIntValues<LIST extends BaseInnerOuterList<int[], LIST,
         return findValueNode(list, value, headNode) != NO_NODE;
     }
 
-    final <P> boolean containsValue(BaseInnerOuterList<int[], LIST, U> list, long headNode, P parameter, IntElementPredicate<P> predicate) {
+    final <P> boolean containsValue(BaseInnerOuterList<int[], LIST, U> list, long headNode, P parameter, IIntElementPredicate<P> predicate) {
 
         return findValueNode(list, headNode, parameter, predicate) != NO_NODE;
     }
@@ -63,7 +63,7 @@ public abstract class BaseIntValues<LIST extends BaseInnerOuterList<int[], LIST,
         return containsOnlyValue(list, value, headNode, (i, l) -> i == l);
     }
 
-    final boolean containsOnlyValue(BaseInnerOuterList<int[], LIST, U> list, int value, long headNode, ContainsOnlyPredicate containsOnlyPredicate) {
+    final boolean containsOnlyValue(BaseInnerOuterList<int[], LIST, U> list, int value, long headNode, IContainsOnlyPredicate containsOnlyPredicate) {
 
         boolean containsOnly = false;
 
@@ -98,7 +98,7 @@ public abstract class BaseIntValues<LIST extends BaseInnerOuterList<int[], LIST,
         return found;
     }
 
-    final <P> long findValueNode(BaseInnerOuterList<int[], LIST, U> list, long headNode, P parameter, IntElementPredicate<P> predicate) {
+    final <P> long findValueNode(BaseInnerOuterList<int[], LIST, U> list, long headNode, P parameter, IIntElementPredicate<P> predicate) {
 
         long found = NO_NODE;
 
@@ -116,7 +116,7 @@ public abstract class BaseIntValues<LIST extends BaseInnerOuterList<int[], LIST,
         return found;
     }
 
-    final <P> int findNodeValue(BaseInnerOuterList<int[], LIST, U> list, int defaultValue, long headNode, P parameter, IntElementPredicate<P> predicate) {
+    final <P> int findNodeValue(BaseInnerOuterList<int[], LIST, U> list, int defaultValue, long headNode, P parameter, IIntElementPredicate<P> predicate) {
 
         int found = defaultValue;
 

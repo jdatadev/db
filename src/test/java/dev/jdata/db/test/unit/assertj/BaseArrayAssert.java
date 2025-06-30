@@ -24,7 +24,7 @@ abstract class BaseArrayAssert<S extends BaseArrayAssert<S, A>, A extends IArray
 
         isNotNull();
 
-        if (actual.getLimit() != 0L) {
+        if (actual.getLimit() == 0L) {
 
             failWithMessage("Expected to not be empty");
         }

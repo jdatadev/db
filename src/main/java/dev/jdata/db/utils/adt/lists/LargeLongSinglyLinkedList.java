@@ -5,7 +5,7 @@ import java.util.Objects;
 public final class LargeLongSinglyLinkedList
 
         extends BaseLargeLongSinglyLinkedList<LargeLongSinglyLinkedList, LargeLongSinglyLinkedList, LongValues<LargeLongSinglyLinkedList>>
-        implements ILargeLongList {
+        implements IMutableLargeLongList {
 
     private long headNode;
     private long tailNode;
@@ -33,13 +33,7 @@ public final class LargeLongSinglyLinkedList
     }
 
     @Override
-    public long[] toArray() {
-
-        return toListArrayValues(headNode, intNumElements(numElements));
-    }
-
-    @Override
-    public <P, E extends Exception> void forEach(P parameter, ForEach<P, E> forEach) throws E {
+    public <P, E extends Exception> void forEach(P parameter, IForEach<P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -47,6 +41,33 @@ public final class LargeLongSinglyLinkedList
 
             forEach.each(getValue(n), parameter);
         }
+    }
+
+    @Override
+    public <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<P1, P2, R, E> forEach) throws E {
+
+        Objects.requireNonNull(forEach);
+
+        R result = defaultResult;
+
+        for (long n = headNode; n != NO_NODE; n = getNextNode(n)) {
+
+            final R forEachResult = forEach.each(getValue(n), parameter1, parameter2);
+
+            if (forEachResult != null) {
+
+                result = forEachResult;
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public long[] toArray() {
+
+        return toListArrayValues(headNode, intNumElements(numElements));
     }
 
     @Override
@@ -62,7 +83,7 @@ public final class LargeLongSinglyLinkedList
     }
 
     @Override
-    public boolean containsOnly(long value, ContainsOnlyPredicate predicate) {
+    public boolean containsOnly(long value, IContainsOnlyPredicate predicate) {
 
         return getValues().containsOnlyValue(this, value, headNode, predicate);
     }

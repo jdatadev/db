@@ -1,17 +1,7 @@
 package dev.jdata.db.utils.adt.lists;
 
-public interface IIntList {
+import dev.jdata.db.utils.adt.elements.IIntIterableElements;
 
-    boolean contains(int value);
-    boolean containsOnly(int value);
+public interface IIntList extends IIntIterableElements {
 
-    @FunctionalInterface
-    public interface ContainsOnlyPredicate {
-
-        boolean test(int inputValue, int listValue);
-    }
-
-    boolean containsOnly(int value, ContainsOnlyPredicate predicate);
-
-    int[] toArray();
 }

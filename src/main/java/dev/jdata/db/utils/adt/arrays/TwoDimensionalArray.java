@@ -6,32 +6,28 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.function.BiPredicate;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.ForEachSequenceElement;
+import dev.jdata.db.utils.adt.IForEachSequenceElement;
 import dev.jdata.db.utils.adt.elements.IMutableElements;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 
-public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebug {
+public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> implements IMutableElements, PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_TWO_DIMENSIONAL_ARRAY;
 
     private final int innerInitialCapacity;
     private final IntFunction<T[]> createInnerArray;
 
-    private T[][] outerArray;
-    private int[] innerArrayNumElements;
-
-    private int numOuterElements;
     private int numElements;
 
     public TwoDimensionalArray(int outerInitialCapacity, IntFunction<T[][]> createOuterArray, int innerInitialCapacity, IntFunction<T[]> createInnerArray) {
+        super(outerInitialCapacity, createOuterArray, true);
 
-        Checks.isInitialCapacity(outerInitialCapacity);
-        Objects.requireNonNull(createOuterArray);
         Checks.isInitialCapacity(innerInitialCapacity);
         Objects.requireNonNull(createInnerArray);
 
@@ -44,22 +40,12 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
         this.innerInitialCapacity = innerInitialCapacity;
         this.createInnerArray = createInnerArray;
 
-        this.outerArray = createOuterArray.apply(outerInitialCapacity);
-        this.innerArrayNumElements = new int[outerInitialCapacity];
-
-        this.numOuterElements = 0;
         this.numElements = 0;
 
         if (DEBUG) {
 
             exit();
         }
-    }
-
-    @Override
-    public final boolean isEmpty() {
-
-        return numOuterElements == 0;
     }
 
     @Override
@@ -70,19 +56,19 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
     @Override
     public void clear() {
 
-        Arrays.fill(innerArrayNumElements, 0, numOuterElements, 0);
+        super.clear();
 
-        this.numOuterElements = 0;
         this.numElements = 0;
     }
 
     public int getNumOuterElements() {
-        return numOuterElements;
+
+        return getNumOuterUtilizedEntries();
     }
 
     public T findExactlyOne(int index, Predicate<T> predicate) {
 
-        checkIndex(index);
+        checkOuterIndex(index);
         Objects.requireNonNull(predicate);
 
         if (DEBUG) {
@@ -90,41 +76,61 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
             enter(b -> b.add("index", index).add("predicate", predicate));
         }
 
-        final T[] innerArray = outerArray[index];
+        final T result = findExactlyOne(index, predicate, (e, p) -> p.test(e));
 
-        final int numInnerElements = innerArrayNumElements[index];
+        if (DEBUG) {
 
-        T found = null;
+            exit(result);
+        }
+
+        return result;
+    }
+
+    public <P> T findExactlyOne(int index, P parameter, BiPredicate<T, P> predicate) {
+
+        checkOuterIndex(index);
+        Objects.requireNonNull(predicate);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("index", index).add("parameter", parameter).add("predicate", predicate));
+        }
+
+        final T[] innerArray = getOuterArray()[index];
+
+        final int numInnerElements = getNumInnerElements(index);
+
+        T result = null;
 
         for (int i = 0; i < numInnerElements; ++ i) {
 
             final T element = innerArray[i];
 
-            if (predicate.test(element)) {
+            if (predicate.test(element, parameter)) {
 
-                if (found != null) {
+                if (result != null) {
 
                     throw new IllegalStateException();
                 }
 
-                found = element;
+                result = element;
             }
         }
 
-        if (found == null) {
+        if (result == null) {
 
             throw new NoSuchElementException();
         }
 
         if (DEBUG) {
 
-            exit(found);
+            exit(result);
         }
 
-        return found;
+        return result;
     }
 
-    public void forEachElement(ForEachSequenceElement<T> forEach) {
+    public void forEachElement(IForEachSequenceElement<T> forEach) {
 
         Objects.requireNonNull(forEach);
 
@@ -133,8 +139,8 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
             enter(b -> b.add("forEach", forEach));
         }
 
-        final int numOuter = numOuterElements;
-        final T[][] outer = outerArray;
+        final int numOuter = getNumOuterUtilizedEntries();
+        final T[][] outer = getOuterArray();
 
         for (int i = 0; i < numOuter; ++ i) {
 
@@ -142,7 +148,7 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
 
             if (innerArray != null) {
 
-                final int numInnerElements = innerArrayNumElements[i];
+                final int numInnerElements = getNumInnerElements(i);
 
                 for (int j = 0; j < numInnerElements; ++ j) {
 
@@ -159,7 +165,7 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
 
     public void add(int index, T value) {
 
-        Objects.checkIndex(index, numOuterElements + 1);
+        Objects.checkIndex(index, getNumOuterElements() + 1);
         Objects.requireNonNull(value);
 
         if (DEBUG) {
@@ -187,6 +193,22 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
 
         final int capacityMultiplicator = 2;
 
+        T[][] outerArray = getOuterArray();
+
+        if (outerArray == null) {
+
+            final int numOuter = index + 1;
+
+            outerArray = allocateInitialOuterArrayAndInnerArrayElements(numOuter);
+
+            for (int i = 0; i < numOuter; ++ i) {
+
+                outerArray[i] = createInnerArray.apply(innerInitialCapacity);
+
+                clearNumInnerElementsIfRequired(i);
+            }
+        }
+
         if (index >= outerArray.length) {
 
             final int newCapacity = index * capacityMultiplicator;
@@ -196,8 +218,7 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
                 debug("expanding outer array capacity=" + outerArray.length + " newCapacity=" + newCapacity);
             }
 
-            this.outerArray = Arrays.copyOf(outerArray, newCapacity);
-            this.innerArrayNumElements = Arrays.copyOf(innerArrayNumElements, newCapacity);
+            outerArray = reallocateOuterArrayAndInnerArrayNumElements(newCapacity);
         }
 
         T[] innerArray = outerArray[index];
@@ -214,7 +235,8 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
             innerArray[0] = value;
 
             outerArray[index] = innerArray;
-            innerArrayNumElements[index] = 1;
+
+            setNumInnerElements(index, 1);
         }
         else {
             if (DEBUG) {
@@ -222,7 +244,7 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
                 debug("adding to existing inner array index=" + index);
             }
 
-            final int innerNumElements = innerArrayNumElements[index];
+            final int innerNumElements = getNumInnerElements(index);
 
             if (innerNumElements == innerArray.length) {
 
@@ -243,8 +265,10 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
 
             innerArray[innerNumElements] = value;
 
-            ++ innerArrayNumElements[index];
+            incrementNumInnerElements(index);
         }
+
+        final int numOuterElements = getNumOuterElements();
 
         if (index >= numOuterElements) {
 
@@ -253,7 +277,7 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
                 debug("updating num outer elements index=" + index + " numOuterElements=" + numOuterElements);
             }
 
-            this.numOuterElements = index + 1;
+            setNumOuterUtilizedEntries(index + 1, outerArray.length);
         }
 
         ++ numElements;
@@ -266,14 +290,14 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
 
     public List<T> toUnmodifiableList(int index) {
 
-        checkIndex(index);
+        checkOuterIndex(index);
 
         if (DEBUG) {
 
             enter(b -> b.add("index", index));
         }
 
-        final int numInnerElements = innerArrayNumElements[index];
+        final int numInnerElements = getNumInnerElements(index);
 
         final List<T> result;
 
@@ -284,7 +308,7 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
         else {
             final ArrayList<T> list = new ArrayList<>(numInnerElements);
 
-            final T[] innerArray = outerArray[index];
+            final T[] innerArray = getOuterArray()[index];
 
             for (int i = 0; i < numInnerElements; ++ i) {
 
@@ -302,8 +326,26 @@ public final class TwoDimensionalArray<T> implements IMutableElements, PrintDebu
         return result;
     }
 
-    private void checkIndex(int index) {
+    @Override
+    protected long getInnerElementCapacity() {
 
-        Objects.checkIndex(index, numOuterElements);
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected T[] getInnerArray(T[][] outerArray, int index) {
+
+        return outerArray[index];
+    }
+
+    @Override
+    protected T[][] copyOuterArray(T[][] outerArray, int newCapacity) {
+
+        return Arrays.copyOf(outerArray, newCapacity);
+    }
+
+    private void checkOuterIndex(int index) {
+
+        Objects.checkIndex(index, getNumOuterElements());
     }
 }

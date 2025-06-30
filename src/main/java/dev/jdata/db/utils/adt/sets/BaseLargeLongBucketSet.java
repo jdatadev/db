@@ -5,7 +5,7 @@ import java.util.Objects;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.adt.elements.ByIndex;
-import dev.jdata.db.utils.adt.elements.ILongElements;
+import dev.jdata.db.utils.adt.elements.ILongIterableElements;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.LargeHashArray;
@@ -15,7 +15,7 @@ import dev.jdata.db.utils.adt.lists.LongNodeSetter;
 import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseLargeLongBucketSet extends BaseLargeIntegerBucketSet<LargeLongArray> implements ILongSetGetters, ILongElements {
+abstract class BaseLargeLongBucketSet extends BaseLargeIntegerBucketSet<LargeLongArray> implements ILongSetGetters, ILongIterableElements {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LARGE_LONG_BUCKET_SET;
 
@@ -66,7 +66,7 @@ abstract class BaseLargeLongBucketSet extends BaseLargeIntegerBucketSet<LargeLon
     }
 
     @Override
-    public final <P, E extends Exception> void forEach(P parameter, ForEach<P, E> forEach) throws E {
+    public final <P, E extends Exception> void forEach(P parameter, IForEach<P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -85,6 +85,39 @@ abstract class BaseLargeLongBucketSet extends BaseLargeIntegerBucketSet<LargeLon
                 forEach.each(b.getValue(n), parameter);
             }
         }
+    }
+
+    @Override
+    public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<P1, P2, R, E> forEach) throws E {
+
+        Objects.requireNonNull(forEach);
+
+        R result = defaultResult;
+
+        final LargeLongArray bucketHeadNodesHashArray = getHashed();
+
+        final long bucketHeadNodesLength = bucketHeadNodesHashArray.getLimit();
+
+        final LargeLongMultiHeadSinglyLinkedList<BaseLargeLongBucketSet> b = buckets;
+
+        final long noNode = BaseList.NO_NODE;
+
+        outer:
+            for (long i = 0L; i < bucketHeadNodesLength; ++ i) {
+
+                for (long n = bucketHeadNodesHashArray.get(i); n != noNode; n = b.getNextNode(n)) {
+
+                    final R forEachResult = forEach.each(b.getValue(n), parameter1, parameter2);
+
+                    if (forEachResult != null) {
+
+                        result = forEachResult;
+                        break outer;
+                    }
+                }
+            }
+
+        return result;
     }
 
     @Override
@@ -189,7 +222,7 @@ abstract class BaseLargeLongBucketSet extends BaseLargeIntegerBucketSet<LargeLon
         return newAdded;
     }
 
-    final boolean removeValue(long value) {
+    final boolean removeAtMostOneValue(long value) {
 
         if (DEBUG) {
 
@@ -218,7 +251,7 @@ abstract class BaseLargeLongBucketSet extends BaseLargeIntegerBucketSet<LargeLon
             this.scratchHashArrayIndex = hashArrayIndex;
             this.scratchHashArray = getHashed();
 
-            removed = buckets.removeNodeByValue(this, value, bucketHeadNode, BaseList.NO_NODE, headSetter, tailSetter) != BaseList.NO_NODE;
+            removed = buckets.removeAtMostOneNodeByValue(this, value, bucketHeadNode, BaseList.NO_NODE, headSetter, tailSetter) != BaseList.NO_NODE;
         }
 
         if (removed) {

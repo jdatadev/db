@@ -6,7 +6,7 @@ import dev.jdata.db.sql.ast.BaseSQLElement;
 
 public abstract class SQLAlterTableOperation extends BaseSQLElement {
 
-    public abstract <T, R> R visit(SQLAlterTableOperationVisitor<T, R> visitor, T parameter);
+    public abstract <T, R, E extends Exception> R visit(SQLAlterTableOperationVisitor<T, R, E> visitor, T parameter) throws E;
 
     SQLAlterTableOperation(Context context) {
         super(context);

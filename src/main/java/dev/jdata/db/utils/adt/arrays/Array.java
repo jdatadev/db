@@ -1,6 +1,7 @@
 package dev.jdata.db.utils.adt.arrays;
 
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -119,24 +120,96 @@ public class Array {
         return ByIndex.contains(array, array.length, predicate, (b, i) -> b[(int)i], (e, p) -> p.test(e), ArrayIndexOutOfBoundsException::new);
     }
 
-    public static <T, P> int findIndex(T[] array, P parameter, BiPredicate<T, P> predicate) {
+    public static <T, P> T findAtMostOne(T[] array, P parameter, BiPredicate<T, P> predicate) {
 
-        return (int)ByIndex.findIndex(array, array.length, parameter, (b, i) -> b[(int)i], predicate, ArrayIndexOutOfBoundsException::new);
+        Objects.requireNonNull(array);
+        Objects.requireNonNull(predicate);
+
+        return findAtMostOne(array, 0, array.length, parameter, predicate);
     }
 
-    public static <T> int closureOrConstantFindIndex(T[] array, Predicate<T> predicate) {
+    public static <T, P> T findAtMostOne(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
 
-        return (int)ByIndex.findIndex(array, array.length, predicate, (b, i) -> b[(int)i], (e, p) -> p.test(e), ArrayIndexOutOfBoundsException::new);
+        Objects.requireNonNull(array);
+        Objects.checkFromIndexSize(startIndex, numElements, array.length);
+        Objects.requireNonNull(predicate);
+
+        T result = null;
+        boolean hasFoundElement = false;
+
+        for (int i = 0; i < numElements; ++ i) {
+
+            final T element = array[i];
+
+            if (predicate.test(element, parameter)) {
+
+                if (hasFoundElement) {
+
+                    throw new IllegalStateException();
+                }
+
+                result = element;
+                break;
+            }
+        }
+
+        return result;
     }
 
-    public static <T, P> int findIndex(T[] array, P parameter, int startIndex, int numElements, BiPredicate<T, P> predicate) {
+    public static <T, P> T findExactlyOne(T[] array, P parameter, BiPredicate<T, P> predicate) {
 
-        return (int)ByIndex.findIndex(array, array.length, startIndex, numElements, parameter, (b, i) -> b[(int)i], predicate, ArrayIndexOutOfBoundsException::new);
+        return findExactlyOne(array, 0, array.length, parameter, predicate);
     }
 
-    public static <T> int closureOrConstantFindIndex(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
+    public static <T, P> T findExactlyOne(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
 
-        return (int)ByIndex.findIndex(array, array.length, startIndex, numElements, predicate, (b, i) -> b[(int)i], predicate != null ? (e, p) -> p.test(e) : null,
+        Objects.requireNonNull(predicate);
+
+        T result = null;
+        boolean hasFoundElement = false;
+
+        for (int i = 0; i < numElements; ++ i) {
+
+            final T element = array[startIndex + i];
+
+            if (predicate.test(element, parameter)) {
+
+                if (hasFoundElement) {
+
+                    throw new IllegalStateException();
+                }
+
+                result = element;
+                break;
+            }
+        }
+
+        if (!hasFoundElement) {
+
+            throw new NoSuchElementException();
+        }
+
+        return result;
+    }
+
+    public static <T, P> int findAtMostOneIndex(T[] array, P parameter, BiPredicate<T, P> predicate) {
+
+        return (int)ByIndex.findAtMostOneIndex(array, array.length, parameter, (b, i) -> b[(int)i], predicate, ArrayIndexOutOfBoundsException::new);
+    }
+
+    public static <T> int closureOrConstantFindAtMostOneIndex(T[] array, Predicate<T> predicate) {
+
+        return (int)ByIndex.findAtMostOneIndex(array, array.length, predicate, (b, i) -> b[(int)i], (e, p) -> p.test(e), ArrayIndexOutOfBoundsException::new);
+    }
+
+    public static <T, P> int findAtMostOneIndex(T[] array, P parameter, int startIndex, int numElements, BiPredicate<T, P> predicate) {
+
+        return (int)ByIndex.findAtMostOneIndex(array, array.length, startIndex, numElements, parameter, (b, i) -> b[(int)i], predicate, ArrayIndexOutOfBoundsException::new);
+    }
+
+    public static <T> int closureOrConstantFindAtMostOneIndex(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
+
+        return (int)ByIndex.findAtMostOneIndex(array, array.length, startIndex, numElements, predicate, (b, i) -> b[(int)i], predicate != null ? (e, p) -> p.test(e) : null,
                 ArrayIndexOutOfBoundsException::new);
     }
 
@@ -235,6 +308,28 @@ public class Array {
         return mapped;
     }
 
+    @FunctionalInterface
+    public interface IMapByIndexToIntFunction<T, P> {
+
+        int apply(T byIndex, int index, P parameter);
+    }
+
+    public static <T, P> int[] mapToInt(T toMap, int toMapLength, P parameter, IMapByIndexToIntFunction<T, P> mapper) {
+
+        Objects.requireNonNull(toMap);
+        Checks.isLengthAboveOrAtZero(toMapLength);
+        Objects.requireNonNull(mapper);
+
+        final int[] mapped = new int[toMapLength];
+
+        for (int i = 0; i < toMapLength; ++ i) {
+
+            mapped[i] = mapper.apply(toMap, i, parameter);
+        }
+
+        return mapped;
+    }
+
     public static <T, R> R[] map(T[] toMap, IntFunction<R[]> createMappedArray, Function<T, R> mapper) {
 
         Objects.requireNonNull(toMap);
@@ -307,6 +402,15 @@ public class Array {
         }
 
         return result;
+    }
+
+    public static void move(long[] array, int startIndex, int numElements, int delta) {
+
+        Objects.requireNonNull(array);
+        Checks.isLengthAboveZero(numElements);
+        Checks.isNotZero(delta);
+
+        System.arraycopy(array, startIndex, array, startIndex + delta, numElements);
     }
 
     @FunctionalInterface

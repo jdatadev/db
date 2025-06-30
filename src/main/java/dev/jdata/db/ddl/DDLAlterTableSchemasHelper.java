@@ -2,10 +2,16 @@ package dev.jdata.db.ddl;
 
 import java.util.Objects;
 
-import org.jutils.ast.objects.Keyword;
 import org.jutils.ast.objects.list.ASTList;
 
+import dev.jdata.db.DebugConstants;
+import dev.jdata.db.ddl.allocators.DDLSchemaCachedObjects;
+import dev.jdata.db.ddl.scratchobjects.ProcessAlterTableScratchObject;
 import dev.jdata.db.engine.database.StringManagement;
+import dev.jdata.db.engine.validation.exceptions.ColumnAlreadyExistsException;
+import dev.jdata.db.engine.validation.exceptions.ColumnDoesNotExistException;
+import dev.jdata.db.engine.validation.exceptions.SQLValidationException;
+import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.model.schemamaps.SchemaMapBuilders;
@@ -18,42 +24,61 @@ import dev.jdata.db.sql.ast.statements.table.SQLAddPrimaryKeyConstraintOperation
 import dev.jdata.db.sql.ast.statements.table.SQLAddUniqueConstraintOperation;
 import dev.jdata.db.sql.ast.statements.table.SQLAlterTableOperationVisitor;
 import dev.jdata.db.sql.ast.statements.table.SQLAlterTableStatement;
-import dev.jdata.db.sql.ast.statements.table.SQLDropColumnOperation;
+import dev.jdata.db.sql.ast.statements.table.SQLColumnNames;
+import dev.jdata.db.sql.ast.statements.table.SQLDropColumnsOperation;
 import dev.jdata.db.sql.ast.statements.table.SQLDropConstraintOperation;
+import dev.jdata.db.sql.ast.statements.table.SQLModifyColumn;
 import dev.jdata.db.sql.ast.statements.table.SQLModifyColumnsOperation;
-import dev.jdata.db.utils.Initializable;
-import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.sql.ast.statements.table.SQLTableColumnDefinition;
+import dev.jdata.db.utils.adt.CapacityExponents;
+import dev.jdata.db.utils.adt.lists.CachedIndexList;
+import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
 import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
+import dev.jdata.db.utils.adt.sets.IIntSet;
+import dev.jdata.db.utils.debug.PrintDebug;
 
 public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
-    public static void processAlterTable(SQLAlterTableStatement sqlAlterTableStatement, Table table, StringManagement stringManagement,
-            SchemaMapBuilders schemaMapBuilders, DDLSchemaCachedObjects ddlSchemaCachedObjects) {
+    private static final boolean DEBUG = DebugConstants.DEBUG_DDL_ALTER_TABLE_SCHEMAS_HELPER;
+
+    private static final Class<?> debugClass = DDLAlterTableSchemasHelper.class;
+
+    public static TableDiff processAlterTable(SQLAlterTableStatement sqlAlterTableStatement, DatabaseId databaseId, Table table, StringManagement stringManagement,
+            SchemaMapBuilders<?, ?, ?, ?, ?, ?, ?> schemaMapBuilders, DDLSchemaCachedObjects<?> ddlSchemaCachedObjects) throws SQLValidationException {
 
         Objects.requireNonNull(sqlAlterTableStatement);
+        Objects.requireNonNull(databaseId);
         Objects.requireNonNull(table);
         Objects.requireNonNull(stringManagement);
         Objects.requireNonNull(ddlSchemaCachedObjects);
 
-        final Table alteredTable = processAlterTable(sqlAlterTableStatement, table, stringManagement, ddlSchemaCachedObjects);
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("sqlAlterTableStatement", sqlAlterTableStatement).add("databaseId", databaseId).add("table", table)
+                    .add("stringManagement", stringManagement).add("schemaMapBuilders", schemaMapBuilders).add("ddlSchemaCachedObjects", ddlSchemaCachedObjects));
+        }
+
+        final TableDiff alteredTable = processAlterTable(sqlAlterTableStatement, databaseId, table, stringManagement, ddlSchemaCachedObjects);
 
 //        schemaMapBuilders.addSchemaObject(DDLObjectType.TABLE, alteredTable);
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, alteredTable);
+        }
+
+        return alteredTable;
     }
 
-    private static Table processAlterTable(SQLAlterTableStatement sqlAlterTableStatement, Table table, StringManagement stringManagement,
-            DDLSchemaCachedObjects ddlSchemaCachedObjects) {
+    private static TableDiff processAlterTable(SQLAlterTableStatement sqlAlterTableStatement, DatabaseId databaseId, Table table, StringManagement stringManagement,
+            DDLSchemaCachedObjects<?> ddlSchemaCachedObjects) throws SQLValidationException {
 
-        Objects.requireNonNull(sqlAlterTableStatement);
-        Objects.requireNonNull(stringManagement);
-        Objects.requireNonNull(table);
-        Objects.requireNonNull(ddlSchemaCachedObjects);
-
-        final Table result;
+        final TableDiff result;
 
         final ProcessAlterTableScratchObject processAlterTableScratchObject = ddlSchemaCachedObjects.allocateProcessAlterTableScratchObject();
 
-        processAlterTableScratchObject.initialize(table, ddlSchemaCachedObjects);
+        processAlterTableScratchObject.initialize(databaseId, stringManagement, table, ddlSchemaCachedObjects);
 
         try {
             result = sqlAlterTableStatement.getOperation().visit(alterTableOperationVisitor, processAlterTableScratchObject);
@@ -66,101 +91,132 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
         return result;
     }
 
-    private static final SQLAlterTableOperationVisitor<ProcessAlterTableScratchObject, Table> alterTableOperationVisitor
-            = new SQLAlterTableOperationVisitor<ProcessAlterTableScratchObject, Table>() {
+    private static final SQLAlterTableOperationVisitor<ProcessAlterTableScratchObject, TableDiff, SQLValidationException> alterTableOperationVisitor
+            = new SQLAlterTableOperationVisitor<ProcessAlterTableScratchObject, TableDiff, SQLValidationException>() {
 
         @Override
-        public Table onAddColumn(SQLAddColumnsOperation addColumnOperation, ProcessAlterTableScratchObject parameter) {
+        public TableDiff onAddColumn(SQLAddColumnsOperation addColumnOperation, ProcessAlterTableScratchObject parameter) throws SQLValidationException {
 
             return processAlterTableAddColumns(addColumnOperation, parameter);
         }
 
         @Override
-        public Table onModifyColumns(SQLModifyColumnsOperation addColumnOperation, ProcessAlterTableScratchObject parameter) {
+        public TableDiff onModifyColumns(SQLModifyColumnsOperation addColumnOperation, ProcessAlterTableScratchObject parameter) throws SQLValidationException {
+
+            return processAlterTableModifyColumns(addColumnOperation, parameter);
+        }
+
+        @Override
+        public TableDiff onDropColumn(SQLDropColumnsOperation dropColumnOperation, ProcessAlterTableScratchObject parameter) throws SQLValidationException {
+
+            return processAlterTableDropColumns(dropColumnOperation, parameter);
+        }
+
+        @Override
+        public TableDiff onAddPrimaryKeyConstraint(SQLAddPrimaryKeyConstraintOperation addPrimaryKeyConstraintOperation, ProcessAlterTableScratchObject parameter) {
 
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Table onDropColumn(SQLDropColumnOperation dropColumnOperation, ProcessAlterTableScratchObject parameter) {
+        public TableDiff onAddForeignKeyConstraint(SQLAddForeignKeyConstraintOperation addForeignKeyConstraintOperation, ProcessAlterTableScratchObject parameter) {
 
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Table onAddPrimaryKeyConstraint(SQLAddPrimaryKeyConstraintOperation addPrimaryKeyConstraintOperation, ProcessAlterTableScratchObject parameter) {
+        public TableDiff onAddUniqueConstraint(SQLAddUniqueConstraintOperation addUniqueConstraintOperation, ProcessAlterTableScratchObject parameter) {
 
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Table onAddForeignKeyConstraint(SQLAddForeignKeyConstraintOperation addForeignKeyConstraintOperation, ProcessAlterTableScratchObject parameter) {
+        public TableDiff onAddNullConstraint(SQLAddNullConstraintOperation addNullConstraintOperation, ProcessAlterTableScratchObject parameter) {
 
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Table onAddUniqueConstraint(SQLAddUniqueConstraintOperation addUniqueConstraintOperation, ProcessAlterTableScratchObject parameter) {
+        public TableDiff onAddNotNullConstraint(SQLAddNotNullConstraintOperation addNotNullConstraintOperation, ProcessAlterTableScratchObject parameter) {
 
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Table onAddNullConstraint(SQLAddNullConstraintOperation addNullConstraintOperation, ProcessAlterTableScratchObject parameter) {
-
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Table onAddNotNullConstraint(SQLAddNotNullConstraintOperation addNotNullConstraintOperation, ProcessAlterTableScratchObject parameter) {
-
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Table onDropConstraint(SQLDropConstraintOperation dropConstraintOperation, ProcessAlterTableScratchObject parameter) {
+        public TableDiff onDropConstraint(SQLDropConstraintOperation dropConstraintOperation, ProcessAlterTableScratchObject parameter) {
 
             throw new UnsupportedOperationException();
         }
     };
 
-    private static Table processAlterTableAddColumns(SQLAddColumnsOperation sqlAddColumnsOperation, ProcessAlterTableScratchObject processAlterTableScratchObject) {
+    private static TableDiff processAlterTableAddColumns(SQLAddColumnsOperation sqlAddColumnsOperation, ProcessAlterTableScratchObject processAlterTableScratchObject)
+            throws ColumnAlreadyExistsException {
 
-        final Table result;
+        if (DEBUG) {
 
-        final StringManagement stringManagement = processAlterTableScratchObject.getStringManagement();
-        final DDLSchemaCachedObjects ddlSchemaCachedObjects = processAlterTableScratchObject.ddlSchemaCachedObjects;
-        final IndexListAllocator<Column> columnIndexListAllocator = ddlSchemaCachedObjects.getColumnIndexListAllocator();
+            PrintDebug.enter(debugClass, b -> b.add("sqlAddColumnsOperation", sqlAddColumnsOperation).add("processAlterTableScratchObject", processAlterTableScratchObject));
+        }
+
+        validateAddColumns(sqlAddColumnsOperation, processAlterTableScratchObject);
+
+        final TableDiff result;
+
+        final DDLSchemaCachedObjects<?> ddlSchemaCachedObjects = processAlterTableScratchObject.getDDLSchemaCachedObjects();
+        final CacheIndexListAllocator<Column> columnIndexListAllocator = ddlSchemaCachedObjects.getColumnIndexListAllocator();
 
         final ASTList<SQLAddColumnDefinition> sqlAddColumnDefinitions = sqlAddColumnsOperation.getColumnDefinitions();
 
         final int numAddedColumns = sqlAddColumnDefinitions.size();
 
-        final Table table = processAlterTableScratchObject.table;
-        final int numExistingColumns = table.getNumColumns();
+        final Table table = processAlterTableScratchObject.getTable();
 
-        final IndexList.Builder<Column> allColumnsBuilder = IndexList.createBuilder(numExistingColumns + numAddedColumns, columnIndexListAllocator);
+        final CachedIndexListBuilder<Column> addedColumnsBuilder = IndexList.createBuilder(numAddedColumns, columnIndexListAllocator);
 
-        IIndexList<Column> allColumns = null;
+        CachedIndexList<Column> addedColumns = null;
 
         try {
-            final int maxColumnId = table.getMaxColumnId();
+            processAlterTableScratchObject.initialize(processAlterTableScratchObject.getStringManagement(), table.getMaxColumnId() + 1, addedColumnsBuilder);
+
+            sqlAddColumnDefinitions.forEachWithParameter(processAlterTableScratchObject, (m, s) -> {
+
+                final Table closureTable = s.getTable();
+
+                final SQLTableColumnDefinition sqlTableColumnDefinition = m.getColumnDefinition();
+                final long parsedColumnName = sqlTableColumnDefinition.getName();
+
+                s.setParsedName(parsedColumnName);
+
+                final Column existingColumn = closureTable.findAtMostOneColumn(s, (c, p) -> parsedEqualsStored(p, c));
+
+                if (existingColumn != null) {
+
+                    throw new ColumnAlreadyExistsException(s.getDatabaseId(), parsedColumnName);
+                }
+
+                final Column addedColumn = convertToColumn(sqlTableColumnDefinition, s.allocateColumnId(), s.getStringManagement());
+
+                s.addColumn(addedColumn);
+            });
+/*
+            final StringManagement stringManagement = processAlterTableScratchObject.getStringManagement();
 
             for (int i = 0; i < numExistingColumns; ++ i) {
 
                 final Column existingColumn = table.getColumn(i);
 
-                final SQLAddColumnDefinition sqlAddColumnDefinition = sqlAddColumnDefinitions.findWithParameter(stringManagement,
+                processAlterTableScratchObject.setExistingColumn(existingColumn);
+
+                final SQLAddColumnDefinition sqlAddColumnDefinition = sqlAddColumnDefinitions.findWithParameter(processAlterTableScratchObject,
                         (d, s) ->    d.getBeforeKeyword() != Keyword.NO_KEYWORD
-                                  && s.parsedEqualsStored(d.getBeforeColumnName(), existingColumn.getParsedName(), false));
+                                  && s.getStringManagement().parsedEqualsStored(d.getBeforeColumnName(), s.getExistingColumn().getParsedName(), false));
 
                 if (sqlAddColumnDefinition != null) {
 
-                    final int columnId = processAlterTableScratchObject.allocateColumnId();
+                    final int addedColumnId = processAlterTableScratchObject.allocateColumnId();
 
-                    final Column column = convertToColumn(sqlAddColumnDefinition.getColumnDefinition(), columnId, stringManagement);
+                    final Column addedColumn = convertToColumn(sqlAddColumnDefinition.getColumnDefinition(), addedColumnId, stringManagement);
 
-                    allColumnsBuilder.addTail(column);
+                    allColumnsBuilder.addTail(addedColumn);
                 }
 
                 allColumnsBuilder.addTail(existingColumn);
@@ -168,48 +224,286 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
             allColumns = allColumnsBuilder.build();
 
-            result = table.makeCopy(allColumns);
+            result = table.makeDiff(allColumns);
+*/
+
+            addedColumns = addedColumnsBuilder.build();
+
+            result = TableDiff.ofAddedColumns(table, addedColumns.toHeapAllocated());
         }
         finally {
 
-            if (allColumns != null) {
+            if (addedColumns != null) {
 
-                columnIndexListAllocator.freeIndexList(allColumns);
+                columnIndexListAllocator.freeIndexList(addedColumns);
             }
 
-            columnIndexListAllocator.freeIndexListBuilder(allColumnsBuilder);
-            ddlSchemaCachedObjects.freeProcessAlterTableScratchObject(processAlterTableScratchObject);
+            columnIndexListAllocator.freeIndexListBuilder(addedColumnsBuilder);
+        }
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result);
         }
 
         return result;
     }
 
-    public static final class ProcessAlterTableScratchObject extends ProcessTableScratchObject<SQLAddColumnDefinition> {
+    private static void validateAddColumns(SQLAddColumnsOperation sqlAddColumnsOperation, ProcessAlterTableScratchObject processAlterTableScratchObject)
+            throws ColumnAlreadyExistsException {
 
-        private Table table;
-        private DDLSchemaCachedObjects ddlSchemaCachedObjects;
+        sqlAddColumnsOperation.getColumnDefinitions().forEachWithParameter(processAlterTableScratchObject, (a, s) -> {
 
-        void initialize(Table table, DDLSchemaCachedObjects ddlSchemaCachedObjects) {
+            final long sqlColumnName = a.getColumnDefinition().getName();
 
-            this.table = Initializable.checkNotYetInitialized(this.table, table);
-            this.ddlSchemaCachedObjects = Initializable.checkNotYetInitialized(this.ddlSchemaCachedObjects, ddlSchemaCachedObjects);
+            if (containsColumn(s.getTable(), sqlColumnName, s.getStringManagement())) {
+
+                throw new ColumnAlreadyExistsException(s.getDatabaseId(), sqlColumnName);
+            }
+
+//            final Table closureTable = s.getTable();
+/*
+            processAlterTableScratchObject.setParsedName(a.getColumnDefinition().getName());
+
+//            closureTable.
+
+            final Column existingColumn = closureTable.findAtMostOneColumn(processAlterTableScratchObject,
+                    (c, p) -> p.parsedEqualsStored(numAddedColumns, p.getnumExistingColumns, false));
+
+            if (existingColumn != null) {
+
+                throw new ColumnAlreadyExistsException(s.getDatabaseId(), a.getColumnDefinition().getName());
+            }
+*/
+        });
+    }
+
+    private static TableDiff processAlterTableModifyColumns(SQLModifyColumnsOperation sqlModifyColumnsOperation, ProcessAlterTableScratchObject processAlterTableScratchObject)
+            throws ColumnDoesNotExistException {
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("sqlModifyColumnsOperation", sqlModifyColumnsOperation)
+                    .add("processAlterTableScratchObject", processAlterTableScratchObject));
         }
 
-        @Override
-        public void reset() {
+        validateModifyColumns(sqlModifyColumnsOperation, processAlterTableScratchObject);
 
-            super.reset();
+        final TableDiff result;
 
-            this.table = Initializable.checkResettable(table);
-            this.ddlSchemaCachedObjects = Initializable.checkResettable(ddlSchemaCachedObjects);
+        final DDLSchemaCachedObjects<?> ddlSchemaCachedObjects = processAlterTableScratchObject.getDDLSchemaCachedObjects();
+        final CacheIndexListAllocator<Column> columnIndexListAllocator = ddlSchemaCachedObjects.getColumnIndexListAllocator();
+
+        final ASTList<SQLModifyColumn> sqlModifyColumns = sqlModifyColumnsOperation.getColumns();
+
+        final CachedIndexListBuilder<Column> modifiedColumnsBuilder = IndexList.createBuilder(sqlModifyColumns.size(), columnIndexListAllocator);
+
+        CachedIndexList<Column> modifiedColumns = null;
+
+        try {
+            processAlterTableScratchObject.initialize(processAlterTableScratchObject.getStringManagement(), -1, modifiedColumnsBuilder);
+
+            sqlModifyColumns.forEachWithParameter(processAlterTableScratchObject, (m, s) -> {
+
+                final Table table = s.getTable();
+
+                final SQLTableColumnDefinition sqlTableColumnDefinition = m.getColumnDefinition();
+                final long parsedColumnName = sqlTableColumnDefinition.getName();
+
+                s.setParsedName(parsedColumnName);
+
+                final Column existingColumn = table.findAtMostOneColumn(s, (c, p) ->  parsedEqualsStored(p, c));
+
+                if (existingColumn == null) {
+
+                    throw new ColumnDoesNotExistException(s.getDatabaseId(), parsedColumnName);
+                }
+
+                final Column modifiedColumn = convertToColumn(sqlTableColumnDefinition, existingColumn.getId(), s.getStringManagement());
+
+                s.addColumn(modifiedColumn);
+            });
+
+/*
+        IIndexList<Column> allColumns = null;
+
+        try {
+
+            final ASTList<SQLModifyColumn> sqlModifyColumns = sqlModifyColumnsOperation.getColumns();
+
+            for (int i = 0; i < numExistingColumns; ++ i) {
+
+                final Column existingColumn = table.getColumn(i);
+
+                processAlterTableScratchObject.setExistingColumn(existingColumn);
+
+                final SQLModifyColumn sqlModifyColumn = sqlModifyColumns.findWithParameter(processAlterTableScratchObject,
+                        (d, s) -> s.getStringManagement().parsedEqualsStored(d.getColumnDefinition().getName(), s.getExistingColumn().getParsedName(), false));
+
+                if (sqlModifyColumn != null) {
+
+                    final Column modifiedColumn = convertToColumn(sqlModifyColumn.getColumnDefinition(), existingColumn.getId(), stringManagement);
+
+                    modifiedColumnsBuilder.addTail(modifiedColumn);
+                }
+                else {
+                    modifiedColumnsBuilder.addTail(existingColumn);
+                }
+            }
+
+            allColumns = modifiedColumnsBuilder.build();
+*/
+            modifiedColumns = modifiedColumnsBuilder.build();
+
+            result = TableDiff.ofModifiedColumns(processAlterTableScratchObject.getTable(), modifiedColumns.toHeapAllocated());
+        }
+        finally {
+
+            if (modifiedColumns != null) {
+
+                columnIndexListAllocator.freeIndexList(modifiedColumns);
+            }
+
+            columnIndexListAllocator.freeIndexListBuilder(modifiedColumnsBuilder);
         }
 
-        public Table getTable() {
-            return table;
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result);
         }
 
-        public DDLSchemaCachedObjects getDDlSchemaCachedObjects() {
-            return ddlSchemaCachedObjects;
+        return result;
+    }
+
+    private static void validateModifyColumns(SQLModifyColumnsOperation sqlModifyColumnsOperation, ProcessAlterTableScratchObject processAlterTableScratchObject)
+            throws ColumnDoesNotExistException {
+
+        sqlModifyColumnsOperation.getColumns().forEachWithParameter(processAlterTableScratchObject, (m, s) -> {
+
+            final long sqlColumnName = m.getColumnDefinition().getName();
+
+            if (!containsColumn(s.getTable(), sqlColumnName, s.getStringManagement())) {
+
+                throw new ColumnDoesNotExistException(s.getDatabaseId(), sqlColumnName);
+            }
+        });
+    }
+
+    private static TableDiff processAlterTableDropColumns(SQLDropColumnsOperation sqlDropColumnsOperation, ProcessAlterTableScratchObject processAlterTableScratchObject)
+            throws ColumnDoesNotExistException {
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("sqlDropColumnsOperation", sqlDropColumnsOperation).add("processAlterTableScratchObject", processAlterTableScratchObject));
         }
+
+        validateDropColumns(sqlDropColumnsOperation, processAlterTableScratchObject);
+
+        final SQLColumnNames sqlColumnNames = sqlDropColumnsOperation.getNames();
+
+        final long numColumnNames = sqlColumnNames.getNumElements();
+
+        final IIntSet.Builder droppedColumnsBuilder = IIntSet.createBuilder(CapacityExponents.computeCapacityExponent(numColumnNames));
+
+        final Table table = processAlterTableScratchObject.getTable();
+
+        for (int i = 0; i < numColumnNames; ++ i) {
+
+            final long sqlColumnName = sqlColumnNames.get(i);
+
+            processAlterTableScratchObject.setParsedName(sqlColumnName);
+
+            final Column existingColumn = table.findAtMostOneColumn(processAlterTableScratchObject,
+                    (c, s) -> s.getStringManagement().parsedEqualsStored(s.getParsedName(), c.getParsedName(), false));
+
+            if (existingColumn == null) {
+
+                throw new ColumnDoesNotExistException(processAlterTableScratchObject.getDatabaseId(), sqlColumnName);
+            }
+
+            droppedColumnsBuilder.add(existingColumn.getId());
+        }
+
+        final TableDiff result = null; // TableDiff.ofDroppedColumns(processAlterTableScratchObject.getTable(), droppedColumnsBuilder.build().toHeapAllocated());
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result);
+        }
+
+        return result;
+    }
+
+    private static void validateDropColumns(SQLDropColumnsOperation sqlDropColumnsOperation, ProcessAlterTableScratchObject processAlterTableScratchObject)
+            throws ColumnDoesNotExistException {
+
+        final SQLColumnNames sqlColumnNames = sqlDropColumnsOperation.getNames();
+
+        final long numColumnNames = sqlColumnNames.getNumElements();
+
+        final Table table = processAlterTableScratchObject.getTable();
+        final StringManagement stringManagement = processAlterTableScratchObject.getStringManagement();
+
+        for (int i = 0; i < numColumnNames; ++ i) {
+
+            final long sqlColumnName = sqlColumnNames.get(i);
+
+            if (!containsColumn(table, sqlColumnName, stringManagement)) {
+
+                throw new ColumnDoesNotExistException(processAlterTableScratchObject.getDatabaseId(), sqlColumnName);
+            }
+        }
+    }
+
+    private static TableDiff processAlterTableAddPrimaryKeyConstraint(SQLAddPrimaryKeyConstraintOperation sqlAddPrimaryKeyConstraintOperation,
+            ProcessAlterTableScratchObject processAlterTableScratchObject) throws ColumnDoesNotExistException {
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("sqlAddPrimaryKeyConstraintOperation", sqlAddPrimaryKeyConstraintOperation)
+                    .add("processAlterTableScratchObject", processAlterTableScratchObject));
+        }
+
+        validateAddPrimaryConstraint(sqlAddPrimaryKeyConstraintOperation, processAlterTableScratchObject);
+
+        final TableDiff result = null;
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result);
+        }
+
+        return result;
+    }
+
+    private static void validateAddPrimaryConstraint(SQLAddPrimaryKeyConstraintOperation sqlAddPrimaryKeyConstraintOperation,
+            ProcessAlterTableScratchObject processAlterTableScratchObject) throws ColumnDoesNotExistException {
+
+        final SQLColumnNames sqlColumnNames = sqlAddPrimaryKeyConstraintOperation.getColumnNames();
+
+        final long numColumnNames = sqlColumnNames.getNumElements();
+
+        final Table table = processAlterTableScratchObject.getTable();
+        final StringManagement stringManagement = processAlterTableScratchObject.getStringManagement();
+
+        for (int i = 0; i < numColumnNames; ++ i) {
+
+            final long sqlColumnName = sqlColumnNames.get(i);
+
+            if (!containsColumn(table, sqlColumnName, stringManagement)) {
+
+                throw new ColumnDoesNotExistException(processAlterTableScratchObject.getDatabaseId(), sqlColumnName);
+            }
+        }
+    }
+
+    private static boolean containsColumn(Table table, long name, StringManagement stringManagement) {
+
+        return table.containsColumn(name, false, stringManagement, (n, c, s, m) -> m.parsedEqualsStored(n, c, s));
+    }
+
+    private static boolean parsedEqualsStored(ProcessAlterTableScratchObject processAlterTableScratchObject, Column column) {
+
+        return processAlterTableScratchObject.getStringManagement().parsedEqualsStored(processAlterTableScratchObject.getParsedName(), column.getParsedName(), false);
     }
 }

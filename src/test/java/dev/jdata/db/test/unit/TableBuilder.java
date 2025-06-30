@@ -22,7 +22,7 @@ public final class TableBuilder {
     private final int tableId;
 
     private final StringStorer stringStorer;
-    private final IndexList.Builder<Column> columnsBuilder;
+    private final IndexList.IndexListBuilder<Column, ?, ?> columnsBuilder;
 
     private int columnIdSequenceNo;
 

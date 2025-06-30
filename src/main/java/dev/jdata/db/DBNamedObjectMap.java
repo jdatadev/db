@@ -94,13 +94,13 @@ public abstract class DBNamedObjectMap<T extends DBNamedObject, M extends DBName
     }
 
     @Override
-    public final boolean isEmpty() {
+    public boolean isEmpty() {
 
         return map.isEmpty();
     }
 
     @Override
-    public final long getNumElements() {
+    public long getNumElements() {
 
         return map.getNumElements();
     }

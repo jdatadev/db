@@ -68,14 +68,14 @@ public final class MutableLongBucketSet extends BaseLongBucketSet implements IMu
     }
 
     @Override
-    public boolean remove(long value) {
+    public boolean removeAtMostOne(long value) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("valuet", value));
+            enter(b -> b.add("value", value));
         }
 
-        final boolean result = removeElement(value);
+        final boolean result = removeAtMostOneElement(value);
 
         if (DEBUG) {
 

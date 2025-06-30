@@ -11,7 +11,7 @@ public abstract class DBNamedIdentifiableObject extends DBNamedObject {
 
     private final int id;
 
-    DBNamedIdentifiableObject(long parsedName, long hashName, int id) {
+    protected DBNamedIdentifiableObject(long parsedName, long hashName, int id) {
         super(parsedName, hashName);
 
         this.id = Checks.isSchemaObjectId(id);

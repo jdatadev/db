@@ -49,7 +49,7 @@ public abstract class DMLInsertUpdateRows<T extends DMLInsertUpdateRows.InsertUp
 
     public final void initialize(T[] rows, int numRows, int numColumns, RowDataNumBits rowDataNumBits) {
 
-        Objects.checkFromIndexSize(0, numRows, rows.length);
+        Checks.checkNumElements(rows, numRows);
         Checks.isNumColumns(numColumns);
         Objects.requireNonNull(rowDataNumBits);
         Checks.areEqual(numColumns, rowDataNumBits.getNumColumns());

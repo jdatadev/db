@@ -5,7 +5,7 @@ import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.test.unit.BaseTest;
 import dev.jdata.db.utils.adt.elements.IElements;
-import dev.jdata.db.utils.adt.lists.ILongList.ContainsOnlyPredicate;
+import dev.jdata.db.utils.adt.elements.ILongElements.IContainsOnlyPredicate;
 
 abstract class BaseLargeListTest<T extends BaseLargeList<?, ?, ?> & ILargeList & IElements> extends BaseTest {
 
@@ -15,7 +15,7 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?, ?> & ILargeList &
 
     abstract boolean contains(T list, long value);
     abstract boolean containsOnly(T list, long value);
-    abstract boolean containsOnly(T list, long value, ContainsOnlyPredicate predicate);
+    abstract boolean containsOnly(T list, long value, IContainsOnlyPredicate predicate);
 
     abstract long[] toArray(T list);
 
@@ -229,7 +229,7 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?, ?> & ILargeList &
 
         final T list = createLargeList(10, 100);
 
-        final ContainsOnlyPredicate containsOnlyPredicate = (i, l) -> i / 10 == l;
+        final IContainsOnlyPredicate containsOnlyPredicate = (i, l) -> i / 10 == l;
 
         addHead(list, 123L);
 

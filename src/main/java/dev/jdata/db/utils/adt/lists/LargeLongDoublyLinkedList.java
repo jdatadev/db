@@ -2,7 +2,7 @@ package dev.jdata.db.utils.adt.lists;
 
 import java.util.Objects;
 
-public final class LargeLongDoublyLinkedList extends BaseLargeLongDoublyLinkedList<LargeLongDoublyLinkedList, LargeLongDoublyLinkedList> implements ILargeLongList {
+public final class LargeLongDoublyLinkedList extends BaseLargeLongDoublyLinkedList<LargeLongDoublyLinkedList, LargeLongDoublyLinkedList> implements IMutableLargeLongList {
 
     private long headNode;
     private long tailNode;
@@ -30,7 +30,13 @@ public final class LargeLongDoublyLinkedList extends BaseLargeLongDoublyLinkedLi
     }
 
     @Override
-    public <P, E extends Exception> void forEach(P parameter, ForEach<P, E> forEach) throws E {
+    public boolean contains(long value) {
+
+        return containsValue(value, headNode);
+    }
+
+    @Override
+    public <P, E extends Exception> void forEach(P parameter, IForEach<P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -41,9 +47,24 @@ public final class LargeLongDoublyLinkedList extends BaseLargeLongDoublyLinkedLi
     }
 
     @Override
-    public boolean contains(long value) {
+    public <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<P1, P2, R, E> forEach) throws E {
 
-        return containsValue(value, headNode);
+        Objects.requireNonNull(forEach);
+
+        R result = defaultResult;
+
+        for (long n = headNode; n != NO_NODE; n = getNextNode(n)) {
+
+            final R forEachResult = forEach.each(getValue(n), parameter1, parameter2);
+
+            if (forEachResult != null) {
+
+                result = forEachResult;
+                break;
+            }
+        }
+
+        return result;
     }
 
     @Override
@@ -53,7 +74,7 @@ public final class LargeLongDoublyLinkedList extends BaseLargeLongDoublyLinkedLi
     }
 
     @Override
-    public boolean containsOnly(long value, ContainsOnlyPredicate predicate) {
+    public boolean containsOnly(long value, IContainsOnlyPredicate predicate) {
 
         return containsOnlyValue(value, headNode, predicate);
     }

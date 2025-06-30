@@ -7,14 +7,14 @@ import java.util.ListIterator;
 import java.util.function.IntFunction;
 
 @Deprecated // currently not in use
-public final class ArrayListImpl<T> extends BaseArrayList<T> implements List<T> {
+public final class ArrayListImpl<T> extends BaseObjectArrayList<T> implements List<T> {
 
-    public ArrayListImpl(IntFunction<T[]> createArray) {
-        super(AllocationType.HEAP, createArray);
+    public ArrayListImpl(IntFunction<T[]> createElementsArray) {
+        super(AllocationType.HEAP, createElementsArray);
     }
 
-    public ArrayListImpl(IntFunction<T[]> createArray, int initialCapacity) {
-        super(AllocationType.HEAP, createArray, initialCapacity);
+    public ArrayListImpl(IntFunction<T[]> createElementsArray, int initialCapacity) {
+        super(AllocationType.HEAP, createElementsArray, initialCapacity);
     }
 
     @Override
@@ -44,7 +44,7 @@ public final class ArrayListImpl<T> extends BaseArrayList<T> implements List<T> 
     @Override
     public boolean add(T instance) {
 
-        addTail(instance);
+        addTailElement(instance);
 
         return true;
     }
@@ -131,5 +131,10 @@ public final class ArrayListImpl<T> extends BaseArrayList<T> implements List<T> 
     public List<T> subList(int fromIndex, int toIndex) {
 
         throw new UnsupportedOperationException();
+    }
+
+    public int getCapacity() {
+
+        return elementsArray.length;
     }
 }

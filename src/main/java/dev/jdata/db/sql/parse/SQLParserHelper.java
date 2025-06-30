@@ -2,6 +2,7 @@ package dev.jdata.db.sql.parse;
 
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 
 import org.jutils.ast.objects.list.IAddableList;
 import org.jutils.ast.objects.list.IIndexListGetters;
@@ -11,34 +12,39 @@ import org.jutils.parse.ParserException;
 import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.parse.expression.SQLScratchExpressionValues;
-import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.CacheIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.allocators.IAddableListAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class SQLParserHelper {
+public final class SQLParserHelper<
+
+                T extends IndexList<BaseSQLStatement>,
+                U extends IndexList.IndexListBuilder<BaseSQLStatement, T, U>,
+                V extends IndexListAllocator<BaseSQLStatement, T, U, ?>> {
 
     private final SQLParser sqlParser;
 
-    private final IndexListAllocator<BaseSQLStatement> indexListAllocator;
+    private final V indexListAllocator;
 
     private final NodeObjectCache<SQLScratchExpressionValues> scratchExpressionValuesCache;
 
-    public SQLParserHelper(SQLParser sqlParser) {
+    public SQLParserHelper(SQLParser sqlParser, Function<IntFunction<BaseSQLStatement[]>, V> createIndexListAllocator) {
 
-        this.sqlParser = Objects.requireNonNull(sqlParser);
+        Objects.requireNonNull(sqlParser);
+        Objects.requireNonNull(createIndexListAllocator);
 
-        this.indexListAllocator = new CacheIndexListAllocator<>(BaseSQLStatement[]::new);
+        this.sqlParser = sqlParser;
+
+        this.indexListAllocator = createIndexListAllocator.apply(BaseSQLStatement[]::new);
         this.scratchExpressionValuesCache = new NodeObjectCache<>(SQLScratchExpressionValues::new);
     }
 
-    public <E extends Exception, BUFFER extends BaseStringBuffers<E>> IIndexList<BaseSQLStatement> parse(BUFFER buffer, ISQLAllocator sqlAllocator,
-            Function<String, E> createEOFException) throws ParserException, E {
+    public <E extends Exception, BUFFER extends BaseStringBuffers<E>> T parse(BUFFER buffer, ISQLAllocator sqlAllocator, Function<String, E> createEOFException)
+            throws ParserException, E {
 
-        final IIndexList<BaseSQLStatement> result;
+        final T result;
 
         final SQLScratchExpressionValues scratchExpressionValues = scratchExpressionValuesCache.allocate();
 
@@ -53,11 +59,17 @@ public final class SQLParserHelper {
         return result;
     }
 
-    public static <E extends Exception, BUFFER extends BaseStringBuffers<E>> IIndexList<BaseSQLStatement> parse(SQLParser sqlParser, BUFFER buffer,
-            Function<String, E> createEOFException, SQLScratchExpressionValues sqlScratchExpressionValues, ISQLAllocator sqlAllocator,
-            IAddableListAllocator addableListAllocator, IndexListAllocator<BaseSQLStatement> indexListAllocator) throws ParserException, E {
+    public static <
+                    E extends Exception,
+                    BUFFER extends BaseStringBuffers<E>,
+                    INDEX_LIST extends IndexList<BaseSQLStatement>,
+                    INDEX_LIST_BUILDER extends IndexList.IndexListBuilder<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER>,
+                    INDEX_LIST_ALLOCATOR extends IndexListAllocator<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER, ?>>
 
-        final IndexList.Builder<BaseSQLStatement> sqlStatementsBuilder = IndexList.createBuilder(indexListAllocator);
+        INDEX_LIST parse(SQLParser sqlParser, BUFFER buffer, Function<String, E> createEOFException, SQLScratchExpressionValues sqlScratchExpressionValues,
+                ISQLAllocator sqlAllocator, IAddableListAllocator addableListAllocator, INDEX_LIST_ALLOCATOR indexListAllocator) throws ParserException, E {
+
+        final INDEX_LIST_BUILDER sqlStatementsBuilder = IndexList.createBuilder(indexListAllocator);
 
         parse(sqlParser, buffer, createEOFException, sqlScratchExpressionValues, sqlAllocator, addableListAllocator, sqlStatementsBuilder, null);
 
@@ -66,7 +78,7 @@ public final class SQLParserHelper {
 
     private static <E extends Exception, BUFFER extends BaseStringBuffers<E>> void parse(SQLParser sqlParser, BUFFER buffer, Function<String, E> createEOFException,
             SQLScratchExpressionValues sqlScratchExpressionValues, ISQLAllocator sqlAllocator, IAddableListAllocator addableListAllocator,
-            IndexList.Builder<BaseSQLStatement> sqlStatementsDst,  IndexList.Builder<SQLString> sqlStringsDst) throws ParserException, E {
+            IndexList.IndexListBuilder<BaseSQLStatement, ?, ?> sqlStatementsDst,  IndexList.IndexListBuilder<SQLString, ?, ?> sqlStringsDst) throws ParserException, E {
 
         final IAddableList<BaseSQLStatement> sqlStatementsAddableList = addableListAllocator.allocateList(1);
         final IAddableList<SQLString> sqlStringsAddableList = addableListAllocator.allocateList(1);
@@ -147,32 +159,32 @@ public final class SQLParserHelper {
         return result;
     }
 
-    public void freeSQLStatements(IIndexList<BaseSQLStatement> sqlStatements) {
+    public void freeSQLStatements(T sqlStatements) {
 
         Objects.requireNonNull(sqlStatements);
 
         indexListAllocator.freeIndexList(sqlStatements);
     }
 
-    private static <T> IIndexList<T> toIndexList(IAddableList<T> addableList, IndexListAllocator<T> indexListAllocator) {
+    private static <T, U extends IndexList.IndexListBuilder<T, ?, U> > IndexList<T> toIndexList(IAddableList<T> addableList, IndexListAllocator<T, ?, U, ?> indexListAllocator) {
 
         final int numElements = Integers.checkUnsignedLongToUnsignedInt(addableList.getNumElements());
 
-        final IndexList.Builder<T> indexListBuilder = IndexList.createBuilder(numElements, indexListAllocator);
+        final IndexList.IndexListBuilder<T, ?, ?> indexListBuilder = IndexList.createBuilder(numElements, indexListAllocator);
 
         toIndexList(addableList, numElements, indexListBuilder);
 
         return indexListBuilder.build();
     }
 
-    private static <T> void toIndexList(IAddableList<T> addableList, IndexList.Builder<T> indexListBuilder) {
+    private static <T> void toIndexList(IAddableList<T> addableList, IndexList.IndexListBuilder<T, ?, ?> indexListBuilder) {
 
         final int numElements = Integers.checkUnsignedLongToUnsignedInt(addableList.getNumElements());
 
         toIndexList(addableList, numElements, indexListBuilder);
     }
 
-    private static <T> void toIndexList(IAddableList<T> addableList, int numElements, IndexList.Builder<T> indexListBuilder) {
+    private static <T> void toIndexList(IAddableList<T> addableList, int numElements, IndexList.IndexListBuilder<T, ?, ?> indexListBuilder) {
 
         for (int i = 0; i < numElements; ++ i) {
 

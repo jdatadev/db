@@ -19,7 +19,7 @@ abstract class BaseIntKeyNonBucketMap<T> extends BaseIntCapacityExponentMap<int[
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_NON_BUCKET_MAP;
 
-    private static final boolean ASSERT = AssertionContants.ASSERT_BASE_INT_NON_BUCKET_MAP;
+    private static final boolean ASSERT = AssertionContants.ASSERT_BASE_INT_KEY_NON_BUCKET_MAP;
 
     private static final int NO_KEY = -1;
 

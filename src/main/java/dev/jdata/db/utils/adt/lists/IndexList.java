@@ -1,413 +1,273 @@
 package dev.jdata.db.utils.adt.lists;
 
-import java.lang.reflect.Array;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.elements.ICapacity;
-import dev.jdata.db.utils.adt.elements.IIterableElements;
-import dev.jdata.db.utils.allocators.ADTInstanceAllocator;
-import dev.jdata.db.utils.allocators.Allocatable;
+import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.elements.IObjectIterableElements;
+import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
 import dev.jdata.db.utils.allocators.BaseAllocatableArrayAllocator;
 import dev.jdata.db.utils.allocators.BaseArrayAllocator;
-import dev.jdata.db.utils.allocators.IAllocators;
-import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer.RefType;
-import dev.jdata.db.utils.allocators.IBuilder;
-import dev.jdata.db.utils.allocators.IInstanceAllocator;
+import dev.jdata.db.utils.allocators.BuilderInstanceAllocator;
+import dev.jdata.db.utils.allocators.IObjectAllocator;
+import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
+import dev.jdata.db.utils.builders.IObjectBuilder;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class IndexList<T> extends BaseIndexList<T> implements ICapacity, IIndexList<T> {
+public abstract class IndexList<T> extends BaseIndexList<T> implements IIndexList<T> {
 
-    public static abstract class IndexListAllocator<T> extends ADTInstanceAllocator<T, Builder<T>> implements IInstanceAllocator<T> {
+    public static abstract class IndexListAllocator<T, U extends IndexList<T>, V extends IndexListBuilder<T, U, V>, W extends MutableIndexList<T>>
 
-        @SafeVarargs
-        public final IIndexList<T> of(T ... instances) {
+            extends BuilderInstanceAllocator<T, V>
+            implements IObjectAllocator<T> {
 
-            final Builder<T> builder = allocateIndexListBuilder(instances.length);
+        abstract V allocateIndexListBuilder(int minimumCapacity);
+        public abstract void freeIndexListBuilder(V builder);
 
-            builder.addTail(instances);
+        abstract U allocateIndexListFrom(T[] values, int numElements);
+        public abstract void freeIndexList(U list);
 
-            return builder.build();
-        }
+        abstract W allocateMutableIndexList(int minimumCapacity);
+        abstract void freeIndexMutableList(W list);
 
-        abstract Builder<T> allocateIndexListBuilder(int minimumCapacity);
-        public abstract void freeIndexListBuilder(Builder<T> builder);
+        abstract U copyToImmutable(MutableIndexList<T> mutableIndexList);
+//        abstract U copyToMutable(MutableIndexList<T> mutableIndexList);
 
-        abstract IndexList<T> allocateIndexList(int minimumCapacity);
-        public abstract void freeIndexList(IIndexList<T> list);
-
-        abstract MutableIndexList<T> allocateMutableIndexList(int minimumCapacity);
-        public abstract void freeIndexMutableList(MutableIndexList<T> list);
-
-        abstract IndexList<T> swapToImmutable(MutableIndexList<T> mutableIndexList);
+        abstract U emptyList();
     }
 
-    public static final class HeapIndexListAllocator<T> extends IndexListAllocator<T> {
+    static final class ArrayIndexListBuilderAllocator<T, U extends IndexListBuilder<T, ?, U>> extends BaseAllocatableArrayAllocator<U> {
 
-        private static final AllocationType ALLOCATION_TYPE = AllocationType.HEAP_ALLOCATOR;
-
-        private final IntFunction<T[]> createElementsArray;
-
-        public HeapIndexListAllocator(IntFunction<T[]> createElementsArray) {
-
-            this.createElementsArray = Objects.requireNonNull(createElementsArray);
+        ArrayIndexListBuilderAllocator(AllocationType allocationType, IntFunction<U> createBuilder) {
+            super(createBuilder, l -> Integers.checkUnsignedLongToUnsignedInt(l.getCapacity()));
         }
 
-        @Override
-        Builder<T> allocateIndexListBuilder(int minimumCapacity) {
+        U allocateIndexListBuilder(int minimumCapacity) {
 
-            addAllocatedBuilder(false);
-
-            return new Builder<>(ALLOCATION_TYPE, minimumCapacity, this);
+            return allocateAllocatableArrayInstance(minimumCapacity);
         }
 
-        @Override
-        public void freeIndexListBuilder(Builder<T> builder) {
-
-            Objects.requireNonNull(builder);
-
-            addFreedBuilder(false);
-        }
-
-        @Override
-        IndexList<T> allocateIndexList(int minimumCapacity) {
-
-            addAllocatedInstance(false);
-
-            return new IndexList<>(ALLOCATION_TYPE, createElementsArray, minimumCapacity);
-        }
-
-        @Override
-        public void freeIndexList(IIndexList<T> list) {
-
-            Objects.requireNonNull(list);
-
-            addFreedInstance(false);
-        }
-
-        @Override
-        MutableIndexList<T> allocateMutableIndexList(int minimumCapacity) {
-
-            addAllocatedInstance(false);
-
-            return new MutableIndexList<>(AllocationType.HEAP, createElementsArray, minimumCapacity);
-        }
-
-        @Override
-        public void freeIndexMutableList(MutableIndexList<T> list) {
-
-            Objects.requireNonNull(list);
-
-            addFreedInstance(false);
-        }
-
-        @Override
-        IndexList<T> swapToImmutable(MutableIndexList<T> mutableIndexList) {
-
-            Objects.requireNonNull(mutableIndexList);
-
-            return mutableIndexList.swapToImmutable();
-        }
-    }
-
-    private static final class ArrayIndexListBuilderAllocator<T> extends BaseAllocatableArrayAllocator<Builder<T>> {
-
-        private static final AllocationType ALLOCATION_TYPE = AllocationType.ARRAY_ALLOCATOR;
-
-        ArrayIndexListBuilderAllocator(IntFunction<T[]> createListElementsArray, IndexListAllocator<T> listAllocator) {
-            super(c -> new Builder<>(ALLOCATION_TYPE, c, listAllocator), l -> Integers.checkUnsignedLongToUnsignedInt(l.getCapacity()));
-        }
-
-        Builder<T> allocateIndexListBuilder(int minimumCapacity) {
-
-            final Builder<T> result = allocateAllocatableArrayInstance(minimumCapacity);
-
-            result.initialize();
-
-            return result;
-        }
-
-        void freeIndexListBuilder(Builder<T> builder) {
-
-            builder.reset();
+        void freeIndexListBuilder(U builder) {
 
             freeAllocatableArrayInstance(builder);
         }
     }
 
-    private static final class IndexListArrayAllocator<T> extends BaseArrayAllocator<IndexList<T>> {
+    static final class IndexListArrayAllocator<T, U extends IndexList<T>> extends BaseArrayAllocator<U> {
 
-        private static final AllocationType ALLOCATION_TYPE = AllocationType.ARRAY_ALLOCATOR;
-
-        IndexListArrayAllocator(IntFunction<T[]> createListElementsArray) {
-            super(c -> new IndexList<>(ALLOCATION_TYPE, createListElementsArray, c), l -> Integers.checkUnsignedLongToUnsignedInt(l.getNumElements()));
+        IndexListArrayAllocator(AllocationType allocationType, IntFunction<U> createList) {
+            super(createList, l -> Integers.checkUnsignedLongToUnsignedInt(l.getNumElements()));
         }
 
-        IndexList<T> allocateIndexList(int minimumCapacity) {
+        U allocateIndexList(int minimumCapacity) {
 
             return allocateArrayInstance(minimumCapacity);
         }
 
-        void freeIndexList(IndexList<T> list) {
+        void freeIndexList(U list) {
 
             freeArrayInstance(list);
-        }
-    }
-
-    private static final class MutableIndexListArrayAllocator<T> extends BaseArrayAllocator<MutableIndexList<T>> {
-
-        private static final AllocationType ALLOCATION_TYPE = AllocationType.ARRAY_ALLOCATOR;
-
-        MutableIndexListArrayAllocator(IntFunction<T[]> createListElementsArray) {
-            super(c -> new MutableIndexList<>(ALLOCATION_TYPE, createListElementsArray, c), l -> Integers.checkUnsignedLongToUnsignedInt(l.getNumElements()));
-        }
-
-        MutableIndexList<T> allocateMutableIndexList(int minimumCapacity) {
-
-            return allocateArrayInstance(minimumCapacity);
-        }
-
-        void freeMutableIndexList(MutableIndexList<T> list) {
-
-            freeArrayInstance(list);
-        }
-    }
-
-    public static final class CacheIndexListAllocator<T> extends IndexListAllocator<T> implements IAllocators {
-
-        private static final AllocationType ALLOCATION_TYPE = AllocationType.CACHING_ALLOCATOR;
-
-        private final ArrayIndexListBuilderAllocator<T> listBuilderArrayAllocator;
-        private final IndexListArrayAllocator<T> listArrayAllocator;
-        private final MutableIndexListArrayAllocator<T> mutableListArrayAllocator;
-
-        public CacheIndexListAllocator(IntFunction<T[]> createElementsArray) {
-
-            Objects.requireNonNull(createElementsArray);
-
-            this.listBuilderArrayAllocator = new ArrayIndexListBuilderAllocator<>(createElementsArray, this);
-            this.listArrayAllocator = new IndexListArrayAllocator<>(createElementsArray);
-            this.mutableListArrayAllocator = new MutableIndexListArrayAllocator<>(createElementsArray);
-        }
-
-        @Override
-        public void gatherStatistics(IAllocatorsStatisticsGatherer statisticsGatherer) {
-
-            Objects.requireNonNull(statisticsGatherer);
-
-            statisticsGatherer.addInstanceAllocator("listBuilderArrayAllocator", RefType.INSTANTIATED, IndexList.Builder.class, listBuilderArrayAllocator);
-            statisticsGatherer.addInstanceAllocator("listArrayAllocator", RefType.INSTANTIATED, IndexList.class, listArrayAllocator);
-            statisticsGatherer.addInstanceAllocator("mutableListArrayAllocator", RefType.INSTANTIATED, MutableIndexList.class, mutableListArrayAllocator);
-        }
-
-        @Override
-        Builder<T> allocateIndexListBuilder(int minimumCapacity) {
-
-            return listBuilderArrayAllocator.allocateIndexListBuilder(minimumCapacity);
-        }
-
-        @Override
-        public void freeIndexListBuilder(Builder<T> builder) {
-
-            listBuilderArrayAllocator.freeIndexListBuilder(builder);
-        }
-
-        @Override
-        IndexList<T> allocateIndexList(int minimumCapacity) {
-
-            return listArrayAllocator.allocateIndexList(minimumCapacity);
-        }
-
-        @Override
-        public void freeIndexList(IIndexList<T> list) {
-
-            listArrayAllocator.freeIndexList((IndexList<T>)list);
-        }
-
-        @Override
-        MutableIndexList<T> allocateMutableIndexList(int minimumCapacity) {
-
-            return mutableListArrayAllocator.allocateMutableIndexList(minimumCapacity);
-        }
-
-        @Override
-        public void freeIndexMutableList(MutableIndexList<T> list) {
-
-            mutableListArrayAllocator.freeMutableIndexList(list);
-        }
-
-        @Override
-        IndexList<T> swapToImmutable(MutableIndexList<T> mutableIndexList) {
-
-            Objects.requireNonNull(mutableIndexList);
-
-            return mutableIndexList.swapToImmutableAndClear();
         }
     }
 
     @SafeVarargs
-    public static <T> IIndexList<T> of(T ... instances) {
+    public static <T> HeapIndexList<T> of(T ... instances) {
 
         Objects.requireNonNull(instances);
 
-        return new IndexList<>(AllocationType.HEAP, instances);
+        return new HeapIndexList<>(AllocationType.HEAP, Array.copyOf(instances));
     }
 
-    public static <T> IIndexList<T> sortedOf(IIterableElements<T> elements, Comparator<? super T> comparator, IntFunction<T[]> createArray, IndexListAllocator<T> allocator) {
+    public static <T> HeapIndexList<T> sortedOf(IObjectIterableElements<T> elements, Comparator<? super T> comparator, IntFunction<T[]> createElementsArray) {
 
-        Objects.requireNonNull(elements);
-        Objects.requireNonNull(comparator);
-        Objects.requireNonNull(createArray);
+        final HeapIndexList<T> result;
 
         final int numElements = Integers.checkUnsignedLongToUnsignedInt(elements.getNumElements());
 
-        final MutableIndexList<T> sorted = allocator != null
-                ? allocator.allocateMutableIndexList(numElements)
-                : new MutableIndexList<>(AllocationType.HEAP, createArray, numElements);
+        if (numElements != 0) {
 
-        sorted.addTail(elements);
+            final MutableIndexList<T> sorted = HeapMutableIndexList.from(createElementsArray, numElements);
 
-        sorted.sort(comparator);
+            sorted.addTail(elements);
 
-        return allocator != null
-                ? allocator.swapToImmutable(sorted)
-                : sorted.swapToImmutable();
-    }
+            sorted.sort(comparator);
 
-    public static <T> Builder<T> createBuilder(IntFunction<T[]> createArray) {
-
-        return createBuilder(createArray, DEFAULT_INITIAL_CAPACITY);
-    }
-
-    public static <T> Builder<T> createBuilder(IntFunction<T[]> createArray, int initialCapacity) {
-
-        final Builder<T> result = new Builder<>(AllocationType.HEAP, new IndexList<>(AllocationType.HEAP, createArray, initialCapacity));
-
-        result.initialize();
+            result = fromMutableIndexList(AllocationType.HEAP, sorted);
+        }
+        else {
+            result = IndexList.empty();
+        }
 
         return result;
     }
 
-    public static <T> Builder<T> createBuilder(IndexListAllocator<T> listAllcator) {
+    public static <T, U extends IndexList<T>> U sortedOf(IObjectIterableElements<T> elements, Comparator<? super T> comparator, IndexListAllocator<T, U, ?, ?> allocator) {
+
+        Objects.requireNonNull(elements);
+        Objects.requireNonNull(comparator);
+        Objects.requireNonNull(allocator);
+
+        final U result;
+
+        final int numElements = Integers.checkUnsignedLongToUnsignedInt(elements.getNumElements());
+
+        if (numElements != 0) {
+
+            final MutableIndexList<T> sorted = allocator.allocateMutableIndexList(numElements);
+
+            sorted.addTail(elements);
+
+            sorted.sort(comparator);
+
+            result = allocator.copyToImmutable(sorted);
+        }
+        else {
+            result = allocator.emptyList();
+        }
+
+        return result;
+    }
+
+    public static <T> HeapIndexListBuilder<T> createBuilder(IntFunction<T[]> createElementsArray) {
+
+        return createBuilder(createElementsArray, DEFAULT_INITIAL_CAPACITY);
+    }
+
+    public static <T> HeapIndexListBuilder<T> createBuilder(IntFunction<T[]> createElementsArray, int initialCapacity) {
+
+        return new HeapIndexListBuilder<>(AllocationType.HEAP, createElementsArray, initialCapacity);
+    }
+
+    public static <T, U extends IndexListAllocator<T, ?, V, ?>, V extends IndexListBuilder<T, ?, V>> V createBuilder(U listAllcator) {
 
         return createBuilder(DEFAULT_INITIAL_CAPACITY, listAllcator);
     }
 
-    public static <T> Builder<T> createBuilder(int minimumCapacity, IndexListAllocator<T> listAllocator) {
+    public static <T, U extends IndexListAllocator<T, ?, V, ?>, V extends IndexListBuilder<T, ?, V>> V createBuilder(int minimumCapacity, U listAllocator) {
 
         return listAllocator.allocateIndexListBuilder(minimumCapacity);
     }
 
-    public static final class Builder<T> extends Allocatable implements IIndexListBuildable<T>, IBuilder<T, Builder<T>> {
+    public static abstract class IndexListBuilder<T, U extends IndexList<T>, V extends IndexListBuilder<T, U, V>>
 
-        private IndexList<T> list;
+            extends ObjectCacheNode
+            implements IIndexListBuildable<T, U, V>, IObjectBuilder<T, V> {
 
-        private Builder(AllocationType allocationType, IndexList<T> list) {
-            super(allocationType);
+        private final MutableIndexList<T> list;
 
-            this.list = Objects.requireNonNull(list);
-        }
-
-        private Builder(AllocationType allocationType, int minimumCapacity, IndexListAllocator<T> listAllocator) {
+        IndexListBuilder(AllocationType allocationType, int minimumCapacity, IndexListAllocator<T, ?, ?, ? extends MutableIndexList<T>> listAllocator) {
             super(allocationType);
 
             Checks.isInitialCapacity(minimumCapacity);
             Objects.requireNonNull(listAllocator);
 
-            this.list = listAllocator.allocateIndexList(minimumCapacity);
-        }
-
-        void initialize() {
-
-        }
-
-        void reset() {
-
+            this.list = listAllocator.allocateMutableIndexList(minimumCapacity);
         }
 
         @Override
-        public boolean isEmpty() {
+        public final boolean isEmpty() {
 
             return list.isEmpty();
         }
 
         @Override
-        public void addTail(T instance) {
+        public final V addTail(T instance) {
 
             checkIsAllocated();
 
-            list.addTail(instance);
+            list.addTailElement(instance);
+
+            return getThis();
         }
 
         @Override
-        public void addTail(@SuppressWarnings("unchecked") T... instances) {
+        public final V addTail(@SuppressWarnings("unchecked") T ... instances) {
 
             checkIsAllocated();
 
-            list.addTail(instances);
+            list.addTailElements(instances);
+
+            return getThis();
         }
 
-        @Override
-        public IIndexList<T> build() {
-
-            final IndexList<T> result = list;
-
-            return result;
+        final MutableIndexList<T> getList() {
+            return list;
         }
 
         final long getCapacity() {
 
             return list.getCapacity();
         }
+
+        @SuppressWarnings("unchecked")
+        private V getThis() {
+
+            return (V)this;
+        }
     }
 
-    private static final IIndexList<?> emptyList = new IndexList<>(AllocationType.HEAP);
+    private static final HeapIndexList<?> emptyList = new HeapIndexList<>(AllocationType.HEAP);
 
     @SuppressWarnings("unchecked")
-    public static <T> IIndexList<T> empty() {
+    public static <T> HeapIndexList<T> empty() {
 
-        return (IIndexList<T>)emptyList;
+        return (HeapIndexList<T>)emptyList;
     }
 
-    public static <T> IndexList<T> of(T instance) {
+    public static <T> HeapIndexList<T> of(T instance) {
 
         Objects.requireNonNull(instance);
 
         @SuppressWarnings("unchecked")
-        final IntFunction<T[]> createArray = l -> (T[])Array.newInstance(instance.getClass(), l);
+        final IntFunction<T[]> createElementsArray = l -> (T[])java.lang.reflect.Array.newInstance(instance.getClass(), l);
 
-        final IndexList<T> result = new IndexList<>(AllocationType.HEAP, createArray);
-
-        result.addHead(instance);
-
-        return result;
+        return new HeapIndexList<>(AllocationType.HEAP, createElementsArray, instance);
     }
 
-    private IndexList(AllocationType allocationType) {
+    public abstract HeapIndexList<T> toHeapAllocated();
+
+    IndexList(AllocationType allocationType) {
         super(allocationType);
     }
 
-    IndexList(AllocationType allocationType, IntFunction<T[]> createArray) {
-        this(allocationType, createArray, DEFAULT_INITIAL_CAPACITY);
+    IndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, int initialCapacity) {
+        super(allocationType, createElementsArray, initialCapacity);
     }
 
-    IndexList(AllocationType allocationType, IntFunction<T[]> createArray, T[] instances, int numElements) {
-        super(allocationType, createArray, instances, numElements);
+    IndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, T instance) {
+        super(allocationType, createElementsArray, instance);
     }
 
-    private IndexList(AllocationType allocationType, T[] instances) {
+    IndexList(AllocationType allocationType, T[] instances) {
         super(allocationType, instances);
     }
 
-    public IndexList(AllocationType allocationType, IntFunction<T[]> createArray, int initialCapacity) {
-        super(allocationType, createArray, initialCapacity);
+    IndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, T[] instances, int numElements) {
+        super(allocationType, createElementsArray, instances, numElements);
+    }
+
+    IndexList(IndexList<T> toCopy) {
+        super(toCopy);
+    }
+
+    static <T> HeapIndexList<T> fromMutableIndexList(AllocationType allocationType, MutableIndexList<T> mutableIndexList) {
+
+        AllocationType.checkIsHeap(allocationType);
+
+        return new HeapIndexList<>(allocationType, mutableIndexList.makeArrayCopy());
     }
 
     @Override
-    public final IMutableIndexList<T> copyToMutable() {
+    public <U extends MutableIndexList<T>> U copyToMutable(IndexListAllocator<T, ? extends IndexList<T>, ?, U> indexListAllocator) {
 
-        return new MutableIndexList<>(AllocationType.HEAP, getCreateArray(), this);
+        Objects.requireNonNull(indexListAllocator);
+
+        final U result = indexListAllocator.allocateMutableIndexList(getIntNumElements());
+
+        result.addTail((BaseObjectArrayList<T>)this);
+
+        return result;
     }
 }

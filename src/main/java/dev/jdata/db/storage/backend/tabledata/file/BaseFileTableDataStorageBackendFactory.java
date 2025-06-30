@@ -16,9 +16,10 @@ import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.TableDataStorageBackend;
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;
+import dev.jdata.db.utils.adt.lists.CachedIndexList;
+import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.file.access.AbsoluteDirectoryPath;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
@@ -72,9 +73,9 @@ public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDa
 
         final IIndexList<RelativeFilePath> tableFilePaths;
 
-        final IndexListAllocator<RelativeFilePath> indexListAllocator = null;
+        final CacheIndexListAllocator<RelativeFilePath> indexListAllocator = null;
 
-        final IndexList.Builder<RelativeFilePath> tableFilePathsBuilder = IndexList.createBuilder(indexListAllocator);
+        final CachedIndexList.CachedIndexListBuilder<RelativeFilePath> tableFilePathsBuilder = IndexList.createBuilder(indexListAllocator);
 
         try {
             fileSystemAccess.listFilePaths(tableFilePath, tableFilePathsBuilder, (p, b) -> b.addTail(p));
@@ -88,7 +89,7 @@ public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDa
 
         final IIndexList<FileTableStorageFile> fileTableStorageFileList = readTableFiles(fileSystemAccess, tableFilePaths, storageTableFileSchemaGetters);
 
-        return new FileTableStorageFiles(fileSystemAccess, tableFilePath, fileTableStorageFileList);
+        return new FileTableStorageFiles(fileSystemAccess, tableFilePath, fileTableStorageFileList, null);
     }
 
     private static IIndexList<FileTableStorageFile> readTableFiles(IRelativeFileSystemAccess fileSystemAccess, IIndexList<RelativeFilePath> tableFilePaths,
@@ -100,9 +101,9 @@ public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDa
 
         final int initialCapacity = Integers.checkUnsignedLongToUnsignedInt(numElements);
 
-        final IndexListAllocator<FileTableStorageFile> indexListAllocator = null;
+        final CacheIndexListAllocator<FileTableStorageFile> indexListAllocator = null;
 
-        final IndexList.Builder<FileTableStorageFile> fileTableStorageFileListBuilder = IndexList.createBuilder(initialCapacity, indexListAllocator);
+        final CachedIndexList.CachedIndexListBuilder<FileTableStorageFile> fileTableStorageFileListBuilder = IndexList.createBuilder(initialCapacity, indexListAllocator);
 
         try {
             for (long i = 0L; i < numElements; ++ i) {

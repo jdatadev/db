@@ -1,10 +1,13 @@
 package dev.jdata.db.utils.allocators;
 
-import dev.jdata.db.utils.adt.sets.MutableIntBucketSet;
+import dev.jdata.db.utils.adt.sets.IIntSet;
+import dev.jdata.db.utils.adt.sets.IMutableIntSet;
 
-public interface IIntSetAllocator {
+public interface IIntSetAllocator<T extends IIntSet> extends IInstanceAllocator<T> {
 
-    MutableIntBucketSet allocateIntSet(int minimumCapacityExponent);
+    T allocateIntSet(int minimumCapacityExponent);
 
-    void freeIntSet(MutableIntBucketSet intSet);
+    void freeIntSet(T intSet);
+
+    T copyToImmutable(IMutableIntSet intSet);
 }

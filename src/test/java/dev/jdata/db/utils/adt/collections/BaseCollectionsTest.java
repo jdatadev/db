@@ -1,7 +1,6 @@
 package dev.jdata.db.utils.adt.collections;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
@@ -10,7 +9,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.test.unit.BaseTest;
-import dev.jdata.db.utils.adt.lists.Lists;
+import dev.jdata.db.utils.adt.arrays.Array;
 
 public abstract class BaseCollectionsTest<IC extends Collection<Integer>, SC extends Collection<String>> extends BaseTest {
 
@@ -18,6 +17,7 @@ public abstract class BaseCollectionsTest<IC extends Collection<Integer>, SC ext
     protected abstract boolean isOrdered();
 
     protected abstract <T> Collection<T> ofIntRange(int start, int numElements, IntFunction<T> mapper);
+    protected abstract Collection<Integer> ofIntArray(int[] array);
     protected abstract SC map(IC collection, Function<Integer, String> mapper);
     protected abstract SC filterAndMap(IC collection, Predicate<Integer> predicate, Function<Integer, String> mapper);
 
@@ -25,16 +25,16 @@ public abstract class BaseCollectionsTest<IC extends Collection<Integer>, SC ext
     @Category(UnitTest.class)
     public final void testOfIntRange() {
 
-        assertThatThrownBy(() -> Lists.ofIntRange(0, -1, Integer::valueOf)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> Lists.ofIntRange(0, 0, Integer::valueOf)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> Lists.ofIntRange(0, 1, null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> ofIntRange(0, -1, Integer::valueOf)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> ofIntRange(0, 0, Integer::valueOf)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> ofIntRange(0, 1, null)).isInstanceOf(NullPointerException.class);
 
         checkOfIntRange(0, 1, 0);
         checkOfIntRange(1, 1, 1);
         checkOfIntRange(1, 3, 1, 2, 3);
         checkOfIntRange(-2, 6, -2, -1, 0, 1, 2, 3);
 
-        final List<Integer> modifiableIntRangeList = Lists.ofIntRange(0, 3, Integer::valueOf);
+        final Collection<Integer> modifiableIntRangeList = ofIntRange(0, 3, Integer::valueOf);
 
         checkModifiable(modifiableIntRangeList, 4);
     }
@@ -52,6 +52,31 @@ public abstract class BaseCollectionsTest<IC extends Collection<Integer>, SC ext
         }
 
         checkModifiable(collection, Integer.MAX_VALUE);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public final void testOfIntArray() {
+
+        assertThatThrownBy(() -> ofIntArray(null)).isInstanceOf(NullPointerException.class);
+
+        checkOfIntArray();
+        checkOfIntArray(123);
+        checkOfIntArray(123, 234);
+        checkOfIntArray(123, 234, 345);
+    }
+
+    private void checkOfIntArray(int ... values) {
+
+        final Collection<Integer> collection = ofIntArray(values);
+
+        final int numValues = values.length;
+
+        assertThat(collection.size()).isEqualTo(numValues);
+
+        final IC expectedCollection = createCollection(Array.boxed(values));
+
+        assertThat(collection).isEqualTo(expectedCollection);
     }
 
     @Test

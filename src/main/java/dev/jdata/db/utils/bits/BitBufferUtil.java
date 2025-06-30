@@ -588,8 +588,8 @@ public class BitBufferUtil {
         }
     }
 
-    private static <T> void copyLessOrEqualToEightBits(T inputBuffer, long inputBitOffset, byte[] outputBuffer, long outputBitOffset, int totalNumBits, ByteGetter<T> byteGetter,
-            ToIntFunction<T> lengthGetter) {
+    private static <T> void copyLessOrEqualToEightBits(T inputBuffer, long inputBitOffset, byte[] outputBuffer, long outputBitOffset, int totalNumBits,
+            ByteGetter<T> byteGetter, ToIntFunction<T> lengthGetter) {
 
         if (DEBUG) {
 
@@ -640,7 +640,7 @@ public class BitBufferUtil {
                 PrintDebug.debug(debugClass, "update one byte", b -> b.binary("existingByte", existingByte).add("inputLeftShift", inputLeftShift).binary("clearMask", clearMask)
                         .binary("updatedByte", updatedByte));
             }
-       }
+        }
         else {
             final int numOutputBits2 = totalNumBits - numOutputBits1;
 

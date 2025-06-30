@@ -288,7 +288,7 @@ abstract class BaseLongKeyBucketMap<
             @SuppressWarnings("unchecked")
             final LongNodeSetter<MAP> tSetter = (LongNodeSetter<MAP>)tailSetter;
 
-            removedNode = getBuckets().removeNodeByValue(mapThis, key, bucketHeadNode, BaseList.NO_NODE, hSetter, tSetter);
+            removedNode = getBuckets().removeAtMostOneNodeByValue(mapThis, key, bucketHeadNode, BaseList.NO_NODE, hSetter, tSetter);
         }
 
         if (removedNode == BaseList.NO_NODE) {

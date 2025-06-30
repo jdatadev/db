@@ -355,7 +355,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
         }
         finally {
 
-            scratchLockIndices.reset();
+            scratchLockIndices.clear();
         }
 
         return allLocksAquired;

@@ -12,7 +12,7 @@ abstract class BaseLargeLongNonBucketMap<T> extends BaseLargeIntegerMap<LargeLon
     protected static final long NO_KEY = -1L;
 
     BaseLargeLongNonBucketMap(int initialOuterCapacity, int innerCapacityExponent, float loadFactor, BiIntToObjectFunction<T> createValues) {
-        super(initialOuterCapacity, innerCapacityExponent, loadFactor, (o, i) -> new LargeLongArray(o, i, NO_KEY), LargeLongArray::reset, createValues);
+        super(initialOuterCapacity, innerCapacityExponent, loadFactor, (o, i) -> new LargeLongArray(o, i, NO_KEY), LargeLongArray::clear, createValues);
     }
 
     @Override

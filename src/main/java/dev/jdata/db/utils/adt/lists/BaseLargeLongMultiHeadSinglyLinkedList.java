@@ -50,21 +50,26 @@ public abstract class BaseLargeLongMultiHeadSinglyLinkedList<
         return getValue(node);
     }
 
-    public final long removeNodeByValue(INSTANCE instance, long value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter,
+    public final long removeAtMostOneNodeByValue(INSTANCE instance, long value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter,
             LongNodeSetter<INSTANCE> tailNodeSetter) {
 
-        long previousNode = NO_NODE;
+        final long noNode = NO_NODE;
 
-        long removedNode = BaseList.NO_NODE;
+        long previousNode = noNode;
+        long removedNode = noNode;
 
-        for (long n = headNode; n != NO_NODE; n = getNextNode(n)) {
+        for (long n = headNode; n != noNode; n = getNextNode(n)) {
 
             if (getValue(n) == value) {
+
+                if (removedNode != noNode) {
+
+                    throw new IllegalStateException();
+                }
 
                 removeNode(instance, n, previousNode, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
                 removedNode = n;
-                break;
             }
 
             previousNode = n;

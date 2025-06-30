@@ -61,7 +61,7 @@ public class DMLUpdatingStatementEvaluator {
         try {
             evaluatorParameter.setExpressionEvaluators(expressionEvaluators);
 
-            values.foreachWithIndexAndParameter(evaluatorParameter, (v, i, p) -> {
+            values.forEachWithIndexAndParameter(evaluatorParameter, (v, i, p) -> {
 
                 final SQLExpressionEvaluator expressionEvaluator = p.getExpressionEvaluators()[i];
 
@@ -174,7 +174,7 @@ public class DMLUpdatingStatementEvaluator {
         try {
             evaluatorParameter.setExpressionEvaluators(expressionEvaluators);
 
-            values.foreachWithIndexAndParameter(evaluatorParameter, (v, i, p) -> {
+            values.forEachWithIndexAndParameter(evaluatorParameter, (v, i, p) -> {
 
                 final SQLExpressionEvaluator expressionEvaluator = p.getExpressionEvaluators()[i];
 

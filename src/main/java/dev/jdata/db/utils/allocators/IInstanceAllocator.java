@@ -1,10 +1,5 @@
 package dev.jdata.db.utils.allocators;
 
-public interface IInstanceAllocator<T> extends IAllocator {
+public interface IInstanceAllocator<T> extends IElementAllocator {
 
-    long getNumCurrentlyAllocatedInstances();
-    long getNumFreeListInstances();
-
-    long getTotalNumAllocatedInstances();
-    long getTotalNumFreedInstances();
 }

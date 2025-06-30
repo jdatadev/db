@@ -52,26 +52,26 @@ public final class ListsByIndexTest extends BaseByIndexTest {
     }
 
     @Override
-    protected <T, P> int findIndex(T[] array, P parameter, BiPredicate<T, P> predicate) {
+    protected <T, P> int findAtMostOneIndex(T[] array, P parameter, BiPredicate<T, P> predicate) {
 
-        return Lists.findIndex(Arrays.asList(array), parameter, predicate);
+        return Lists.findAtMostOneIndex(Arrays.asList(array), parameter, predicate);
     }
 
     @Override
-    protected <T> int closureOrConstantFindIndex(T[] array, Predicate<T> predicate) {
+    protected <T> int closureOrConstantFindAtMostOneIndex(T[] array, Predicate<T> predicate) {
 
-        return Lists.closureOrConstantFindIndex(Arrays.asList(array), predicate);
+        return Lists.closureOrConstantFindAtMostOneIndex(Arrays.asList(array), predicate);
     }
 
     @Override
-    protected <T, P> int findIndexInRange(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
+    protected <T, P> int findAtMostOneIndexInRange(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
 
-        return Lists.findIndex(Arrays.asList(array), array.length, startIndex, numElements, parameter, predicate);
+        return Lists.findAtMostOneIndex(Arrays.asList(array), array.length, startIndex, numElements, parameter, predicate);
     }
 
     @Override
-    protected <T> int closureOrConstantFindIndexInRange(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
+    protected <T> int closureOrConstantFindAtMostOneIndexInRange(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
 
-        return Lists.closureOrConstantFindIndex(Arrays.asList(array), startIndex, numElements, predicate);
+        return Lists.closureOrConstantFindAtMostOneIndex(Arrays.asList(array), startIndex, numElements, predicate);
     }
 }

@@ -1,15 +1,20 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.elements.IIterableElements;
+import dev.jdata.db.utils.adt.elements.IObjectIterableElements;
 
-public interface IListBuildable<T> {
+public interface IListBuildable<T, V extends IListBuildable<T, V>> {
 
-    void addTail(T instance);
+    V addTail(T instance);
 
-    default void addTail(IIterableElements<T> instances) {
+    V addTail(@SuppressWarnings("unchecked") T ... instances);
+
+    default V addTail(IObjectIterableElements<T> instances) {
 
         instances.forEach(this, (e, b) -> b.addTail(e));
-    }
 
-    void addTail(@SuppressWarnings("unchecked") T ... instances);
+        @SuppressWarnings("unchecked")
+        final V result = (V)this;
+
+        return result;
+    }
 }

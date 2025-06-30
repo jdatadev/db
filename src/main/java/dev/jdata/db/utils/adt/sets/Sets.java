@@ -19,6 +19,11 @@ public class Sets extends BaseCollections {
         return Coll.ofIntRange(start, numElements, HashSet::new, mapper);
     }
 
+    public static Set<Integer> of(int[] array) {
+
+        return Coll.of(array, HashSet::new);
+    }
+
     public static <T> Set<T> unmodifiableCopyOf(Set<T> set) {
 
         Objects.requireNonNull(set);

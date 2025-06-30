@@ -176,6 +176,34 @@ public final class ArrayTest extends BaseByIndexTest {
 
     @Test
     @Category(UnitTest.class)
+    public void testMapByIndexToInt() {
+
+        final Object parameter = new Object();
+
+        assertThatThrownBy(() -> Array.mapToInt(null, 0, parameter, (b, i, p) -> 0)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Array.mapToInt(create("abc"), 0, parameter, (b, i, p) -> 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Array.mapToInt(create("abc"), parameter, null)).isInstanceOf(NullPointerException.class);
+
+        assertThat(Array.mapToInt(create("123"), 1, parameter, (b, i, p) -> {
+
+            assertThat(p).isSameAs(parameter);
+
+            return Integer.parseInt(b[i]);
+        }))
+        .containsExactly(123);
+
+        final int[] oneMapped = Array.mapToInt(create("1"), 1, parameter, (b, i, p) -> Integer.parseInt(b[i]));
+        assertThat(oneMapped).containsExactly(1);
+
+        final int[] threeMapped = Array.mapToInt(create("1", "2", "3"), 3, parameter, (b, i, p) -> Integer.parseInt(b[i]));
+        assertThat(threeMapped).containsExactly(1, 2, 3);
+
+        final int[] twoOutOfThreeMapped = Array.mapToInt(create("1", "2", "3"), 2, parameter, (b, i, p) -> Integer.parseInt(b[i]));
+        assertThat(twoOutOfThreeMapped).containsExactly(1, 2);
+    }
+
+    @Test
+    @Category(UnitTest.class)
     public void testToUnsignedByteArray() {
 
         assertThatThrownBy(() -> Array.toUnsignedByteArray(null)).isInstanceOf(NullPointerException.class);
@@ -249,6 +277,35 @@ public final class ArrayTest extends BaseByIndexTest {
         assertThat(Array.toLongArray(new int[] { 1, 0, 2 })).containsExactly(1, 0, 2);
     }
 
+    @Test
+    @Category(UnitTest.class)
+    public void testMove() {
+
+        assertThatThrownBy(() -> Array.move(null, 0, 0, 0)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Array.move(new long[] { 0L }, 1, 1, -1)).isInstanceOf(ArrayIndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> Array.move(new long[] { 0L }, 0, 2, 1)).isInstanceOf(ArrayIndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> Array.move(new long[] { 0L }, 0, 1, -1)).isInstanceOf(ArrayIndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> Array.move(new long[] { 0L, 1 }, 1, 1, -2)).isInstanceOf(ArrayIndexOutOfBoundsException.class);
+
+        assertThatThrownBy(() -> Array.move(new long[] { 0L }, 0, 0, 1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Array.move(new long[] { 0L }, 0, 1, 0)).isInstanceOf(IllegalArgumentException.class);
+
+        checkLong(new long[] { 123L, 234L, 345L }, 0, 1, 1, new long[] { 123L, 123L, 345L });
+        checkLong(new long[] { 123L, 234L, 345L }, 0, 2, 1, new long[] { 123L, 123L, 234L });
+        checkLong(new long[] { 123L, 234L, 345L }, 0, 1, 2, new long[] { 123L, 234L, 123L });
+
+        checkLong(new long[] { 123L, 234L, 345L }, 2, 1, -1, new long[] { 123L, 345L, 345L });
+        checkLong(new long[] { 123L, 234L, 345L }, 1, 2, -1, new long[] { 234L, 345L, 345L });
+        checkLong(new long[] { 123L, 234L, 345L }, 2, 1, -2, new long[] { 345L, 234L, 345L });
+    }
+
+    private void checkLong(long[] array, int startIndex, int numElements, int delta, long[] expectedResult) {
+
+        Array.move(array, startIndex, numElements, delta);
+
+        assertThat(array).isEqualTo(expectedResult);
+    }
+
     @Override
     protected <T, R> R[] map(T[] array, IntFunction<R[]> createMappedArray, Function<T, R> mapper) {
 
@@ -287,27 +344,27 @@ public final class ArrayTest extends BaseByIndexTest {
     }
 
     @Override
-    protected <T, P> int findIndex(T[] array, P parameter, BiPredicate<T, P> predicate) {
+    protected <T, P> int findAtMostOneIndex(T[] array, P parameter, BiPredicate<T, P> predicate) {
 
-        return Array.findIndex(array, parameter, predicate);
+        return Array.findAtMostOneIndex(array, parameter, predicate);
     }
 
     @Override
-    protected <T> int closureOrConstantFindIndex(T[] array, Predicate<T> predicate) {
+    protected <T> int closureOrConstantFindAtMostOneIndex(T[] array, Predicate<T> predicate) {
 
-        return Array.closureOrConstantFindIndex(array, predicate);
+        return Array.closureOrConstantFindAtMostOneIndex(array, predicate);
     }
 
     @Override
-    protected <T, P> int findIndexInRange(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
+    protected <T, P> int findAtMostOneIndexInRange(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
 
-        return Array.findIndex(array, parameter, startIndex, numElements, predicate);
+        return Array.findAtMostOneIndex(array, parameter, startIndex, numElements, predicate);
     }
 
     @Override
-    protected <T> int closureOrConstantFindIndexInRange(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
+    protected <T> int closureOrConstantFindAtMostOneIndexInRange(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
 
-        return Array.closureOrConstantFindIndex(array, startIndex, numElements, predicate);
+        return Array.closureOrConstantFindAtMostOneIndex(array, startIndex, numElements, predicate);
     }
 
     private static String[] create(String ... values) {

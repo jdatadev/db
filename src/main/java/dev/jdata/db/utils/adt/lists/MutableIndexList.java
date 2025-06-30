@@ -1,30 +1,83 @@
 package dev.jdata.db.utils.adt.lists;
 
+import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.elements.IIterableElements;
+import dev.jdata.db.utils.adt.elements.IObjectIterableElements;
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
+import dev.jdata.db.utils.allocators.InstanceAllocator;
 
-public final class MutableIndexList<T> extends BaseIndexList<T> implements IMutableIndexList<T> {
+public abstract class MutableIndexList<T> extends BaseIndexList<T> implements IMutableIndexList<T> {
 
-    public MutableIndexList(AllocationType allocationType) {
+    static abstract class MutableIndexListAllocator<T, U extends MutableIndexList<T>> extends InstanceAllocator<T> {
+
+        abstract U allocateMutableIndexList(int minimumCapacity);
+        abstract void freeMutableIndexList(U list);
+    }
+
+    @SafeVarargs
+    public static <T> HeapMutableIndexList<T> of(T ... instances) {
+
+        Objects.requireNonNull(instances);
+
+        return new HeapMutableIndexList<>(AllocationType.HEAP, instances);
+    }
+
+    private MutableIndexList(AllocationType allocationType) {
         super(allocationType);
     }
 
-    public MutableIndexList(AllocationType allocationType, IntFunction<T[]> createArray, int initialCapacity) {
-        super(allocationType, createArray, initialCapacity);
+    MutableIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray) {
+        super(allocationType, createElementsArray);
     }
 
-    MutableIndexList(AllocationType allocationType, IntFunction<T[]> createArray, IIndexList<T> toCopy) {
-        super(allocationType, createArray, toCopy);
+    MutableIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, int initialCapacity) {
+        super(allocationType, createElementsArray, initialCapacity);
+    }
+
+    MutableIndexList(AllocationType allocationType, T[] instances) {
+        super(allocationType, instances);
+    }
+
+    MutableIndexList(IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
+        super(createElementsArray, toCopy);
+    }
+
+    private MutableIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
+        super(allocationType, createElementsArray, toCopy);
     }
 
     @Override
-    public final void addTail(IIterableElements<T> elements) {
+    public final long getCapacity() {
 
-        if (elements instanceof BaseArrayList<?>) {
+        return elementsArray.length;
+    }
+
+    @Override
+    public final void addHead(T instance) {
+
+        addHeadElement(instance);
+    }
+
+    @Override
+    public final void addTail(T instance) {
+
+        addTailElement(instance);
+    }
+
+    @Override
+    public final void addTail(@SuppressWarnings("unchecked") T... instances) {
+
+        addTailElements(instances);
+    }
+
+    @Override
+    public final void addTail(IObjectIterableElements<T> elements) {
+
+        if (elements instanceof BaseObjectArrayList<?>) {
 
             @SuppressWarnings("unchecked")
-            final BaseArrayList<T> baseArrayList = (BaseArrayList<T>)elements;
+            final BaseObjectArrayList<T> baseArrayList = (BaseObjectArrayList<T>)elements;
 
             addTail(baseArrayList);
         }
@@ -33,13 +86,28 @@ public final class MutableIndexList<T> extends BaseIndexList<T> implements IMuta
         }
     }
 
-    IndexList<T> swapToImmutable() {
+    public final <U extends IndexList<T>> U copyToImmutable(IndexListAllocator<T, U, ?, ?> indexListAllocator) {
 
-        return swapToOther(false, (c, a, n) -> new IndexList<T>(AllocationType.HEAP, c, a, n));
+        Objects.requireNonNull(indexListAllocator);
+
+        return indexListAllocator.copyToImmutable(this);
     }
 
-    IndexList<T> swapToImmutableAndClear() {
+    final <P, R> R makeFromElementsAndDispose(P parameter, MakeFromElementsFunction<T[], P, R> makeFromElements) {
 
-        return swapToOther(true, (c, a, n) -> new IndexList<T>(AllocationType.HEAP, c, a, n));
+        final R result = makeFromElements(parameter, makeFromElements);
+
+        resetToNullAndDispose();
+
+        return result;
+    }
+
+    final <P, R> R makeFromElementsAndRecreate(P parameter, MakeFromElementsFunction<T[], P, R> makeFromElements) {
+
+        final R result = makeFromElements(parameter, makeFromElements);
+
+        recreateArrays();
+
+        return result;
     }
 }

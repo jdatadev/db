@@ -1,5 +1,6 @@
 package dev.jdata.db.utils.adt.lists;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiPredicate;
@@ -12,7 +13,7 @@ import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.utils.adt.collections.Coll;
 
-public final class ArrayListImplTest extends BaseArrayListTest<ArrayListImpl<Integer>, ArrayListImpl<String>> {
+public final class ArrayListImplTest extends BaseMutableObjectArrayListTest<ArrayListImpl<Integer>, ArrayListImpl<String>> {
 
     @Test
     @Category(UnitTest.class)
@@ -73,7 +74,7 @@ public final class ArrayListImplTest extends BaseArrayListTest<ArrayListImpl<Int
     }
 
     @SafeVarargs
-    private static <E, L extends BaseArrayList<E>> void checkElementsSameAs(Iterator<E> iterator, E ... expectedElements) {
+    private static <E, L extends BaseObjectArrayList<E>> void checkElementsSameAs(Iterator<E> iterator, E ... expectedElements) {
 
         int count = 0;
 
@@ -99,12 +100,12 @@ public final class ArrayListImplTest extends BaseArrayListTest<ArrayListImpl<Int
 
         case 1:
 
-            list.addTail(elementsToAdd[0]);
+            list.addTailElement(elementsToAdd[0]);
             break;
 
         default:
 
-            list.addTail(elementsToAdd);
+            list.addTailElements(elementsToAdd);
             break;
         }
 
@@ -136,7 +137,31 @@ public final class ArrayListImplTest extends BaseArrayListTest<ArrayListImpl<Int
     }
 
     @Override
-    void checkNumElements(BaseArrayList<?> list, int expectedNumElements) {
+    int getCapacity(ArrayListImpl<String> list) {
+
+        return list.getCapacity();
+    }
+
+    @Override
+    void addHead(ArrayListImpl<String> list, String string) {
+
+        list.addHeadElement(string);
+    }
+
+    @Override
+    void addTail(ArrayListImpl<String> list, String string) {
+
+        list.add(string);
+    }
+
+    @Override
+    void addTail(ArrayListImpl<String> list, String... strings) {
+
+        list.addAll(Arrays.asList(strings));
+    }
+
+    @Override
+    void checkNumElements(BaseObjectArrayList<?> list, int expectedNumElements) {
 
         super.checkNumElements(list, expectedNumElements);
 

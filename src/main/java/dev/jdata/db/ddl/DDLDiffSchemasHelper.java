@@ -1,20 +1,23 @@
 package dev.jdata.db.ddl;
 
-import dev.jdata.db.schema.model.SchemaMap;
-import dev.jdata.db.schema.model.diff.schemamaps.DiffSchemaMaps;
-import dev.jdata.db.schema.model.objects.DDLObjectType;
+import dev.jdata.db.schema.model.diff.schemamaps.HeapDiffSchemaMaps;
+import dev.jdata.db.schema.model.diff.schemamaps.HeapDiffSchemaMaps.HeapDiffSchemaMapsBuilder;
+import dev.jdata.db.schema.model.schemamaps.HeapCompleteSchemaMaps.HeapCompleteSchemaMapsBuilder;
 
 public class DDLDiffSchemasHelper extends DDLSchemasHelper {
 
-    private static DiffSchemaMaps buildDiffSchemaMaps(DiffSchemaMaps.Builder diffSchemaMapsBuilder, SchemaMap.Builder<?>[] schemaMapBuilders) {
+    private static HeapDiffSchemaMaps buildDiffSchemaMaps(HeapCompleteSchemaMapsBuilder diffSchemaMapsBuilder, HeapDiffSchemaMapsBuilder[] schemaMapBuilders) {
 
+        throw new UnsupportedOperationException();
+/*
         for (DDLObjectType ddlObjectType : DDLObjectType.values()) {
 
-            final SchemaMap<?> schemaMap = schemaMapBuilders[ddlObjectType.ordinal()].build();
+            final HeapSchemaMap<?> schemaMap = schemaMapBuilders[ddlObjectType.ordinal()].build();
 
             diffSchemaMapsBuilder.setSchemaMap(ddlObjectType, schemaMap);
         }
 
         return diffSchemaMapsBuilder.build();
+*/
     }
 }

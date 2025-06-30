@@ -2,22 +2,18 @@ package dev.jdata.db.schema.model.diff.dropped;
 
 import java.util.Objects;
 
-import dev.jdata.db.schema.model.diff.dropped.DroppedElements.IDroppedElementsAllocator;
+import dev.jdata.db.schema.allocators.model.diff.dropped.DroppedSchemaObjectsAllocator;
+import dev.jdata.db.schema.allocators.model.diff.dropped.IDroppedElementsAllocator;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.ColumnsObject;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
-import dev.jdata.db.utils.adt.sets.MutableIntBucketSet;
-import dev.jdata.db.utils.allocators.IAllocators;
-import dev.jdata.db.utils.allocators.IIntSetAllocator;
+import dev.jdata.db.utils.adt.sets.MutableIntMaxDistanceNonBucketSet;
+import dev.jdata.db.utils.allocators.IMutableIntSetAllocator;
 import dev.jdata.db.utils.allocators.IIntToObjectMapAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
 public final class DroppedSchemaObjects extends ObjectCacheNode implements IDroppedSchemaObjects {
-
-    public interface IDroppedSchemaObjectsAllocator extends IDroppedElementsAllocator, IIntToObjectMapAllocator<MutableIntBucketSet>, IIntSetAllocator, IAllocators {
-
-    }
 
     private final DroppedElements[] droppedElementsArray;
 
@@ -26,10 +22,10 @@ public final class DroppedSchemaObjects extends ObjectCacheNode implements IDrop
         this.droppedElementsArray = new DroppedElements[DDLObjectType.getNumObjectTypes()];
     }
 
-    public void add(IDroppedSchemaObjects other, IDroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator) {
+    public void add(IDroppedSchemaObjects other, DroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator) {
 
-        final IIntToObjectMapAllocator<MutableIntBucketSet> intToObjectMapAllocator = droppedSchemaObjectsAllocator;
-        final IIntSetAllocator intSetAllocator = droppedSchemaObjectsAllocator;
+        final IIntToObjectMapAllocator<MutableIntMaxDistanceNonBucketSet> intToObjectMapAllocator = droppedSchemaObjectsAllocator.getIntToObjectMapAllocator();
+        final IMutableIntSetAllocator intSetAllocator = droppedSchemaObjectsAllocator.getIntSetAllocator();
 
         final DroppedSchemaObjects otherDroppedSchemaObjects = (DroppedSchemaObjects)other;
 
@@ -56,14 +52,14 @@ public final class DroppedSchemaObjects extends ObjectCacheNode implements IDrop
         }
     }
 
-    public void initialize(DroppedSchemaObjects other, IDroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator) {
+    public void initialize(DroppedSchemaObjects other, DroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator) {
 
         Objects.requireNonNull(other);
         Objects.requireNonNull(droppedSchemaObjectsAllocator);
 
         final IDroppedElementsAllocator droppedElementsAllocator = droppedSchemaObjectsAllocator;
-        final IIntToObjectMapAllocator<MutableIntBucketSet> intToObjectMapAllocator = droppedSchemaObjectsAllocator;
-        final IIntSetAllocator intSetAllocator = droppedSchemaObjectsAllocator;
+        final IIntToObjectMapAllocator<MutableIntMaxDistanceNonBucketSet> intToObjectMapAllocator = droppedSchemaObjectsAllocator.getIntToObjectMapAllocator();
+        final IMutableIntSetAllocator intSetAllocator = droppedSchemaObjectsAllocator.getIntSetAllocator();
 
         final int numDDLObjectTypes = DDLObjectType.getNumObjectTypes();
 
@@ -97,19 +93,19 @@ public final class DroppedSchemaObjects extends ObjectCacheNode implements IDrop
         }
     }
 
-    public void addDroppedSchemaObject(DDLObjectType ddlObjectType, SchemaObject schemaObject, IDroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator) {
+    public void addDroppedSchemaObject(DDLObjectType ddlObjectType, SchemaObject schemaObject, DroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator) {
 
         checkParameters(ddlObjectType, schemaObject);
         Objects.requireNonNull(droppedSchemaObjectsAllocator);
 
         final IDroppedElementsAllocator droppedElementsAllocator = droppedSchemaObjectsAllocator;
-        final IIntSetAllocator intSetAllocator = droppedSchemaObjectsAllocator;
+        final IMutableIntSetAllocator intSetAllocator = droppedSchemaObjectsAllocator.getIntSetAllocator();
 
         addDroppedSchemaObject(ddlObjectType, schemaObject, droppedElementsAllocator, intSetAllocator);
     }
 
     void addDroppedSchemaObject(DDLObjectType ddlObjectType, SchemaObject schemaObject, IDroppedElementsAllocator droppedElementsAllocator,
-            IIntSetAllocator intSetAllocator) {
+            IMutableIntSetAllocator intSetAllocator) {
 
         checkParameters(ddlObjectType, schemaObject);
         Objects.requireNonNull(droppedElementsAllocator);
@@ -138,7 +134,7 @@ public final class DroppedSchemaObjects extends ObjectCacheNode implements IDrop
     }
 
     public void addDroppedColumn(DDLObjectType ddlObjectType, ColumnsObject columnsObject, Column column, IDroppedElementsAllocator droppedElementsAllocator,
-            IIntSetAllocator intSetAllocator) {
+            IMutableIntSetAllocator intSetAllocator) {
 
         checkParameters(ddlObjectType, columnsObject);
         Objects.requireNonNull(column);

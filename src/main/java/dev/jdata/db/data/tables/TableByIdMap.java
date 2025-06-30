@@ -7,6 +7,7 @@ import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.CheckedExceptionFunction;
+
 public final class TableByIdMap<T> extends SchemaObjectByIdMap<Table, T> {
 
     public <E extends Exception> TableByIdMap(IEffectiveDatabaseSchema databaseSchema, IntFunction<T[]> createArray, CheckedExceptionFunction<Table, T, E> elementMapper)

@@ -18,15 +18,13 @@ public final class BitBuffer extends BaseLargeByteArray implements PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BIT_BUFFER;
 
-    private static final int NUM_INNER_ELEMENTS_NUM_BITS = NUM_INNER_ELEMENTS_NUM_BYTES * Byte.SIZE;
-
     private final int innerBitsCapacity;
     private final long innerBitsCapacityMask;
 
     private long bitOffset;
 
     public BitBuffer(int innerBytesCapacityExponent) {
-        super(innerBytesCapacityExponent);
+        super(innerBytesCapacityExponent, true);
 
         if (DEBUG) {
 
@@ -137,23 +135,22 @@ public final class BitBuffer extends BaseLargeByteArray implements PrintDebug {
 
         final long byteOffset = bitOffset >>> 3;
 
-        final byte[] byteArray = getBuffer(byteOffset);
+        final int outerIndex = getOuterIndex(byteOffset);
+        final byte[] byteArray = getByteArrayByOuterIndex(outerIndex);
 
-        final long byteArrayStoredBitOffset = bitOffset & innerBitsCapacityMask;
-        final long byteArrayBitOffset = byteArrayStoredBitOffset + NUM_INNER_ELEMENTS_NUM_BITS;
+        final long byteArrayBitOffset = bitOffset & innerBitsCapacityMask;
 
-        final long numByteArrayBitsRemaining = innerBitsCapacity - byteArrayStoredBitOffset;
+        final long numByteArrayBitsRemaining = innerBitsCapacity - byteArrayBitOffset;
 
-        final int innerArrayNumElements = getInnerArrayNumElements(byteArray);
+        final int innerArrayNumElements = getNumInnerElements(outerIndex);
 
         if (DEBUG) {
 
-            debug("byte array variables", b -> b.add("byteOffset", byteOffset).add("byteArrayStoredBitOffset", byteArrayStoredBitOffset)
-                    .add("byteArrayBitOffset", byteArrayBitOffset).add("numByteArrayBitsRemaining", numByteArrayBitsRemaining)
-                    .add("innerArrayNumElements", innerArrayNumElements));
+            debug("byte array variables", b -> b.add("byteOffset", byteOffset).add("byteArrayBitOffset", byteArrayBitOffset)
+                    .add("numByteArrayBitsRemaining", numByteArrayBitsRemaining).add("innerArrayNumElements", innerArrayNumElements));
         }
 
-        if (innerArrayNumElements < innerBitsCapacity && (byteArrayStoredBitOffset + numBits) > innerArrayNumElements) {
+        if (innerArrayNumElements < innerBitsCapacity && (byteArrayBitOffset + numBits) > innerArrayNumElements) {
 
             throw new IllegalArgumentException();
         }
@@ -169,16 +166,17 @@ public final class BitBuffer extends BaseLargeByteArray implements PrintDebug {
 
             result = BitBufferUtil.getLongValue(byteArray, signed, byteArrayBitOffset, Integers.checkUnsignedLongToUnsignedInt(numByteArrayBitsRemaining));
 
-            final byte[] nextByteArray = getBuffer(byteOffset + getInnerCapacity());
+            final int nextOuterIndex = getOuterIndex(byteOffset + getInnerCapacity());
+            final byte[] nextByteArray = getByteArrayByOuterIndex(nextOuterIndex);
 
             result <<= numNextByteArrayBitsToStore;
 
-            if (numNextByteArrayBitsToStore > getInnerArrayNumElements(nextByteArray)) {
+            if (numNextByteArrayBitsToStore > getNumInnerElements(nextOuterIndex)) {
 
                 throw new IllegalArgumentException();
             }
 
-            result |= BitBufferUtil.getLongValue(nextByteArray, false, NUM_INNER_ELEMENTS_NUM_BITS, numNextByteArrayBitsToStore);
+            result |= BitBufferUtil.getLongValue(nextByteArray, false, 0L, numNextByteArrayBitsToStore);
         }
 
         if (DEBUG) {
@@ -261,28 +259,30 @@ public final class BitBuffer extends BaseLargeByteArray implements PrintDebug {
             throw new UnsupportedOperationException();
         }
 
-        byte[] byteArray = getLastBufferOrAllocate();
+        int outerIndex = getLastByteArrayIndexOrAllocateForOneAppendedElement();
 
-        int numByteArrayStoredBits = getInnerArrayNumElements(byteArray);
+        int numByteArrayStoredBits = getNumInnerElements(outerIndex);
 
         if (numByteArrayStoredBits == innerBitsCapacity) {
 
-            byteArray = allocate();
+            outerIndex = checkCapacityAndReturnOuterIndex(numBits);
 
             numByteArrayStoredBits = 0;
         }
+
+        final byte[] byteArray = getByteArrayByOuterIndex(outerIndex);
 
         if (DEBUG) {
 
             final byte[] closureByteArray = byteArray;
             final int closureNumByteArrayStoredBits = numByteArrayStoredBits;
 
-            final int numToPrint = BitBufferUtil.numBytes(numByteArrayStoredBits) + NUM_INNER_ELEMENTS_NUM_BYTES;
+            final int numToPrint = BitBufferUtil.numBytes(numByteArrayStoredBits);
 
             debug("byte array", b -> b.add("byteArray", byteArrayString(closureByteArray, numToPrint)).add("numByteArrayStoredBits", closureNumByteArrayStoredBits));
         }
 
-        final long dstBitOffset = numByteArrayStoredBits + NUM_INNER_ELEMENTS_NUM_BITS;
+        final long dstBitOffset = numByteArrayStoredBits;
 
         final int numByteArrayBitsRemaining = innerBitsCapacity - numByteArrayStoredBits;
 
@@ -297,7 +297,7 @@ public final class BitBuffer extends BaseLargeByteArray implements PrintDebug {
                 debugByteArray("updated one out of one byte array", byteArray, updatedNumByteArrayStoredBits);
             }
 
-            setNumElements(byteArray, updatedNumByteArrayStoredBits);
+            setNumInnerElements(outerIndex, updatedNumByteArrayStoredBits);
         }
         else {
             final int numNextByteArrayBitsToStore = numBits - numByteArrayBitsRemaining;
@@ -311,18 +311,18 @@ public final class BitBuffer extends BaseLargeByteArray implements PrintDebug {
                 debugByteArray("updated one out of two byte array", byteArray, updatedNumByteArrayStoredBits);
             }
 
-            setNumElements(byteArray, updatedNumByteArrayStoredBits);
+            setNumInnerElements(outerIndex, updatedNumByteArrayStoredBits);
 
-            final byte[] nextByteArray = allocate();
+            final byte[] nextByteArray = checkCapacity(numNextByteArrayBitsToStore);
 
-            BitBufferUtil.setLongValue(nextByteArray, value & BitsUtil.maskLong(numNextByteArrayBitsToStore), signed, NUM_INNER_ELEMENTS_NUM_BITS, numNextByteArrayBitsToStore);
+            BitBufferUtil.setLongValue(nextByteArray, value & BitsUtil.maskLong(numNextByteArrayBitsToStore), signed, 0L, numNextByteArrayBitsToStore);
 
             if (DEBUG) {
 
-                debugByteArray("updated two out of two byte array", byteArray, numNextByteArrayBitsToStore);
+                debugByteArray("updated two out of two byte array", nextByteArray, numNextByteArrayBitsToStore);
             }
 
-            setNumElements(nextByteArray, numNextByteArrayBitsToStore);
+            setNumInnerElements(outerIndex + 1, numNextByteArrayBitsToStore);
         }
 
         this.bitOffset += numBits;
@@ -345,6 +345,7 @@ public final class BitBuffer extends BaseLargeByteArray implements PrintDebug {
 
     private <T> void addBytes(T byteBuffer, long byteBufferBitOffset, int numBits, ByteGetter<T> byteGetter, ToIntFunction<T> lengthGetter) {
 
+        Checks.isNumBits(numBits);
         Checks.isLessThanOrEqualTo(numBits, innerBitsCapacity);
 
         if (DEBUG) {
@@ -352,17 +353,18 @@ public final class BitBuffer extends BaseLargeByteArray implements PrintDebug {
             enter(b -> b.add("byteBuffer.length", lengthGetter.applyAsInt(byteBuffer)).add("byteBufferBitOffset", byteBufferBitOffset).add("numBits", numBits));
         }
 
-        final byte[] byteArray = getLastBufferOrAllocate();
+        final int outerIndex = getLastByteArrayIndexOrAllocateForOneAppendedElement();
+        final byte[] byteArray = getByteArrayByOuterIndex(outerIndex);
 
-        final int numByteArrayStoredBits = getInnerArrayNumElements(byteArray);
+        final int numByteArrayStoredBits = getNumInnerElements(outerIndex);
 
-        final long dstBitOffset = numByteArrayStoredBits + NUM_INNER_ELEMENTS_NUM_BITS;
+        final long dstBitOffset = numByteArrayStoredBits;
 
         final int numValueBitsRemaining = innerBitsCapacity - numByteArrayStoredBits;
 
         long srcBitOffset = byteBufferBitOffset;
 
-        if (numBits < numValueBitsRemaining) {
+        if (numBits <= numValueBitsRemaining) {
 
             BitBufferUtil.copyBits(byteBuffer, srcBitOffset, numBits, byteArray, dstBitOffset, numBits, byteGetter, lengthGetter);
 
@@ -373,38 +375,49 @@ public final class BitBuffer extends BaseLargeByteArray implements PrintDebug {
                 debugByteArray("updated one out of one byte array", byteArray, updatedNumByteArrayStoredBits);
             }
 
-            setNumElements(byteArray, numByteArrayStoredBits + numBits);
+            setNumInnerElements(outerIndex, numByteArrayStoredBits + numBits);
         }
         else {
-            final int numNextByteArrayBitsToStore = numBits - numValueBitsRemaining;
+            if (numValueBitsRemaining > 0) {
 
-            BitBufferUtil.copyBits(byteBuffer, srcBitOffset, numValueBitsRemaining, byteArray, dstBitOffset, numValueBitsRemaining, byteGetter, lengthGetter);
+                BitBufferUtil.copyBits(byteBuffer, srcBitOffset, numValueBitsRemaining, byteArray, dstBitOffset, numValueBitsRemaining, byteGetter, lengthGetter);
 
-            final int updatedNumByteArrayStoredBits = numByteArrayStoredBits + numValueBitsRemaining;
+                final int updatedNumByteArrayStoredBits = numByteArrayStoredBits + numValueBitsRemaining;
 
-            if (DEBUG) {
+                if (DEBUG) {
 
-                debugByteArray("updated one out of two byte array", byteArray, updatedNumByteArrayStoredBits);
+                    debugByteArray("updated one out of two byte array", byteArray, updatedNumByteArrayStoredBits);
+                }
+
+                setNumInnerElements(outerIndex, updatedNumByteArrayStoredBits);
             }
 
-            setNumElements(byteArray, updatedNumByteArrayStoredBits);
+            final int numNextByteArrayBitsToStore = numBits - numValueBitsRemaining;
+            final byte[] nextByteArray = checkCapacity(numNextByteArrayBitsToStore);
 
-            final byte[] nextByteArray = allocate();
-
-            BitBufferUtil.copyBits(byteBuffer, srcBitOffset + numValueBitsRemaining, numNextByteArrayBitsToStore, nextByteArray, NUM_INNER_ELEMENTS_NUM_BITS,
-                    numNextByteArrayBitsToStore, byteGetter, lengthGetter);
+            BitBufferUtil.copyBits(byteBuffer, srcBitOffset + numValueBitsRemaining, numNextByteArrayBitsToStore, nextByteArray, 0L, numNextByteArrayBitsToStore, byteGetter,
+                    lengthGetter);
 
             if (DEBUG) {
 
                 debugByteArray("updated two out of two byte array", byteArray, numNextByteArrayBitsToStore);
             }
 
-            setNumElements(nextByteArray, numNextByteArrayBitsToStore);
+            setNumInnerElements(outerIndex + 1, numNextByteArrayBitsToStore);
         }
 
         this.bitOffset += numBits;
 
-        exit(b -> b.add("this.bitOffset", bitOffset));
+        if (DEBUG) {
+
+            exit(b -> b.add("this.bitOffset", bitOffset));
+        }
+    }
+
+    @Override
+    protected long getInnerElementCapacity() {
+
+        return innerBitsCapacity;
     }
 
     private void debugByteArray(String message, byte[] byteArray, int numByteArrayStoredBits) {
@@ -412,7 +425,7 @@ public final class BitBuffer extends BaseLargeByteArray implements PrintDebug {
         final byte[] closureByteArray = byteArray;
         final int closureNumByteArrayStoredBits = numByteArrayStoredBits;
 
-        final int numToPrint = BitBufferUtil.numBytes(numByteArrayStoredBits) + NUM_INNER_ELEMENTS_NUM_BYTES;
+        final int numToPrint = BitBufferUtil.numBytes(numByteArrayStoredBits);
 
         debug(message, b -> b.add("byteArray", byteArrayString(closureByteArray, numToPrint)).add("numByteArrayStoredBits", closureNumByteArrayStoredBits));
     }

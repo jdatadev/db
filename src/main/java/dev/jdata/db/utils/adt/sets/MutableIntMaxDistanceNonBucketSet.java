@@ -3,6 +3,7 @@ package dev.jdata.db.utils.adt.sets;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
+import dev.jdata.db.utils.allocators.IIntSetAllocator;
 
 public final class MutableIntMaxDistanceNonBucketSet extends BaseIntMaxDistanceNonBucketSet implements IMutableIntSet {
 
@@ -88,5 +89,11 @@ public final class MutableIntMaxDistanceNonBucketSet extends BaseIntMaxDistanceN
 
             exit();
         }
+    }
+
+    @Override
+    public <T extends IIntSet> T toImmutable(IIntSetAllocator<T> intSetAllocator) {
+
+        return intSetAllocator.copyToImmutable(this);
     }
 }

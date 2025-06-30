@@ -13,6 +13,7 @@ import dev.jdata.db.DBConstants;
 import dev.jdata.db.engine.database.IStringCache;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
+import dev.jdata.db.schema.model.schemamaps.CompleteSchemaMaps;
 import dev.jdata.db.schema.storage.sqloutputter.ISQLOutputter;
 import dev.jdata.db.schema.storage.sqloutputter.TextToByteOutputPrerequisites;
 import dev.jdata.db.sql.ast.statements.BaseSQLDDLOperationStatement;
@@ -29,7 +30,7 @@ import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
 
-public final class DatabaseSchemaStorage implements IDatabaseSchemaStorageFactory<IOException> {
+public final class DatabaseSchemaStorage<T extends CompleteSchemaMaps<?>> implements IDatabaseSchemaStorageFactory<T, IOException> {
 
     private static final String SCHEMA_DIFF_PREFIX = "schemadiff";
 
@@ -41,16 +42,16 @@ public final class DatabaseSchemaStorage implements IDatabaseSchemaStorageFactor
     private TextToByteOutputPrerequisites textOutputPrerequisites;
     private final IRelativeFileSystemAccess fileSystemAccess;
 
-    private final NodeObjectCache<Storage> storageCache;
+    private final NodeObjectCache<Storage<T>> storageCache;
 
-    private static final class Storage extends FileStorage implements IDatabaseSchemaStorage<IOException> {
+    private static final class Storage<T extends CompleteSchemaMaps<?>> extends FileStorage implements IDatabaseSchemaStorage<T, IOException> {
 
         private RelativeDirectoryPath schemaDirectoryPath;
-        private DatabaseSchemaStorage schemaStorage;
+        private DatabaseSchemaStorage<T> schemaStorage;
 
         private int diffSequenceNo;
 
-        void initialize(RelativeDirectoryPath schemaDirectoryPath, DatabaseSchemaStorage schemaStorage) {
+        void initialize(RelativeDirectoryPath schemaDirectoryPath, DatabaseSchemaStorage<T> schemaStorage) {
 
             this.schemaDirectoryPath = Objects.requireNonNull(schemaDirectoryPath);
             this.schemaStorage = Objects.requireNonNull(schemaStorage);
@@ -103,7 +104,7 @@ public final class DatabaseSchemaStorage implements IDatabaseSchemaStorageFactor
         }
 
         @Override
-        public void completeSchemaDiff(IEffectiveDatabaseSchema completeEffectiveDatabaseSchema, IDatabaseSchemaSerializer schemaSerializer,
+        public void completeSchemaDiff(IEffectiveDatabaseSchema completeEffectiveDatabaseSchema, IDatabaseSchemaSerializer<T> schemaSerializer,
                 StringResolver stringResolver, ISQLOutputter<IOException> sqlOutputter) throws IOException {
 
             Objects.requireNonNull(completeEffectiveDatabaseSchema);
@@ -136,7 +137,7 @@ public final class DatabaseSchemaStorage implements IDatabaseSchemaStorageFactor
     }
 
     @Override
-    public IDatabaseSchemaStorage<IOException> storeSchemaDiff(DatabaseSchemaVersion databaseSchemaVersion) throws IOException {
+    public IDatabaseSchemaStorage<T, IOException> storeSchemaDiff(DatabaseSchemaVersion databaseSchemaVersion) throws IOException {
 
         Objects.requireNonNull(databaseSchemaVersion);
 
@@ -146,9 +147,9 @@ public final class DatabaseSchemaStorage implements IDatabaseSchemaStorageFactor
 
         fileSystemAccess.createDirectory(directoryPath);
 
-        final NodeObjectCache<Storage> cache = storageCache;
+        final NodeObjectCache<Storage<T>> cache = storageCache;
 
-        final Storage storage;
+        final Storage<T> storage;
 
         synchronized (cache) {
 
@@ -160,9 +161,9 @@ public final class DatabaseSchemaStorage implements IDatabaseSchemaStorageFactor
         return storage;
     }
 
-    private void onSchemaComplete(Storage storage) {
+    private void onSchemaComplete(Storage<T> storage) {
 
-        final NodeObjectCache<Storage> cache = storageCache;
+        final NodeObjectCache<Storage<T>> cache = storageCache;
 
         storage.reset();
 

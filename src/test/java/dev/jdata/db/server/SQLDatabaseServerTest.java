@@ -32,14 +32,14 @@ import dev.jdata.db.engine.transactions.mvcc.MVCCTransaction;
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaManager;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.schema.SchemaManagementAllocators;
+import dev.jdata.db.schema.allocators.SchemaManagementAllocators;
 import dev.jdata.db.schema.model.databaseschema.CompleteDatabaseSchema;
 import dev.jdata.db.schema.types.SchemaCustomType;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.sql.parse.SQLParserFactory;
 import dev.jdata.db.test.unit.BaseTest;
 import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
-import dev.jdata.db.utils.allocators.IntBucketSetAllocator;
+import dev.jdata.db.utils.allocators.MutableIntMaxDistanceNonBucketSetAllocator;
 import dev.jdata.db.utils.checks.Checks;
 
 public class SQLDatabaseServerTest extends BaseTest {
@@ -134,7 +134,7 @@ public class SQLDatabaseServerTest extends BaseTest {
 
         final DatabaseId databaseId = new DatabaseId(DBConstants.INITIAL_DESCRIPTORABLE, databaseName);
 
-        final IntBucketSetAllocator intSetAllocator = new IntBucketSetAllocator();
+        final MutableIntMaxDistanceNonBucketSetAllocator intSetAllocator = new MutableIntMaxDistanceNonBucketSetAllocator();
 
         final SchemaManagementAllocators schemaManagementAllocators = new SchemaManagementAllocators(intSetAllocator);
 

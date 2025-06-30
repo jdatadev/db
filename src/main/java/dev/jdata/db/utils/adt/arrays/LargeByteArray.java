@@ -4,16 +4,26 @@ import java.util.Objects;
 
 public final class LargeByteArray extends BaseLargeByteArray implements IArray {
 
+    private static final boolean REQUIRES_INNER_ARRAY_NUM_ELEMENTS = false;
+
     private long limit;
 
     public LargeByteArray(int innerCapacityExponent) {
-        super(innerCapacityExponent);
+        super(innerCapacityExponent, REQUIRES_INNER_ARRAY_NUM_ELEMENTS);
 
         this.limit = 0L;
     }
 
     public LargeByteArray(int initialOuterCapacity, int innerCapacityExponent) {
-        super(initialOuterCapacity, innerCapacityExponent);
+        super(initialOuterCapacity, innerCapacityExponent, REQUIRES_INNER_ARRAY_NUM_ELEMENTS);
+
+        this.limit = 0L;
+    }
+
+    @Override
+    public void clear() {
+
+        super.clear();
 
         this.limit = 0L;
     }
@@ -25,12 +35,6 @@ public final class LargeByteArray extends BaseLargeByteArray implements IArray {
     }
 
     @Override
-    public boolean isEmpty() {
-
-        return limit == 0L;
-    }
-
-    @Override
     public long getLimit() {
 
         return limit;
@@ -38,29 +42,39 @@ public final class LargeByteArray extends BaseLargeByteArray implements IArray {
 
     public int get(long index) {
 
-        return getBuffer(index)[getInnerIndexNotCountingNumElements(index) + NUM_INNER_ELEMENTS_NUM_BYTES];
+        return getByteArrayByOffset(index)[getInnerElementIndex(index)];
     }
 
     public void add(byte value) {
 
-        final byte[] buffer = checkCapacity();
+        final int outerIndex = checkCapacityForOneAppendedElementAndReturnOuterIndex();
 
-        buffer[getInnerIndexNotCountingNumElements(getNumElements()) + NUM_INNER_ELEMENTS_NUM_BYTES] = value;
+        final byte[] byteArray = getOuterArray()[outerIndex];
+
+        byteArray[getInnerElementIndex(getNumElements())] = value;
 
         incrementNumElements();
-
-        incrementNumElements(buffer);
     }
 
     public void set(long index, byte value) {
 
-        Objects.checkIndex(index, getNumElements());
+        if (index >= limit) {
 
-        final byte[] array = getBuffer(index);
+            ensureCapacityAndLimit(index, limit, this, null, (t, i) -> t.limit += i, null);
+        }
+        else {
+            Objects.checkIndex(index, getNumElements());
+        }
 
-        final int innerIndex = getInnerIndexNotCountingNumElements(index);
+        final byte[] array = getByteArrayByOffset(index);
 
-        array[innerIndex + NUM_INNER_ELEMENTS_NUM_BYTES] = value;
+        array[getInnerElementIndex(index)] = value;
+    }
+
+    @Override
+    final long getRemainderOfLastInnerArray(int outerIndex) {
+
+        return getRemainderOfLastInnerArrayWithLimit(outerIndex, limit);
     }
 
     private long getNumElements() {

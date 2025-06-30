@@ -19,11 +19,11 @@ public final class LargeLongMultiHeadSinglyLinkedListTest extends BaseLargeMulti
         final long addedNode = list.addHead(testList, value, BaseList.NO_NODE, BaseList.NO_NODE, TestList::setHeadNode, TestList::setTailNode);
         assertThat(addedNode).isNotEqualTo(BaseList.NO_NODE);
 
-        final long otherValueRemovedNode = list.removeNodeByValue(testList, otherValue, testList.getHeadNode(), testList.getTailNode(), TestList::setHeadNode,
+        final long otherValueRemovedNode = list.removeAtMostOneNodeByValue(testList, otherValue, testList.getHeadNode(), testList.getTailNode(), TestList::setHeadNode,
                 TestList::setTailNode);
         assertThat(otherValueRemovedNode).isEqualTo(BaseList.NO_NODE);
 
-        final long valueRemovedNode = list.removeNodeByValue(testList, value, testList.getHeadNode(), testList.getTailNode(), TestList::setHeadNode, TestList::setTailNode);
+        final long valueRemovedNode = list.removeAtMostOneNodeByValue(testList, value, testList.getHeadNode(), testList.getTailNode(), TestList::setHeadNode, TestList::setTailNode);
         assertThat(valueRemovedNode).isEqualTo(addedNode);
     }
 }

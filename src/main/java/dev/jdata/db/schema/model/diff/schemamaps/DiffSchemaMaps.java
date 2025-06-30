@@ -1,117 +1,51 @@
 package dev.jdata.db.schema.model.diff.schemamaps;
 
-import java.util.Objects;
-import java.util.function.Function;
+import java.util.function.IntFunction;
 
 import dev.jdata.db.schema.model.SchemaMap;
 import dev.jdata.db.schema.model.objects.DBFunction;
-import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.Index;
 import dev.jdata.db.schema.model.objects.Procedure;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.model.objects.Trigger;
 import dev.jdata.db.schema.model.objects.View;
 import dev.jdata.db.schema.model.schemamaps.BaseSchemaMaps;
-import dev.jdata.db.utils.allocators.IAllocators;
-import dev.jdata.db.utils.allocators.NodeObjectCache;
 
-public final class DiffSchemaMaps extends BaseSchemaMaps<SchemaMap<?>> {
+public abstract class DiffSchemaMaps<T extends SchemaMap<?, ?, ?, ?, ?>> extends BaseSchemaMaps<T> {
 
-    public static abstract class DiffSchemaMapsBuilderAllocator {
+    public static abstract class DiffSchemaMapsBuilderAllocator<T extends SchemaMap<?, ?, ?, ?, ?>, U extends DiffSchemaMapsBuilder<T, V, U>, V extends DiffSchemaMaps<T>> {
 
-        abstract Builder allocateDiffSchemaMapsBuilder();
+        abstract U allocateDiffSchemaMapsBuilder();
 
-        abstract void freeDiffSchemaMapsBuilder(Builder builder);
+        abstract void freeDiffSchemaMapsBuilder(U builder);
     }
 
-    public static final class HeapDiffSchemaMapsBuilderAllocator extends DiffSchemaMapsBuilderAllocator {
-
-        public static final HeapDiffSchemaMapsBuilderAllocator INSTANCE = new HeapDiffSchemaMapsBuilderAllocator();
-
-        private HeapDiffSchemaMapsBuilderAllocator() {
-
-        }
-
-        @Override
-        Builder allocateDiffSchemaMapsBuilder() {
-
-            return new Builder(this);
-        }
-
-        @Override
-        void freeDiffSchemaMapsBuilder(Builder builder) {
-
-            Objects.requireNonNull(builder);
-        }
-    }
-
-    public static final class CacheDiffSchemaMapsBuilderAllocator extends DiffSchemaMapsBuilderAllocator implements IAllocators {
-
-        private final NodeObjectCache<Builder> objectCache;
-
-        public CacheDiffSchemaMapsBuilderAllocator() {
-
-            this.objectCache = new NodeObjectCache<>(Builder::new);
-        }
-
-        @Override
-        public void gatherStatistics(IAllocatorsStatisticsGatherer statisticsGatherer) {
-
-            Objects.requireNonNull(statisticsGatherer);
-
-            statisticsGatherer.addNodeObjectCache("objectCache", Builder.class, objectCache);
-        }
-
-        @Override
-        Builder allocateDiffSchemaMapsBuilder() {
-
-            return objectCache.allocate();
-        }
-
-        @Override
-        void freeDiffSchemaMapsBuilder(Builder builder) {
-
-            Objects.requireNonNull(builder);
-
-            objectCache.free(builder);
-        }
-    }
-
-    public static Builder createBuilder(DiffSchemaMapsBuilderAllocator allocator) {
+    public static <T extends SchemaMap<?, ?, ?, ?, ?>, U extends DiffSchemaMaps<T>, V extends DiffSchemaMapsBuilder<T, U, V>>
+    V createBuilder(DiffSchemaMapsBuilderAllocator<T, V, U> allocator) {
 
         return allocator.allocateDiffSchemaMapsBuilder();
     }
 
-    public static final class Builder extends BaseBuilder<Builder> {
+    public static abstract class DiffSchemaMapsBuilder<T extends SchemaMap<?, ?, ?, ?, ?>, U extends DiffSchemaMaps<T>, V extends DiffSchemaMapsBuilder<T, U, V>>
 
-        private Builder() {
+            extends BaseBuilder<T, V> {
 
+        DiffSchemaMapsBuilder(IntFunction<T[]> createSchemaMapsArray) {
+            super(createSchemaMapsArray);
+
+            initialize();
         }
 
-        private Builder(DiffSchemaMapsBuilderAllocator builderAllocator) {
-
-            initialize(builderAllocator);
-        }
-
-        void initialize(DiffSchemaMapsBuilderAllocator builderAllocator) {
+        final void initialize() {
 
             checkIsNotAllocated();
         }
-
-        public DiffSchemaMaps build() {
-
-            checkIsAllocated();
-
-            return new DiffSchemaMaps(mapOrEmpty(DDLObjectType.TABLE), mapOrEmpty(DDLObjectType.VIEW), mapOrEmpty(DDLObjectType.INDEX), mapOrEmpty(DDLObjectType.TRIGGER),
-                    mapOrEmpty(DDLObjectType.FUNCTION), mapOrEmpty(DDLObjectType.PROCEDURE));
-        }
     }
 
-    private static final DiffSchemaMaps EMPTY = new DiffSchemaMaps(SchemaMap.empty(), SchemaMap.empty(), SchemaMap.empty(), SchemaMap.empty(), SchemaMap.empty(),
-            SchemaMap.empty());
+    @SuppressWarnings("unchecked")
+    DiffSchemaMaps(IntFunction<T[]> createSchemaMapsArray, SchemaMap<Table, ?, ?, ?, ?> tables, SchemaMap<View, ?, ?, ?, ?> views, SchemaMap<Index, ?, ?, ?, ?> indices,
+            SchemaMap<Trigger, ?, ?, ?, ?> triggers, SchemaMap<DBFunction, ?, ?, ?, ?> functions, SchemaMap<Procedure, ?, ?, ?, ?> procedures) {
 
-    public DiffSchemaMaps(SchemaMap<Table> tables, SchemaMap<View> views, SchemaMap<Index> indices, SchemaMap<Trigger> triggers, SchemaMap<DBFunction> functions,
-            SchemaMap<Procedure> procedures) {
-        super(Function.identity(), SchemaMap[]::new, Function.identity(), tables, views, indices, triggers, functions, procedures);
+        super(m -> (T)m, createSchemaMapsArray, m -> m, tables, views, indices, triggers, functions, procedures);
     }
 }

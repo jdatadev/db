@@ -56,6 +56,6 @@ public final class IntArray implements IIntArray, IIntArrayMutators, IResettable
     @Override
     public void reset() {
 
-        delegate.reset();
+        delegate.clear();
     }
 }

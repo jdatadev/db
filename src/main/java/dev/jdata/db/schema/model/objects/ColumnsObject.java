@@ -1,7 +1,9 @@
 package dev.jdata.db.schema.model.objects;
 
 import java.util.Objects;
+import java.util.function.BiPredicate;
 
+import org.jutils.io.strings.StringRef;
 import org.jutils.io.strings.StringResolver;
 import org.jutils.io.strings.StringResolver.RefStringResolver;
 import org.jutils.io.strings.StringResolver.ToStringWithStringResolver;
@@ -15,8 +17,6 @@ public abstract class ColumnsObject extends SchemaObject implements ToStringWith
 
     private final IIndexList<Column> columns;
 
-    private final int numNullableColumns;
-
     public abstract ColumnsObject makeCopy(IIndexList<Column> columns);
 
     ColumnsObject(long parsedName, long hashName, int id, IIndexList<Column> columns) {
@@ -26,22 +26,12 @@ public abstract class ColumnsObject extends SchemaObject implements ToStringWith
         Checks.isLessThanOrEqualTo(columns.getNumElements(), DBConstants.MAX_COLUMNS);
 
         this.columns = columns;
-
-        this.numNullableColumns = countNullableColumns(columns);
     }
-
 
     public ColumnsObject(SchemaObject toCopy, IIndexList<Column> columns) {
         super(toCopy);
 
         this.columns = columns;
-
-        this.numNullableColumns = countNullableColumns(columns);
-    }
-
-    private static int countNullableColumns(IIndexList<Column> columns) {
-
-        return Integers.checkUnsignedLongToUnsignedInt(columns.countWithClosure(Column::isNullable));
     }
 
     public final int getNumColumns() {
@@ -54,16 +44,46 @@ public abstract class ColumnsObject extends SchemaObject implements ToStringWith
         return columns.get(index);
     }
 
+    public final <P> Column findAtMostOneColumn(P parameter, BiPredicate<Column, P> predicate) {
+
+        Objects.requireNonNull(predicate);
+
+        return columns.findAtMostOne(parameter, predicate);
+    }
+
+    @FunctionalInterface
+    public interface ColumnNameEqualityTester<P> {
+
+        boolean areEqual(long parameterName, long columnName, boolean caseSensitive, P parameter);
+    }
+
+    public final <P> boolean containsColumn(long name, boolean caseSensitive, P parameter, ColumnNameEqualityTester<P> equalityTester) {
+
+        StringRef.checkIsString(name);
+        Objects.requireNonNull(equalityTester);
+
+        boolean result = false;
+
+        final long numColumns = columns.getNumElements();
+
+        for (int i = 0; i < numColumns; ++ i) {
+
+            if (equalityTester.areEqual(name, columns.get(i).getParsedName(), caseSensitive, parameter)) {
+
+                result = true;
+                break;
+            }
+        }
+
+        return result;
+    }
+
     public final int getMaxColumnId() {
 
         return columns.maxInt(DBConstants.INITIAL_COLUMN_ID - 1, Column::getId);
     }
 
-    public final int getNumNullableColumns() {
-        return numNullableColumns;
-    }
-
-    public final boolean equals(StringResolver thisStringResolver, ColumnsObject other, StringResolver otherStringResolver, boolean caseSensitive) {
+    public boolean equals(StringResolver thisStringResolver, ColumnsObject other, StringResolver otherStringResolver, boolean caseSensitive) {
 
         Objects.requireNonNull(thisStringResolver);
         Objects.requireNonNull(other);
@@ -118,11 +138,11 @@ public abstract class ColumnsObject extends SchemaObject implements ToStringWith
 
     private boolean equalsInstanceVariables(ColumnsObject other) {
 
-        return numNullableColumns == other.numNullableColumns;
+        return true;
     }
 
     @Override
-    public final void toString(StringResolver stringResolver, StringBuilder sb) {
+    public void toString(StringResolver stringResolver, StringBuilder sb) {
 
         Objects.requireNonNull(stringResolver);
         Objects.requireNonNull(sb);
@@ -131,7 +151,7 @@ public abstract class ColumnsObject extends SchemaObject implements ToStringWith
 
         columns.toString(sb, stringResolver, (c, b, p) -> c.toString(p, b));
 
-        sb.append(", numNullableColumns=").append(numNullableColumns).append("]");
+        sb.append(']');
     }
 
     @Override

@@ -16,141 +16,7 @@ import dev.jdata.db.utils.scalars.Integers;
 
 public interface IIndexListGetters<T> extends IListGetters<T>, ITailListGetters<T>, IElementsToString<T> {
 
-    T get(long index);
-
     @Override
-    default <P, E extends Exception> void forEach(P parameter, ForEach<T, P, E> forEach) throws E {
-
-        Objects.requireNonNull(forEach);
-
-        final long numElements = getNumElements();
-
-        for (long i = 0L; i < numElements; ++ i) {
-
-            forEach.each(get(i), parameter);
-        }
-    }
-
-    @Override
-    default T[] toArray(IntFunction<T[]> createArray) {
-
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(getNumElements());
-
-        final T[] result = createArray.apply(numElements);
-
-        for (int i = 0; i < numElements; ++ i) {
-
-            result[i] = get(i);
-        }
-
-        return result;
-    }
-
-    @Override
-    default <P1, P2, E extends Exception> void forEach(P1 parameter1, P2 parameter2, ForEach2<T, P1, P2, E> forEach) throws E {
-
-        Objects.requireNonNull(forEach);
-
-        final long numElements = getNumElements();
-
-        for (long i = 0L; i < numElements; ++ i) {
-
-            forEach.each(get(i), parameter1, parameter2);
-        }
-    }
-
-    @Override
-    default T getHead() {
-
-        return get(0L);
-    }
-
-    @Override
-    default T getTail() {
-
-        return get(getNumElements() - 1L);
-    }
-
-    @Override
-    default <R> IIndexList<R> map(LongFunction<IIndexListBuildable<R>> createMappedList, Function<T, R> mapper) {
-
-        Objects.requireNonNull(createMappedList);
-        Objects.requireNonNull(mapper);
-
-        final long numElements = getNumElements();
-
-        final IIndexListBuildable<R> resultAddable = createMappedList.apply(numElements);
-
-        for (long i = 0L; i < numElements; ++ i) {
-
-            final R mapped = mapper.apply(get(i));
-
-            resultAddable.addTail(mapped);
-        }
-
-        return resultAddable.build();
-    }
-
-    @Override
-    default boolean containsInstance(T instance) {
-
-        return ByIndex.containsInstance(this, getNumElements(), instance, IIndexListGetters::get, IndexOutOfBoundsException::new);
-    }
-
-    @Override
-    default boolean containsInstance(T instance, long startIndex, long numElements) {
-
-        return ByIndex.containsInstance(this, getNumElements(), instance, startIndex, numElements, IIndexListGetters::get, IndexOutOfBoundsException::new);
-    }
-
-    @Override
-    default boolean closureOrConstantContains(Predicate<T> predicate) {
-
-        return ByIndex.contains(this, getNumElements(), predicate, IIndexListGetters::get, (e, p) -> p.test(e), IndexOutOfBoundsException::new);
-    }
-
-    @Override
-    default <P> boolean contains(P parameter, BiPredicate<T, P> predicate) {
-
-        return ByIndex.contains(this, getNumElements(), parameter, IIndexListGetters::get, predicate, IndexOutOfBoundsException::new);
-    }
-
-    @Override
-    default <P> boolean contains(long startIndex, long numElements, P parameter, BiPredicate<T, P> predicate) {
-
-        return ByIndex.contains(this, getNumElements(), startIndex, numElements, parameter, IIndexListGetters::get, predicate, IndexOutOfBoundsException::new);
-    }
-
-    @Override
-    default long closureOrConstantFindIndexInRange(long startIndex, long numElements, Predicate<T> predicate) {
-
-        return ByIndex.findIndex(this, getNumElements(), startIndex, numElements, predicate, IIndexListGetters::get, predicate != null ? (e, p) -> p.test(e) : null,
-                IndexOutOfBoundsException::new);
-    }
-
-    @Override
-    default <P> long findIndexInRange(long startIndex, long numElements, P parameter, BiPredicate<T, P> predicate) {
-
-        return ByIndex.findIndex(this, getNumElements(), startIndex, numElements, parameter, IIndexListGetters::get, predicate, IndexOutOfBoundsException::new);
-    }
-
-    @Override
-    default long closureOrConstantFindIndex(Predicate<T> predicate) {
-
-        return ByIndex.findIndex(this, getNumElements(), predicate, IIndexListGetters::get, (e, p) -> p.test(e), IndexOutOfBoundsException::new);
-    }
-
-    @Override
-    default <P> long findIndex(P parameter, BiPredicate<T, P> predicate) {
-
-        return ByIndex.findIndex(this, getNumElements(), parameter, IIndexListGetters::get, predicate, IndexOutOfBoundsException::new);
-    }
-
-    default long countWithClosure(Predicate<T> predicate) {
-
-        return count(predicate, (e, p) -> p.test(e));
-    }
-
     default <P> long count(P parameter, BiPredicate<T, P> predicate) {
 
         Objects.requireNonNull(predicate);
@@ -198,7 +64,8 @@ public interface IIndexListGetters<T> extends IListGetters<T>, ITailListGetters<
         return found ? max : defaultValue;
     }
 
-    default long maxLong(long defaultValue, ToLongFunction<T> mapper) {
+    @Override
+    default long maxLong(long defaultValue, ToLongFunction<? super T> mapper) {
 
         Objects.requireNonNull(mapper);
 
@@ -221,6 +88,146 @@ public interface IIndexListGetters<T> extends IListGetters<T>, ITailListGetters<
         }
 
         return found ? max : defaultValue;
+    }
+
+    T get(long index);
+
+    @Override
+    default <P, E extends Exception> void forEach(P parameter, IForEach<T, P, E> forEach) throws E {
+
+        Objects.requireNonNull(forEach);
+
+        final long numElements = getNumElements();
+
+        for (long i = 0L; i < numElements; ++ i) {
+
+            forEach.each(get(i), parameter);
+        }
+    }
+
+    @Override
+    default <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<T, P1, P2, R, E> forEach) throws E {
+
+        Objects.requireNonNull(forEach);
+
+        R result = defaultResult;
+
+        final long numElements = getNumElements();
+
+        for (long i = 0L; i < numElements; ++ i) {
+
+            final R forEachResult = forEach.each(get(i), parameter1, parameter2);
+
+            if (forEachResult != null) {
+
+                result = forEachResult;
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    default T[] toArray(IntFunction<T[]> createArray) {
+
+        final int numElements = Integers.checkUnsignedLongToUnsignedInt(getNumElements());
+
+        final T[] result = createArray.apply(numElements);
+
+        for (int i = 0; i < numElements; ++ i) {
+
+            result[i] = get(i);
+        }
+
+        return result;
+    }
+
+    @Override
+    default T getHead() {
+
+        return get(0L);
+    }
+
+    @Override
+    default T getTail() {
+
+        return get(getNumElements() - 1L);
+    }
+
+    @Override
+    default <R> IIndexList<R> map(LongFunction<IIndexListBuildable<R, ?, ?>> createMappedList, Function<T, R> mapper) {
+
+        Objects.requireNonNull(createMappedList);
+        Objects.requireNonNull(mapper);
+
+        final long numElements = getNumElements();
+
+        final IIndexListBuildable<R, ?, ?> resultAddable = createMappedList.apply(numElements);
+
+        for (long i = 0L; i < numElements; ++ i) {
+
+            final R mapped = mapper.apply(get(i));
+
+            resultAddable.addTail(mapped);
+        }
+
+        return resultAddable.build();
+    }
+
+    @Override
+    default boolean containsInstance(T instance) {
+
+        return ByIndex.containsInstance(this, getNumElements(), instance, IIndexListGetters::get, IndexOutOfBoundsException::new);
+    }
+
+    @Override
+    default boolean containsInstance(T instance, long startIndex, long numElements) {
+
+        return ByIndex.containsInstance(this, getNumElements(), instance, startIndex, numElements, IIndexListGetters::get, IndexOutOfBoundsException::new);
+    }
+
+    @Override
+    default boolean closureOrConstantContains(Predicate<T> predicate) {
+
+        return ByIndex.contains(this, getNumElements(), predicate, IIndexListGetters::get, (e, p) -> p.test(e), IndexOutOfBoundsException::new);
+    }
+
+    @Override
+    default <P> boolean contains(P parameter, BiPredicate<T, P> predicate) {
+
+        return ByIndex.contains(this, getNumElements(), parameter, IIndexListGetters::get, predicate, IndexOutOfBoundsException::new);
+    }
+
+    @Override
+    default <P> boolean contains(long startIndex, long numElements, P parameter, BiPredicate<T, P> predicate) {
+
+        return ByIndex.contains(this, getNumElements(), startIndex, numElements, parameter, IIndexListGetters::get, predicate, IndexOutOfBoundsException::new);
+    }
+
+    @Override
+    default long closureOrConstantFindAtMostOneIndexInRange(long startIndex, long numElements, Predicate<T> predicate) {
+
+        return ByIndex.findAtMostOneIndex(this, getNumElements(), startIndex, numElements, predicate, IIndexListGetters::get, predicate != null ? (e, p) -> p.test(e) : null,
+                IndexOutOfBoundsException::new);
+    }
+
+    @Override
+    default <P> long findAtMostOneIndexInRange(long startIndex, long numElements, P parameter, BiPredicate<T, P> predicate) {
+
+        return ByIndex.findAtMostOneIndex(this, getNumElements(), startIndex, numElements, parameter, IIndexListGetters::get, predicate, IndexOutOfBoundsException::new);
+    }
+
+    @Override
+    default long closureOrConstantFindAtMostOneIndex(Predicate<T> predicate) {
+
+        return ByIndex.findAtMostOneIndex(this, getNumElements(), predicate, IIndexListGetters::get, (e, p) -> p.test(e), IndexOutOfBoundsException::new);
+    }
+
+    @Override
+    default <P> long findAtMostOneIndex(P parameter, BiPredicate<T, P> predicate) {
+
+        return ByIndex.findAtMostOneIndex(this, getNumElements(), parameter, IIndexListGetters::get, predicate, IndexOutOfBoundsException::new);
     }
 
     @FunctionalInterface

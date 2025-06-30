@@ -1,20 +1,24 @@
 package dev.jdata.db.utils.adt.elements;
 
-public interface IIntElements {
+public interface IIntElements extends IElements {
 
     @FunctionalInterface
-    public interface IntElementPredicate<P> {
+    public interface IIntElementPredicate<P> {
 
         boolean test(int value, P parameter);
     }
 
-    @FunctionalInterface
-    public interface ForEach<P, E extends Exception> {
+    boolean contains(int value);
 
-        void each(int element, P parameter) throws E;
+    boolean containsOnly(int value);
+
+    @FunctionalInterface
+    public interface IContainsOnlyPredicate {
+
+        boolean test(int inputValue, int elementsValue);
     }
 
-    <P, E extends Exception> void forEach(P parameter, ForEach<P, E> forEach) throws E;
+    boolean containsOnly(int value, IContainsOnlyPredicate predicate);
 
-    boolean contains(int value);
+    int[] toArray();
 }

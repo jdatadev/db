@@ -1,18 +1,7 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.elements.ILongElements;
+import dev.jdata.db.utils.adt.elements.ILongIterableElements;
 
-public interface ILongList extends ILongElements {
+public interface ILongList extends ILongIterableElements {
 
-    boolean containsOnly(long value);
-
-    @FunctionalInterface
-    public interface ContainsOnlyPredicate {
-
-        boolean test(long inputValue, long listValue);
-    }
-
-    boolean containsOnly(long value, ContainsOnlyPredicate predicate);
-
-    long[] toArray();
 }

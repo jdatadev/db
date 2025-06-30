@@ -22,13 +22,15 @@ public final class LargeLongArray extends LargeLimitArray<long[][], long[]> impl
     private final Long clearValue;
 
     public LargeLongArray(int initialOuterCapacity, int innerCapacityExponent, Long clearValue) {
-        super(initialOuterCapacity, innerCapacityExponent, 0, long[][]::new);
+        super(initialOuterCapacity, long[][]::new, a -> a.length, innerCapacityExponent);
 
         this.clearValue = clearValue;
     }
 
     @Override
     public void clear() {
+
+        super.clear();
 
         clearArrays(clearValue, arrayClearer);
     }
@@ -44,7 +46,7 @@ public final class LargeLongArray extends LargeLimitArray<long[][], long[]> impl
 
         Objects.checkIndex(index, getLimit());
 
-        return getArray()[getOuterIndex(index)][getInnerIndex(index)];
+        return getOuterArray()[getOuterIndex(index)][getInnerElementIndex(index)];
     }
 
     public void add(long value) {
@@ -53,66 +55,50 @@ public final class LargeLongArray extends LargeLimitArray<long[][], long[]> impl
 
         final long index = getAndIncrementLimit();
 
-        array[getInnerIndex(index)] = value;
+        array[getInnerElementIndex(index)] = value;
     }
 
     public void set(long index, long value) {
 
-        Checks.isIndex(index);
+        Checks.isIndexNotOutOfBounds(index);
 
         final int outerIndex = ensureCapacityAndLimit(index);
 
-        getArray()[outerIndex][getInnerIndex(index)] = value;
+        getOuterArray()[outerIndex][getInnerElementIndex(index)] = value;
     }
 
     @Override
-    long[][] copyOuterArray(long[][] outerArray, int capacity) {
+    protected long[][] copyOuterArray(long[][] outerArray, int capacity) {
 
         return Arrays.copyOf(outerArray, capacity);
     }
 
     @Override
-    int getOuterArrayLength(long[][] outerArray) {
+    protected int getOuterArrayLength(long[][] outerArray) {
 
         return outerArray.length;
     }
 
     @Override
-    long[] getInnerArray(long[][] outerArray, int index) {
+    protected long[] getInnerArray(long[][] outerArray, int index) {
 
         return outerArray[index];
     }
 
     @Override
-    int getInnerArrayLength(long[] innerArray) {
-
-        return innerArray.length;
-    }
-
-    @Override
-    void setInnerArrayLength(long[] innerArray, int length) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    int getNumInnerElements(long[] innerArray) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    long[] setInnerArray(long[][] outerArray, int outerIndex, int innerArrayLength) {
+    protected long[] abstractCreateAndSetInnerArray(long[][] outerArray, int outerIndex, int innerArrayLength) {
 
         return outerArray[outerIndex] = new long[innerArrayLength];
     }
 
-    private long[] checkCapacity() {
+    @Override
+    protected long[] checkCapacity() {
 
         return checkCapacity(clearValue, arrayClearer);
     }
 
-    private int ensureCapacityAndLimit(long index) {
+    @Override
+    int ensureCapacityAndLimit(long index) {
 
         return ensureCapacityAndLimit(index, clearValue, arrayClearer);
     }

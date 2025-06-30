@@ -14,11 +14,11 @@ import dev.jdata.db.engine.database.StringStorer;
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
+import dev.jdata.db.schema.model.HeapSchemaMap;
 import dev.jdata.db.schema.model.IDatabaseSchema;
-import dev.jdata.db.schema.model.SchemaMap;
 import dev.jdata.db.schema.model.databaseschema.CompleteDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.model.schemamaps.CompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.HeapCompleteSchemaMaps;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.file.BaseFileTableStorageFileTest.TestData;
@@ -26,9 +26,9 @@ import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.NumCol
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;
 import dev.jdata.db.test.unit.BaseDBTest;
 import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.lists.HeapIndexList;
+import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.HeapIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.bits.BitsUtil;
@@ -219,12 +219,12 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
 
     private static final class TestAllocators {
 
-        private final IndexListAllocator<Table> tableIndexListAllocator;
+        private final HeapIndexListAllocator<Table> tableIndexListAllocator;
         private final ILongToObjectMaxDistanceMapAllocator<Table> longToObjectMapAllocator;
-        private final IndexListAllocator<IDatabaseSchema> databaseSchemaIndexListAllocator;
+        private final HeapIndexListAllocator<IDatabaseSchema> databaseSchemaIndexListAllocator;
 
-        TestAllocators(IndexListAllocator<Table> tableIndexListAllocator, ILongToObjectMaxDistanceMapAllocator<Table> longToObjectMapAllocator,
-                IndexListAllocator<IDatabaseSchema> databaseSchemaIndexListAllocator) {
+        TestAllocators(HeapIndexListAllocator<Table> tableIndexListAllocator, ILongToObjectMaxDistanceMapAllocator<Table> longToObjectMapAllocator,
+                HeapIndexListAllocator<IDatabaseSchema> databaseSchemaIndexListAllocator) {
 
             this.tableIndexListAllocator = Objects.requireNonNull(tableIndexListAllocator);
             this.longToObjectMapAllocator = Objects.requireNonNull(longToObjectMapAllocator);
@@ -435,10 +435,11 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
         Checks.isNotEmpty(tables);
         Checks.areElements(tables, Objects::nonNull);
 
-        final SchemaMap<Table> tablesSchemaMap = SchemaMap.of(testAllocators. tableIndexListAllocator.of(tables), Table[]::new, testAllocators.longToObjectMapAllocator);
+        final HeapIndexList<Table> tableList = IndexList.of(tables);
 
-        final CompleteSchemaMaps schemaMaps = new CompleteSchemaMaps(tablesSchemaMap, SchemaMap.empty(), SchemaMap.empty(), SchemaMap.empty(), SchemaMap.empty(),
-                SchemaMap.empty());
+        final HeapSchemaMap<Table> tablesSchemaMap = HeapSchemaMap.of(tableList, Table[]::new, testAllocators.longToObjectMapAllocator);
+
+        final HeapCompleteSchemaMaps schemaMaps = HeapCompleteSchemaMaps.empty();
 
         final DatabaseId databaseId = new DatabaseId(DBConstants.INITIAL_DESCRIPTORABLE, "testdb");
 

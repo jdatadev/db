@@ -1,28 +1,43 @@
 package dev.jdata.db.schema.model.schemamaps;
 
 import java.util.Objects;
+import java.util.function.IntFunction;
 
+import dev.jdata.db.schema.allocators.model.SchemaMapBuilderAllocator;
+import dev.jdata.db.schema.allocators.model.SchemaMapBuilderAllocators;
 import dev.jdata.db.schema.model.SchemaMap;
-import dev.jdata.db.schema.model.SchemaMap.Builder;
-import dev.jdata.db.schema.model.SchemaMap.SchemaMapBuilderAllocator;
-import dev.jdata.db.schema.model.SchemaMap.SchemaMapBuilderAllocators;
+import dev.jdata.db.schema.model.SchemaMap.SchemaMapBuilder;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.utils.Initializable;
+import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
-public final class SchemaMapBuilders extends ObjectCacheNode {
+public abstract class SchemaMapBuilders<
 
-    private final SchemaMap.Builder<?>[] schemaMapBuilders;
+                SCHEMA_OBJECT extends SchemaObject,
+                INDEX_LIST extends IndexList<SCHEMA_OBJECT>,
+                INDEX_LIST_BUILDER extends IndexList.IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
+                INDEX_LIST_ALLOCATOR extends IndexListAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
+                SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP>,
+                SCHEMA_MAP_BUILDER extends SchemaMapBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER>,
+                COMPLETE_SCHEMA_MAPS extends CompleteSchemaMaps<? extends SchemaMap<?, ?, ?, ?, ?>>>
+
+        extends ObjectCacheNode {
+
+    public abstract COMPLETE_SCHEMA_MAPS build();
+
+    private final SCHEMA_MAP_BUILDER[] schemaMapBuilders;
 
     private boolean initialized;
 
-    public SchemaMapBuilders() {
+    public SchemaMapBuilders(IntFunction<SCHEMA_MAP_BUILDER[]> createSchemaMapBuildersArray) {
 
-        this.schemaMapBuilders = new SchemaMap.Builder<?>[DDLObjectType.getNumObjectTypes()];
+        this.schemaMapBuilders = createSchemaMapBuildersArray.apply(DDLObjectType.getNumObjectTypes());
     }
 
-    public void initialize(SchemaMapBuilderAllocators schemaMapBuilderAllocators) {
+    public final void initialize(SchemaMapBuilderAllocators schemaMapBuilderAllocators) {
 
         Objects.requireNonNull(schemaMapBuilderAllocators);
 
@@ -32,11 +47,14 @@ public final class SchemaMapBuilders extends ObjectCacheNode {
 
         for (DDLObjectType ddlObjectType : DDLObjectType.values()) {
 
-            schemaMapBuilders[ddlObjectType.ordinal()] = SchemaMap.createBuilder(1, schemaMapBuilderAllocators.getAllocator(ddlObjectType));
+            final SchemaMapBuilderAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER> schemaMapBuilderAllocator
+                    = schemaMapBuilderAllocators.getAllocator(ddlObjectType);
+
+            schemaMapBuilders[ddlObjectType.ordinal()] = SchemaMap.createBuilder(1, schemaMapBuilderAllocator);
         }
     }
 
-    public void reset(SchemaMapBuilderAllocators schemaMapBuilderAllocators) {
+    public final void reset(SchemaMapBuilderAllocators schemaMapBuilderAllocators) {
 
         Objects.requireNonNull(schemaMapBuilderAllocators);
 
@@ -48,10 +66,10 @@ public final class SchemaMapBuilders extends ObjectCacheNode {
 
             final int index = ddlObjectType.ordinal();
 
-            final SchemaMapBuilderAllocator<SchemaObject> schemaMapBuilderAllocator = schemaMapBuilderAllocators.getAllocator(ddlObjectType);
+            final SchemaMapBuilderAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER> schemaMapBuilderAllocator
+                    = schemaMapBuilderAllocators.getAllocator(ddlObjectType);
 
-            @SuppressWarnings("unchecked")
-            final SchemaMap.Builder<SchemaObject> schemaMapBuilder = (Builder<SchemaObject>)schemaMapBuilders[index];
+            final SCHEMA_MAP_BUILDER schemaMapBuilder = schemaMapBuilders[index];
 
             schemaMapBuilderAllocator.freeSchemaMapBuilder(schemaMapBuilder);
 
@@ -59,30 +77,29 @@ public final class SchemaMapBuilders extends ObjectCacheNode {
         }
     }
 
-    public <T extends SchemaObject> void addSchemaObject(DDLObjectType ddlObjectType, T schemaObject) {
+    public final void addSchemaObject(DDLObjectType ddlObjectType, SCHEMA_OBJECT schemaObject) {
 
         Objects.requireNonNull(ddlObjectType);
         Objects.requireNonNull(schemaObject);
 
-        @SuppressWarnings("unchecked")
-        final SchemaMap.Builder<T> tableSchemaMapBuilder = (SchemaMap.Builder<T>)schemaMapBuilders[ddlObjectType.ordinal()];
+        Initializable.checkIsInitialized(initialized);
+
+        final SCHEMA_MAP_BUILDER tableSchemaMapBuilder = schemaMapBuilders[ddlObjectType.ordinal()];
 
         tableSchemaMapBuilder.add(schemaObject);
     }
 
-    public CompleteSchemaMaps build() {
+    final <T extends SchemaMap<?, ?, ?, ?, ?>> T build(DDLObjectType ddlObjectType) {
 
-        return new CompleteSchemaMaps(build(DDLObjectType.TABLE), build(DDLObjectType.VIEW), build(DDLObjectType.INDEX), build(DDLObjectType.TRIGGER),
-                build(DDLObjectType.FUNCTION), build(DDLObjectType.PROCEDURE));
-    }
-
-    private <T extends SchemaObject> SchemaMap<T> build(DDLObjectType ddlObjectType) {
+        Objects.requireNonNull(ddlObjectType);
 
         Initializable.checkIsInitialized(initialized);
 
-        @SuppressWarnings("unchecked")
-        final SchemaMap.Builder<T> schemaMapBuilder = (SchemaMap.Builder<T>)schemaMapBuilders[ddlObjectType.ordinal()];
+        final SCHEMA_MAP_BUILDER schemaMapBuilder = schemaMapBuilders[ddlObjectType.ordinal()];
 
-        return schemaMapBuilder.build();
+        @SuppressWarnings("unchecked")
+        final T result = (T)schemaMapBuilder.build();
+
+        return result;
     }
 }

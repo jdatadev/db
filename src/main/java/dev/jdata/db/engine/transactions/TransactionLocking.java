@@ -149,7 +149,7 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
             }
         }
 
-        lockedTableRows.reset();
-        lockStatements.reset();
+        lockedTableRows.clear();
+        lockStatements.clear();
     }
 }

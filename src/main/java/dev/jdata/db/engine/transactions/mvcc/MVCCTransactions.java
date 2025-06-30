@@ -5,9 +5,9 @@ import java.util.Objects;
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.utils.adt.lists.FreeList;
+import dev.jdata.db.utils.adt.lists.HeapMutableIndexList;
 import dev.jdata.db.utils.adt.lists.MutableIndexList;
 import dev.jdata.db.utils.adt.sets.MutableLongBucketSet;
-import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class MVCCTransactions {
@@ -22,8 +22,8 @@ public final class MVCCTransactions {
 
     MVCCTransactions() {
 
-        this.ongoingTransactions = new MutableIndexList<>(AllocationType.HEAP);
-        this.ongoingOriginatingFromTransactions = new MutableIndexList<>(AllocationType.HEAP);
+        this.ongoingTransactions = HeapMutableIndexList.from(MVCCTransaction[]::new);
+        this.ongoingOriginatingFromTransactions = HeapMutableIndexList.from(MVCCTransaction[]::new);
 
         this.freeList = new FreeList<>(MVCCTransaction[]::new);
     }
@@ -53,7 +53,7 @@ public final class MVCCTransactions {
 
                 this.scratchTransactionId = mvccTransaction.getOriginatingTransactionId();
 
-                final long index = ongoingOriginatingFromTransactions.findIndex(this, (o, t) -> o.getOriginatingTransactionId() == t.scratchTransactionId);
+                final long index = ongoingOriginatingFromTransactions.findAtMostOneIndex(this, (o, t) -> o.getOriginatingTransactionId() == t.scratchTransactionId);
 
                 if (index == -1) {
 
@@ -210,10 +210,7 @@ public final class MVCCTransactions {
     private void releaseTransaction(MVCCTransaction mvccTransaction) {
 
         try {
-            if (!ongoingTransactions.removeInstance(mvccTransaction)) {
-
-                throw new IllegalStateException();
-            }
+            ongoingTransactions.removeExactlyOneInstance(mvccTransaction);
         }
         finally {
 

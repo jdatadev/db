@@ -1,52 +1,47 @@
 package dev.jdata.db.schema.model.schemamaps;
 
-import java.util.function.Function;
+import java.util.function.IntFunction;
 
+import dev.jdata.db.schema.allocators.model.schemamaps.ICompleteSchemaMapsBuilderAllocator;
 import dev.jdata.db.schema.model.SchemaMap;
 import dev.jdata.db.schema.model.objects.DBFunction;
-import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.Index;
 import dev.jdata.db.schema.model.objects.Procedure;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.model.objects.Trigger;
 import dev.jdata.db.schema.model.objects.View;
 
-public final class CompleteSchemaMaps extends BaseSchemaMaps<SchemaMap<?>> {
+public abstract class CompleteSchemaMaps<T extends SchemaMap<?, ?, ?, ?, ?>> extends BaseSchemaMaps<T> {
 
-    public interface CompleteSchemaMapsBuilderAllocator {
+    public static abstract class CompleteSchemaMapsBuilder<
 
-        Builder allocateCompleteSchemaMapsBuilder();
+                    T extends SchemaMap<?, ?, ?, ?, ?>,
+                    U extends CompleteSchemaMaps<T>,
+                    V extends CompleteSchemaMapsBuilder<T, U, V>>
 
-        void freeCompleteSchemaMapsBuilder(Builder builder);
-    }
+            extends BaseBuilder<T, V> {
 
-    public static final class Builder extends BaseBuilder<Builder> {
-
-        private Builder(CompleteSchemaMapsBuilderAllocator allocator) {
-
+        CompleteSchemaMapsBuilder(IntFunction<T[]> createSchemaMapsArray) {
+            super(createSchemaMapsArray);
         }
 
-        public CompleteSchemaMaps build() {
-
-            return new CompleteSchemaMaps(mapOrEmpty(DDLObjectType.TABLE), mapOrEmpty(DDLObjectType.VIEW), mapOrEmpty(DDLObjectType.INDEX), mapOrEmpty(DDLObjectType.TRIGGER),
-                    mapOrEmpty(DDLObjectType.FUNCTION), mapOrEmpty(DDLObjectType.PROCEDURE));
-        }
+        public abstract U build();
     }
 
-    public static final CompleteSchemaMaps EMPTY = new CompleteSchemaMaps(SchemaMap.empty(), SchemaMap.empty(), SchemaMap.empty(), SchemaMap.empty(), SchemaMap.empty(),
-            SchemaMap.empty());
+    public static <T extends SchemaMap<?, ?, ?, ?, ?>, U extends CompleteSchemaMaps<T>, V extends CompleteSchemaMapsBuilder<T, U, V>>
+    V createBuilder(ICompleteSchemaMapsBuilderAllocator<U, V> allocator) {
 
-    public static Builder createBuilder(CompleteSchemaMapsBuilderAllocator allocator) {
-
-        return new Builder(allocator);
+        return allocator.allocateCompleteSchemaMapsBuilder();
     }
 
-    public CompleteSchemaMaps(SchemaMap<Table> tables, SchemaMap<View> views, SchemaMap<Index> indices, SchemaMap<Trigger> triggers, SchemaMap<DBFunction> functions,
-            SchemaMap<Procedure> procedures) {
-        super(Function.identity(), SchemaMap[]::new, Function.identity(), tables, views, indices, triggers, functions, procedures);
+    @SuppressWarnings("unchecked")
+    CompleteSchemaMaps(IntFunction<T[]> createSchemaMapsArray) {
+        super(m -> (T)m, createSchemaMapsArray, m -> m);
     }
 
-    CompleteSchemaMaps() {
-        super(Function.identity(), SchemaMap[]::new, Function.identity());
+    @SuppressWarnings("unchecked")
+    CompleteSchemaMaps(IntFunction<T[]> createSchemaMapsArray, SchemaMap<Table, ?, ?, ?, ?> tables, SchemaMap<View, ?, ?, ?, ?> views, SchemaMap<Index, ?, ?, ?, ?> indices,
+            SchemaMap<Trigger, ?, ?, ?, ?> triggers, SchemaMap<DBFunction, ?, ?, ?, ?> functions, SchemaMap<Procedure, ?, ?, ?, ?> procedures) {
+        super(m -> (T)m, createSchemaMapsArray, m -> m, tables, views, indices, triggers, functions, procedures);
     }
 }

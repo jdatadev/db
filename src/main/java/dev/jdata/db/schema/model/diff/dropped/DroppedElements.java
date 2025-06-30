@@ -6,29 +6,22 @@ import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.utils.adt.maps.IMutableIntToObjectStaticMap;
 import dev.jdata.db.utils.adt.maps.MutableIntToObjectWithRemoveNonBucketMap;
-import dev.jdata.db.utils.adt.sets.MutableIntBucketSet;
-import dev.jdata.db.utils.allocators.IIntSetAllocator;
+import dev.jdata.db.utils.adt.sets.IMutableIntSet;
 import dev.jdata.db.utils.allocators.IIntToObjectMapAllocator;
+import dev.jdata.db.utils.allocators.IMutableIntSetAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.checks.Checks;
 
-final class DroppedElements extends ObjectCacheNode implements IDroppedElements {
+public final class DroppedElements<T extends IMutableIntSet>  extends ObjectCacheNode implements IDroppedElements {
 
     private static final int DROPPED_OBJECTS_INITIAL_CAPACITY_EXPONENT = 0;
     private static final int DROPPED_COLUMNS_MAP_INITIAL_CAPACITY_EXPONENT = 0;
     private static final int DROPPED_COLUMNS_INTSET_INITIAL_CAPACITY_EXPONENT = 0;
 
-    interface IDroppedElementsAllocator {
+    private T droppedObjects;
+    private MutableIntToObjectWithRemoveNonBucketMap<T> droppedColumns;
 
-        DroppedElements allocateDroppedElements();
-
-        void freeDroppedElements(DroppedElements droppedElements);
-    }
-
-    private MutableIntBucketSet droppedObjects;
-    private MutableIntToObjectWithRemoveNonBucketMap<MutableIntBucketSet> droppedColumns;
-
-    private IIntSetAllocator scratchIntSetAllocator;
+    private IMutableIntSetAllocator<T> scratchIntSetAllocator;
     private int sratchColumnsObjectId;
 
     @Override
@@ -45,30 +38,31 @@ final class DroppedElements extends ObjectCacheNode implements IDroppedElements 
         Objects.requireNonNull(schemaObject);
         Objects.requireNonNull(column);
 
-        final MutableIntBucketSet droppedColumnsSet = droppedColumns.get(schemaObject.getId());
+        final T droppedColumnsSet = droppedColumns.get(schemaObject.getId());
 
         return droppedColumnsSet != null ? droppedColumnsSet.contains(column.getId()) : false;
     }
 
-    void add(DroppedElements other, IIntToObjectMapAllocator<MutableIntBucketSet> intToObjectMapAllocator, IIntSetAllocator intSetAllocator) {
+    void add(DroppedElements<T> other, IIntToObjectMapAllocator<T> intToObjectMapAllocator,
+            IMutableIntSetAllocator<T> intSetAllocator) {
 
         Objects.requireNonNull(other);
         Objects.requireNonNull(intToObjectMapAllocator);
         Objects.requireNonNull(intSetAllocator);
 
-        final MutableIntBucketSet otherDroppedObjects = other.droppedObjects;
+        final T otherDroppedObjects = other.droppedObjects;
 
         if (otherDroppedObjects != null) {
 
             if (droppedObjects == null) {
 
-                this.droppedObjects = intSetAllocator.allocateIntSet(DROPPED_OBJECTS_INITIAL_CAPACITY_EXPONENT);
+                this.droppedObjects = intSetAllocator.allocateMutableIntSet(DROPPED_OBJECTS_INITIAL_CAPACITY_EXPONENT);
             }
 
             this.droppedObjects.addAll(otherDroppedObjects);
         }
 
-        final MutableIntToObjectWithRemoveNonBucketMap<MutableIntBucketSet> otherDroppedColumns = other.droppedColumns;
+        final MutableIntToObjectWithRemoveNonBucketMap<T> otherDroppedColumns = other.droppedColumns;
 
         if (otherDroppedColumns != null) {
 
@@ -81,7 +75,7 @@ final class DroppedElements extends ObjectCacheNode implements IDroppedElements 
         }
     }
 
-    void initialize(DroppedElements other, IIntToObjectMapAllocator<MutableIntBucketSet> intToObjectMapAllocator, IIntSetAllocator intSetAllocator) {
+    void initialize(DroppedElements<T> other, IIntToObjectMapAllocator<T> intToObjectMapAllocator, IMutableIntSetAllocator<T> intSetAllocator) {
 
         Objects.requireNonNull(other);
         Objects.requireNonNull(intToObjectMapAllocator);
@@ -101,7 +95,7 @@ final class DroppedElements extends ObjectCacheNode implements IDroppedElements 
         }
     }
 
-    void addDroppedSchemaObject(SchemaObject schemaObject, IIntSetAllocator intSetAllocator) {
+    void addDroppedSchemaObject(SchemaObject schemaObject, IMutableIntSetAllocator<T> intSetAllocator) {
 
         Objects.requireNonNull(schemaObject);
         Objects.requireNonNull(intSetAllocator);
@@ -109,33 +103,33 @@ final class DroppedElements extends ObjectCacheNode implements IDroppedElements 
         addDroppedSchemaObject(schemaObject.getId(), intSetAllocator);
     }
 
-    private void addDroppedSchemaObject(int schemaObjectId, IIntSetAllocator intSetAllocator) {
+    private void addDroppedSchemaObject(int schemaObjectId, IMutableIntSetAllocator<T> intSetAllocator) {
 
-        MutableIntBucketSet dropped = droppedObjects;
+        T dropped = droppedObjects;
 
         if (dropped == null) {
 
-            dropped = this.droppedObjects = intSetAllocator.allocateIntSet(DROPPED_OBJECTS_INITIAL_CAPACITY_EXPONENT);
+            dropped = this.droppedObjects = intSetAllocator.allocateMutableIntSet(DROPPED_OBJECTS_INITIAL_CAPACITY_EXPONENT);
         }
 
         dropped.add(schemaObjectId);
     }
 
-    private void initializeDroppedSchemaObjects(MutableIntBucketSet schemaObjects, IIntSetAllocator intSetAllocator) {
+    private void initializeDroppedSchemaObjects(T schemaObjects, IMutableIntSetAllocator<T> intSetAllocator) {
 
         if (droppedObjects != null) {
 
             droppedObjects.clear();
         }
         else {
-            this.droppedObjects = intSetAllocator.allocateIntSet(DROPPED_OBJECTS_INITIAL_CAPACITY_EXPONENT);
+            this.droppedObjects = intSetAllocator.allocateMutableIntSet(DROPPED_OBJECTS_INITIAL_CAPACITY_EXPONENT);
         }
 
         droppedObjects.addAll(schemaObjects);
     }
 
-    private void initializeDroppedColumns(MutableIntToObjectWithRemoveNonBucketMap<MutableIntBucketSet> droppedColumnsToAdd,
-            IIntToObjectMapAllocator<MutableIntBucketSet> intToObjectMapAllocator, IIntSetAllocator intSetAllocator) {
+    private void initializeDroppedColumns(MutableIntToObjectWithRemoveNonBucketMap<T> droppedColumnsToAdd, IIntToObjectMapAllocator<T> intToObjectMapAllocator,
+            IMutableIntSetAllocator<T> intSetAllocator) {
 
         if (droppedColumns != null) {
 
@@ -148,8 +142,8 @@ final class DroppedElements extends ObjectCacheNode implements IDroppedElements 
         addDroppedColumns(droppedColumnsToAdd, intToObjectMapAllocator, intSetAllocator);
     }
 
-    private void addDroppedColumns(IMutableIntToObjectStaticMap<MutableIntBucketSet> droppedColumnsToAdd,
-            IIntToObjectMapAllocator<MutableIntBucketSet> intToObjectMapAllocator, IIntSetAllocator intSetAllocator) {
+    private void addDroppedColumns(IMutableIntToObjectStaticMap<T> droppedColumnsToAdd, IIntToObjectMapAllocator<T> intToObjectMapAllocator,
+            IMutableIntSetAllocator<T> intSetAllocator) {
 
         this.scratchIntSetAllocator = intSetAllocator;
 
@@ -163,17 +157,17 @@ final class DroppedElements extends ObjectCacheNode implements IDroppedElements 
         this.scratchIntSetAllocator = null;
     }
 
-    void addDroppedColumn(int columnsObjectId, int columnId, IIntSetAllocator intSetAllocator) {
+    void addDroppedColumn(int columnsObjectId, int columnId, IMutableIntSetAllocator<T> intSetAllocator) {
 
         Checks.isSchemaObjectId(columnsObjectId);
         Checks.isColumnId(columnId);
         Objects.requireNonNull(intSetAllocator);
 
-        MutableIntBucketSet droppedColumnsSet = droppedColumns.get(columnsObjectId);
+        T droppedColumnsSet = droppedColumns.get(columnsObjectId);
 
         if (droppedColumnsSet == null) {
 
-            droppedColumnsSet = intSetAllocator.allocateIntSet(DROPPED_COLUMNS_INTSET_INITIAL_CAPACITY_EXPONENT);
+            droppedColumnsSet = intSetAllocator.allocateMutableIntSet(DROPPED_COLUMNS_INTSET_INITIAL_CAPACITY_EXPONENT);
 
             droppedColumns.put(columnsObjectId, droppedColumnsSet);
         }
@@ -187,14 +181,14 @@ final class DroppedElements extends ObjectCacheNode implements IDroppedElements 
         droppedColumnsSet.add(columnId);
     }
 
-    void free(IIntToObjectMapAllocator<MutableIntBucketSet> intToObjectMapAllocator, IIntSetAllocator intSetAllocator) {
+    void free(IIntToObjectMapAllocator<T> intToObjectMapAllocator, IMutableIntSetAllocator<T> intSetAllocator) {
 
         Objects.requireNonNull(intToObjectMapAllocator);
         Objects.requireNonNull(intSetAllocator);
 
         if (droppedObjects != null) {
 
-            intSetAllocator.freeIntSet(droppedObjects);
+            intSetAllocator.freeMutableIntSet(droppedObjects);
 
             this.droppedObjects = null;
         }
@@ -205,7 +199,7 @@ final class DroppedElements extends ObjectCacheNode implements IDroppedElements 
 
                 s.clear();
 
-                a.freeIntSet(s);
+                a.freeMutableIntSet(s);
             });
 
             droppedColumns.clear();

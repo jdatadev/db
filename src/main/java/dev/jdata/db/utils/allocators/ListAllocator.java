@@ -4,13 +4,12 @@ import java.util.List;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.lists.ArrayListImpl;
-import dev.jdata.db.utils.scalars.Integers;
 
 @Deprecated
 public final class ListAllocator extends BaseArrayAllocator<ArrayListImpl<?>> implements IListAllocator {
 
     public ListAllocator(IntFunction<Object[]> createArray) {
-        super(c -> new ArrayListImpl<>(createArray, c), l -> Integers.checkUnsignedLongToUnsignedInt(l.getCapacity()));
+        super(c -> new ArrayListImpl<>(createArray, c), l -> l.getCapacity());
     }
 
     @Override

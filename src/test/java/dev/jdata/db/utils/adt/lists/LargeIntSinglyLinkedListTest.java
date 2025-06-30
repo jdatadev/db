@@ -3,28 +3,28 @@ package dev.jdata.db.utils.adt.lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public final class LargeIntSinglyLinkedListTest extends BaseLargeIntListTest<LargeIntSinglyLinkedList> {
+public final class LargeIntSinglyLinkedListTest extends BaseLargeIntListTest<MutableLargeIntSinglyLinkedList> {
 
     @Override
-    LargeIntSinglyLinkedList createLargeList(int initialOuterCapacity, int innerCapacity) {
+    MutableLargeIntSinglyLinkedList createLargeList(int initialOuterCapacity, int innerCapacity) {
 
-        return new LargeIntSinglyLinkedList(initialOuterCapacity, innerCapacity);
+        return new MutableLargeIntSinglyLinkedList(initialOuterCapacity, innerCapacity);
     }
 
     @Override
-    long removeTailNode(LargeIntSinglyLinkedList list, long newTailNode) {
+    long removeTailNode(MutableLargeIntSinglyLinkedList list, long newTailNode) {
 
         return list.removeTailNodeAndReturnNode(newTailNode);
     }
 
     @Override
-    void removeNode(LargeIntSinglyLinkedList list, long node, long previousNode) {
+    void removeNode(MutableLargeIntSinglyLinkedList list, long node, long previousNode) {
 
         list.removeNode(node, previousNode);
     }
 
     @Override
-    void clear(LargeIntSinglyLinkedList list) {
+    void clear(MutableLargeIntSinglyLinkedList list) {
 
         list.clear();
     }
@@ -32,7 +32,7 @@ public final class LargeIntSinglyLinkedListTest extends BaseLargeIntListTest<Lar
     @Category(UnitTest.class)
     public void testRemoveHeadNode() {
 
-        final LargeIntSinglyLinkedList list = new LargeIntSinglyLinkedList(10, 100);
+        final MutableLargeIntSinglyLinkedList list = new MutableLargeIntSinglyLinkedList(10, 100);
 
         final long node1 = list.addHead(123);
         final long node2 = list.addHead(234);
@@ -56,7 +56,7 @@ public final class LargeIntSinglyLinkedListTest extends BaseLargeIntListTest<Lar
     @Category(UnitTest.class)
     public void testRemoveTailNode() {
 
-        final LargeIntSinglyLinkedList list = new LargeIntSinglyLinkedList(10, 100);
+        final MutableLargeIntSinglyLinkedList list = new MutableLargeIntSinglyLinkedList(10, 100);
 
         final long node1 = list.addHead(123);
         final long node2 = list.addHead(234);

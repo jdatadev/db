@@ -38,6 +38,11 @@ public class Lists extends BaseCollections {
         return Coll.ofIntRange(start, numElements, ArrayList::new, mapper);
     }
 
+    public static List<Integer> of(int[] array) {
+
+        return Coll.of(array, ArrayList::new);
+    }
+
     public static <T> List<T> unmodifiableCopyOf(List<T> list) {
 
         Objects.requireNonNull(list);
@@ -96,24 +101,24 @@ public class Lists extends BaseCollections {
         return ByIndex.contains(list, list.size(), startIndex, numElements, parameter, (l, i) -> l.get((int)i), predicate, IndexOutOfBoundsException::new);
     }
 
-    public static <T, P> int findIndex(List<T> list, P parameter, BiPredicate<T, P> predicate) {
+    public static <T, P> int findAtMostOneIndex(List<T> list, P parameter, BiPredicate<T, P> predicate) {
 
-        return (int)ByIndex.findIndex(list, list.size(), parameter, (l, i) -> l.get((int)i), predicate, IndexOutOfBoundsException::new);
+        return (int)ByIndex.findAtMostOneIndex(list, list.size(), parameter, (l, i) -> l.get((int)i), predicate, IndexOutOfBoundsException::new);
     }
 
-    public static <T> int closureOrConstantFindIndex(List<T> list, Predicate<T> predicate) {
+    public static <T> int closureOrConstantFindAtMostOneIndex(List<T> list, Predicate<T> predicate) {
 
-        return (int)ByIndex.findIndex(list, list.size(), predicate, (l, i) -> l.get((int)i), (e, p) -> p.test(e), IndexOutOfBoundsException::new);
+        return (int)ByIndex.findAtMostOneIndex(list, list.size(), predicate, (l, i) -> l.get((int)i), (e, p) -> p.test(e), IndexOutOfBoundsException::new);
     }
 
-    public static <T, P> int findIndex(List<T> list, int byIndexLength, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
+    public static <T, P> int findAtMostOneIndex(List<T> list, int byIndexLength, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
 
-        return (int)ByIndex.findIndex(list, byIndexLength, startIndex, numElements, parameter, (l, i) -> l.get((int)i), predicate, IndexOutOfBoundsException::new);
+        return (int)ByIndex.findAtMostOneIndex(list, byIndexLength, startIndex, numElements, parameter, (l, i) -> l.get((int)i), predicate, IndexOutOfBoundsException::new);
     }
 
-    public static <T> int closureOrConstantFindIndex(List<T> list, int startIndex, int numElements, Predicate<T> predicate) {
+    public static <T> int closureOrConstantFindAtMostOneIndex(List<T> list, int startIndex, int numElements, Predicate<T> predicate) {
 
-        return (int)ByIndex.findIndex(list, list.size(), startIndex, numElements, predicate, (l, i) -> l.get((int)i), predicate != null ? (e, p) -> p.test(e) : null,
+        return (int)ByIndex.findAtMostOneIndex(list, list.size(), startIndex, numElements, predicate, (l, i) -> l.get((int)i), predicate != null ? (e, p) -> p.test(e) : null,
                 IndexOutOfBoundsException::new);
     }
 
@@ -121,17 +126,18 @@ public class Lists extends BaseCollections {
 
         Objects.requireNonNull(list);
         Objects.requireNonNull(predicate);
-        Objects.requireNonNull(parameter);
 
         final int numElements = list.size();
 
         int numRemoved = 0;
 
-        for (int i = 0; i < numElements; ++ i) {
+        for (int i = numElements - 1; i >= 0; -- i) {
 
             if (predicate.test(list.get(i), parameter)) {
 
                 list.remove(i);
+
+                ++ numRemoved;
             }
         }
 

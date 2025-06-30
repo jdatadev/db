@@ -8,41 +8,78 @@ import java.util.function.ToLongFunction;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
+import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
 
-public final class IndexListTest extends BaseArrayListTest<IIndexList<Integer>, IndexList<String>> {
+public final class IndexListTest extends BaseImmutableObjectArrayListTest<IIndexList<Integer>, IndexList<String>> {
 
     @Test
     @Category(UnitTest.class)
-    public void testConstructorArguments() {
+    public void testEmptyList() {
 
-        final AllocationType allocationType = AllocationType.HEAP;
+        final IndexList<String> emptyList = IndexList.empty();
 
-        assertThatThrownBy(() -> new IndexList<>(null, String[]::new)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> new IndexList<>(allocationType, null)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> new IndexList<>(allocationType, null, 1)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> new IndexList<>(allocationType, String[]::new, -1)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new IndexList<>(allocationType, String[]::new, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThat(emptyList).isEmpty();
     }
 
     @Test
     @Category(UnitTest.class)
     public void testOfSingleton() {
 
-        final IndexList<String> list = IndexList.of("0");
+        final String value = "abc";
 
-        checkAddTailMany(list, (l, i) -> {
+        final IndexList<String> list = IndexList.of(value);
 
-            l.addTail(i);
+        checkElementsSameAs(list, value);
+    }
 
-            return true;
-        });
+    @Test
+    @Category(UnitTest.class)
+    public void testOfValues() {
+
+        final String abc = "abc";
+        final String bcd = "bcd";
+        final String cde = "cde";
+
+        final IndexList<String> emptyList = IndexList.of();
+        assertThat(emptyList).isEmpty();
+
+        final IndexList<String> oneElementList = IndexList.of(abc);
+        checkElementsSameAs(oneElementList, abc);
+
+        final IndexList<String> twoElementsList = IndexList.of(abc, bcd);
+        checkElementsSameAs(twoElementsList, abc, bcd);
+
+        final IndexList<String> threeElementList = IndexList.of(abc, bcd, cde);
+        checkElementsSameAs(threeElementList, abc, bcd, cde);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testSortedOfValues() {
+
+        final String abc = "abc";
+        final String bcd = "bcd";
+        final String cde = "cde";
+
+        final HeapIndexListAllocator<String> indexListAllocator = new HeapIndexListAllocator<>(String[]::new);
+
+        final IndexList<String> emptyList = IndexList.sortedOf(IndexList.empty(), String::compareTo, indexListAllocator);
+        assertThat(emptyList).isEmpty();
+
+        final IndexList<String> oneElementList = IndexList.sortedOf(IndexList.of(abc), String::compareTo, indexListAllocator);
+        checkElementsSameAs(oneElementList, abc);
+
+        final IndexList<String> twoElementsList = IndexList.sortedOf(IndexList.of(bcd, abc), String::compareTo, indexListAllocator);
+        checkElementsSameAs(twoElementsList, abc, bcd);
+
+        final IndexList<String> threeElementList = IndexList.sortedOf(IndexList.of(bcd, cde, abc), String::compareTo, indexListAllocator);
+        checkElementsSameAs(threeElementList, abc, bcd, cde);
     }
 
     @Override
     protected IIndexList<Integer> createTestElements(Integer[] elementsToAdd) {
 
-        final IndexList.Builder<Integer> builder = IndexList.createBuilder(Integer[]::new);
+        final HeapIndexList.HeapIndexListBuilder<Integer> builder = IndexList.createBuilder(Integer[]::new);
 
         switch (elementsToAdd.length) {
 
@@ -72,7 +109,7 @@ public final class IndexListTest extends BaseArrayListTest<IIndexList<Integer>, 
     @Override
     protected long countWithClosure(IIndexList<Integer> elements, Predicate<Integer> predicate) {
 
-        return elements.countWithClosure(predicate);
+        return elements.closureOrConstantCount(predicate);
     }
 
     @Override
@@ -88,20 +125,8 @@ public final class IndexListTest extends BaseArrayListTest<IIndexList<Integer>, 
     }
 
     @Override
-    IndexList<String> createStringList() {
+    IndexList<String> createStringList(String ... values) {
 
-        return new IndexList<>(AllocationType.HEAP, String[]::new);
-    }
-
-    @Override
-    IndexList<String> createStringList(int initialCapacity) {
-
-        return new IndexList<>(AllocationType.HEAP, String[]::new, initialCapacity);
-    }
-
-    @Override
-    void add(IndexList<String> list, String string) {
-
-        list.addTail(string);
+        return IndexList.of(values);
     }
 }

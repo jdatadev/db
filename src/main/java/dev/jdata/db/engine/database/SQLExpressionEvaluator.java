@@ -1131,7 +1131,7 @@ public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressio
             this.operators = operators.toImmutableIndexList();
             this.numOperators = Integers.checkUnsignedLongToUnsignedInt(numOperators);
 
-            expressions.foreachWithIndexAndParameter(this, (e, i, p) -> {
+            expressions.forEachWithIndexAndParameter(this, (e, i, p) -> {
 
                 final SQLExpressionEvaluatorParameter param = p.parameter;
 

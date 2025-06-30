@@ -51,6 +51,12 @@ public final class SetsTest extends BaseCollectionsTest<Set<Integer>, Set<String
     }
 
     @Override
+    protected Collection<Integer> ofIntArray(int[] array) {
+
+        return Sets.of(array);
+    }
+
+    @Override
     protected Set<String> map(Set<Integer> collection, Function<Integer, String> mapper) {
 
         return Sets.map(collection, mapper);

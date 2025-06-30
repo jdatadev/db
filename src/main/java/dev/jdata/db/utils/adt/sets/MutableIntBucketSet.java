@@ -3,8 +3,9 @@ package dev.jdata.db.utils.adt.sets;
 import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.elements.IIntElements;
+import dev.jdata.db.utils.adt.elements.IIntIterableElements;
 import dev.jdata.db.utils.adt.hashed.helpers.Buckets;
+import dev.jdata.db.utils.allocators.IIntSetAllocator;
 
 public final class MutableIntBucketSet extends BaseIntBucketSet implements IMutableIntSet {
 
@@ -50,7 +51,7 @@ public final class MutableIntBucketSet extends BaseIntBucketSet implements IMuta
     }
 
     @Override
-    public void addAll(IIntElements intElements) {
+    public void addAll(IIntIterableElements intElements) {
 
         Objects.requireNonNull(intElements);
 
@@ -107,5 +108,11 @@ public final class MutableIntBucketSet extends BaseIntBucketSet implements IMuta
         }
 
         return result;
+    }
+
+    @Override
+    public <T extends IIntSet> T toImmutable(IIntSetAllocator<T> intSetAllocator) {
+
+        return intSetAllocator.copyToImmutable(this);
     }
 }

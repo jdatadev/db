@@ -32,6 +32,23 @@ public class Coll {
         return result;
     }
 
+    public static <C extends Collection<Integer>> C of(int[] array, IntFunction<C> createCollection) {
+
+        Objects.requireNonNull(array);
+        Objects.requireNonNull(createCollection);
+
+        final int arrayLength = array.length;
+
+        final C result = createCollection.apply(arrayLength);
+
+        for (int i = 0; i < arrayLength; ++ i) {
+
+            result.add(array[i]);
+        }
+
+        return result;
+    }
+
     public static <T> int maxInt(Iterable<T> iterable, int defaultValue, ToIntFunction<T> mapper) {
 
         Objects.requireNonNull(iterable);

@@ -51,7 +51,7 @@ public final class StringStorer extends BaseLargeArrayMap<LargeLongArray, LargeL
     }
 
     public StringStorer(int initialOuterCapacity, int innerCapacityExponent, float loadFactor) {
-        super(initialOuterCapacity, innerCapacityExponent, loadFactor, (o, i) -> new LargeLongArray(o, i, NO_ELEMENT), LargeLongArray::reset,
+        super(initialOuterCapacity, innerCapacityExponent, loadFactor, (o, i) -> new LargeLongArray(o, i, NO_ELEMENT), LargeLongArray::clear,
                 (o, i) -> new LargeLongArray(o, i, null));
 
         this.charArray = new LargeCharArray(initialOuterCapacity, innerCapacityExponent);
@@ -66,7 +66,7 @@ public final class StringStorer extends BaseLargeArrayMap<LargeLongArray, LargeL
 
         clearHashed();
 
-        charArray.reset();
+        charArray.clear();
         buckets.clear();
     }
 
@@ -272,7 +272,7 @@ public final class StringStorer extends BaseLargeArrayMap<LargeLongArray, LargeL
         else {
             this.scratchHashArrayIndex = hashArrayIndex;
 
-            removed = buckets.removeNodeByValue(this, stringRef, bucketHeadNode, BaseList.NO_NODE, headSetter, tailSetter) != BaseList.NO_NODE;
+            removed = buckets.removeAtMostOneNodeByValue(this, stringRef, bucketHeadNode, BaseList.NO_NODE, headSetter, tailSetter) != BaseList.NO_NODE;
         }
 
         if (removed) {

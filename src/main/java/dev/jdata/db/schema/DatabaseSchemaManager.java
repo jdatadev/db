@@ -2,7 +2,8 @@ package dev.jdata.db.schema;
 
 import java.util.Objects;
 
-import dev.jdata.db.schema.EffectiveSchemaHelper.AllEffectiveSchemaAllocators;
+import dev.jdata.db.schema.allocators.databases.heap.HeapDatabasesSchemaManagerAllocator;
+import dev.jdata.db.schema.allocators.effective.heap.HeapAllEffectiveSchemaAllocators;
 import dev.jdata.db.schema.model.databaseschema.BaseDatabaseSchema;
 import dev.jdata.db.schema.model.databaseschema.CompleteDatabaseSchema;
 import dev.jdata.db.schema.model.diff.DiffDatabaseSchema;
@@ -11,18 +12,18 @@ import dev.jdata.db.schema.model.diff.dropped.IDroppedSchemaObjects;
 import dev.jdata.db.schema.model.effective.EffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
-import dev.jdata.db.schema.model.schemamaps.CompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.HeapCompleteSchemaMaps;
+import dev.jdata.db.utils.adt.lists.HeapMutableIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IMutableIndexList;
 import dev.jdata.db.utils.allocators.IFreeing;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements ISchemaObjectIdAllocator, IFreeing<DatabasesSchemaManagerAllocator> {
+public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements ISchemaObjectIdAllocator, IFreeing<HeapDatabasesSchemaManagerAllocator> {
 
     private final CompleteDatabaseSchema initialCompleteSchema;
-    private final IMutableIndexList<DiffDatabaseSchema> diffSchemas;
+    private final HeapMutableIndexList<DiffDatabaseSchema> diffSchemas;
 
-    private final DatabasesSchemaManagerAllocator databasesSchemaManagerAllocator;
+    private final HeapDatabasesSchemaManagerAllocator databasesSchemaManagerAllocator;
 
     private final int[] objectIdAllocators;
     private final DroppedSchemaObjects droppedSchemaObjects;
@@ -30,7 +31,7 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
     private int schemaVersionNumber;
 
     public static DatabaseSchemaManager of(DatabaseId databaseId, CompleteDatabaseSchema completeDatabaseSchema,
-            DatabasesSchemaManagerAllocator databasesSchemaManagerAllocator) {
+            HeapDatabasesSchemaManagerAllocator databasesSchemaManagerAllocator) {
 
         Objects.requireNonNull(databaseId);
         Objects.requireNonNull(completeDatabaseSchema);
@@ -40,7 +41,7 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
     }
 
     DatabaseSchemaManager(AllocationType allocationType, DatabaseId databaseId, CompleteDatabaseSchema initialCompleteSchema, IIndexList<DiffDatabaseSchema> diffSchemas,
-            DatabasesSchemaManagerAllocator databasesSchemaManagerAllocator) {
+            HeapDatabasesSchemaManagerAllocator databasesSchemaManagerAllocator) {
         super(allocationType, databaseId);
 
         Objects.requireNonNull(initialCompleteSchema);
@@ -63,7 +64,7 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
         checkVersionNumber(diffSchemas);
 
         this.initialCompleteSchema = initialCompleteSchema;
-        this.diffSchemas = diffSchemas.copyToMutable();
+        this.diffSchemas = HeapMutableIndexList.copyOf(DiffDatabaseSchema[]::new, diffSchemas);
         this.databasesSchemaManagerAllocator = databasesSchemaManagerAllocator;
 
         this.objectIdAllocators = computeObjectIdAllocators(initialCompleteSchema, diffSchemas);
@@ -101,7 +102,7 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
     }
 
     @Override
-    public synchronized void free(DatabasesSchemaManagerAllocator instance) {
+    public synchronized void free(HeapDatabasesSchemaManagerAllocator instance) {
 
         Objects.requireNonNull(instance);
 
@@ -190,11 +191,11 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
         throw new UnsupportedOperationException();
     }
 
-    public synchronized IEffectiveDatabaseSchema buildEffectiveDatabaseSchema(AllEffectiveSchemaAllocators allocators) {
+    public synchronized IEffectiveDatabaseSchema buildEffectiveDatabaseSchema(HeapAllEffectiveSchemaAllocators allocators) {
 
         Objects.requireNonNull(allocators);
 
-        final CompleteSchemaMaps schemaMaps = EffectiveSchemaHelper.buildSchemaMaps(initialCompleteSchema, diffSchemas, droppedSchemaObjects, allocators);
+        final HeapCompleteSchemaMaps schemaMaps = null; // EffectiveSchemaHelper.buildSchemaMaps(initialCompleteSchema, diffSchemas, droppedSchemaObjects, null);
 
         final DatabaseSchemaVersion latestVersion = diffSchemas.isEmpty()
                 ? initialCompleteSchema.getVersion()

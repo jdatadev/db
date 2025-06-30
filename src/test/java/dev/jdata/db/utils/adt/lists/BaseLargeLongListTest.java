@@ -1,8 +1,8 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.lists.ILongList.ContainsOnlyPredicate;
+import dev.jdata.db.utils.adt.elements.ILongElements.IContainsOnlyPredicate;
 
-abstract class BaseLargeLongListTest<T extends BaseLargeList<?, ?, ?> & ILargeLongList> extends BaseLargeListTest<T> {
+abstract class BaseLargeLongListTest<T extends BaseLargeList<?, ?, ?> & IMutableLargeLongList> extends BaseLargeListTest<T> {
 
     @Override
     final long getValue(T list, long node) {
@@ -23,7 +23,7 @@ abstract class BaseLargeLongListTest<T extends BaseLargeList<?, ?, ?> & ILargeLo
     }
 
     @Override
-    final boolean containsOnly(T list, long value, ContainsOnlyPredicate predicate) {
+    final boolean containsOnly(T list, long value, IContainsOnlyPredicate predicate) {
 
         return list.containsOnly(value, predicate);
     }

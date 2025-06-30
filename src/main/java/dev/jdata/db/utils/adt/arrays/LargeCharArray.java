@@ -22,12 +22,12 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
     private static final boolean DEBUG = DebugConstants.DEBUG_LARGE_CHAR_ARRAY;
 
     @FunctionalInterface
-    public interface ForEachStringIndex<P> {
+    public interface IForEachStringIndex<P> {
 
         void each(long index, LargeCharArray largeCharArray, P parameter);
     }
 
-    private <P> void forEachIndexAndString(P parameter, ForEachStringIndex<P> forEachStringIndex) {
+    private <P> void forEachIndexAndString(P parameter, IForEachStringIndex<P> forEachStringIndex) {
 
         if (DEBUG) {
 
@@ -59,7 +59,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
     private static final char TERMINATOR_CHAR = '\0';
 
     public LargeCharArray(int initialOuterCapacity, int innerCapacityExponent) {
-        super(initialOuterCapacity, innerCapacityExponent, 0, char[][]::new);
+        super(initialOuterCapacity, char[][]::new, a -> a.length, innerCapacityExponent);
     }
 
     public boolean containsOnly(long index, CharPredicate predicate) {
@@ -70,9 +70,9 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
         boolean containsOnly = true;
 
         int bufferNo = getOuterIndex(index);
-        int bufferOffset = getInnerIndex(index);
+        int bufferOffset = getInnerElementIndex(index);
 
-        final char[][] buffers = getArray();
+        final char[][] buffers = getOuterArray();
 
         char[] buffer = buffers[bufferNo];
 
@@ -95,7 +95,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
             if (bufferOffset == endBufferOffset) {
 
                 ++ bufferNo;
-                bufferOffset = getInnerArrayLengthNumElements();
+                bufferOffset = 0;
                 buffer = buffers[bufferNo];
             }
             else {
@@ -133,9 +133,9 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
         sb.ensureCapacity(sbCapacity);
 
         int bufferNo = getOuterIndex(index);
-        int bufferOffset = getInnerIndex(index);
+        int bufferOffset = getInnerElementIndex(index);
 
-        final char[][] buffers = getArray();
+        final char[][] buffers = getOuterArray();
 
         char[] buffer = buffers[bufferNo];
 
@@ -155,7 +155,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
             if (bufferOffset == endBufferOffset) {
 
                 ++ bufferNo;
-                bufferOffset = getInnerArrayLengthNumElements();
+                bufferOffset = 0;
                 buffer = buffers[bufferNo];
             }
             else {
@@ -175,16 +175,16 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
         Objects.checkIndex(otherIndex, otherCharArray.getLimit());
 
         int bufferNo = getOuterIndex(index);
-        int bufferOffset = getInnerIndex(index);
+        int bufferOffset = getInnerElementIndex(index);
 
         int otherBufferNo = getOuterIndex(otherIndex);
-        int otherBufferOffset = getInnerIndex(otherIndex);
+        int otherBufferOffset = getInnerElementIndex(otherIndex);
 
-        final char[][] buffers = getArray();
+        final char[][] buffers = getOuterArray();
         char[] buffer = buffers[bufferNo];
         final int endBufferOffset = getInnerNumAllocateElements() - 1;
 
-        final char[][] otherBuffers = otherCharArray.getArray();
+        final char[][] otherBuffers = otherCharArray.getOuterArray();
         char[] otherBuffer = otherBuffers[otherBufferNo];
         final int otherEndBufferOffset = otherCharArray.getInnerNumAllocateElements() - 1;
 
@@ -210,7 +210,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
                 if (bufferOffset == endBufferOffset) {
 
                     ++ bufferNo;
-                    bufferOffset = getInnerArrayLengthNumElements();
+                    bufferOffset = 0;
                     buffer = buffers[bufferNo];
                 }
                 else {
@@ -220,7 +220,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
                 if (otherBufferOffset == otherEndBufferOffset) {
 
                     ++ otherBufferNo;
-                    otherBufferOffset = otherCharArray.getInnerArrayLengthNumElements();
+                    otherBufferOffset = 0;
                     otherBuffer = otherBuffers[otherBufferNo];
                 }
                 else {
@@ -251,9 +251,9 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
         }
 
         int bufferNo = getOuterIndex(index);
-        int bufferOffset = getInnerIndex(index);
+        int bufferOffset = getInnerElementIndex(index);
 
-        final char[][] buffers = getArray();
+        final char[][] buffers = getOuterArray();
 
         char[] buffer = buffers[bufferNo];
 
@@ -312,9 +312,9 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
         long length = 0L;
 
         int bufferNo = getOuterIndex(index);
-        int bufferOffset = getInnerIndex(index);
+        int bufferOffset = getInnerElementIndex(index);
 
-        final char[][] buffers = getArray();
+        final char[][] buffers = getOuterArray();
 
         char[] buffer = buffers[bufferNo];
 
@@ -334,7 +334,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
             if (bufferOffset == endBufferOffset) {
 
                 ++ bufferNo;
-                bufferOffset = getInnerArrayLengthNumElements();
+                bufferOffset = 0;
                 buffer = buffers[bufferNo];
             }
             else {
@@ -353,9 +353,9 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
         boolean equals = true;
 
         int bufferNo = getOuterIndex(index);
-        int bufferOffset = getInnerIndex(index);
+        int bufferOffset = getInnerElementIndex(index);
 
-        final char[][] buffers = getArray();
+        final char[][] buffers = getOuterArray();
 
         char[] buffer = buffers[bufferNo];
 
@@ -386,7 +386,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
             if (bufferOffset == endBufferOffset) {
 
                 ++ bufferNo;
-                bufferOffset = getInnerArrayLengthNumElements();
+                bufferOffset = 0;
                 buffer = buffers[bufferNo];
             }
             else {
@@ -435,7 +435,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
         Objects.checkIndex(index, getLimit());
 
-        return getArray()[getOuterIndex(index)][getInnerIndex(index)];
+        return getOuterArray()[getOuterIndex(index)][getInnerElementIndex(index)];
     }
 
     public void add(CharacterBuffer[] characterBuffers, int numCharacterBuffers) {
@@ -477,9 +477,9 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
         final long index = getLimit();
 
         int bufferNo = getOuterIndex(index);
-        int bufferOffset = getInnerIndex(index);
+        int bufferOffset = getInnerElementIndex(index);
 
-        final char[][] buffers = getArray();
+        final char[][] buffers = getOuterArray();
 
         char[] buffer = buffers[bufferNo];
 
@@ -492,7 +492,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
             if (bufferOffset == endBufferOffset) {
 
                 ++ bufferNo;
-                bufferOffset = getInnerArrayLengthNumElements();
+                bufferOffset = 0;
                 buffer = buffers[bufferNo];
             }
             else {
@@ -521,7 +521,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
         final long index = getAndIncrementLimit();
 
-        array[getInnerIndex(index)] = value;
+        array[getInnerElementIndex(index)] = value;
     }
 
     public void set(long index, char value) {
@@ -530,64 +530,31 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
         final int outerIndex = ensureCapacityAndLimit(index);
 
-        getArray()[outerIndex][getInnerIndex(index)] = value;
+        getOuterArray()[outerIndex][getInnerElementIndex(index)] = value;
     }
 
     @Override
-    char[][] copyOuterArray(char[][] outerArray, int capacity) {
+    protected char[][] copyOuterArray(char[][] outerArray, int capacity) {
 
         return Arrays.copyOf(outerArray, capacity);
     }
 
     @Override
-    int getOuterArrayLength(char[][] outerArray) {
+    protected int getOuterArrayLength(char[][] outerArray) {
 
         return outerArray.length;
     }
 
     @Override
-    char[] getInnerArray(char[][] outerArray, int index) {
+    protected char[] getInnerArray(char[][] outerArray, int index) {
 
         return outerArray[index];
     }
 
     @Override
-    int getInnerArrayLength(char[] innerArray) {
-
-        return innerArray.length;
-    }
-
-    @Override
-    void setInnerArrayLength(char[] innerArray, int length) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    int getNumInnerElements(char[] innerArray) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    char[] setInnerArray(char[][] outerArray, int outerIndex, int innerArrayLength) {
+    protected char[] abstractCreateAndSetInnerArray(char[][] outerArray, int outerIndex, int innerArrayLength) {
 
         return outerArray[outerIndex] = new char[innerArrayLength];
-    }
-
-    private char[] checkCapacity() {
-
-        return checkCapacity(null, null);
-    }
-
-    private void checkCapacity(long numAdditional) {
-
-        checkCapacity(numAdditional, null, null);
-    }
-
-    private int ensureCapacityAndLimit(long index) {
-
-        return ensureCapacityAndLimit(index, null, null);
     }
 
     @Override

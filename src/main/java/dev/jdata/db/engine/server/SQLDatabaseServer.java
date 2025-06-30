@@ -28,6 +28,9 @@ import dev.jdata.db.sql.parse.SQLParser;
 import dev.jdata.db.sql.parse.SQLParserFactory;
 import dev.jdata.db.sql.parse.SQLParserHelper;
 import dev.jdata.db.sql.parse.SQLParserHelper.ParsedSQLStatementsFunction;
+import dev.jdata.db.utils.adt.lists.CachedIndexList;
+import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.allocators.ObjectCache;
@@ -55,7 +58,7 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
 
     private final IDatabaseServer server;
 
-    private final SQLParserHelper sqlParserHelper;
+    private final SQLParserHelper<CachedIndexList<BaseSQLStatement>, CachedIndexListBuilder<BaseSQLStatement>, CacheIndexListAllocator<BaseSQLStatement>> sqlParserHelper;
 
     private final NodeObjectCache<SQLAllocator> allocatorsCache;
     private final ObjectCache<CharBufferLoadStream> charBufferLoadStreamCache;
@@ -71,7 +74,7 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
 
         final SQLParser sqlParser = sqlParserFactory.createParser();
 
-        this.sqlParserHelper = new SQLParserHelper(sqlParser);
+        this.sqlParserHelper = new SQLParserHelper<>(sqlParser, CacheIndexListAllocator::new);
 
         this.allocatorsCache = new NodeObjectCache<>(SQLAllocator::new);
         this.charBufferLoadStreamCache = new ObjectCache<>(CharBufferLoadStream::new, CharBufferLoadStream[]::new);

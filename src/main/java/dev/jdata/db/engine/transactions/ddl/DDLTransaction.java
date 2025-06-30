@@ -7,14 +7,17 @@ import org.jutils.io.strings.StringResolver;
 
 import dev.jdata.db.ddl.DDLAlterTableSchemasHelper;
 import dev.jdata.db.ddl.DDLCreateTableSchemasHelper;
-import dev.jdata.db.ddl.DDLSchemasHelper.DDLSchemaCachedObjects;
+import dev.jdata.db.ddl.allocators.DDLSchemaCachedObjects;
 import dev.jdata.db.engine.database.DatabaseStringManagement;
-import dev.jdata.db.engine.database.SQLValidationException;
 import dev.jdata.db.engine.database.StringManagement;
-import dev.jdata.db.engine.database.TableAlreadyExistsException;
+import dev.jdata.db.engine.transactions.ddl.DDLTransaction.DDLTransactionStatement;
+import dev.jdata.db.engine.validation.exceptions.SQLValidationException;
+import dev.jdata.db.engine.validation.exceptions.TableAlreadyExistsException;
+import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaManager;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.model.diff.schemamaps.DiffSchemaMaps;
+import dev.jdata.db.schema.model.diff.schemamaps.DiffSchemaMaps.DiffSchemaMapsBuilder;
 import dev.jdata.db.schema.model.diff.schemamaps.DiffSchemaMaps.DiffSchemaMapsBuilderAllocator;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
@@ -37,18 +40,18 @@ import dev.jdata.db.utils.allocators.Allocatable;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
-final class DDLTransaction extends Allocatable {
+final class DDLTransaction<T extends IndexList<DDLTransactionStatement>, U extends IndexList.IndexListBuilder<DDLTransactionStatement, T, U>> extends Allocatable {
 
-    static final class DDLTransactionCachedObjects {
+    static final class DDLTransactionCachedObjects<T extends IndexList<DDLTransactionStatement>, U extends IndexList.IndexListBuilder<DDLTransactionStatement, T, U>> {
 
-        private final IndexListAllocator<DDLTransactionStatement> ddlTransactionStatementListAllocator;
-        private final DiffSchemaMapsBuilderAllocator diffSchemaMapsBuilderAllocator;
+        private final IndexListAllocator<DDLTransactionStatement, T, U, ?> ddlTransactionStatementListAllocator;
+        private final DiffSchemaMapsBuilderAllocator<?, ?, ?> diffSchemaMapsBuilderAllocator;
         private final DDLSchemaCachedObjects ddlSchemaCachedObjects;
 
         private final NodeObjectCache<DDLTransactionStatement> ddlTransactionStatementCache;
 
-        DDLTransactionCachedObjects(IndexListAllocator<DDLTransactionStatement> ddlTransactionStatementListAllocator,
-                DiffSchemaMapsBuilderAllocator diffSchemaMapsBuilderAllocator, DDLSchemaCachedObjects ddlSchemaCachedObjects) {
+        DDLTransactionCachedObjects(IndexListAllocator<DDLTransactionStatement, T, U, ?> ddlTransactionStatementListAllocator,
+                DiffSchemaMapsBuilderAllocator<?, ?, ?> diffSchemaMapsBuilderAllocator, DDLSchemaCachedObjects ddlSchemaCachedObjects) {
 
             this.ddlTransactionStatementListAllocator = Objects.requireNonNull(ddlTransactionStatementListAllocator);
             this.diffSchemaMapsBuilderAllocator = Objects.requireNonNull(diffSchemaMapsBuilderAllocator);
@@ -58,7 +61,7 @@ final class DDLTransaction extends Allocatable {
         }
     }
 
-    private static final class DDLTransactionStatement extends ObjectCacheNode implements IResettable {
+    static final class DDLTransactionStatement extends ObjectCacheNode implements IResettable {
 
         private BaseSQLDDLOperationStatement sqlStatement;
         private SQLString sqlString;
@@ -101,22 +104,22 @@ final class DDLTransaction extends Allocatable {
     };
 
     private DatabaseStringManagement databaseStringManagement;
-    private DDLTransactionCachedObjects ddlTransactionCachedObjects;
+    private DDLTransactionCachedObjects<T, U> ddlTransactionCachedObjects;
     private DatabaseSchemaManager databaseSchemaManager;
     private IDatabaseSchemaSerializer databaseSchemaSerializer;
 
     private IEffectiveDatabaseSchema currentSchema;
 
-    private SchemaMapBuilders schemaMapBuilders;
+    private SchemaMapBuilders<?, ?, ?, ?, ?, ?, ?> schemaMapBuilders;
 
-    private IndexList.Builder<DDLTransactionStatement> ddlTransactionStatements;
-    private DiffSchemaMaps.Builder diffSchemaMapsBuilder;
+    private U ddlTransactionStatements;
+    private DiffSchemaMapsBuilder<?, ?, ?> diffSchemaMapsBuilder;
 
     DDLTransaction(AllocationType allocationType) {
         super(allocationType);
     }
 
-    void initialize(IEffectiveDatabaseSchema currentSchema, DatabaseStringManagement stringManagement, DDLTransactionCachedObjects ddlCachedObjects,
+    void initialize(IEffectiveDatabaseSchema currentSchema, DatabaseStringManagement stringManagement, DDLTransactionCachedObjects<T, U> ddlCachedObjects,
             DatabaseSchemaManager databaseSchemaManager, IDatabaseSchemaSerializer databaseSchemaSerializer) {
 
         Objects.requireNonNull(currentSchema);
@@ -140,7 +143,7 @@ final class DDLTransaction extends Allocatable {
         this.ddlTransactionStatements = IndexList.createBuilder(ddlCachedObjects.ddlTransactionStatementListAllocator);
     }
 
-    public void reset(DDLTransactionCachedObjects ddlCachedObjects) {
+    public void reset(DDLTransactionCachedObjects<T, U> ddlCachedObjects) {
 
         Objects.requireNonNull(ddlCachedObjects);
 
@@ -163,7 +166,7 @@ final class DDLTransaction extends Allocatable {
         Objects.requireNonNull(databaseSchemaStorage);
         Objects.requireNonNull(sqlOutputter);
 
-        final IDatabaseSchemaStorage<IOException> storage = databaseSchemaStorage.storeSchemaDiff(databaseSchemaVersion);
+        final IDatabaseSchemaStorage<?, IOException> storage = databaseSchemaStorage.storeSchemaDiff(databaseSchemaVersion);
 
         try {
             final IIndexList<DDLTransactionStatement> ddlTransactionStatementsList = makeDDLTransactionStatementsList();
@@ -250,28 +253,36 @@ final class DDLTransaction extends Allocatable {
 
         if (currentSchema.containsSchemaObjectName(objectType, parsedTableName)) {
 
-            throw new TableAlreadyExistsException();
+            throw new TableAlreadyExistsException(getDatabaseId(), parsedTableName);
         }
 
         DDLCreateTableSchemasHelper.processCreateTable(sqlCreateTableStatement, stringManagement, schemaMapBuilders, ddlTransactionCachedObjects.ddlSchemaCachedObjects,
                 databaseSchemaManager, m -> m.allocateTableId());
     }
 
-    private void processAlterTable(SQLAlterTableStatement sqlAlterTableStatement, StringManagement stringManagement) throws TableAlreadyExistsException {
+    private void processAlterTable(SQLAlterTableStatement sqlAlterTableStatement, StringManagement stringManagement) throws SQLValidationException {
 
         final long parsedTableName = stringManagement.resolveParsedStringRef(sqlAlterTableStatement.getName());
 
         final DDLObjectType objectType = DDLObjectType.TABLE;
 
+        final DatabaseId databaseId = getDatabaseId();
+
         if (currentSchema.containsSchemaObjectName(objectType, parsedTableName)) {
 
-            throw new TableAlreadyExistsException();
+            throw new TableAlreadyExistsException(databaseId, parsedTableName);
         }
 
         final long schemaTableName = stringManagement.getHashStringRef(parsedTableName);
 
         final Table existingTable = currentSchema.getTableMap().getSchemaObjectByName(schemaTableName);
 
-        DDLAlterTableSchemasHelper.processAlterTable(sqlAlterTableStatement, existingTable, stringManagement, schemaMapBuilders, ddlTransactionCachedObjects.ddlSchemaCachedObjects);
+        DDLAlterTableSchemasHelper.processAlterTable(sqlAlterTableStatement, databaseId, existingTable, stringManagement, schemaMapBuilders,
+                ddlTransactionCachedObjects.ddlSchemaCachedObjects);
+    }
+
+    private DatabaseId getDatabaseId() {
+
+        return currentSchema.getDatabaseId();
     }
 }

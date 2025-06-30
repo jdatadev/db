@@ -21,8 +21,6 @@ abstract class BaseIntBucketSet extends BaseIntegerBucketSet<int[]> implements I
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_BUCKET_SET;
 
-//    private static final boolean ASSERT = AssertionContants.ASSERT_BASE_INT_BUCKET_SET;
-
     private static final Class<?> debugClass = MutableIntBucketSet.class;
 
 //    private static final LongNodeSetter<BaseIntBucketSet> headSetter = (i, h) -> i.scratchSet[i.scratcHashArrayIndex] = nodeToInt(h);
@@ -71,11 +69,9 @@ abstract class BaseIntBucketSet extends BaseIntegerBucketSet<int[]> implements I
 
         Checks.isCapacityExponent(bucketsInnerCapacityExponent);
 
-        final int bucketsInnerCapacity = CapacityExponents.computeCapacity(bucketsInnerCapacityExponent);
+        final int bucketsInnerCapacity = this.bucketsInnerCapacity = CapacityExponents.computeCapacity(bucketsInnerCapacityExponent);
 
-        this.bucketsInnerCapacity = bucketsInnerCapacity;
-
-        this.buckets = new LargeIntMultiHeadSinglyLinkedList<>(BUCKETS_OUTER_INITIAL_CAPACITY, bucketsInnerCapacity);
+        this.buckets = createBuckets(bucketsInnerCapacity);
     }
 
     BaseIntBucketSet(int[] values) {
@@ -87,8 +83,23 @@ abstract class BaseIntBucketSet extends BaseIntegerBucketSet<int[]> implements I
         }
     }
 
+    BaseIntBucketSet(BaseIntBucketSet toCopy) {
+        super(toCopy, (t, c) -> System.arraycopy(c, 0, t, 0, c.length));
+
+        final int bucketsInnerCapacity = this.bucketsInnerCapacity = toCopy.bucketsInnerCapacity;
+
+        this.buckets = createBuckets(bucketsInnerCapacity);
+
+        forEach(this, (e, p) -> p.addValue(e));
+    }
+
+    private static LargeIntMultiHeadSinglyLinkedList<BaseIntBucketSet> createBuckets(int innerCapacity) {
+
+        return new LargeIntMultiHeadSinglyLinkedList<>(BUCKETS_OUTER_INITIAL_CAPACITY, innerCapacity);
+    }
+
     @Override
-    public final <P, E extends Exception> void forEach(P parameter, ForEach<P, E> forEach) throws E {
+    public final <P, E extends Exception> void forEach(P parameter, IForEach<P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -118,6 +129,46 @@ abstract class BaseIntBucketSet extends BaseIntegerBucketSet<int[]> implements I
     }
 
     @Override
+    public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<P1, P2, R, E> forEach) throws E {
+
+        Objects.requireNonNull(forEach);
+
+        R result = defaultResult;
+
+        final int[] bucketHeadNodesHashArray = getHashed();
+
+        final int bucketHeadNodesHashArrayLength = bucketHeadNodesHashArray.length;
+
+        final LargeIntMultiHeadSinglyLinkedList<BaseIntBucketSet> b = buckets;
+
+        final int noIntNode = Buckets.NO_INT_NODE;
+        final long noNode = BaseList.NO_NODE;
+
+        for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
+
+            final int bucketHeadIntNode = bucketHeadNodesHashArray[i];
+
+            if (bucketHeadIntNode != noIntNode) {
+
+                final long bucketHeadNode = Buckets.intToNode(bucketHeadIntNode);
+
+                for (long n = bucketHeadNode; n != noNode; n = b.getNextNode(n)) {
+
+                    final R forEachResult = forEach.each(b.getValue(n), parameter1, parameter2);
+
+                    if (forEachResult != null) {
+
+                        result = forEachResult;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Override
     public final boolean contains(int value) {
 
         if (DEBUG) {
@@ -139,6 +190,12 @@ abstract class BaseIntBucketSet extends BaseIntegerBucketSet<int[]> implements I
         }
 
         return found;
+    }
+
+    @Override
+    public final IHeapIntSet toHeapAllocated() {
+
+        throw new UnsupportedOperationException();
     }
 
     @Override

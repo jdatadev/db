@@ -74,7 +74,7 @@ public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends B
 
         Objects.requireNonNull(descriptorableFactory);
 
-        int descriptor = Array.closureOrConstantFindIndex(descriptorables, 0, numArrayElements, e -> e == null);
+        int descriptor = Array.closureOrConstantFindAtMostOneIndex(descriptorables, 0, numArrayElements, e -> e == null);
 
         if (descriptor == -1) {
 

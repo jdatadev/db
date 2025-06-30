@@ -86,7 +86,7 @@ abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParamet
 
         Objects.requireNonNull(largeLongArray);
 
-        largeLongArray.reset();
+        largeLongArray.clear();
 
         largeLongArrayAllocator.freeLargeLongArray(largeLongArray);
     }

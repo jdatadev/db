@@ -7,9 +7,9 @@ import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance.MaxDistanceIntSetOperations;
 import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
 
-abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet {
+abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet implements IIntSetCommon {
 
-    private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_TO_INT_MAX_DISTANCE_NON_BUCKET_MAP;
+    private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_MAX_DISTANCE_NON_BUCKET_SET;
 
     private byte[] maxDistances;
 
@@ -19,6 +19,10 @@ abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet {
 
     BaseIntMaxDistanceNonBucketSet(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
+    }
+
+    BaseIntMaxDistanceNonBucketSet(BaseIntMaxDistanceNonBucketSet toCopy) {
+        super(toCopy);
     }
 
     @Override

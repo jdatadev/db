@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.lists.ILongList.ContainsOnlyPredicate;
+import dev.jdata.db.utils.adt.elements.ILongElements.IContainsOnlyPredicate;
 
 public final class LargeLongMultiHeadDoublyLinkedList<INSTANCE>
 
@@ -22,7 +22,7 @@ public final class LargeLongMultiHeadDoublyLinkedList<INSTANCE>
     }
 
     @Override
-    public boolean containsOnly(long value, long headNode, ContainsOnlyPredicate predicate) {
+    public boolean containsOnly(long value, long headNode, IContainsOnlyPredicate predicate) {
 
         return containsOnlyValue(value, headNode, predicate);
     }

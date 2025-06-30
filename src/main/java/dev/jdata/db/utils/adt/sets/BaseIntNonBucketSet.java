@@ -1,9 +1,10 @@
 package dev.jdata.db.utils.adt.sets;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.elements.IIntElements;
+import dev.jdata.db.utils.adt.elements.IIntIterableElements;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
@@ -11,11 +12,9 @@ import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IIntElements {
+abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IIntIterableElements {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_NON_BUCKET_SET;
-
-//    private static final boolean ASSERT = AssertionContants.ASSERT_BASE_INT_NON_BUCKET_MAP;
 
     private static final int NO_ELEMENT = -1;
 
@@ -37,8 +36,14 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
         }
     }
 
+    BaseIntNonBucketSet(BaseIntNonBucketSet toCopy) {
+        super(toCopy, (t, c) -> System.arraycopy(c, 0, t, 0, c.length));
+    }
+
     @Override
-    public final <P, E extends Exception> void forEach(P parameter, ForEach<P, E> forEach) throws E {
+    public final <P, E extends Exception> void forEach(P parameter, IForEach<P, E> forEach) throws E {
+
+        Objects.requireNonNull(forEach);
 
         if (DEBUG) {
 
@@ -65,23 +70,41 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
         }
     }
 
-    private int getIndexScanHashArrayToMax(int key, int max) {
+    @Override
+    public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<P1, P2, R, E> forEach) throws E {
 
-        NonBucket.checkIsHashArrayElement(key);
-        Checks.isLengthAboveZero(max);
+        Objects.requireNonNull(forEach);
 
         if (DEBUG) {
 
-            enter(b -> b.add("key", key).add("max", max));
+            enter(b -> b.add("defaultResult", defaultResult).add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
         }
 
-        final int hashArrayIndex = HashFunctions.hashArrayIndex(key, getKeyMask());
+        R result = defaultResult;
 
-        final int result = getIndexScanHashArrayToMax(key, hashArrayIndex, max);
+        final int[] hashArray = getHashed();
+
+        final int hashArrayLength = hashArray.length;
+
+        for (int i = 0; i < hashArrayLength; ++ i) {
+
+            final int element = hashArray[i];
+
+            if (element != NO_ELEMENT) {
+
+                final R forEachResult = forEach.each(element, parameter1, parameter2);
+
+                if (forEachResult != null) {
+
+                    result = forEachResult;
+                    break;
+                }
+            }
+        }
 
         if (DEBUG) {
 
-            exit(b -> b.add("key", key).add("max", max));
+            exit(result, b -> b.add("defaultResult", defaultResult).add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
         }
 
         return result;
@@ -258,7 +281,8 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
         return result;
     }
 
-    private int[] toArray() {
+    @Override
+    public int[] toArray() {
 
         if (DEBUG) {
 

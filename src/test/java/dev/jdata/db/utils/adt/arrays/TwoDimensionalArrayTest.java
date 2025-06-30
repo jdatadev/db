@@ -3,6 +3,7 @@ package dev.jdata.db.utils.adt.arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.function.BiPredicate;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
 
@@ -25,11 +26,14 @@ public final class TwoDimensionalArrayTest extends BaseTest {
     public void testConstructorArguments() {
 
         assertThatThrownBy(() -> new TwoDimensionalArray<>(-1,  Integer[][]::new, 1, Integer[]::new)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new TwoDimensionalArray<>(0,   Integer[][]::new, 1, Integer[]::new)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new TwoDimensionalArray<>(1,   null, 1, Integer[]::new)).isInstanceOf(NullPointerException.class);
         assertThatThrownBy(() -> new TwoDimensionalArray<>(1,   Integer[][]::new, -1, Integer[]::new)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new TwoDimensionalArray<>(1,   Integer[][]::new, 0, Integer[]::new)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new TwoDimensionalArray<>(1,   Integer[][]::new, 1, null)).isInstanceOf(NullPointerException.class);
+
+        final TwoDimensionalArray<Integer> twoDimensionalArray = new TwoDimensionalArray<>(0, Integer[][]::new, 1, Integer[]::new);
+
+        twoDimensionalArray.addWithOuterExpand(0, 1);
     }
 
     @Test
@@ -186,7 +190,7 @@ public final class TwoDimensionalArrayTest extends BaseTest {
 
     @Test
     @Category(UnitTest.class)
-    public void testFindExactlyOne() {
+    public void testClosureOrConstantFindExactlyOne() {
 
         final TwoDimensionalArray<String> twoDimensionalArray = createTwoDimensionalArray(String[][]::new, String[]::new);
 
@@ -217,6 +221,48 @@ public final class TwoDimensionalArrayTest extends BaseTest {
         twoDimensionalArray.add(outerIndex0, String.valueOf(element));
 
         assertThatThrownBy(() -> twoDimensionalArray.findExactlyOne(outerIndex0, predicate)).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testFindExactlyOne() {
+
+        final TwoDimensionalArray<String> twoDimensionalArray = createTwoDimensionalArray(String[][]::new, String[]::new);
+
+        assertThatThrownBy(() -> twoDimensionalArray.findExactlyOne(-1, null, (s, p) -> true)).isInstanceOf(IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> twoDimensionalArray.findExactlyOne(0, null, (s, p) -> true)).isInstanceOf(IndexOutOfBoundsException.class);
+
+        final int element = 123;
+        final int otherElement = 234;
+        final int anotherElement = 234;
+
+        final String elementString = String.valueOf(element);
+
+        final int outerIndex0 = 0;
+
+        final Object parameter = new Object();
+
+        final BiPredicate<String, Object> predicate = (s, p) -> {
+
+            assertThat(p).isSameAs(parameter);
+
+            return Integer.parseInt(s) == element;
+        };
+
+        twoDimensionalArray.add(outerIndex0, String.valueOf(otherElement));
+
+        assertThatThrownBy(() -> twoDimensionalArray.findExactlyOne(0, null, null)).isInstanceOf(NullPointerException.class);
+
+        assertThatThrownBy(() -> twoDimensionalArray.findExactlyOne(outerIndex0, parameter, predicate)).isInstanceOf(NoSuchElementException.class);
+
+        twoDimensionalArray.add(outerIndex0, elementString);
+        twoDimensionalArray.add(outerIndex0, String.valueOf(anotherElement));
+
+        assertThat(twoDimensionalArray.findExactlyOne(outerIndex0, parameter, predicate)).isSameAs(elementString);
+
+        twoDimensionalArray.add(outerIndex0, String.valueOf(element));
+
+        assertThatThrownBy(() -> twoDimensionalArray.findExactlyOne(outerIndex0, parameter, predicate)).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
