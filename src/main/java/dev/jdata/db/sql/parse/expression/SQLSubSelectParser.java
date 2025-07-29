@@ -1,7 +1,6 @@
 package dev.jdata.db.sql.parse.expression;
 
 import org.jutils.ast.objects.list.IIndexListGetters;
-import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.expressions.SQLSubSelectStatement;

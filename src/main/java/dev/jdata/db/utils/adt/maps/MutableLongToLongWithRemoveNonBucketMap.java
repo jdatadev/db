@@ -1,9 +1,8 @@
 package dev.jdata.db.utils.adt.maps;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
-import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
-import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
+import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 
 public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLongWithRemoveNonBucketMap implements IMutableLongToLongStaticMap {
 
@@ -11,53 +10,56 @@ public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLon
 
     public MutableLongToLongWithRemoveNonBucketMap(int initialCapacityExponent) {
         super(initialCapacityExponent);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     public MutableLongToLongWithRemoveNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
     public long put(long key, long value, long defaultPreviousValue) {
 
-        NonBucket.checkIsHashArrayElement(key);
-        Checks.isNotNegative(value);
+        LongNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
-            enter(b -> b.add("key", key).add("value", value));
+            enter(b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
         }
 
-        final long result;
-
-        final long putResult = put(key);
-
-        final int index = IntPutResult.getPutIndex(putResult);
-
-        if (index != NO_INDEX) {
-
-            final long[] values = getValues();
-
-            result = values[index];
-
-            values[index] = value;
-        }
-        else {
-            result = defaultPreviousValue;
-        }
+        final long result = putValue(key, value, defaultPreviousValue);
 
         if (DEBUG) {
 
-            exit(result, b -> b.add("key", key).add("value", value));
+            exit(result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
         }
 
         return result;
     }
 
     @Override
-    public void remove(long key) {
+    public long removeAndReturnPrevious(long key) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        LongNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -66,11 +68,13 @@ public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLon
 
         final long result;
 
-        final int index = removeAndReturnIndex(key);
+        final int indexToRemove = HashArray.removeAndReturnIndexScanEntire(getHashed(), key, getKeyMask());
 
-        if (index != NO_INDEX) {
+        if (indexToRemove != NO_INDEX) {
 
-            result = getHashed()[index];
+            decrementNumElements();
+
+            result = getValues()[indexToRemove];
         }
         else {
             throw new IllegalStateException();
@@ -79,6 +83,33 @@ public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLon
         if (DEBUG) {
 
             exit(result, b -> b.add("key", key));
+        }
+
+        return result;
+    }
+
+    @Override
+    public void remove(long key) {
+
+        LongNonBucket.checkIsHashArrayElement(key);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("key", key));
+        }
+
+        final int indexToRemove = HashArray.removeAndReturnIndexScanEntire(getHashed(), key, getKeyMask());
+
+        if (indexToRemove == NO_INDEX) {
+
+            throw new IllegalStateException();
+        }
+
+        decrementNumElements();
+
+        if (DEBUG) {
+
+            exit(b -> b.add("key", key));
         }
     }
 

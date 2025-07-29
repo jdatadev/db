@@ -5,7 +5,6 @@ import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.lists.BaseLargeLongMultiHeadSinglyLinkedList;
-import dev.jdata.db.utils.adt.lists.BaseList;
 import dev.jdata.db.utils.adt.lists.BaseLongValues;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -31,6 +30,23 @@ abstract class BaseLongToIntBucketMap<MAP extends BaseLongToIntBucketMap<MAP>>
 
             return getValues().intValues[getOuterIndex(node)][getInnerIndex(node)];
         }
+
+        void setIntValue(long node, int value) {
+
+            getValues().intValues[getOuterIndex(node)][getInnerIndex(node)] = value;
+        }
+
+        int getAndSetIntValue(long node, int value) {
+
+            final int[] innerArray = getValues().intValues[getOuterIndex(node)];
+            final int innerIndex = getInnerIndex(node);
+
+            final int result = innerArray[innerIndex];
+
+            innerArray[innerIndex] = value;
+
+            return result;
+        }
     }
 
     static final class LongToIntValues<INSTANCE> extends BaseLongValues<LongToIntBucketMapMultiHeadSinglyLinkedList<INSTANCE>, LongToIntValues<INSTANCE>> {
@@ -39,6 +55,8 @@ abstract class BaseLongToIntBucketMap<MAP extends BaseLongToIntBucketMap<MAP>>
 
         LongToIntValues(int initialOuterCapacity) {
             super(initialOuterCapacity);
+
+            this.intValues = new int[initialOuterCapacity][];
         }
 
         @Override
@@ -67,11 +85,31 @@ abstract class BaseLongToIntBucketMap<MAP extends BaseLongToIntBucketMap<MAP>>
     }
 
     BaseLongToIntBucketMap(int initialCapacityExponent) {
-        super(initialCapacityExponent, LongToIntBucketMapMultiHeadSinglyLinkedList::new, LongToIntValues::new);
+        super(initialCapacityExponent, LongToIntBucketMapMultiHeadSinglyLinkedList::new);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    BaseLongToIntBucketMap(int initialCapacityExponent, float loadFactor) {
-        super(initialCapacityExponent, loadFactor, LongToIntBucketMapMultiHeadSinglyLinkedList::new, LongToIntValues::new);
+    BaseLongToIntBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
+        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, LongToIntBucketMapMultiHeadSinglyLinkedList::new);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
@@ -87,16 +125,16 @@ abstract class BaseLongToIntBucketMap<MAP extends BaseLongToIntBucketMap<MAP>>
         final long[] bucketHeadNodesHashArray = getHashed();
         final int bucketHeadNodesHashArrayLength = bucketHeadNodesHashArray.length;
 
-        final long noElement = BaseList.NO_NODE;
+        final long noNode = NO_LONG_NODE;
         final LongToIntBucketMapMultiHeadSinglyLinkedList<MAP> buckets = getBuckets();
 
         for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
 
             final long bucketHeadNode = bucketHeadNodesHashArray[i];
 
-            for (long n = bucketHeadNode; n != noElement; n = buckets.getNextNode(n)) {
+            for (long node = bucketHeadNode; node != noNode; node = buckets.getNextNode(node)) {
 
-                forEach.each(buckets.getValue(n), buckets.getIntValue(n), parameter);
+                forEach.each(buckets.getValue(node), buckets.getIntValue(node), parameter);
             }
         }
 
@@ -121,24 +159,26 @@ abstract class BaseLongToIntBucketMap<MAP extends BaseLongToIntBucketMap<MAP>>
         final long[] bucketHeadNodesHashArray = getHashed();
         final int bucketHeadNodesHashArrayLength = bucketHeadNodesHashArray.length;
 
-        final long noElement = BaseList.NO_NODE;
+        final long noNode = NO_LONG_NODE;
         final LongToIntBucketMapMultiHeadSinglyLinkedList<MAP> buckets = getBuckets();
 
-        for (int i = 0; i < bucketHeadNodesHashArrayLength && result == null; ++ i) {
+        outer:
+            for (int i = 0; i < bucketHeadNodesHashArrayLength && result == null; ++ i) {
 
-            final long bucketHeadNode = bucketHeadNodesHashArray[i];
+                final long bucketHeadNode = bucketHeadNodesHashArray[i];
 
-            for (long n = bucketHeadNode; n != noElement; n = buckets.getNextNode(n)) {
+                for (long node = bucketHeadNode; node != noNode; node = buckets.getNextNode(node)) {
 
-                final R forEachResult = forEach.each(buckets.getValue(n), buckets.getIntValue(n), parameter, delegate);
+                    final R forEachResult = forEach.each(buckets.getValue(node), buckets.getIntValue(node), parameter, delegate);
 
-                if (forEachResult != null) {
+                    if (forEachResult != null) {
 
-                    result = forEachResult;
-                    break;
+                        result = forEachResult;
+
+                        break outer;
+                    }
                 }
             }
-        }
 
         if (result == null) {
 
@@ -170,7 +210,7 @@ abstract class BaseLongToIntBucketMap<MAP extends BaseLongToIntBucketMap<MAP>>
         final long[] bucketHeadNodesHashArray = getHashed();
         final int bucketHeadNodesHashArrayLength = bucketHeadNodesHashArray.length;
 
-        final long noElement = BaseList.NO_NODE;
+        final long noNode = NO_LONG_NODE;
         final LongToIntBucketMapMultiHeadSinglyLinkedList<MAP> buckets = getBuckets();
 
         int dstIndex = 0;
@@ -179,10 +219,10 @@ abstract class BaseLongToIntBucketMap<MAP extends BaseLongToIntBucketMap<MAP>>
 
             final long bucketHeadNode = bucketHeadNodesHashArray[i];
 
-            for (long n = bucketHeadNode; n != noElement; n = buckets.getNextNode(n)) {
+            for (long node = bucketHeadNode; node != noNode; node = buckets.getNextNode(node)) {
 
-                keysDst[dstIndex] = buckets.getValue(n);
-                valuesDst[dstIndex] = buckets.getIntValue(n);
+                keysDst[dstIndex] = buckets.getValue(node);
+                valuesDst[dstIndex] = buckets.getIntValue(node);
 
                 ++ dstIndex;
             }
@@ -197,15 +237,59 @@ abstract class BaseLongToIntBucketMap<MAP extends BaseLongToIntBucketMap<MAP>>
     @Override
     public final int get(long key, int defaultValue) {
 
-        final long node = getValueNode(key);
+        if (DEBUG) {
 
-        return node != BaseList.NO_NODE ? getBuckets().getIntValue(node) : defaultValue;
+            enter(b -> b.add("key", key).add("defaultValue", defaultValue));
+        }
+
+        final int result;
+
+        final long headNode = getValueNode(key);
+
+        final long noNode = NO_LONG_NODE;
+
+        if (headNode != noNode) {
+
+            final LongToIntBucketMapMultiHeadSinglyLinkedList<?> buckets = getBuckets();
+
+            final long node = buckets.findNodeWithValue(key, headNode);
+
+            result = node != noNode ? buckets.getIntValue(node) : defaultValue;
+        }
+        else {
+            result = defaultValue;
+        }
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
     }
 
     @Override
     final LongToIntBucketMapMultiHeadSinglyLinkedList<MAP> createBuckets(int outerInitialCapacity, int bucketsInnerCapacity) {
 
         return new LongToIntBucketMapMultiHeadSinglyLinkedList<>(outerInitialCapacity, bucketsInnerCapacity);
+    }
+
+    @Override
+    void rehashPut(LongToIntBucketMapMultiHeadSinglyLinkedList<MAP> oldBuckets, long oldNode, LongToIntBucketMapMultiHeadSinglyLinkedList<MAP> newBuckets, long newNode) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("oldBuckets", oldBuckets).hex("oldNode", oldNode).add("newBuckets", newBuckets).hex("newNode", newNode));
+        }
+
+        final int value = oldBuckets.getIntValue(oldNode);
+
+        newBuckets.setIntValue(newNode, value);
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     final void clearBaseLongToIntBucketMap() {

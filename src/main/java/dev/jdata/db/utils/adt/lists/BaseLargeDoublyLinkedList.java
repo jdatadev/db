@@ -14,7 +14,7 @@ abstract class BaseLargeDoublyLinkedList<
 
     private long[][] previous;
 
-    BaseLargeDoublyLinkedList(int initialOuterCapacity, int innerCapacity, BaseValuesFactory<LIST_T, LIST, VALUES> valuesFactory) {
+    BaseLargeDoublyLinkedList(int initialOuterCapacity, int innerCapacity, ILargeListValuesFactory<LIST_T, LIST, VALUES> valuesFactory) {
         super(initialOuterCapacity, innerCapacity, valuesFactory);
 
         Checks.isCapacity(initialOuterCapacity);
@@ -44,7 +44,7 @@ abstract class BaseLargeDoublyLinkedList<
         previous[outerIndex] = new long[innerArrayCapacity];
     }
 
-    final long addHeadNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long addHeadNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = allocateNextNode();
 
@@ -66,7 +66,7 @@ abstract class BaseLargeDoublyLinkedList<
         return node;
     }
 
-    final long addTailNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long addTailNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = allocateNextNode();
 
@@ -91,7 +91,7 @@ abstract class BaseLargeDoublyLinkedList<
         return node;
     }
 
-    final long removeHeadNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long removeHeadNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         if (isEmpty(headNode, tailNode)) {
 
@@ -115,7 +115,7 @@ abstract class BaseLargeDoublyLinkedList<
         return headNode;
     }
 
-    final long removeTailNodeAndReturnNode(INSTANCE instance, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long removeTailNodeAndReturnNode(INSTANCE instance, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         if (tailNode == NO_NODE) {
 
@@ -142,8 +142,8 @@ abstract class BaseLargeDoublyLinkedList<
         return tailNode;
     }
 
-    final long removeListNodeAndReturnNode(INSTANCE instance, long node, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter,
-            LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long removeListNodeAndReturnNode(INSTANCE instance, long toRemove, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter,
+            ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         if (isEmpty(headNode, tailNode)) {
 
@@ -152,17 +152,17 @@ abstract class BaseLargeDoublyLinkedList<
 
         final long result;
 
-        if (node == headNode) {
+        if (toRemove == headNode) {
 
             result = removeHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
         }
-        else if (node == tailNode) {
+        else if (toRemove == tailNode) {
 
             result = removeTailNodeAndReturnNode(instance, tailNode, headNodeSetter, tailNodeSetter);
         }
         else {
-            final long previousNode = getPreviousNode(node);
-            final long nextNode = getNextNode(node);
+            final long previousNode = getPreviousNode(toRemove);
+            final long nextNode = getNextNode(toRemove);
 
             if (previousNode != NO_NODE) {
 
@@ -174,9 +174,9 @@ abstract class BaseLargeDoublyLinkedList<
                 }
             }
 
-            result = node;
+            result = toRemove;
 
-            addNodeToFreeList(node);
+            addNodeToFreeList(toRemove);
         }
 
         return result;

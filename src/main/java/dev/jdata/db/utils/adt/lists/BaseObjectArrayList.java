@@ -20,7 +20,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         super(allocationType);
     }
 
-    BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray) {
+    protected BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray) {
         this(allocationType, createElementsArray, DEFAULT_INITIAL_CAPACITY);
     }
 
@@ -195,6 +195,11 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         return foundIndex;
     }
 
+    protected final int getElementsArrayLength() {
+
+        return elementsArray.length;
+    }
+
     final void addHeadElement(T instance) {
 
         if (instance == null) {
@@ -310,7 +315,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
     public final void set(long index, T instance) {
 
         Objects.requireNonNull(instance);
-        Objects.checkIndex(index, numElements);
+        Checks.checkIndex(index, numElements);
 
         elementsArray[(int)index] = instance;
     }
@@ -356,7 +361,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
 
         final int num = numElements;
 
-        Objects.checkIndex(index, num);
+        Checks.checkIndex(index, num);
 
         final int intIndex = Integers.checkUnsignedLongToUnsignedInt(index);
 
@@ -526,7 +531,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         return elementsToArray(createElementsArray);
     }
 
-    final Iterator<T> makeIterator() {
+    protected final Iterator<T> makeIterator() {
 
         return new Iterator<T>() {
 
@@ -555,11 +560,11 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         };
     }
 
-    final <E> E[] makeArray(E[] dst) {
+    protected final <E> E[] makeArray(E[] dst) {
 
         final T[] a = elementsArray;
 
-        Objects.checkFromIndexSize(0, dst.length, a.length);
+        Checks.checkFromIndexSize(0, dst.length, a.length);
 
         final int num = numElements;
 
@@ -649,7 +654,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
 
             final int num = numElements;
 
-            result = num == other.numElements && Arrays.equals(elementsArray, 0, num, other.elementsArray, 0, num);
+            result = num == other.numElements && Array.equals(elementsArray, 0, other.elementsArray, 0, num);
         }
 
         return result;

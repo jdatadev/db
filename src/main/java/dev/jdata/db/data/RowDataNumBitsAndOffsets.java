@@ -1,7 +1,8 @@
 package dev.jdata.db.data;
 
 import java.util.Arrays;
-import java.util.Objects;
+
+import dev.jdata.db.utils.checks.Checks;
 
 public final class RowDataNumBitsAndOffsets extends RowDataNumBits {
 
@@ -27,7 +28,7 @@ public final class RowDataNumBitsAndOffsets extends RowDataNumBits {
 
     public int getRowDataBitOffset(int columnIndex) {
 
-        Objects.checkIndex(columnIndex, getNumColumns());
+        Checks.checkIndex(columnIndex, getNumColumns());
 
         return rowDataBitOffsets[columnIndex];
     }

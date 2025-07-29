@@ -10,12 +10,12 @@ import dev.jdata.db.storage.backend.transactionlog.backend.TransactionLogBackend
 import dev.jdata.db.utils.file.access.AbsoluteDirectoryPath;
 import dev.jdata.db.utils.file.access.IAbsoluteFileSystemAccess;
 
-public final class FileTransactionLogBackendConfiguration extends TransactionLogBackendConfiguration {
+public abstract class FileTransactionLogBackendConfiguration extends TransactionLogBackendConfiguration {
 
     private final IAbsoluteFileSystemAccess fileSystemAccess;
     private final AbsoluteDirectoryPath rootPath;
 
-    public FileTransactionLogBackendConfiguration(CommonConfiguration commonConfiguration, IEffectiveDatabaseSchema databaseSchema,
+    protected FileTransactionLogBackendConfiguration(CommonConfiguration commonConfiguration, IEffectiveDatabaseSchema databaseSchema,
             VersionedDatabaseSchemas versionedDatabaseSchemas, NumStorageBitsParameters numStorageBitsParameters, IAbsoluteFileSystemAccess fileSystemAccess,
             AbsoluteDirectoryPath rootPath) {
         super(commonConfiguration, databaseSchema, versionedDatabaseSchemas, numStorageBitsParameters);
@@ -24,11 +24,11 @@ public final class FileTransactionLogBackendConfiguration extends TransactionLog
         this.rootPath = Objects.requireNonNull(rootPath);
     }
 
-    public IAbsoluteFileSystemAccess getFileSystemAccess() {
+    public final IAbsoluteFileSystemAccess getFileSystemAccess() {
         return fileSystemAccess;
     }
 
-    public AbsoluteDirectoryPath getRootPath() {
+    public final AbsoluteDirectoryPath getRootPath() {
         return rootPath;
     }
 }

@@ -40,9 +40,9 @@ public final class LargeLongDoublyLinkedList extends BaseLargeLongDoublyLinkedLi
 
         Objects.requireNonNull(forEach);
 
-        for (long n = headNode; n != NO_NODE; n = getNextNode(n)) {
+        for (long node = headNode; node != NO_NODE; node = getNextNode(node)) {
 
-            forEach.each(getValue(n), parameter);
+            forEach.each(getValue(node), parameter);
         }
     }
 
@@ -53,9 +53,9 @@ public final class LargeLongDoublyLinkedList extends BaseLargeLongDoublyLinkedLi
 
         R result = defaultResult;
 
-        for (long n = headNode; n != NO_NODE; n = getNextNode(n)) {
+        for (long node = headNode; node != NO_NODE; node = getNextNode(node)) {
 
-            final R forEachResult = forEach.each(getValue(n), parameter1, parameter2);
+            final R forEachResult = forEach.each(getValue(node), parameter1, parameter2);
 
             if (forEachResult != null) {
 
@@ -127,7 +127,7 @@ public final class LargeLongDoublyLinkedList extends BaseLargeLongDoublyLinkedLi
         return result;
     }
 
-    private long removeHeadNode() {
+    private long removeHeadNodeAndReturNode() {
 
         final long result = removeHeadNodeAndReturnNode(this, headNode, tailNode, LargeLongDoublyLinkedList::setHeadNode, LargeLongDoublyLinkedList::setTailNode);
 
@@ -150,9 +150,9 @@ public final class LargeLongDoublyLinkedList extends BaseLargeLongDoublyLinkedLi
         return result;
     }
 
-    public long removeNode(long node) {
+    public long removeNode(long toRemove) {
 
-        final long result = getValue(removeListNodeAndReturnNode(this, node, headNode, tailNode, LargeLongDoublyLinkedList::setHeadNode, LargeLongDoublyLinkedList::setTailNode));
+        final long result = getValue(removeListNodeAndReturnNode(this, toRemove, headNode, tailNode, LargeLongDoublyLinkedList::setHeadNode, LargeLongDoublyLinkedList::setTailNode));
 
         decreaseNumElements();
 

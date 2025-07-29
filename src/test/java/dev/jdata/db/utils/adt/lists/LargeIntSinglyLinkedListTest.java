@@ -70,7 +70,7 @@ public final class LargeIntSinglyLinkedListTest extends BaseLargeIntListTest<Mut
         assertThat(list.removeTailNodeAndReturnNode(node3)).isEqualTo(node2);
         checkElements(list, 345);
 
-        assertThat(list.removeTailNodeAndReturnNode(BaseList.NO_NODE)).isEqualTo(node3);
+        assertThat(list.removeTailNodeAndReturnNode(NO_NODE)).isEqualTo(node3);
 
         assertThat(list).isEmpty();
         assertThat(list).hasNumElements(0);

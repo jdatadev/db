@@ -9,12 +9,14 @@ import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
 
+import dev.jdata.db.utils.adt.byindex.IObjectByIndexGetters;
 import dev.jdata.db.utils.adt.elements.ByIndex;
 import dev.jdata.db.utils.adt.elements.ByIndex.IByIndexElementEqualityTester;
 import dev.jdata.db.utils.adt.elements.IElementsToString;
+import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-public interface IIndexListGetters<T> extends IListGetters<T>, ITailListGetters<T>, IElementsToString<T> {
+public interface IIndexListGetters<T> extends IObjectByIndexGetters<T>, IListGetters<T>, ITailListGetters<T>, IElementsToString<T> {
 
     @Override
     default <P> long count(P parameter, BiPredicate<T, P> predicate) {
@@ -89,8 +91,6 @@ public interface IIndexListGetters<T> extends IListGetters<T>, ITailListGetters<
 
         return found ? max : defaultValue;
     }
-
-    T get(long index);
 
     @Override
     default <P, E extends Exception> void forEach(P parameter, IForEach<T, P, E> forEach) throws E {
@@ -230,6 +230,37 @@ public interface IIndexListGetters<T> extends IListGetters<T>, ITailListGetters<
         return ByIndex.findAtMostOneIndex(this, getNumElements(), parameter, IIndexListGetters::get, predicate, IndexOutOfBoundsException::new);
     }
 
+    @Override
+    default boolean equals(long startIndex, IListGetters<T> other, long otherStartIndex, long numElements) {
+
+        Checks.checkFromIndexSize(startIndex, numElements, getNumElements());
+        Objects.requireNonNull(other);
+        Checks.checkFromIndexSize(otherStartIndex, numElements, other.getNumElements());
+
+        boolean equals;
+
+        if (other instanceof IIndexListGetters) {
+
+            equals = true;
+
+            final IIndexListGetters<T> otherIndexList = (IIndexListGetters<T>)other;
+
+            for (int i = 0; i < numElements; ++ i) {
+
+                if (!Objects.equals(get(startIndex + i), otherIndexList.get(otherStartIndex + i))) {
+
+                    equals = false;
+                    break;
+                }
+            }
+        }
+        else {
+            throw new UnsupportedOperationException();
+        }
+
+        return equals;
+    }
+
     @FunctionalInterface
     public interface IIndexListEqualityTester<T, P1, P2> extends IByIndexElementEqualityTester<T, P1, P2> {
 
@@ -255,8 +286,8 @@ public interface IIndexListGetters<T> extends IListGetters<T>, ITailListGetters<
     default <P1, P2> boolean equals(long thisStartIndex, P1 thisParameter, IIndexListGetters<T> other, long otherStartIndex, P2 otherParameter, long numElements,
             IIndexListEqualityTester<T, P1, P2> equalityTester) {
 
-        Objects.checkIndex(thisStartIndex, getNumElements());
-        Objects.checkIndex(otherStartIndex, other.getNumElements());
+        Checks.checkIndex(thisStartIndex, getNumElements());
+        Checks.checkIndex(otherStartIndex, other.getNumElements());
 
         return ByIndex.equals(this, thisStartIndex, thisParameter, other, otherStartIndex, otherParameter, numElements, equalityTester,
                 (l1, i1, p1, l2, i2, p2, d) -> d.equals(l1.get(i1), p1, l2.get(i2), p2));

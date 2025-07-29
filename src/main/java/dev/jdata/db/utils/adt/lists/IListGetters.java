@@ -32,4 +32,25 @@ public interface IListGetters<T> extends IObjectIterableElements<T>, IHeadListGe
 
         return findAtMostOneIndex(instance, (e, i) -> e == i);
     }
+
+    boolean equals(long startIndex, IListGetters<T> other, long otherStartIndex, long numElements);
+
+    default boolean equalsList(IListGetters<T> other) {
+
+        Objects.requireNonNull(other);
+
+        final long numElements = getNumElements();
+
+        boolean equals;
+
+        if (numElements != other.getNumElements()) {
+
+            equals = false;
+        }
+        else {
+            equals = equals(0L, other, 0L, numElements);
+        }
+
+        return equals;
+    }
 }

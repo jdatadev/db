@@ -14,14 +14,14 @@ import dev.jdata.db.engine.transactions.TransactionMechanism;
 import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.arrays.ILongArray;
-import dev.jdata.db.utils.adt.arrays.IntArray;
-import dev.jdata.db.utils.adt.arrays.LongArray;
+import dev.jdata.db.utils.adt.arrays.ILongArrayCommon;
+import dev.jdata.db.utils.adt.arrays.MutableIntArray;
+import dev.jdata.db.utils.adt.arrays.MutableLongArray;
 import dev.jdata.db.utils.adt.buffers.BitBuffer;
 import dev.jdata.db.utils.adt.buffers.BufferUtil;
-import dev.jdata.db.utils.adt.lists.BaseList;
+import dev.jdata.db.utils.adt.lists.ILongNodeSetter;
+import dev.jdata.db.utils.adt.lists.LargeLists;
 import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadDoublyLinkedList;
-import dev.jdata.db.utils.adt.lists.LongNodeSetter;
 import dev.jdata.db.utils.adt.maps.MutableIntToLongWithRemoveNonBucketMap;
 import dev.jdata.db.utils.adt.sets.IMutableLongSet;
 import dev.jdata.db.utils.bits.BitsUtil;
@@ -38,6 +38,8 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
     private static final boolean ASSERT = AssertionContants.ASSERT_MVCC;
 
     private static final Class<?> debugClass = MVCCTransaction.class;
+
+    private static final long NO_NODE = LargeLists.NO_LONG_NODE;
 
     public static final class MVCCTransactionState {
 
@@ -69,8 +71,6 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
         }
     }
 
-    private static final long NO_NODE = BaseList.NO_NODE;
-
     private static final int DML_OPERATION_NUM_BITS;
 
     static {
@@ -100,7 +100,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
     private DBIsolationLevel isolationLevel;
 
-    private final LongArray rowOperationBySequenceNo;
+    private final MutableLongArray rowOperationBySequenceNo;
 
     private final MutableIntToLongWithRemoveNonBucketMap operationListsHeadNodesByTableId;
     private final MutableIntToLongWithRemoveNonBucketMap operationListsTailNodesByTableId;
@@ -114,7 +114,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
     private final BitBuffer updateToInsertRows;
 */
     private final BitBuffer deleteRows;
-    private final IntArray deleteAllRows;
+    private final MutableIntArray deleteAllRows;
 
     private final RowBufferComparer rowBufferComparer;
 
@@ -129,16 +129,16 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
     MVCCTransaction(int innerCapacityExponent) {
 
-        Checks.isCapacityExponent(innerCapacityExponent);
+        Checks.isIntCapacityExponent(innerCapacityExponent);
 
         if (DEBUG) {
 
             enter(b -> b.add("innerCapacityExponent", innerCapacityExponent));
         }
 
-        final int innerCapacity = CapacityExponents.computeCapacity(innerCapacityExponent);
+        final int innerCapacity = CapacityExponents.computeIntCapacityFromExponent(innerCapacityExponent);
 
-        this.rowOperationBySequenceNo = new LongArray(1, 10);
+        this.rowOperationBySequenceNo = new MutableLongArray(0);
 
         this.operationListsHeadNodesByTableId = new MutableIntToLongWithRemoveNonBucketMap(0);
         this.operationListsTailNodesByTableId = new MutableIntToLongWithRemoveNonBucketMap(0);
@@ -153,7 +153,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
         this.updateToInsertRows = new MVCCBitBuffer(innerCapacity);
 */
         this.deleteRows = new BitBuffer(innerCapacityExponent);
-        this.deleteAllRows = new IntArray(1, innerCapacityExponent);
+        this.deleteAllRows = new MutableIntArray(1, innerCapacityExponent);
 
         this.rowBufferComparer = new RowBufferComparer();
 
@@ -190,9 +190,11 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
         boolean removeAll = false;
 
-        if (headNode != BaseList.NO_NODE) {
+        final long noNode = NO_NODE;
 
-            for (long node = headNode; !done && node != BaseList.NO_NODE; node = tableOperationsLists.getNextNode(node)) {
+        if (headNode != noNode) {
+
+            for (long node = headNode; !done && node != noNode; node = tableOperationsLists.getNextNode(node)) {
 
                 final long encodedOperation = tableOperationsLists.getValue(node);
 
@@ -263,7 +265,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
     }
 
     @Override
-    public OperationResult insertRows(MVCCTransactionState mvccSharedState, Table table, int statementId, ILongArray rowIds, DMLInsertRows rows) {
+    public OperationResult insertRows(MVCCTransactionState mvccSharedState, Table table, int statementId, ILongArrayCommon rowIds, DMLInsertRows rows) {
 
         if (DEBUG) {
 
@@ -283,7 +285,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
     }
 
     @Override
-    public OperationResult updateRows(MVCCTransactionState mvccSharedState, Table table, int statementId, ILongArray rowIds, DMLUpdateRows rows) {
+    public OperationResult updateRows(MVCCTransactionState mvccSharedState, Table table, int statementId, ILongArrayCommon rowIds, DMLUpdateRows rows) {
 
         if (DEBUG) {
 
@@ -331,7 +333,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
     }
 
     @Override
-    public OperationResult deleteRows(MVCCTransactionState mvccSharedState, Table table, int statementId, ILongArray rowIds) {
+    public OperationResult deleteRows(MVCCTransactionState mvccSharedState, Table table, int statementId, ILongArrayCommon rowIds) {
 
         if (DEBUG) {
 
@@ -502,7 +504,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
         rowOperationBySequenceNo.clear();
 
-        final LongNodeSetter<MVCCTransaction> noop = (i, n) -> { };
+        final ILongNodeSetter<MVCCTransaction> noop = (i, n) -> { };
 
         operationListsHeadNodesByTableId.forEachKeyAndValue(this, (k, v, t) -> t.tableOperationsLists.clear(t, v, noop, noop));
 
@@ -565,7 +567,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
         }
     }
 
-    private void addInsertUpdateRows(int tableId, DMLOperation dmlOperation, BitBuffer mvccBitBuffer, ILongArray rowIds, DMLInsertUpdateRows<?> rows) {
+    private void addInsertUpdateRows(int tableId, DMLOperation dmlOperation, BitBuffer mvccBitBuffer, ILongArrayCommon rowIds, DMLInsertUpdateRows<?> rows) {
 
         if (DEBUG) {
 
@@ -584,7 +586,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
         }
     }
 
-    private void addInsertUpdateRowsImpl(int tableId, DMLOperation dmlOperation, BitBuffer mvccBitBuffer, ILongArray rowIds, DMLInsertUpdateRows<?> rows, long numRows) {
+    private void addInsertUpdateRowsImpl(int tableId, DMLOperation dmlOperation, BitBuffer mvccBitBuffer, ILongArrayCommon rowIds, DMLInsertUpdateRows<?> rows, long numRows) {
 
         if (DEBUG) {
 
@@ -608,7 +610,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
         }
     }
 
-    private static void addInsertUpdateRowsImpl(BitBuffer mvccBitBuffer, ILongArray rowIds, DMLInsertUpdateRows<?> rows, long numRows) {
+    private static void addInsertUpdateRowsImpl(BitBuffer mvccBitBuffer, ILongArrayCommon rowIds, DMLInsertUpdateRows<?> rows, long numRows) {
 
         if (DEBUG) {
 
@@ -688,9 +690,9 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
         }
     }
 
-    private static long addRowOperation(MVCCTransaction mvccTransaction, int tableId, DMLOperation dmlOperation, int operationSequenceNo, LongArray rowOperationBySequenceNo,
-            MutableIntToLongWithRemoveNonBucketMap operationsHeadNodeByTableId, MutableIntToLongWithRemoveNonBucketMap operationsTailNodeByTableId,
-            LargeLongMultiHeadDoublyLinkedList<MVCCTransaction> operationsLists, long value) {
+    private static long addRowOperation(MVCCTransaction mvccTransaction, int tableId, DMLOperation dmlOperation, int operationSequenceNo,
+            MutableLongArray rowOperationBySequenceNo, MutableIntToLongWithRemoveNonBucketMap operationsHeadNodeByTableId,
+            MutableIntToLongWithRemoveNonBucketMap operationsTailNodeByTableId, LargeLongMultiHeadDoublyLinkedList<MVCCTransaction> operationsLists, long value) {
 
         if (DEBUG) {
 
@@ -707,10 +709,12 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
         rowOperationBySequenceNo.add(encoded);
 
+        final long noNode = NO_NODE;
+
         final long headNode = operationsHeadNodeByTableId.get(tableId);
-        final long tailNode = headNode != NO_NODE
+        final long tailNode = headNode != noNode
                 ? operationsTailNodeByTableId.get(tableId)
-                : NO_NODE;
+                : noNode;
 
         operationsLists.addTail(mvccTransaction, encoded, headNode, tailNode, (t, n) -> t.scratcHeadNode = n, (t, n) -> t.scratcTailNode = n);
 

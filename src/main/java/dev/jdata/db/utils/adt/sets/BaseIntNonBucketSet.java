@@ -1,14 +1,14 @@
 package dev.jdata.db.utils.adt.sets;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.elements.IIntIterableElements;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
+import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
 import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
-import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
@@ -16,7 +16,7 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_NON_BUCKET_SET;
 
-    private static final int NO_ELEMENT = -1;
+    static final int NO_ELEMENT = -1;
 
     BaseIntNonBucketSet(int initialCapacityExponent, float loadFactor) {
         this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, loadFactor);
@@ -37,7 +37,17 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
     }
 
     BaseIntNonBucketSet(BaseIntNonBucketSet toCopy) {
-        super(toCopy, (t, c) -> System.arraycopy(c, 0, t, 0, c.length));
+        super(toCopy, Array::copyOf);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
@@ -112,7 +122,7 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
 
     final int getIndexScanHashArrayToMax(int key, int hashArrayIndex, int max) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        IntNonBucket.checkIsHashArrayElement(key);
         Checks.isLengthAboveOrAtZero(max);
 
         if (DEBUG) {
@@ -125,25 +135,6 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
         if (DEBUG) {
 
             exit(result, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
-        }
-
-        return result;
-    }
-
-    final int getIndexScanEntireHashArray(int key) {
-
-        NonBucket.checkIsHashArrayElement(key);
-
-        if (DEBUG) {
-
-            enter(b -> b.add("key", key));
-        }
-
-        final int result = HashArray.getIndexScanEntireHashArray(getHashed(), key, getKeyMask());
-
-        if (DEBUG) {
-
-            exit(result, b -> b.add("key", key));
         }
 
         return result;
@@ -171,51 +162,27 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
 
         if (DEBUG) {
 
-            exit(putResult, b -> b.add("key", value).add("newAdded", newAdded).add("getNumElements()", getNumElements()));
+            exitWithHex(putResult, b -> b.add("key", value).add("newAdded", newAdded).add("getNumElements()", getNumElements()));
         }
 
         return putResult;
     }
 
-    final int removeAndReturnIndex(int value) {
-
-        NonBucket.checkIsHashArrayElement(value);
-
-        if (DEBUG) {
-
-            enter(b -> b.add("value", value));
-        }
-
-        final int result = HashArray.removeAndReturnIndex(getHashed(), value, getKeyMask(), this, i -> i.decrementNumElements());
-
-        if (result == HashArray.NO_INDEX) {
-
-            throw new IllegalStateException();
-        }
-
-        if (DEBUG) {
-
-            exit(result);
-        }
-
-        return result;
-    }
-
     @Override
-    protected int[] rehash(int[] hashArray, int newCapacity, int newKeyMask) {
+    protected int[] rehash(int[] hashArray, int newCapacity, int newCapacityExponent, int newKeyMask) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).hex("newKeyMask", newKeyMask));
+            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).hex("newKeyMask", newKeyMask));
         }
 
         final int[] newHashArray = new int[newCapacity];
 
         clearHashArray(newHashArray);
 
-        final int mapLength = hashArray.length;
+        final int hashArrayLength = hashArray.length;
 
-        for (int i = 0; i < mapLength; ++ i) {
+        for (int i = 0; i < hashArrayLength; ++ i) {
 
             final int element = hashArray[i];
 
@@ -231,7 +198,7 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
 
         if (DEBUG) {
 
-            exit(newHashArray, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).hex("newKeyMask", newKeyMask));
+            exit(newHashArray, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).hex("newKeyMask", newKeyMask));
         }
 
         return newHashArray;
@@ -268,10 +235,7 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
             enter(b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
-        final long putResult = HashArray.add(hashArray, value, hashArrayIndex);
-
-        final long result = putResult;
-//        final boolean result = IntPutResult.getPutNewAdded(putResult);
+        final long result = HashArray.add(hashArray, value, hashArrayIndex);
 
         if (DEBUG) {
 
@@ -319,11 +283,21 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
 
     final void clearBaseIntToIntNonBucketMap() {
 
+        if (DEBUG) {
+
+            enter();
+        }
+
         clearHashed();
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     private static void clearHashArray(int[] hashArray) {
 
-        Arrays.fill(hashArray, NO_ELEMENT);
+        IntNonBucket.clearHashArray(hashArray);
     }
 }

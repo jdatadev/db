@@ -24,6 +24,12 @@ public final class IndexListByIndexTest extends BaseByIndexTest {
     }
 
     @Override
+    protected <T> boolean equals(T[] array1, int startIndex1, T[] array2, int startIndex2, int numElements) {
+
+        return makeList(array1).equals(startIndex1, makeList(array2), startIndex2, numElements);
+    }
+
+    @Override
     protected <T, P> boolean equals(T[] array1, P parameter1, T[] array2, P parameter2, IByIndexTestEqualityTester<T, P> byIndexEqualityTester) {
 
         final IIndexListGetters<T> list1 = makeList(array1);

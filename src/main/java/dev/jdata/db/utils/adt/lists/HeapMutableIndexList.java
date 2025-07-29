@@ -60,6 +60,14 @@ public final class HeapMutableIndexList<T> extends MutableIndexList<T> implement
         return new HeapMutableIndexList<>(allocationType, createElementsArray, initialCapacity);
     }
 
+    public HeapMutableIndexList(IntFunction<T[]> createElementsArray) {
+        super(AllocationType.HEAP, createElementsArray);
+    }
+
+    public HeapMutableIndexList(IntFunction<T[]> createElementsArray, int initialCapacity) {
+        this(AllocationType.HEAP, createElementsArray, initialCapacity);
+    }
+
     private HeapMutableIndexList(IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
         super(createElementsArray, toCopy);
     }

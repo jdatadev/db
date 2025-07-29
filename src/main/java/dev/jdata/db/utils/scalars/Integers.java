@@ -2,9 +2,92 @@ package dev.jdata.db.utils.scalars;
 
 import java.util.Objects;
 
+import org.jutils.io.strings.StringParse;
+
 import dev.jdata.db.utils.checks.Checks;
 
 public class Integers {
+
+    public static int parseUnsignedInt(String string) {
+
+        return parseUnsignedInt(string, 0, string.length(), 10);
+    }
+
+    public static int parseUnsignedInt(CharSequence charSequence) {
+
+        return parseUnsignedInt(charSequence, 0, charSequence.length(), 10);
+    }
+
+    public static int parseUnsignedInt(CharSequence charSequence, int startIndex, int endIndex, int radix) {
+
+        int numLeadingZeros = 0;
+
+        for (int i = startIndex; i < endIndex; ++ i) {
+
+            if (charSequence.charAt(i) == '0') {
+
+                ++ numLeadingZeros;
+            }
+            else {
+                break;
+            }
+        }
+
+        if (numLeadingZeros > 0) {
+
+            if (numLeadingZeros > 1) {
+
+                throw new NumberFormatException();
+            }
+            else {
+                if (charSequence.length() != 1) {
+
+                    throw new NumberFormatException();
+                }
+            }
+        }
+
+        return StringParse.parseUnsignedInt(charSequence, startIndex, endIndex, radix);
+    }
+
+    public static int parseSignedInt(String string) {
+
+        return parseSignedInt(string, 0, string.length(), 10);
+    }
+
+    public static int parseSignedInt(CharSequence charSequence) {
+
+        return parseSignedInt(charSequence, 0, charSequence.length(), 10);
+    }
+
+    public static int parseSignedInt(CharSequence charSequence, int startIndex, int endIndex, int radix) {
+
+        final int charSequenceLength = charSequence.length();
+
+        Checks.checkFromToIndex(startIndex, endIndex, charSequenceLength);
+
+        if (charSequenceLength == 0) {
+
+            throw new NumberFormatException();
+        }
+
+        final int result;
+
+        if (charSequence.charAt(startIndex) == '-') {
+
+            if (charSequenceLength == 1) {
+
+                throw new NumberFormatException();
+            }
+
+            result = - parseUnsignedInt(charSequence, startIndex + 1, endIndex, radix);
+        }
+        else {
+            result = parseUnsignedInt(charSequence, startIndex, endIndex, radix);
+        }
+
+        return result;
+    }
 
     public static byte checkIntToByte(int value) {
 
@@ -20,7 +103,7 @@ public class Integers {
         return (byte)value;
     }
 
-    public static byte checkUnsignedIntToUnsignedByte(int value) {
+    public static byte checkUnsignedIntToUnsignedByteAsByte(int value) {
 
         Checks.isNotNegative(value);
 
@@ -30,6 +113,32 @@ public class Integers {
         }
 
         return (byte)value;
+    }
+
+    public static short checkUnsignedIntToUnsignedByteAsShort(int value) {
+
+        Checks.isNotNegative(value);
+
+        if (value > 255) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return (short)value;
+    }
+
+    public static short checkIntToShort(int value) {
+
+        if (value < Short.MIN_VALUE) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (value > Short.MAX_VALUE) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return (short)value;
     }
 
     public static short checkUnsignedIntToUnsignedShort(int value) {

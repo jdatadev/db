@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.elements.IIntIterableElements;
-import dev.jdata.db.utils.adt.hashed.helpers.Buckets;
+import dev.jdata.db.utils.adt.hashed.helpers.IntBuckets;
 import dev.jdata.db.utils.allocators.IIntSetAllocator;
 
 public final class MutableIntBucketSet extends BaseIntBucketSet implements IMutableIntSet {
@@ -17,11 +17,11 @@ public final class MutableIntBucketSet extends BaseIntBucketSet implements IMuta
     }
 
     public MutableIntBucketSet(int initialCapacityExponent) {
-        super(initialCapacityExponent);
+        this(initialCapacityExponent, DEFAULT_LOAD_FACTOR);
     }
 
     public MutableIntBucketSet(int initialCapacityExponent, float loadFactor) {
-        super(initialCapacityExponent, loadFactor);
+        super(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, loadFactor, DEFAULT_BUCKETS_INNER_CAPACITY_EXPONENT);
     }
 
     private MutableIntBucketSet(int[] values) {
@@ -59,7 +59,7 @@ public final class MutableIntBucketSet extends BaseIntBucketSet implements IMuta
 
             final MutableIntBucketSet intSet = (MutableIntBucketSet)intElements;
 
-            final int noIntNode = Buckets.NO_INT_NODE;
+            final int noIntNode = IntBuckets.NO_INT_NODE;
 
             for (int value : intSet.getHashed()) {
 

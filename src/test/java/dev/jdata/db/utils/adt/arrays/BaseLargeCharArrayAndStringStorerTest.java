@@ -6,6 +6,7 @@ import org.jutils.io.strings.StringRef;
 import org.jutils.io.strings.StringResolver.CharacterBuffer;
 
 import dev.jdata.db.test.unit.BaseTest;
+import dev.jdata.db.utils.adt.strings.Strings;
 import dev.jdata.db.utils.function.CharPredicate;
 
 public abstract class BaseLargeCharArrayAndStringStorerTest<T> extends BaseTest {
@@ -96,8 +97,8 @@ public abstract class BaseLargeCharArrayAndStringStorerTest<T> extends BaseTest 
 
         final int hundredThousand = 100 * 1000;
 
-        checkContainsOnly("abc".repeat(hundredThousand), Character::isLowerCase, true);
-        checkContainsOnly("abc".repeat(hundredThousand).concat("aBc"), Character::isLowerCase, false);
+        checkContainsOnly(Strings.repeat("abc", hundredThousand), Character::isLowerCase, true);
+        checkContainsOnly(Strings.repeat("abc", hundredThousand).concat("aBc"), Character::isLowerCase, false);
     }
 
     private void checkContainsOnly(String string, CharPredicate charPredicate, boolean expectedResult) {
@@ -126,8 +127,8 @@ public abstract class BaseLargeCharArrayAndStringStorerTest<T> extends BaseTest 
 
         final int hundredThousand = 100 * 1000;
 
-        checkEquals("abc".repeat(hundredThousand), "abc".repeat(hundredThousand), true);
-        checkEquals("abc".repeat(hundredThousand), "abc".repeat(hundredThousand - 1), false);
+        checkEquals(Strings.repeat("abc", hundredThousand), Strings.repeat("abc", hundredThousand), true);
+        checkEquals(Strings.repeat("abc", hundredThousand), Strings.repeat("abc", hundredThousand - 1), false);
     }
 
     private void checkEquals(String string1, String string2, boolean expectedResult) {
@@ -158,11 +159,11 @@ public abstract class BaseLargeCharArrayAndStringStorerTest<T> extends BaseTest 
 
         final int hundredThousand = 100 * 1000;
 
-        checkEqualsCaseInsensitive("abc".repeat(hundredThousand), "abc".repeat(hundredThousand), true);
-        checkEqualsCaseInsensitive("abc".repeat(hundredThousand), "abc".repeat(hundredThousand - 1), false);
+        checkEqualsCaseInsensitive(Strings.repeat("abc", hundredThousand), Strings.repeat("abc", hundredThousand), true);
+        checkEqualsCaseInsensitive(Strings.repeat("abc", hundredThousand), Strings.repeat("abc", hundredThousand - 1), false);
 
-        checkEqualsCaseInsensitive("abc".repeat(hundredThousand), "aBc".repeat(hundredThousand), true);
-        checkEqualsCaseInsensitive("abc".repeat(hundredThousand), "aBc".repeat(hundredThousand - 1), false);
+        checkEqualsCaseInsensitive(Strings.repeat("abc", hundredThousand), Strings.repeat("aBc", hundredThousand), true);
+        checkEqualsCaseInsensitive(Strings.repeat("abc", hundredThousand), Strings.repeat("aBc", hundredThousand - 1), false);
     }
 
     private void checkEqualsCaseInsensitive(String string1, String string2, boolean expectedResult) {

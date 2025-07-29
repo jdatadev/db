@@ -23,7 +23,6 @@ public class DBBitEncoding {
     private static final int TABLE_ID_SHIFT = ROW_ID_NUM_BITS;
     private static final int LOCK_TYPE_SHIFT = TABLE_ID_NUM_BITS + LOCK_TYPE_NUM_BITS;
 
-    private static final long LOCK_TYPE_MASK = BitsUtil.maskLong(LOCK_TYPE_NUM_BITS, LOCK_TYPE_SHIFT);
     private static final long TABLE_ID_MASK = BitsUtil.maskLong(TABLE_ID_NUM_BITS, TABLE_ID_SHIFT);
     private static final long ROW_ID_MASK = BitsUtil.maskLong(ROW_ID_NUM_BITS, 0);
 

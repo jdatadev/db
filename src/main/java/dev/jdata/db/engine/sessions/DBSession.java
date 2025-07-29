@@ -7,9 +7,9 @@ import java.nio.charset.Charset;
 import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.engine.database.DMLException;
 import dev.jdata.db.engine.database.EvaluateException;
-import dev.jdata.db.engine.database.IDatabaseExecuteOperations.SelectResultWriter;
+import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.ISelectResultWriter;
+import dev.jdata.db.engine.database.operations.exceptions.DMLException;
 import dev.jdata.db.engine.descriptorables.BaseDescriptorable;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.engine.transactions.Transaction;
@@ -188,7 +188,7 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
 
     @Override
     public <E extends Exception> void executeDMLSelectSQL(SQLSelectStatement sqlSelectStatement, DMLSelectEvaluatorParameter evaluatorParameter,
-            SelectResultWriter<E> selectResultWriter) throws DMLException, E {
+            ISelectResultWriter<E> selectResultWriter) throws DMLException, E {
 
         Objects.requireNonNull(sqlSelectStatement);
         Objects.requireNonNull(evaluatorParameter);

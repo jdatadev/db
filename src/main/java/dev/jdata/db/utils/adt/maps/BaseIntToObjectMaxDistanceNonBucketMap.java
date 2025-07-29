@@ -5,9 +5,10 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
+import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
+import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance.MaxDistanceIntMapOperations;
-import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
 
 abstract class BaseIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntToObjectNonBucketMap<T, IIntToObjectDynamicMapCommon<T>> implements IIntToObjectDynamicMapCommon<T> {
 
@@ -18,19 +19,50 @@ abstract class BaseIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntToObject
     BaseIntToObjectMaxDistanceNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createValuesArray) {
         super(initialCapacityExponent, createValuesArray);
 
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
+        }
+
         initialize();
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseIntToObjectMaxDistanceNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createValuesArray) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
 
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
+                    .add("createValuesArray", createValuesArray));
+        }
+
         initialize();
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseIntToObjectMaxDistanceNonBucketMap(BaseIntToObjectMaxDistanceNonBucketMap<T> toCopy) {
         super(toCopy);
 
-        initialize();
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy));
+        }
+
+        this.maxDistances = MaxDistance.copyMaxDistances(toCopy.maxDistances);
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     private void initialize() {
@@ -59,7 +91,7 @@ abstract class BaseIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntToObject
     @Override
     public final T get(int key, T defaultValue) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        IntNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -81,7 +113,7 @@ abstract class BaseIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntToObject
     @Override
     protected final int getHashArrayIndex(int key, int keyMask) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        IntNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -90,7 +122,7 @@ abstract class BaseIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntToObject
 
         final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
 
-        final int result = getIndexScanHashArrayToMaxHashArrayIndex(key, hashArrayIndex, maxDistances[hashArrayIndex]);
+        final int result = HashArray.getIndexScanHashArrayToMaxHashArrayIndex(getHashed(), key, hashArrayIndex, maxDistances[hashArrayIndex]);
 
         if (DEBUG) {
 
@@ -101,20 +133,20 @@ abstract class BaseIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntToObject
     }
 
     @Override
-    protected final int[] rehash(int[] hashArray, int newCapacity, int newKeyMask) {
+    protected final int[] rehash(int[] hashArray, int newCapacity, int newCapacityExponent, int newKeyMask) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newKeyMask", newKeyMask));
+            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).add("newKeyMask", newKeyMask));
         }
 
         this.maxDistances = new byte[newCapacity];
 
-        final int[] result = super.rehash(hashArray, newCapacity, newKeyMask);
+        final int[] result = super.rehash(hashArray, newCapacity, newCapacityExponent, newKeyMask);
 
         if (DEBUG) {
 
-            exit(result);
+            exit(result, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).add("newKeyMask", newKeyMask));
         }
 
         return result;
@@ -174,6 +206,8 @@ abstract class BaseIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntToObject
 
     final T putMaxDistance(int key, T value, T defaultPreviousValue) {
 
+        IntNonBucket.checkIsHashArrayElement(key);
+
         if (DEBUG) {
 
             enter(b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
@@ -186,6 +220,30 @@ abstract class BaseIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntToObject
         if (DEBUG) {
 
             exit(result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
+        }
+
+        return result;
+    }
+
+    final int removeMaxDistance(int key) {
+
+        IntNonBucket.checkIsHashArrayElement(key);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("key", key));
+        }
+
+        final int result = HashArray.removeAndReturnIndexScanToMax(getHashed(), key, getKeyMask(), maxDistances);
+
+        if (result != NO_INDEX) {
+
+            decrementNumElements();
+        }
+
+        if (DEBUG) {
+
+            exit(result, b -> b.add("key", key));
         }
 
         return result;

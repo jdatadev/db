@@ -68,7 +68,7 @@ public final class CopyByteBufferAllocatorTest extends ByteBufferAllocatorTest<C
     }
 
     @Override
-    CopyByteBufferAllocator createAllocator() {
+    protected CopyByteBufferAllocator createAllocator() {
 
         return new CopyByteBufferAllocator();
     }
@@ -80,13 +80,13 @@ public final class CopyByteBufferAllocatorTest extends ByteBufferAllocatorTest<C
     }
 
     @Override
-    ByteBuffer allocate(CopyByteBufferAllocator allocator, int minimumCapacity) {
+    protected ByteBuffer allocate(CopyByteBufferAllocator allocator, int minimumCapacity) {
 
         return allocator.allocate(ByteBuffer.wrap(new byte[minimumCapacity]), 0, minimumCapacity);
     }
 
     @Override
-    void free(CopyByteBufferAllocator allocator, ByteBuffer instance) {
+    protected void free(CopyByteBufferAllocator allocator, ByteBuffer instance) {
 
         allocator.freeByteBuffer(instance);
     }

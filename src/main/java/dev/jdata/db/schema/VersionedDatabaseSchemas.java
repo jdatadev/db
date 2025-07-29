@@ -76,7 +76,7 @@ public final class VersionedDatabaseSchemas {
 
             schemasByVersion.put(schemaVersion, schema);
 
-            schema.getTables().forEach(tableSchemasOrderedByVersion, (t, a) ->  a.addWithOuterExpand(t.getId(), new VersionedTable(t, schemaVersion)));
+            schema.getTables().forEach(tableSchemasOrderedByVersion, (t, a) -> a.addWithOuterExpand(t.getId(), new VersionedTable(t, schemaVersion)));
         }
     }
 

@@ -7,12 +7,12 @@ import dev.jdata.db.DBException;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.LockType;
 import dev.jdata.db.data.BaseRows;
-import dev.jdata.db.utils.adt.arrays.ILongArray;
+import dev.jdata.db.utils.adt.arrays.ILongArrayCommon;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.adt.elements.IElements;
-import dev.jdata.db.utils.adt.lists.BaseList;
 import dev.jdata.db.utils.adt.lists.ILongMultiList;
 import dev.jdata.db.utils.adt.lists.ILongMutableMultiList;
+import dev.jdata.db.utils.adt.lists.LargeLists;
 import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadDoublyLinkedList;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.AssertionContants;
@@ -59,7 +59,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
         void decrement(LockTable lockTable, int tableId, int transactionDescriptor, int statementId, LockType lockType);
     }
 
-    private static final long NO_NODE = BaseList.NO_NODE;
+    private static final long NO_NODE = LargeLists.NO_LONG_NODE;
 
     private static final int READ_NUM_BITS = 32;
     static final int READ_SHIFT = 32;
@@ -152,7 +152,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
 
         this.rowLockSetter = new RowLockSetter();
 
-        this.scratchLockIndices = new LargeLongArray(initialOuterCapacity, innerCapacity, null);
+        this.scratchLockIndices = new LargeLongArray(initialOuterCapacity, innerCapacity);
     }
 
     public boolean tryReadLockTable(int tableId, int transactionDescriptor, int statementId) {
@@ -307,7 +307,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
         unlockRow(tableId, rowId, transactionDescriptor, statementId, LockType.WRITE);
     }
 
-    public synchronized boolean tryLockRows(int tableId, ILongArray rowIds, int transactionDescriptor, int statementId, LockType lockType) {
+    public synchronized boolean tryLockRows(int tableId, ILongArrayCommon rowIds, int transactionDescriptor, int statementId, LockType lockType) {
 
         checkParameters(tableId, transactionDescriptor, statementId, lockType);
         Objects.requireNonNull(rowIds);

@@ -3,8 +3,9 @@ package dev.jdata.db.utils.adt.maps;
 import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
+import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
 import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
-import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
 
 abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBucketMap<IIntToIntStaticMapCommon> implements IIntToIntStaticMapCommon {
 
@@ -12,20 +13,50 @@ abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBuc
 
     BaseIntToIntNonContainsKeyNonBucketMap(int initialCapacityExponent) {
         super(initialCapacityExponent);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseIntToIntNonContainsKeyNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseIntToIntNonContainsKeyNonBucketMap(BaseIntToIntNonRemoveNonBucketMap toCopy) {
         super(toCopy);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
     public final int get(int key) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        IntNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -34,7 +65,7 @@ abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBuc
 
         final int result;
 
-        final int index = getIndexScanEntireHashArray(key, getKeyMask());
+        final int index = HashArray.getIndexScanEntireHashArray(getHashed(), key, getKeyMask());
 
         if (index != NO_INDEX) {
 
@@ -60,7 +91,7 @@ abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBuc
             enter(b -> b.add("key", key).add("keyMask", keyMask));
         }
 
-        final int result = getIndexScanEntireHashArray(key, getKeyMask());
+        final int result = HashArray.getIndexScanEntireHashArray(getHashed(), key, getKeyMask());
 
         if (DEBUG) {
 
@@ -72,29 +103,21 @@ abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBuc
 
     final int putValue(int key, int value, int defaultPreviousValue) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        IntNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
             enter(b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
         }
 
-        final int result;
-
         final long putResult = put(key);
+
         final int index = IntPutResult.getPutIndex(putResult);
+        final int[] values = getValues();
 
-        if (index != NO_INDEX) {
+        final int result = IntPutResult.getPutNewAdded(putResult) ? defaultPreviousValue : values[index];
 
-            final int[] values = getValues();
-
-            result = IntPutResult.getPutNewAdded(putResult) ? values[index] : defaultPreviousValue;
-
-            values[index] = value;
-        }
-        else {
-            throw new IllegalStateException();
-        }
+        values[index] = value;
 
         if (DEBUG) {
 

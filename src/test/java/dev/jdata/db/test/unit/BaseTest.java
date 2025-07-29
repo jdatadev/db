@@ -17,6 +17,10 @@ public abstract class BaseTest extends CustomAssertJAssertions {
 
     }
 
+    public interface AdhocTest {
+
+    }
+
     protected static <T, C extends Collection<T>> C checkUnmodifiable(C collection, T element) {
 
         Objects.requireNonNull(element);

@@ -48,7 +48,7 @@ public abstract class StorageInsertUpdateRows<T extends StorageInsertUpdateRows.
 
         Checks.atMost(rows, numRows);
 
-        final int maxTotalNumRowBits = Array.max(rows, -1, r -> r.getRowDataNumBits().getTotalNumRowDataBits());
+        final int maxTotalNumRowBits = Array.maxInt(rows, -1, r -> r.getRowDataNumBits().getTotalNumRowDataBits());
 
         this.maxTotalNumRowBytes = BitBufferUtil.numBytes(maxTotalNumRowBits);
     }

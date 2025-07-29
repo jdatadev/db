@@ -7,17 +7,17 @@ import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArrayList<String>> extends BaseObjectArrayListTest<T> {
+public abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArrayList<String>> extends BaseObjectArrayListTest<T> {
 
-    abstract U createStringList();
-    abstract U createStringList(int initialCapacity);
+    protected abstract U createStringList();
+    protected abstract U createStringList(int initialCapacity);
 
-    abstract int getCapacity(U list);
+    protected abstract int getCapacity(U list);
 
-    abstract void add(U list, String string);
-    abstract void addHead(U list, String string);
-    abstract void addTail(U list, String string);
-    abstract void addTail(U list, String ... strings);
+    protected abstract void add(U list, String string);
+    protected abstract void addHead(U list, String string);
+    protected abstract void addTail(U list, String string);
+    protected abstract void addTail(U list, String ... strings);
 
     @Test
     @Category(UnitTest.class)
@@ -51,7 +51,7 @@ abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArrayList<S
         });
     }
 
-    final void checkAddTail(BiPredicate<U, String> listTailAdder) {
+    protected final void checkAddTail(BiPredicate<U, String> listTailAdder) {
 
         final U list = createStringList();
 
@@ -164,7 +164,7 @@ abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArrayList<S
         });
     }
 
-    final void checkAddTailMany(BiPredicate<U, String> listTailAdder) {
+    protected final void checkAddTailMany(BiPredicate<U, String> listTailAdder) {
 
         final U list = createStringList();
 

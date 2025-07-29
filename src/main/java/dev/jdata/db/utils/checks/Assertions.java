@@ -1,7 +1,7 @@
 package dev.jdata.db.utils.checks;
 
 import dev.jdata.db.utils.adt.IContains;
-import dev.jdata.db.utils.adt.arrays.IArray;
+import dev.jdata.db.utils.adt.arrays.IOneDimensionalArrayGetters;
 import dev.jdata.db.utils.adt.elements.IElements;
 
 public class Assertions {
@@ -70,6 +70,14 @@ public class Assertions {
         }
     }
 
+    public static void isGreaterThanOrEqualTo(long value1, long value2) {
+
+        if (value1 < value2) {
+
+            throwAssertion();
+        }
+    }
+
     public static void areEqual(long value1, long value2) {
 
         if (value1 != value2) {
@@ -110,7 +118,7 @@ public class Assertions {
         }
     }
 
-    public static void isSameLimit(IArray array1, IArray array2) {
+    public static void isSameLimit(IOneDimensionalArrayGetters array1, IOneDimensionalArrayGetters array2) {
 
         if (array1.getLimit() != array2.getLimit()) {
 

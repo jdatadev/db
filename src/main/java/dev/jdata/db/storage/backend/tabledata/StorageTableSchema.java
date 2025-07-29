@@ -9,7 +9,7 @@ import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.collections.Coll;
+import dev.jdata.db.utils.adt.collections.CollectionUtil;
 
 public final class StorageTableSchema {
 
@@ -91,7 +91,7 @@ public final class StorageTableSchema {
         this.tableId = table.getId();
         this.databaseSchemaVersion = databaseSchemaVersion;
 
-        this.columns = Coll.toArray(table, table.getNumColumns(), StorageSchemaColumn[]::new, (t, i) -> toStorageSchemaColumn(t.getColumn(i), numStorageBitsGetter));
+        this.columns = CollectionUtil.toArray(table, table.getNumColumns(), StorageSchemaColumn[]::new, (t, i) -> toStorageSchemaColumn(t.getColumn(i), numStorageBitsGetter));
 
         this.totalMaxBits = Array.sum(columns, c -> c.maxBits);
     }

@@ -21,7 +21,8 @@ public final class CopyByteBufferAllocator extends ByteBufferAllocator implement
         result.position(0);
         result.limit(length);
 
-        result.put(0, byteBuffer, offset, length);
+//        result.put(0, byteBuffer, offset, length);
+        result.put(byteBuffer.array(), offset, length);
 
         return result;
     }

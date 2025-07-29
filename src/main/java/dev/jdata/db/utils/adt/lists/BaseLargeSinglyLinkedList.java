@@ -8,7 +8,7 @@ public abstract class BaseLargeSinglyLinkedList<
 
         extends BaseLargeList<LIST_T, LIST, VALUES> {
 
-    protected BaseLargeSinglyLinkedList(int initialOuterCapacity, int innerCapacity, BaseValuesFactory<LIST_T, LIST, VALUES> valuesFactory) {
+    protected BaseLargeSinglyLinkedList(int initialOuterCapacity, int innerCapacity, ILargeListValuesFactory<LIST_T, LIST, VALUES> valuesFactory) {
         super(initialOuterCapacity, innerCapacity, valuesFactory);
     }
 
@@ -17,7 +17,7 @@ public abstract class BaseLargeSinglyLinkedList<
 
     }
 
-    final long addHeadNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long addHeadNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = allocateNextNode();
 
@@ -33,7 +33,7 @@ public abstract class BaseLargeSinglyLinkedList<
         return node;
     }
 
-    final long addTailNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long addTailNodeAndReturnNode(INSTANCE instance, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = allocateNextNode();
 
@@ -56,7 +56,7 @@ public abstract class BaseLargeSinglyLinkedList<
         return node;
     }
 
-    final long removeHeadNodeAndReturnNode(INSTANCE instance, long headNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long removeHeadNodeAndReturnNode(INSTANCE instance, long headNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         if (headNode == NO_NODE) {
 
@@ -77,7 +77,7 @@ public abstract class BaseLargeSinglyLinkedList<
         return headNode;
     }
 
-    final long removeTailNodeAndReturnNode(INSTANCE instance, long newTailNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long removeTailNodeAndReturnNode(INSTANCE instance, long newTailNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         if (tailNode == NO_NODE) {
 
@@ -100,42 +100,42 @@ public abstract class BaseLargeSinglyLinkedList<
         return tailNode;
     }
 
-    final void removeNodeByFindingPreviousNode(INSTANCE instance, long node, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final void removeNodeByFindingPreviousNode(INSTANCE instance, long toRemove, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         long previousNode = NO_NODE;
 
-        for (long n = headNode; n != node; n = getNextNode(n)) {
+        for (long node = headNode; node != toRemove; node = getNextNode(node)) {
 
-            previousNode = n;
+            previousNode = node;
         }
 
-        removeNode(instance, node, previousNode, headNode, tailNode, headNodeSetter, tailNodeSetter);
+        removeNode(instance, toRemove, previousNode, headNode, tailNode, headNodeSetter, tailNodeSetter);
     }
 
-    final void removeNode(INSTANCE instance, long node, long previousNode, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final void removeNode(INSTANCE instance, long toRemove, long previousNode, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         if (isEmpty(headNode, tailNode)) {
 
             throw new IllegalStateException();
         }
 
-        if (node == headNode) {
+        if (toRemove == headNode) {
 
             removeHeadNodeAndReturnNode(instance, headNode, headNodeSetter, tailNodeSetter);
         }
-        else if (node == tailNode) {
+        else if (toRemove == tailNode) {
 
             removeTailNodeAndReturnNode(instance, previousNode, tailNode, headNodeSetter, tailNodeSetter);
         }
         else {
             if (previousNode != NO_NODE) {
 
-                final long nextNode = getNextNode(node);
+                final long nextNode = getNextNode(toRemove);
 
                 setNextNode(previousNode, nextNode);
             }
 
-            addNodeToFreeList(node);
+            addNodeToFreeList(toRemove);
         }
     }
 }

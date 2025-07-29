@@ -90,43 +90,43 @@ public final class MutableIndexListTest extends BaseMutableObjectArrayListTest<I
     }
 
     @Override
-    int getCapacity(MutableIndexList<String> list) {
+    protected int getCapacity(MutableIndexList<String> list) {
 
         return Integers.checkUnsignedLongToUnsignedInt(list.getCapacity());
     }
 
     @Override
-    void addHead(MutableIndexList<String> list, String string) {
+    protected void addHead(MutableIndexList<String> list, String string) {
 
         list.addHead(string);
     }
 
     @Override
-    void addTail(MutableIndexList<String> list, String string) {
+    protected void addTail(MutableIndexList<String> list, String string) {
 
         list.addTail(string);
     }
 
     @Override
-    void addTail(MutableIndexList<String> list, String... strings) {
+    protected void addTail(MutableIndexList<String> list, String... strings) {
 
         list.addTail(strings);
     }
 
     @Override
-    MutableIndexList<String> createStringList() {
+    protected MutableIndexList<String> createStringList() {
 
         return HeapMutableIndexList.from(String[]::new);
     }
 
     @Override
-    MutableIndexList<String> createStringList(int initialCapacity) {
+    protected MutableIndexList<String> createStringList(int initialCapacity) {
 
         return HeapMutableIndexList.from(String[]::new, initialCapacity);
     }
 
     @Override
-    void add(MutableIndexList<String> list, String string) {
+    protected void add(MutableIndexList<String> list, String string) {
 
         list.addTailElement(string);
     }

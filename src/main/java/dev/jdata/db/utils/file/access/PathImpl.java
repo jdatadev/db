@@ -1,5 +1,6 @@
 package dev.jdata.db.utils.file.access;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystem;
@@ -9,6 +10,7 @@ import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchEvent.Modifier;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.Iterator;
 import java.util.Objects;
 
 import dev.jdata.db.utils.adt.IResettable;
@@ -47,6 +49,54 @@ final class PathImpl implements Path, IResettable {
 
             throw new IllegalStateException();
         }
+    }
+
+    @Override
+    public boolean endsWith(String arg0) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Iterator<Path> iterator() {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public WatchKey register(WatchService arg0, Kind<?>... arg1) throws IOException {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Path resolve(String arg0) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Path resolveSibling(Path arg0) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Path resolveSibling(String arg0) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean startsWith(String arg0) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public File toFile() {
+
+        throw new UnsupportedOperationException();
     }
 
     @Override

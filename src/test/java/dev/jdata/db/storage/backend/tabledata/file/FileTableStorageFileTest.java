@@ -141,13 +141,11 @@ public final class FileTableStorageFileTest extends BaseFileTableStorageFileTest
 
         final CheckAppendResult checkAppendResult = checkAppend(testData, startRowId, fileInitializer);
 
-        final RelativeFilePath filePath = testData.getFilePath();
-
         final int allRowsNumBytes = BitBufferUtil.numBytes(testSchema.totalRowNumBits * checkAppendResult.numRows);
 
         final byte[] rowsBuffer = new byte[allRowsNumBytes];
 
-        try (DataInputStream dataInputStream = testData.openDataInputStream(filePath)) {
+        try (DataInputStream dataInputStream = testData.openDataInputStream()) {
 
             final StorageTableFileSchemaGetters storageTableFileSchemaGetters = testData.dbSchemas.getStorageTableFileSchemaGetters();
 

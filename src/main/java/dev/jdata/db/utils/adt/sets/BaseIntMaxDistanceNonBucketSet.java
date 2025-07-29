@@ -3,9 +3,10 @@ package dev.jdata.db.utils.adt.sets;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
+import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance.MaxDistanceIntSetOperations;
-import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
+import dev.jdata.db.utils.scalars.Integers;
 
 abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet implements IIntSetCommon {
 
@@ -28,7 +29,7 @@ abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet implem
     @Override
     public final boolean contains(int value) {
 
-        NonBucket.checkIsHashArrayElement(value);
+        IntNonBucket.checkIsHashArrayElement(value);
 
         if (DEBUG) {
 
@@ -50,20 +51,20 @@ abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet implem
     }
 
     @Override
-    protected final int[] rehash(int[] hashArray, int newCapacity, int newKeyMask) {
+    protected final int[] rehash(int[] hashArray, int newCapacity, int newCapacityExponent, int newKeyMask) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newKeyMask", newKeyMask));
+            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).hex("newKeyMask", newKeyMask));
         }
 
         this.maxDistances = new byte[newCapacity];
 
-        final int[] result = super.rehash(hashArray, newCapacity, newKeyMask);
+        final int[] result = super.rehash(hashArray, newCapacity, newCapacityExponent, newKeyMask);
 
         if (DEBUG) {
 
-            exit(result);
+            exit(result, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).hex("newKeyMask", newKeyMask));
         }
 
         return result;
@@ -129,5 +130,37 @@ abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet implem
         }
 
         return result;
+    }
+
+    final int removeMaxDistance(int element) {
+
+        IntNonBucket.checkIsHashArrayElement(element);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("element", element));
+        }
+
+        final int[] hashArray = getHashed();
+
+        final int hashArrayIndex = HashFunctions.hashArrayIndex(element, getKeyMask());
+
+        final int indexToRemove = HashArray.getIndexScanHashArrayToMaxHashArrayIndex(hashArray, element, hashArrayIndex, maxDistances[hashArrayIndex]);
+
+        if (indexToRemove != HashArray.NO_INDEX) {
+
+            hashArray[indexToRemove] = NO_ELEMENT;
+
+            maxDistances[hashArrayIndex] = Integers.checkUnsignedIntToUnsignedByteAsByte(MaxDistance.computeDistance(indexToRemove, hashArrayIndex, hashArray.length));
+
+            decrementNumElements();
+        }
+
+        if (DEBUG) {
+
+            exit(indexToRemove);
+        }
+
+        return indexToRemove;
     }
 }

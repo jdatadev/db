@@ -64,7 +64,7 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = new LargeLongArray(1, 10, null);
+        final LargeLongArray rowIds = createRowIdsArray();
 
         final DMLInsertRows rows = makeInsertRows(rowId, rowIds, intValue);
 
@@ -124,7 +124,7 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = new LargeLongArray(1, 10, null);
+        final LargeLongArray rowIds = createRowIdsArray();
 
         final DMLUpdateRows rows = makeUpdateRows(rowId, rowIds, intValue);
 
@@ -224,7 +224,7 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = new LargeLongArray(1, 10, null);
+        final LargeLongArray rowIds = createRowIdsArray();
 
         rowIds.add(rowId);
 
@@ -275,7 +275,7 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = new LargeLongArray(1, 10, null);
+        final LargeLongArray rowIds = createRowIdsArray();
 
         final DMLInsertRows rows = makeInsertRows(rowId, rowIds, intValue);
 
@@ -436,5 +436,10 @@ public final class MVCCTransactionTest extends BaseDBTest {
         return TableBuilder.create(tableName, tableId, stringStorer)
                 .addColumn("testcolumn", IntegerType.INSTANCE)
                 .build();
+    }
+
+    private static LargeLongArray createRowIdsArray() {
+
+        return new LargeLongArray(0, 10);
     }
 }

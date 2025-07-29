@@ -7,7 +7,6 @@ import org.jutils.ast.objects.list.ASTList;
 
 import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.data.RowDataNumBits;
-import dev.jdata.db.data.RowDataNumBitsAndOffsets;
 import dev.jdata.db.dml.DMLInsertUpdateRows;
 import dev.jdata.db.dml.DMLInsertUpdateRows.InsertUpdateRow;
 import dev.jdata.db.dml.DMLUpdateRows.UpdateRow;
@@ -104,7 +103,7 @@ class ColumnStoreUtil {
 
         final int tableId = evaluatorParameter.getTableId();
         final UpdateRow[] rows = evaluatorParameter.getUpdateRowsArray();
-        final RowDataNumBits rowDataNumBits = evaluatorParameter.getRowDataNumBitsAndOffsets();
+        final RowDataNumBits rowDataNumBits = evaluatorParameter.getRowDataNumBits();
 
         Checks.isExactlyOne(rows.length);
 
@@ -147,7 +146,7 @@ class ColumnStoreUtil {
 
         final TableAndColumnNames columnNames = evaluatorParameter.getTableAndColumnNames();
 
-        final RowDataNumBitsAndOffsets rowDataNumBitsAndOffsets = evaluatorParameter.getRowDataNumBitsAndOffsets();
+        final RowDataNumBits rowDataNumBits = evaluatorParameter.getRowDataNumBits();
 
         final int tableId = evaluatorParameter.getTableId();
 
@@ -157,7 +156,7 @@ class ColumnStoreUtil {
 
         final int rowBitOffset = evaluatorParameter.getRowBitOffset();
 
-        rowDataNumBitsAndOffsets.addNumBitsAndOffset(numBits, rowBitOffset);
+        rowDataNumBits.addNumBits(numBits);
 
         evaluatorParameter.increaseRowBitOffset(numBits);
 

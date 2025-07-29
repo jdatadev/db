@@ -93,7 +93,7 @@ public abstract class SQLParser extends BaseSQLParser {
         this.sqlExpressionLexerCache = new NodeObjectCache<>(SQLExpressionLexer::new);
     }
 
-    private <E extends Exception> IImmutableIndexList<BaseSQLStatement> parse(LoadStream<E> loadStream, Function<String, E> createEOFException, ISQLAllocator allocator,
+    final <E extends Exception> IImmutableIndexList<BaseSQLStatement> parse(LoadStream<E> loadStream, Function<String, E> createEOFException, ISQLAllocator allocator,
             SQLScratchExpressionValues scratchExpressionValues) throws ParserException, E {
 
         final IImmutableIndexList<BaseSQLStatement> result;
@@ -128,7 +128,6 @@ public abstract class SQLParser extends BaseSQLParser {
         Objects.requireNonNull(createEOFException);
         Objects.requireNonNull(scratchExpressionValues);
         Objects.requireNonNull(sqlStatementDst);
-        Objects.requireNonNull(sqlStringsDst);
 
         @SuppressWarnings("unchecked")
         final SQLExpressionLexer<E, BUFFER> lexer = (SQLExpressionLexer<E, BUFFER>)sqlExpressionLexerCache.allocate();

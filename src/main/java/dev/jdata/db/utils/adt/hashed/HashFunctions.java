@@ -36,4 +36,9 @@ public class HashFunctions {
 
         return longHashKey(key) & keyMask;
     }
+
+    public static long longObjectHashArrayIndex(Object object, long keyMask) {
+
+        return object.hashCode() & keyMask;
+    }
 }

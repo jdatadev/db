@@ -15,13 +15,13 @@ import dev.jdata.db.common.storagebits.BaseMaxNumStorageBitsAdapter;
 import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.common.storagebits.NumStorageBitsParameters;
 import dev.jdata.db.custom.ansi.sql.parser.ANSISQLParserFactory;
+import dev.jdata.db.engine.database.BucketsStringCache;
 import dev.jdata.db.engine.database.DatabaseParameters;
+import dev.jdata.db.engine.database.DatabaseStringManagement;
 import dev.jdata.db.engine.database.Databases;
 import dev.jdata.db.engine.database.DatabasesAllocators;
 import dev.jdata.db.engine.database.ExecuteException;
-import dev.jdata.db.engine.database.IDatabaseExecuteOperations.SelectResultWriter;
-import dev.jdata.db.engine.database.StringCache;
-import dev.jdata.db.engine.database.DatabaseStringManagement;
+import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.ISelectResultWriter;
 import dev.jdata.db.engine.server.DatabaseServer;
 import dev.jdata.db.engine.server.SQLDatabaseServer;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
@@ -50,7 +50,7 @@ public class SQLDatabaseServerTest extends BaseTest {
 
         final SQLParserFactory parserFactory = ANSISQLParserFactory.INSTANCE;
 
-        final StringCache stringCache = new StringCache();
+        final BucketsStringCache stringCache = new BucketsStringCache(0, 0);
         final boolean cacheStatements = false;
 
         final Databases databases = new Databases(stringCache, cacheStatements);
@@ -103,7 +103,7 @@ public class SQLDatabaseServerTest extends BaseTest {
             final ExecuteSQLResultWriter<RuntimeException> resultWriter = new ExecuteSQLResultWriter<RuntimeException>() {
 
                 @Override
-                public SelectResultWriter<RuntimeException> getSelectResultWriter() {
+                public ISelectResultWriter<RuntimeException> getSelectResultWriter() {
 
                     throw new UnsupportedOperationException();
                 }

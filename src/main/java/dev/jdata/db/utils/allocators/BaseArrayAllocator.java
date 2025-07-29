@@ -17,9 +17,6 @@ public abstract class BaseArrayAllocator<T> extends InstanceNodeAllocator<T, Bas
     private final ToIntFunction<T> arrayLengthGetter;
     private final boolean exactLengthMatch;
 
-    private ArrayAllocatorNode<T> arrayFreeList;
-    private ArrayAllocatorNode<T> nodeFreeList;
-
     protected BaseArrayAllocator(IntFunction<T> createArray, ToIntFunction<T> arrayLengthGetter) {
         this(createArray, arrayLengthGetter, false);
     }
@@ -29,9 +26,6 @@ public abstract class BaseArrayAllocator<T> extends InstanceNodeAllocator<T, Bas
         this.createArray = Objects.requireNonNull(createArray);
         this.arrayLengthGetter = Objects.requireNonNull(arrayLengthGetter);
         this.exactLengthMatch = exactLengthMatch;
-
-        this.arrayFreeList = null;
-        this.nodeFreeList = null;
     }
 
     protected final T allocateArrayInstance(int minimumCapacity) {
@@ -42,7 +36,7 @@ public abstract class BaseArrayAllocator<T> extends InstanceNodeAllocator<T, Bas
 
         final boolean fromFreeList;
 
-        if (arrayFreeList == null) {
+        if (instanceFreeList == null) {
 
             result = createArray.apply(minimumCapacity);
 
@@ -54,7 +48,7 @@ public abstract class BaseArrayAllocator<T> extends InstanceNodeAllocator<T, Bas
 
             final boolean exactMatch = exactLengthMatch;
 
-            for (ArrayAllocatorNode<T> node = arrayFreeList; node != null; node = node.next) {
+            for (ArrayAllocatorNode<T> node = instanceFreeList; node != null; node = node.next) {
 
                 final boolean canBeAllocated = exactMatch
                         ? node.arrayLength == minimumCapacity
@@ -78,7 +72,7 @@ public abstract class BaseArrayAllocator<T> extends InstanceNodeAllocator<T, Bas
                     previousNode.next = nextNode;
                 }
                 else {
-                    this.arrayFreeList = nextNode;
+                    this.instanceFreeList = nextNode;
                 }
 
                 result = foundNode.instance;
@@ -121,16 +115,16 @@ public abstract class BaseArrayAllocator<T> extends InstanceNodeAllocator<T, Bas
 
         allocatorNode.arrayLength = arrayLengthGetter.applyAsInt(array);
 
-        if (arrayFreeList == null) {
+        if (instanceFreeList == null) {
 
             allocatorNode.init(null, true, true, array);
 
-            this.arrayFreeList = allocatorNode;
+            this.instanceFreeList = allocatorNode;
         }
         else {
             ArrayAllocatorNode<T> foundNode = null;
 
-            for (ArrayAllocatorNode<T> node = arrayFreeList; node != null; node = node.next) {
+            for (ArrayAllocatorNode<T> node = instanceFreeList; node != null; node = node.next) {
 
                 if (node.instance == array) {
 
@@ -140,7 +134,7 @@ public abstract class BaseArrayAllocator<T> extends InstanceNodeAllocator<T, Bas
 
             final int arrayLength = arrayLengthGetter.applyAsInt(array);
 
-            for (ArrayAllocatorNode<T> node = arrayFreeList; node != null; node = node.next) {
+            for (ArrayAllocatorNode<T> node = instanceFreeList; node != null; node = node.next) {
 
                 if (arrayLength >= node.arrayLength) {
 
@@ -157,8 +151,8 @@ public abstract class BaseArrayAllocator<T> extends InstanceNodeAllocator<T, Bas
                 foundNode.next = allocatorNode;
             }
             else {
-                nextNode = arrayFreeList;
-                this.arrayFreeList = allocatorNode;
+                nextNode = instanceFreeList;
+                this.instanceFreeList = allocatorNode;
             }
 
             allocatorNode.init(nextNode, true, true, array);

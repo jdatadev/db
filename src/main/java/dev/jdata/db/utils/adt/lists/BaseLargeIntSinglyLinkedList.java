@@ -9,7 +9,7 @@ abstract class BaseLargeIntSinglyLinkedList<
 
         extends BaseLargeSinglyLinkedList<INSTANCE, int[], LIST, VALUES> {
 
-    BaseLargeIntSinglyLinkedList(int initialOuterCapacity, int innerCapacity, BaseValuesFactory<int[], LIST, VALUES> valuesFactory) {
+    BaseLargeIntSinglyLinkedList(int initialOuterCapacity, int innerCapacity, ILargeListValuesFactory<int[], LIST, VALUES> valuesFactory) {
         super(initialOuterCapacity, innerCapacity, valuesFactory);
     }
 
@@ -43,7 +43,7 @@ abstract class BaseLargeIntSinglyLinkedList<
         return getValues().findValueNode(this, value, headNode);
     }
 
-    final long addHeadValue(INSTANCE instance, int value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long addHeadValue(INSTANCE instance, int value, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = addHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
@@ -52,7 +52,7 @@ abstract class BaseLargeIntSinglyLinkedList<
         return node;
     }
 
-    final long addTailValue(INSTANCE instance, int value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long addTailValue(INSTANCE instance, int value, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = addTailNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
@@ -61,7 +61,7 @@ abstract class BaseLargeIntSinglyLinkedList<
         return node;
     }
 
-    final int removeHeadAndReturnValue(INSTANCE instance, long headNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final int removeHeadAndReturnValue(INSTANCE instance, long headNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long removedHeadNode = removeHeadNodeAndReturnNode(instance, headNode, headNodeSetter, tailNodeSetter);
 

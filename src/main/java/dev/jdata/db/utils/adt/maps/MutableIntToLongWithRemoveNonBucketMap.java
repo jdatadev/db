@@ -1,7 +1,8 @@
 package dev.jdata.db.utils.adt.maps;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
+import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
+import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
 
 public final class MutableIntToLongWithRemoveNonBucketMap extends BaseIntToLongWithRemoveNonBucketMap implements IMutableIntToLongStaticMap {
 
@@ -9,20 +10,50 @@ public final class MutableIntToLongWithRemoveNonBucketMap extends BaseIntToLongW
 
     public MutableIntToLongWithRemoveNonBucketMap(int initialCapacityExponent) {
         super(initialCapacityExponent);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     public MutableIntToLongWithRemoveNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     public MutableIntToLongWithRemoveNonBucketMap(MutableIntToLongWithRemoveNonBucketMap toCopy) {
         super(toCopy);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
     public final long put(int key, long value, long defaultPreviousValue) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        IntNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -42,7 +73,7 @@ public final class MutableIntToLongWithRemoveNonBucketMap extends BaseIntToLongW
     @Override
     public long removeAndReturnPrevious(int key) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        IntNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -51,11 +82,13 @@ public final class MutableIntToLongWithRemoveNonBucketMap extends BaseIntToLongW
 
         final long result;
 
-        final int index = removeAndReturnIndex(key);
+        final int indexToRemove = HashArray.removeAndReturnIndexScanEntire(getHashed(), key, getKeyMask());
 
-        if (index != NO_INDEX) {
+        if (indexToRemove != NO_INDEX) {
 
-            result = getValues()[index];
+            result = getValues()[indexToRemove];
+
+            decrementNumElements();
         }
         else {
             throw new IllegalStateException();
@@ -72,19 +105,21 @@ public final class MutableIntToLongWithRemoveNonBucketMap extends BaseIntToLongW
     @Override
     public void remove(int key) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        IntNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
             enter(b -> b.add("key", key));
         }
 
-        final int index = removeAndReturnIndex(key);
+        final int indexToRemove = HashArray.removeAndReturnIndexScanEntire(getHashed(), key, getKeyMask());
 
-        if (index == NO_INDEX) {
+        if (indexToRemove == NO_INDEX) {
 
             throw new IllegalStateException();
         }
+
+        decrementNumElements();
 
         if (DEBUG) {
 

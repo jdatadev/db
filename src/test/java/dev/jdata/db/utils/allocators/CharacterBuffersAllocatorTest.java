@@ -77,25 +77,25 @@ public final class CharacterBuffersAllocatorTest extends BaseArrayMinimumCapacit
     }
 
     @Override
-    CharacterBuffer[] allocate(CharacterBuffersAllocator allocator, int minimumCapacity) {
+    protected CharacterBuffer[] allocate(CharacterBuffersAllocator allocator, int minimumCapacity) {
 
         return allocator.allocateCharacterBuffers(minimumCapacity);
     }
 
     @Override
-    CharacterBuffersAllocator createAllocator() {
+    protected CharacterBuffersAllocator createAllocator() {
 
         return new CharacterBuffersAllocator();
     }
 
     @Override
-    CharacterBuffer[][] allocateArray(int length) {
+    protected CharacterBuffer[][] allocateArray(int length) {
 
         return new CharacterBuffer[length][];
     }
 
     @Override
-    void free(CharacterBuffersAllocator allocator, CharacterBuffer[] instance) {
+    protected void free(CharacterBuffersAllocator allocator, CharacterBuffer[] instance) {
 
         allocator.freeCharacterBuffers(instance);
     }

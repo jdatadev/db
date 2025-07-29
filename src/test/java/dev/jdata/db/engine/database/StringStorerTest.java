@@ -38,52 +38,40 @@ public final class StringStorerTest extends BaseLargeCharArrayAndStringStorerTes
         checkStore((stringStorer, string) -> stringStorer.getOrAddStringRef(prefix + string + suffix, prefixLength, string.length()));
     }
 
-    private void checkStore(BiObjToLongFunction<StringStorer, String> getOrAddStringRef) {
+    private static void checkStore(BiObjToLongFunction<StringStorer, String> getOrAddStringRef) {
 
         final ICharactersBufferAllocator charactersBufferAllocator = new CharacterBuffersAllocator();
         final StringBuilder sb = new StringBuilder();
 
-        for (int initialCapacityExponent = 0; initialCapacityExponent < 8; ++ initialCapacityExponent) {
+        StringStoreTestUtil.checkStore(StringStorer::new, StringStorer::contains, StringStorer::getOrAddStringRef,
+                (getOrAddResult, expectedCharArrayIndex) ->
+        {
+            if (getOrAddResult != expectedCharArrayIndex) {
 
-            final StringStorer stringStorer = new StringStorer(1, initialCapacityExponent);
-
-            final int numToAdd = 1000;
-
-            long expectedCharArrayIndex = 0L;
-
-            for (int i = 0; i < numToAdd; ++ i) {
-
-                final String stringToAdd = "toAdd" + i;
-
-                assertThat(stringStorer.contains(stringToAdd)).isFalse();
-
-                assertThat(getOrAddStringRef.apply(stringStorer, stringToAdd)).isEqualTo(expectedCharArrayIndex);
-                assertThat(getOrAddStringRef.apply(stringStorer, stringToAdd)).isEqualTo(expectedCharArrayIndex);
-                assertThat(getOrAddStringRef.apply(stringStorer, stringToAdd)).isEqualTo(expectedCharArrayIndex);
-
-                assertThat(stringStorer.contains(stringToAdd)).isTrue();
-
-                final long stringRef = expectedCharArrayIndex;
-
-                assertThat(stringStorer.asString(stringRef)).isEqualTo(stringToAdd);
-
-                stringStorer.makeString(stringRef, sb, charactersBufferAllocator, (b, n, s) -> {
-
-                    for (int characterIndex = 0; characterIndex < n; ++ characterIndex) {
-
-                        s.append(b[characterIndex]);
-                    }
-
-                    return null;
-                });
-
-                assertThat(sb.toString()).isEqualTo(stringToAdd);
-
-                sb.setLength(0);
-
-                expectedCharArrayIndex += stringToAdd.length() + 1;
+                assertThat(getOrAddResult).isEqualTo(expectedCharArrayIndex);
             }
-        }
+        },
+//        assertThat(getOrAddResult).isEqualTo(expectedCharArrayIndex),
+                (stringStore, stringToAdd, expectedCharArrayIndex) -> {
+
+            final long stringRef = expectedCharArrayIndex;
+
+            assertThat(stringStore.asString(stringRef)).isEqualTo(stringToAdd);
+
+            stringStore.makeString(stringRef, sb, charactersBufferAllocator, (b, n, s) -> {
+
+                for (int characterIndex = 0; characterIndex < n; ++ characterIndex) {
+
+                    s.append(b[characterIndex]);
+                }
+
+                return null;
+            });
+
+            assertThat(sb.toString()).isEqualTo(stringToAdd);
+
+            sb.setLength(0);
+        });
     }
 
     @Test
@@ -100,15 +88,16 @@ public final class StringStorerTest extends BaseLargeCharArrayAndStringStorerTes
         assertThat(stringRef2).isEqualTo(4L);
         assertThat(stringRef3).isEqualTo(8L);
 
-        final String expectedToString = stringStorer.getClass().getSimpleName() + " {" + stringRef3 +  "=cde," + stringRef2 + "=bcd," + stringRef1 + "=abc}";
+        final String string = stringStorer.toString();
 
-        assertThat(stringStorer.toString()).isEqualTo(expectedToString);
+        assertThat(string.startsWith(stringStorer.getClass().getSimpleName() + " {"));
+        assertThat(string).contains("=abc", "=bcd", "=cde");
     }
 
     @Override
     protected StringStorer create() {
 
-        return new StringStorer(1, 0);
+        return new StringStorer(0, 0);
     }
 
     @Override

@@ -4,5 +4,10 @@ import dev.jdata.db.utils.adt.IClearable;
 
 public interface IMutableLongToObjectStaticMap<T>
 
-        extends ILongKeyMap, IClearable, ILongKeyStaticMapRemovalMutators, ILongToObjectCommonMapMutators<T>, ILongToObjectCommonMapGetters<T> {
+        extends ILongKeyMap,
+                IClearable,
+                ILongKeyStaticMapRemovalMutators,
+                ILongToObjectStaticMapRemovalMutators<T>,
+                ILongToObjectCommonMapMutators<T>,
+                ILongToObjectCommonMapGetters<T> {
 }

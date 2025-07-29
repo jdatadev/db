@@ -91,7 +91,6 @@ public final class MutableDecimal extends BaseDecimal<MutableDecimal> implements
     }
 
     @Override
-    @Deprecated
     public void add(double d) {
 
         throw new UnsupportedOperationException();

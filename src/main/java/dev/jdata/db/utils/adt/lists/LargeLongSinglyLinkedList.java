@@ -37,9 +37,9 @@ public final class LargeLongSinglyLinkedList
 
         Objects.requireNonNull(forEach);
 
-        for (long n = headNode; n != NO_NODE; n = getNextNode(n)) {
+        for (long node = headNode; node != NO_NODE; node = getNextNode(node)) {
 
-            forEach.each(getValue(n), parameter);
+            forEach.each(getValue(node), parameter);
         }
     }
 
@@ -50,9 +50,9 @@ public final class LargeLongSinglyLinkedList
 
         R result = defaultResult;
 
-        for (long n = headNode; n != NO_NODE; n = getNextNode(n)) {
+        for (long node = headNode; node != NO_NODE; node = getNextNode(node)) {
 
-            final R forEachResult = forEach.each(getValue(n), parameter1, parameter2);
+            final R forEachResult = forEach.each(getValue(node), parameter1, parameter2);
 
             if (forEachResult != null) {
 

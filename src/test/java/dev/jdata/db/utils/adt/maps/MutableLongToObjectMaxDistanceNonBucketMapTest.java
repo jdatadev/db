@@ -6,18 +6,12 @@ import dev.jdata.db.utils.scalars.Integers;
 
 public final class MutableLongToObjectMaxDistanceNonBucketMapTest
 
-        extends BaseMutableLongToIntegerOrObjectMaxDistanceTest<Integer[], MutableLongToObjectMaxDistanceNonBucketMap<Integer>> {
+        extends BaseMutableLongToIntegerOrObjectMaxDistanceMapTest<Integer[], MutableLongToObjectMaxDistanceNonBucketMap<Integer>> {
 
     @Override
     MutableLongToObjectMaxDistanceNonBucketMap<Integer> createMap(int initialCapacityExponent) {
 
         return new MutableLongToObjectMaxDistanceNonBucketMap<>(initialCapacityExponent, Integer[]::new);
-    }
-
-    @Override
-    long[] createKeysArray(int length) {
-
-        return new long[length];
     }
 
     @Override
@@ -35,7 +29,7 @@ public final class MutableLongToObjectMaxDistanceNonBucketMapTest
     @Override
     int get(MutableLongToObjectMaxDistanceNonBucketMap<Integer> map, int key) {
 
-        return map.get(key, -1);
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -45,13 +39,13 @@ public final class MutableLongToObjectMaxDistanceNonBucketMapTest
     }
 
     @Override
-    <P> void forEachKeysAndValues(MutableLongToObjectMaxDistanceNonBucketMap<Integer> map, P parameter) {
+    <P> void forEachKeyAndValueWithNullFunction(MutableLongToObjectMaxDistanceNonBucketMap<Integer> map, P parameter) {
 
         map.forEachKeyAndValue(parameter, null);
     }
 
     @Override
-    <P> void forEachKeysAndValues(MutableLongToObjectMaxDistanceNonBucketMap<Integer> map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
+    <P> void forEachKeyAndValue(MutableLongToObjectMaxDistanceNonBucketMap<Integer> map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
 
         map.forEachKeyAndValue(parameter, (k, v, p) -> {
 

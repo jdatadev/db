@@ -12,11 +12,11 @@ import org.jutils.parse.ParserException;
 import dev.jdata.db.engine.database.DatabaseParameters;
 import dev.jdata.db.engine.database.EvaluateException;
 import dev.jdata.db.engine.database.ExecuteException;
-import dev.jdata.db.engine.database.IDatabaseExecuteOperations.SelectResultWriter;
+import dev.jdata.db.engine.database.operations.IDatabaseOperations;
+import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.ISelectResultWriter;
 import dev.jdata.db.engine.database.IDatabaseExecutePreparedStatement;
 import dev.jdata.db.engine.database.IDatabaseFreePreparedStatement;
 import dev.jdata.db.engine.database.IDatabaseLookup;
-import dev.jdata.db.engine.database.IDatabaseOperations;
 import dev.jdata.db.engine.database.IDatabaseSessions;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
 import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
@@ -41,7 +41,7 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
 
     public interface ExecuteSQLResultWriter<E extends Exception> {
 
-        SelectResultWriter<E> getSelectResultWriter();
+        ISelectResultWriter<E> getSelectResultWriter();
     }
 
     private static final class ExecuteSQLParameter extends ObjectCacheNode {
@@ -188,7 +188,7 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
             final SQLSelectStatement sqlSelectStatement = (SQLSelectStatement)sqlStatement;
 
             @SuppressWarnings("unchecked")
-            final SelectResultWriter<E> selectResultWriter = (SelectResultWriter<E>)executeSQLParameter.resultWriter;
+            final ISelectResultWriter<E> selectResultWriter = (ISelectResultWriter<E>)executeSQLParameter.resultWriter;
 
             databaseOperations.executeDMLSelectSQL(sessionId, sqlSelectStatement, selectResultWriter);
 

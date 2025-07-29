@@ -1,6 +1,5 @@
 package dev.jdata.db.utils.adt.arrays;
 
-public interface IIntArray extends IArray {
+public interface IIntArray extends IImmutableArray, IIntArrayCommon {
 
-    int get(int index);
 }

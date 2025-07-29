@@ -12,12 +12,13 @@ public final class StringManagement extends ObjectCacheNode implements IResettab
 
     private DatabaseStringManagement databaseStringManagement;
     private StringResolver parserStringResolver;
+    private IStringCache stringCache;
 
     public StringManagement() {
 
     }
 
-    public void initialize(DatabaseStringManagement databaseStringManagement, StringResolver parserStringResolver) {
+    public void initialize(DatabaseStringManagement databaseStringManagement, StringResolver parserStringResolver, IStringCache stringCache) {
 
         if (this.databaseStringManagement != null) {
 
@@ -26,6 +27,7 @@ public final class StringManagement extends ObjectCacheNode implements IResettab
 
         this.databaseStringManagement = Objects.requireNonNull(databaseStringManagement);
         this.parserStringResolver = Objects.requireNonNull(parserStringResolver);
+        this.stringCache = Objects.requireNonNull(stringCache);
     }
 
     @Override
@@ -67,8 +69,11 @@ public final class StringManagement extends ObjectCacheNode implements IResettab
         return databaseStringManagement.getLowerCaseString(stringRef);
     }
 
-    private StringResolver getStringResolver() {
+    public IStringCache getStringCache() {
+        return stringCache;
+    }
 
-        return databaseStringManagement.getStringResolver();
+    public void setStringCache(IStringCache stringCache) {
+        this.stringCache = stringCache;
     }
 }

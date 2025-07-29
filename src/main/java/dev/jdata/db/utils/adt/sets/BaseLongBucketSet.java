@@ -1,6 +1,5 @@
 package dev.jdata.db.utils.adt.sets;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
@@ -8,10 +7,9 @@ import dev.jdata.db.utils.adt.CapacityExponents;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.elements.ILongIterableElements;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
-import dev.jdata.db.utils.adt.hashed.HashedConstants;
-import dev.jdata.db.utils.adt.lists.BaseList;
+import dev.jdata.db.utils.adt.hashed.helpers.LongBuckets;
+import dev.jdata.db.utils.adt.lists.ILongNodeSetter;
 import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadSinglyLinkedList;
-import dev.jdata.db.utils.adt.lists.LongNodeSetter;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
@@ -19,10 +17,8 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_BUCKET_SET;
 
-    private static final long NO_LONG_NODE = BaseList.NO_NODE;
-
-    private static final LongNodeSetter<BaseLongBucketSet> headSetter = (i, h) -> i.scratchHashArray[i.scratchHashArrayIndex] = h;
-    private static final LongNodeSetter<BaseLongBucketSet> tailSetter = (i, t) -> { };
+    private static final ILongNodeSetter<BaseLongBucketSet> headSetter = (i, h) -> i.scratchHashArray[i.scratchHashArrayIndex] = h;
+    private static final ILongNodeSetter<BaseLongBucketSet> tailSetter = (i, t) -> { };
 
     private final int bucketsInnerCapacity;
 
@@ -31,37 +27,50 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
     private int scratchHashArrayIndex;
     private long[] scratchHashArray;
 
-    BaseLongBucketSet() {
-        this(3);
-    }
+    BaseLongBucketSet(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent) {
+        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, long[]::new, BaseLongBucketSet::clearHashArray);
 
-    BaseLongBucketSet(int initialCapacityExponent) {
-        this(initialCapacityExponent, HashedConstants.DEFAULT_LOAD_FACTOR);
-    }
+        if (DEBUG) {
 
-    BaseLongBucketSet(int initialCapacityExponent, float loadFactor) {
-        this(initialCapacityExponent, loadFactor, BUCKETS_INNER_CAPACITY_EXPONENT);
-    }
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
+                    .add("bucketsInnerCapacityExponent", bucketsInnerCapacityExponent));
+        }
 
-    private BaseLongBucketSet(int initialCapacityExponent, float loadFactor, int bucketsInnerCapacityExponent) {
-        super(initialCapacityExponent, loadFactor, long[]::new, BaseLongBucketSet::clearHashArray);
+        Checks.isIntCapacityExponent(bucketsInnerCapacityExponent);
 
-        Checks.isCapacityExponent(bucketsInnerCapacityExponent);
-
-        final int bucketsInnerCapacity = CapacityExponents.computeCapacity(bucketsInnerCapacityExponent);
+        final int bucketsInnerCapacity = CapacityExponents.computeIntCapacityFromExponent(bucketsInnerCapacityExponent);
 
         this.bucketsInnerCapacity = bucketsInnerCapacity;
 
-        this.buckets = new LargeLongMultiHeadSinglyLinkedList<>(BUCKETS_OUTER_INITIAL_CAPACITY, bucketsInnerCapacity);
+        this.buckets = new LargeLongMultiHeadSinglyLinkedList<>(DEFAULT_BUCKETS_OUTER_INITIAL_CAPACITY, bucketsInnerCapacity);
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseLongBucketSet(long[] values) {
-        this(computeCapacityExponent(values.length, HashedConstants.DEFAULT_LOAD_FACTOR), HashedConstants.DEFAULT_LOAD_FACTOR);
+        this(computeRehashCapacityExponent(values.length, DEFAULT_LOAD_FACTOR), DEFAULT_LOAD_FACTOR);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("values", values));
+        }
 
         for (long value : values) {
 
             addValue(value);
         }
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    private BaseLongBucketSet(int initialCapacityExponent, float loadFactor) {
+        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, loadFactor, DEFAULT_BUCKETS_INNER_CAPACITY_EXPONENT);
     }
 
     @Override
@@ -75,13 +84,13 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
 
         final LargeLongMultiHeadSinglyLinkedList<BaseLongBucketSet> b = buckets;
 
-        final long noNode = BaseList.NO_NODE;
+        final long noNode = NO_LONG_NODE;
 
         for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
 
-            for (long n = bucketHeadNodesHashArray[i]; n != noNode; n = b.getNextNode(n)) {
+            for (long node = bucketHeadNodesHashArray[i]; node != noNode; node = b.getNextNode(node)) {
 
-                forEach.each(b.getValue(n), parameter);
+                forEach.each(b.getValue(node), parameter);
             }
         }
     }
@@ -99,21 +108,23 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
 
         final LargeLongMultiHeadSinglyLinkedList<BaseLongBucketSet> b = buckets;
 
-        final long noNode = BaseList.NO_NODE;
+        final long noNode = NO_LONG_NODE;
 
-        for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
+        outer:
+            for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
 
-            for (long n = bucketHeadNodesHashArray[i]; n != noNode; n = b.getNextNode(n)) {
+                for (long node = bucketHeadNodesHashArray[i]; node != noNode; node = b.getNextNode(node)) {
 
-                final R forEachResult = forEach.each(b.getValue(n), parameter1, parameter2);
+                    final R forEachResult = forEach.each(b.getValue(node), parameter1, parameter2);
 
-                if (forEachResult != null) {
+                    if (forEachResult != null) {
 
-                    result = forEachResult;
-                    break;
+                        result = forEachResult;
+
+                        break outer;
+                    }
                 }
             }
-        }
 
         return result;
     }
@@ -132,7 +143,7 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
 
         final long bucketHeadNode = bucketHeadNodesHashArray[hashArrayIndex];
 
-        final boolean found = bucketHeadNode != BaseList.NO_NODE && buckets.contains(value, bucketHeadNode);
+        final boolean found = bucketHeadNode != NO_LONG_NODE && buckets.contains(value, bucketHeadNode);
 
         if (DEBUG) {
 
@@ -143,11 +154,11 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
     }
 
     @Override
-    protected final long[] rehash(long[] hashArray, int newCapacity, int keyMask) {
+    protected final long[] rehash(long[] hashArray, int newCapacity, int newCapacityExponent, int keyMask) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).hex("keyMask", keyMask));
+            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).hex("keyMask", keyMask));
         }
 
         final long[] newBucketHeadNodesHashArray = new long[newCapacity];
@@ -164,22 +175,22 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
 
         final int hashArrayLength = hashArray.length;
 
+        final long noNode = NO_LONG_NODE;
+
         for (int i = 0; i < hashArrayLength; ++ i) {
 
             final long bucketHeadNode = hashArray[i];
 
-            if (bucketHeadNode != NO_LONG_NODE) {
+            for (long node = bucketHeadNode; node != noNode; node = oldBuckets.getNextNode(node)) {
 
-                for (long node = bucketHeadNode; node != BaseList.NO_NODE; node = oldBuckets.getNextNode(node)) {
-
-                    add(newBucketHeadNodesHashArray, oldBuckets.getValue(node), keyMask);
-                }
+                add(newBucketHeadNodesHashArray, oldBuckets.getValue(node), keyMask);
             }
         }
 
         if (DEBUG) {
 
-            exit(newBucketHeadNodesHashArray, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).hex("keyMask", keyMask));
+            exit(newBucketHeadNodesHashArray, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent)
+                    .hex("keyMask", keyMask));
         }
 
         return newBucketHeadNodesHashArray;
@@ -209,12 +220,14 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
         return newAdded;
     }
 
-    final boolean removeAtMostOneElement(long element) {
+    final boolean removeElement(long element) {
 
         if (DEBUG) {
 
             enter(b -> b.add("element", element));
         }
+
+        final boolean removed;
 
         final int keyMask = getKeyMask();
         final int hashArrayIndex = HashFunctions.hashArrayIndex(element, keyMask);
@@ -226,21 +239,21 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
 
         final long bucketHeadNode = getHashed()[hashArrayIndex];
 
-        final boolean removed;
+        final long noNode = NO_LONG_NODE;
 
-        if (bucketHeadNode == BaseList.NO_NODE) {
+        if (bucketHeadNode == noNode) {
 
             removed = false;
         }
         else {
             this.scratchHashArrayIndex = hashArrayIndex;
 
-            removed = buckets.removeAtMostOneNodeByValue(this, element, bucketHeadNode, BaseList.NO_NODE, headSetter, tailSetter) != BaseList.NO_NODE;
-        }
+            removed = buckets.removeAtMostOneNodeByValue(this, element, bucketHeadNode, noNode, headSetter, tailSetter) != noNode;
 
-        if (removed) {
+            if (removed) {
 
-            decrementNumElements();
+                decrementNumElements();
+            }
         }
 
         if (DEBUG) {
@@ -274,14 +287,16 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
             debugFormatln("lookup hashArrayIndex=%d value=%d keyMask=0x%08x bucketHeadNode=0x%016x", hashArrayIndex, value, keyMask, bucketHeadNode);
         }
 
-        final boolean newAdded = bucketHeadNode == BaseList.NO_NODE || !buckets.contains(value, bucketHeadNode);
+        final long noNode = NO_LONG_NODE;
+
+        final boolean newAdded = bucketHeadNode == noNode || !buckets.contains(value, bucketHeadNode);
 
         if (newAdded) {
 
             this.scratchHashArrayIndex = hashArrayIndex;
             this.scratchHashArray = bucketHeadNodesHashArray;
 
-            buckets.addHead(this, value, bucketHeadNode, BaseList.NO_NODE, headSetter, tailSetter);
+            buckets.addHead(this, value, bucketHeadNode, noNode, headSetter, tailSetter);
         }
 
         if (DEBUG) {
@@ -294,7 +309,7 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
 
     private static void clearHashArray(long[] bucketHeadNodesHashArray) {
 
-        Arrays.fill(bucketHeadNodesHashArray, NO_LONG_NODE);
+        LongBuckets.clearHashArray(bucketHeadNodesHashArray);
     }
 
     @Override

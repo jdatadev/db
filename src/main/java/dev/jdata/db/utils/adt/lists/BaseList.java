@@ -10,7 +10,7 @@ public abstract class BaseList<
 
         extends BaseElements {
 
-    public static final long NO_NODE = -1L;
+    static final long NO_NODE = LargeLists.NO_LONG_NODE;
 
     static long checkIsNode(long node) {
 

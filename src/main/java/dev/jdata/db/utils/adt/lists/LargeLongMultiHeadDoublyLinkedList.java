@@ -33,25 +33,25 @@ public final class LargeLongMultiHeadDoublyLinkedList<INSTANCE>
         return findValue(value, headNode);
     }
 
-    public long addHead(INSTANCE instance, long value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    public long addHead(INSTANCE instance, long value, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         return addHeadValue(instance, value, headNode, tailNode, headNodeSetter, tailNodeSetter);
     }
 
-    public long addTail(INSTANCE instance, long value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    public long addTail(INSTANCE instance, long value, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         return addTailValue(instance, value, headNode, tailNode, headNodeSetter, tailNodeSetter);
     }
 
-    private long removeTail(INSTANCE instance, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    private long removeTail(INSTANCE instance, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         return getValue(removeTailNodeAndReturnNode(instance, tailNode, headNodeSetter, tailNodeSetter));
     }
 
     @Override
-    public long removeNode(INSTANCE instance, long node, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    public long removeNode(INSTANCE instance, long toRemove, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
-        return getValue(removeListNodeAndReturnNode(instance, node, headNode, tailNode, headNodeSetter, tailNodeSetter));
+        return getValue(removeListNodeAndReturnNode(instance, toRemove, headNode, tailNode, headNodeSetter, tailNodeSetter));
     }
 
     @Override
@@ -65,7 +65,7 @@ public final class LargeLongMultiHeadDoublyLinkedList<INSTANCE>
 
     }
 
-    public void clear(INSTANCE instance, long headNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    public void clear(INSTANCE instance, long headNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         clearNodes(instance, headNode, headNodeSetter, tailNodeSetter);
     }

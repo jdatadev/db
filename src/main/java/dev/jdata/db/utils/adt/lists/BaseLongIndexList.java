@@ -91,6 +91,12 @@ abstract class BaseLongIndexList extends BaseIntegerIndexList<long[]> implements
         return elementsArray[Integers.checkUnsignedLongToUnsignedInt(index)];
     }
 
+    @Override
+    public final void toString(long index, StringBuilder sb) {
+
+        sb.append(get(index));
+    }
+
     final int getElementCapacity() {
 
         return elementsArray.length;

@@ -10,6 +10,75 @@ public final class StringBuildersTest extends BaseTest {
 
     @Test
     @Category(UnitTest.class)
+    public void testIsEmpty() {
+
+        assertThatThrownBy(() -> StringBuilders.isEmpty(null)).isInstanceOf(NullPointerException.class);
+
+        checkIsEmpty("", true);
+        checkIsEmpty(" ", false);
+        checkIsEmpty("\t", false);
+        checkIsEmpty("\0", false);
+        checkIsEmpty("a", false);
+        checkIsEmpty("abc", false);
+    }
+
+    private static void checkIsEmpty(String string, boolean expectedResult) {
+
+        final StringBuilder sb = new StringBuilder(string);
+
+        assertThat(StringBuilders.isEmpty(sb)).isEqualTo(expectedResult);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testRepeat() {
+
+        assertThatThrownBy(() -> checkRepeatArguments(null, " ", 1)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> checkRepeatArguments(new StringBuilder(), null, 1)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> checkRepeatArguments(new StringBuilder(), "", 1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> checkRepeatArguments(new StringBuilder(), " ", -1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> checkRepeatArguments(new StringBuilder(), " ", 0)).isInstanceOf(IllegalArgumentException.class);
+
+        checkRepeat("", " ", 1, " ");
+        checkRepeat("", " ", 2, "  ");
+        checkRepeat("", " ", 3, "   ");
+
+        checkRepeat("", "  ", 1, "  ");
+        checkRepeat("", "  ", 2, "    ");
+        checkRepeat("", "  ", 3, "      ");
+
+        checkRepeat("abc", "123", 1, "abc123");
+        checkRepeat("abc", "123", 2, "abc123123");
+        checkRepeat("abc", "123", 3, "abc123123123");
+    }
+
+    private static void checkRepeatArguments(StringBuilder sb, String toAdd, int times) {
+
+        final String sbContents = sb != null ? sb.toString() : null;
+
+        try {
+            StringBuilders.repeat(sb, toAdd, times);
+        }
+        finally {
+
+            if (sbContents != null) {
+
+                assertThat(sb.toString()).isEqualTo(sbContents);
+            }
+        }
+    }
+
+    private static void checkRepeat(String prefix, String toAdd, int times, String expectedResult) {
+
+        final StringBuilder sb = new StringBuilder(prefix);
+
+        StringBuilders.repeat(sb, toAdd, times);
+
+        assertThat(sb.toString()).isEqualTo(expectedResult);
+    }
+
+    @Test
+    @Category(UnitTest.class)
     public void testHexString() {
 
         checkHexString(0L, null, 0, Case.UPPER, "0");
@@ -44,9 +113,9 @@ public final class StringBuildersTest extends BaseTest {
 
         for (int i = 3; i < 10; ++ i) {
 
-            checkHexString(0L, "hex", i, Case.UPPER, "hex" + "0".repeat(i - 1) + '0');
-            checkHexString(1L, "hex", i, Case.UPPER, "hex" + "0".repeat(i - 1) + '1');
-            checkHexString(256L, "hex", i, Case.UPPER, "hex" + "0".repeat(i - 3) + "100");
+            checkHexString(0L, "hex", i, Case.UPPER, "hex" + Strings.repeat("0", i - 1) + '0');
+            checkHexString(1L, "hex", i, Case.UPPER, "hex" + Strings.repeat("0", i - 1) + '1');
+            checkHexString(256L, "hex", i, Case.UPPER, "hex" + Strings.repeat("0", i - 3) + "100");
         }
     }
 
@@ -54,7 +123,7 @@ public final class StringBuildersTest extends BaseTest {
 
         checkHexString(null, value, prefix, zeroPad, hexCase, expectedString);
 
-        final String prepended = "prepended".repeat(10);
+        final String prepended = Strings.repeat("prepended", 10);
 
         checkHexString(prepended, value, prefix, zeroPad, hexCase, prepended + expectedString);
     }

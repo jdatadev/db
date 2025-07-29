@@ -37,7 +37,7 @@ abstract class BaseLargeLongDoublyLinkedList<
         return getValues().findValueNode(this, value, headNode);
     }
 
-    final long addHeadValue(INSTANCE instance, long value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long addHeadValue(INSTANCE instance, long value, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = addHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
@@ -46,7 +46,7 @@ abstract class BaseLargeLongDoublyLinkedList<
         return node;
     }
 
-    final long addTailValue(INSTANCE instance, long value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long addTailValue(INSTANCE instance, long value, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long node = addTailNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
@@ -55,7 +55,7 @@ abstract class BaseLargeLongDoublyLinkedList<
         return node;
     }
 
-    final long removeHead(INSTANCE instance, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    final long removeHead(INSTANCE instance, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         final long removedHeadNode = removeHeadNodeAndReturnNode(instance, headNode, tailNode, headNodeSetter, tailNodeSetter);
 

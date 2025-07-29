@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.util.Objects;
 
-import dev.jdata.db.engine.database.IDatabaseExecuteOperations.DataWriter;
+import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.IDataWriter;
 import dev.jdata.db.engine.server.network.protocol.ProtocolMessage.ProtocolAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.checks.Checks;
@@ -199,32 +199,27 @@ public final class Protocol {
 
             freePreparedStatementMessageCache.free((FreePreparedStatementMessage)protocolMessage);
             break;
+
+        default:
+            throw new UnsupportedOperationException();
         }
     }
 
-    public <E extends Exception> void writeExecuteSQLResponseHeader(DataWriter<E> dataWriter) throws E {
+    public <E extends Exception> void writeExecuteSQLResponseHeader(IDataWriter<E> dataWriter) throws E {
 
         Objects.requireNonNull(dataWriter);
 
         throw new UnsupportedOperationException();
     }
 
-    public <E extends Exception> void writeExecuteSQLResponseCompletion(DataWriter<E> dataWriter, long resultValue) throws E {
+    public <E extends Exception> void writeExecuteSQLResponseCompletion(IDataWriter<E> dataWriter, long resultValue) throws E {
 
         Objects.requireNonNull(dataWriter);
 
         throw new UnsupportedOperationException();
     }
 
-    public <E extends Exception> void writePrepareStatementResponse(DataWriter<E> dataWriter, int prepredStatementId) throws E {
-
-        Objects.requireNonNull(dataWriter);
-        Checks.isPreparedStatementId(prepredStatementId);
-
-        throw new UnsupportedOperationException();
-    }
-
-    public <E extends Exception> void writeExecuteStatementResponse(DataWriter<E> dataWriter, int prepredStatementId, long resultValue) throws E {
+    public <E extends Exception> void writePrepareStatementResponse(IDataWriter<E> dataWriter, int prepredStatementId) throws E {
 
         Objects.requireNonNull(dataWriter);
         Checks.isPreparedStatementId(prepredStatementId);
@@ -232,7 +227,15 @@ public final class Protocol {
         throw new UnsupportedOperationException();
     }
 
-    public <E extends Exception> void writeFreePreparedStatementResponse(DataWriter<E> dataWriter, int prepredStatementId) throws E {
+    public <E extends Exception> void writeExecuteStatementResponse(IDataWriter<E> dataWriter, int prepredStatementId, long resultValue) throws E {
+
+        Objects.requireNonNull(dataWriter);
+        Checks.isPreparedStatementId(prepredStatementId);
+
+        throw new UnsupportedOperationException();
+    }
+
+    public <E extends Exception> void writeFreePreparedStatementResponse(IDataWriter<E> dataWriter, int prepredStatementId) throws E {
 
         Objects.requireNonNull(dataWriter);
         Checks.isPreparedStatementId(prepredStatementId);

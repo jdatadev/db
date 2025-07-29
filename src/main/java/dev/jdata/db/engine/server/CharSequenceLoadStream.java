@@ -6,6 +6,8 @@ import java.util.Objects;
 import org.jutils.io.loadstream.LoadStream;
 import org.jutils.io.loadstream.StreamStatus;
 
+import dev.jdata.db.utils.checks.Checks;
+
 public final class CharSequenceLoadStream extends LoadStream<RuntimeException> {
 
     private CharSequence charSequence;
@@ -49,7 +51,7 @@ public final class CharSequenceLoadStream extends LoadStream<RuntimeException> {
     public long read(char[] buffer, int offset, int length) {
 
         Objects.requireNonNull(buffer);
-        Objects.checkFromIndexSize(offset, length, buffer.length);
+        Checks.checkFromIndexSize(offset, length, buffer.length);
 
         if (charSequence.length() != charSequenceLength) {
 

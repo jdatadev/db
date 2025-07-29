@@ -2,18 +2,12 @@ package dev.jdata.db.utils.adt.maps;
 
 import java.util.List;
 
-public final class MutableIntToIntMaxDistanceNonBucketMapTest extends BaseMutableIntToIntegerOrObjectMaxDistanceTest<int[], MutableIntToIntMaxDistanceNonBucketMap> {
+public final class MutableIntToIntMaxDistanceNonBucketMapTest extends BaseMutableIntToIntegerOrObjectMaxDistanceMapTest<int[], MutableIntToIntMaxDistanceNonBucketMap> {
 
     @Override
     MutableIntToIntMaxDistanceNonBucketMap createMap(int initialCapacityExponent) {
 
         return new MutableIntToIntMaxDistanceNonBucketMap(initialCapacityExponent);
-    }
-
-    @Override
-    int[] createKeysArray(int length) {
-
-        return new int[length];
     }
 
     @Override
@@ -31,7 +25,7 @@ public final class MutableIntToIntMaxDistanceNonBucketMapTest extends BaseMutabl
     @Override
     int get(MutableIntToIntMaxDistanceNonBucketMap map, int key) {
 
-        return map.get(key, -1);
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -41,13 +35,13 @@ public final class MutableIntToIntMaxDistanceNonBucketMapTest extends BaseMutabl
     }
 
     @Override
-    <P> void forEachKeysAndValues(MutableIntToIntMaxDistanceNonBucketMap map, P parameter) {
+    <P> void forEachKeyAndValueWithNullFunction(MutableIntToIntMaxDistanceNonBucketMap map, P parameter) {
 
         map.forEachKeyAndValue(parameter, null);
     }
 
     @Override
-    <P> void forEachKeysAndValues(MutableIntToIntMaxDistanceNonBucketMap map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
+    <P> void forEachKeyAndValue(MutableIntToIntMaxDistanceNonBucketMap map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
 
         map.forEachKeyAndValue(parameter, (k, v, p) -> {
 

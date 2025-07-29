@@ -13,8 +13,8 @@ import org.jutils.parse.ParserException;
 
 import dev.jdata.db.engine.database.DatabaseParameters;
 import dev.jdata.db.engine.database.ExecuteException;
-import dev.jdata.db.engine.database.IDatabaseExecuteOperations.DataWriter;
-import dev.jdata.db.engine.database.IDatabaseExecuteOperations.SelectResultWriter;
+import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.IDataWriter;
+import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.ISelectResultWriter;
 import dev.jdata.db.engine.server.NoSuchDatabaseException;
 import dev.jdata.db.engine.server.SQLDatabaseServer;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
@@ -249,7 +249,7 @@ public final class DatabaseNetworkServer {
         else {
             final ProtocolMessage protocolMessage = protocol.decode(byteBuffer, offset, length, charsetDecoder, protocolAllocator);
 
-            final DataWriter<E> dataWriter = responseWriter.getDataWriter();
+            final IDataWriter<E> dataWriter = responseWriter.getDataWriter();
 
             try {
                 switch (protocolMessage.getMessageType()) {
@@ -389,7 +389,7 @@ public final class DatabaseNetworkServer {
         return charsetDecoder;
     }
 
-    private static final class ByteBufferSelectResultWriter extends ByteBufferDataWriter implements SelectResultWriter<RuntimeException> {
+    private static final class ByteBufferSelectResultWriter extends ByteBufferDataWriter implements ISelectResultWriter<RuntimeException> {
 
         @Override
         public void startRow() {
@@ -406,28 +406,28 @@ public final class DatabaseNetworkServer {
 
     public interface ProtocolMessageResponseWriter<E extends Exception> extends ExecuteSQLResultWriter<E> {
 
-        DataWriter<E> getDataWriter();
+        IDataWriter<E> getDataWriter();
     }
 
     private static final class ProtocolMessageResponseWriterImpl<E extends Exception> implements ProtocolMessageResponseWriter<E> {
 
-        private final SelectResultWriter<E> selectResultWriter;
-        private final DataWriter<E> dataWriter;
+        private final ISelectResultWriter<E> selectResultWriter;
+        private final IDataWriter<E> dataWriter;
 
-        ProtocolMessageResponseWriterImpl(SelectResultWriter<E> selectResultWriter, DataWriter<E> dataWriter) {
+        ProtocolMessageResponseWriterImpl(ISelectResultWriter<E> selectResultWriter, IDataWriter<E> dataWriter) {
 
             this.selectResultWriter = Objects.requireNonNull(selectResultWriter);
             this.dataWriter = Objects.requireNonNull(dataWriter);
         }
 
         @Override
-        public SelectResultWriter<E> getSelectResultWriter() {
+        public ISelectResultWriter<E> getSelectResultWriter() {
 
             return selectResultWriter;
         }
 
         @Override
-        public DataWriter<E> getDataWriter() {
+        public IDataWriter<E> getDataWriter() {
             return dataWriter;
         }
     }

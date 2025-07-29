@@ -14,8 +14,8 @@ abstract class InstanceNodeAllocator<T, N extends InstanceNodeAllocator.Instance
         }
     }
 
-    private N instanceFreeList;
-    private N nodeFreeList;
+    N instanceFreeList;
+    N nodeFreeList;
 
     InstanceNodeAllocator() {
 

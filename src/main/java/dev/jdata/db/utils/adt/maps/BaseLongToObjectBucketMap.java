@@ -1,89 +1,50 @@
 package dev.jdata.db.utils.adt.maps;
 
-import java.util.Arrays;
 import java.util.Objects;
-import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.lists.BaseLargeLongMultiHeadSinglyLinkedList;
-import dev.jdata.db.utils.adt.lists.BaseList;
-import dev.jdata.db.utils.adt.lists.BaseLongValues;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.function.BiIntToObjectFunction;
 
-abstract class BaseLongToObjectBucketMap<T, MAP extends BaseLongToObjectBucketMap<T, MAP>>
+abstract class BaseLongToObjectBucketMap<
 
-        extends BaseLongKeyBucketMap<
-                BaseLongToObjectBucketMap.LongToObjectBucketMapMultiHeadSinglyLinkedList<MAP, T>,
-                BaseLongToObjectBucketMap.LongToObjectValues<MAP, T>,
-                MAP>
+                T,
+                LIST extends BaseLongToObjectBucketMapMultiHeadSinglyLinkedList<MAP, T, LIST, VALUES>,
+                VALUES extends BaseLongToObjectValues<MAP, T, LIST, VALUES>,
+                MAP extends BaseLongToObjectBucketMap<T, LIST, VALUES, MAP>>
+
+        extends BaseLongKeyBucketMap<LIST, VALUES, MAP>
         implements ILongToObjectCommonMapGetters<T>, ILongToObjectDynamicMapGetters<T> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_TO_OBJECT_BUCKET_MAP;
 
-    static final class LongToObjectBucketMapMultiHeadSinglyLinkedList<INSTANCE, T>
+    BaseLongToObjectBucketMap(int initialCapacityExponent, BiIntToObjectFunction<LIST> createBuckets) {
+        super(initialCapacityExponent, createBuckets);
 
-            extends BaseLargeLongMultiHeadSinglyLinkedList<INSTANCE, LongToObjectBucketMapMultiHeadSinglyLinkedList<INSTANCE, T>, LongToObjectValues<INSTANCE, T>> {
+        if (DEBUG) {
 
-        LongToObjectBucketMapMultiHeadSinglyLinkedList(int initialOuterCapacity, int innerCapacity, IntFunction<T[]> createArray) {
-            super(initialOuterCapacity, innerCapacity, c -> new LongToObjectValues<>(c, createArray));
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createBuckets", createBuckets));
         }
 
-        T getObjectValue(long node) {
+        if (DEBUG) {
 
-            return getValues().objectValues[getOuterIndex(node)][getInnerIndex(node)];
-        }
-    }
-
-    static final class LongToObjectValues<INSTANCE, T> extends BaseLongValues<LongToObjectBucketMapMultiHeadSinglyLinkedList<INSTANCE, T>, LongToObjectValues<INSTANCE, T>> {
-
-        private final IntFunction<T[]> createArray;
-
-        private T[][] objectValues;
-
-        LongToObjectValues(int initialOuterCapacity, IntFunction<T[]> createArray) {
-            super(initialOuterCapacity);
-
-            this.createArray = Objects.requireNonNull(createArray);
-        }
-
-        @Override
-        protected void reallocateOuter(int newOuterLength) {
-
-            if (newOuterLength <= objectValues.length) {
-
-                throw new IllegalArgumentException();
-            }
-
-            super.reallocateOuter(newOuterLength);
-
-            this.objectValues = Arrays.copyOf(objectValues, newOuterLength);
-        }
-
-        @Override
-        protected void allocateInner(int outerIndex, int innerCapacity) {
-
-            Checks.isIndex(outerIndex);
-            Checks.isCapacity(innerCapacity);
-
-            super.allocateInner(outerIndex, innerCapacity);
-
-            objectValues[outerIndex] = createArray.apply(innerCapacity);
+            exit();
         }
     }
 
-    private final IntFunction<T[]> createArray;
+    BaseLongToObjectBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, BiIntToObjectFunction<LIST> createBuckets) {
+        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createBuckets);
 
-    BaseLongToObjectBucketMap(int initialCapacityExponent, IntFunction<T[]> createArray) {
-        super(initialCapacityExponent, (o, i) -> new LongToObjectBucketMapMultiHeadSinglyLinkedList<>(o, i, createArray), c -> new LongToObjectValues<>(c, createArray));
+        if (DEBUG) {
 
-        this.createArray = Objects.requireNonNull(createArray);
-    }
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
+                    .add("createBuckets", createBuckets));
+        }
 
-    BaseLongToObjectBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, (o, i) -> new LongToObjectBucketMapMultiHeadSinglyLinkedList<>(o, i, createArray),
-                c -> new LongToObjectValues<>(c, createArray));
+        if (DEBUG) {
 
-        this.createArray = Objects.requireNonNull(createArray);
+            exit();
+        }
     }
 
     @Override
@@ -99,16 +60,16 @@ abstract class BaseLongToObjectBucketMap<T, MAP extends BaseLongToObjectBucketMa
         final long[] bucketHeadNodesHashArray = getHashed();
         final int bucketHeadNodesHashArrayLength = bucketHeadNodesHashArray.length;
 
-        final long noElement = BaseList.NO_NODE;
-        final LongToObjectBucketMapMultiHeadSinglyLinkedList<MAP, T> buckets = getBuckets();
+        final long noNode = NO_LONG_NODE;
+        final LIST buckets = getBuckets();
 
         for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
 
             final long bucketHeadNode = bucketHeadNodesHashArray[i];
 
-            for (long n = bucketHeadNode; n != noElement; n = buckets.getNextNode(n)) {
+            for (long node = bucketHeadNode; node != noNode; node = buckets.getNextNode(node)) {
 
-                forEach.each(buckets.getValue(n), buckets.getObjectValue(n), parameter);
+                forEach.each(buckets.getValue(node), buckets.getObjectValue(node), parameter);
             }
         }
 
@@ -133,24 +94,26 @@ abstract class BaseLongToObjectBucketMap<T, MAP extends BaseLongToObjectBucketMa
         final long[] bucketHeadNodesHashArray = getHashed();
         final int bucketHeadNodesHashArrayLength = bucketHeadNodesHashArray.length;
 
-        final long noElement = BaseList.NO_NODE;
-        final LongToObjectBucketMapMultiHeadSinglyLinkedList<MAP, T> buckets = getBuckets();
+        final long noNode = NO_LONG_NODE;
+        final LIST buckets = getBuckets();
 
-        for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
+        outer:
+            for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
 
-            final long bucketHeadNode = bucketHeadNodesHashArray[i];
+                final long bucketHeadNode = bucketHeadNodesHashArray[i];
 
-            for (long n = bucketHeadNode; n != noElement; n = buckets.getNextNode(n)) {
+                for (long node = bucketHeadNode; node != noNode; node = buckets.getNextNode(node)) {
 
-                final R forEachResult = forEach.each(buckets.getValue(n), buckets.getObjectValue(n), parameter, delegate);
+                    final R forEachResult = forEach.each(buckets.getValue(node), buckets.getObjectValue(node), parameter, delegate);
 
-                if (forEachResult != null) {
+                    if (forEachResult != null) {
 
-                    result = forEachResult;
-                    break;
+                        result = forEachResult;
+
+                        break outer;
+                    }
                 }
             }
-        }
 
         if (DEBUG) {
 
@@ -177,8 +140,8 @@ abstract class BaseLongToObjectBucketMap<T, MAP extends BaseLongToObjectBucketMa
         final long[] bucketHeadNodesHashArray = getHashed();
         final int bucketHeadNodesHashArrayLength = bucketHeadNodesHashArray.length;
 
-        final long noElement = BaseList.NO_NODE;
-        final LongToObjectBucketMapMultiHeadSinglyLinkedList<MAP, T> buckets = getBuckets();
+        final long noNode = NO_LONG_NODE;
+        final LIST buckets = getBuckets();
 
         int dstIndex = 0;
 
@@ -186,10 +149,10 @@ abstract class BaseLongToObjectBucketMap<T, MAP extends BaseLongToObjectBucketMa
 
             final long bucketHeadNode = bucketHeadNodesHashArray[i];
 
-            for (long n = bucketHeadNode; n != noElement; n = buckets.getNextNode(n)) {
+            for (long node = bucketHeadNode; node != noNode; node = buckets.getNextNode(node)) {
 
-                keysDst[dstIndex] = buckets.getValue(n);
-                valuesDst[dstIndex] = buckets.getObjectValue(n);
+                keysDst[dstIndex] = buckets.getValue(node);
+                valuesDst[dstIndex] = buckets.getObjectValue(node);
 
                 ++ dstIndex;
             }
@@ -206,13 +169,25 @@ abstract class BaseLongToObjectBucketMap<T, MAP extends BaseLongToObjectBucketMa
 
         final long node = getValueNode(key);
 
-        return node != BaseList.NO_NODE ? getBuckets().getObjectValue(node) : null;
+        return node != NO_LONG_NODE ? getBuckets().getObjectValue(node) : defaultValue;
     }
 
     @Override
-    final LongToObjectBucketMapMultiHeadSinglyLinkedList<MAP, T> createBuckets(int outerInitialCapacity, int bucketsInnerCapacity) {
+    void rehashPut(LIST oldBuckets, long oldNode, LIST newBuckets, long newNode) {
 
-        return new LongToObjectBucketMapMultiHeadSinglyLinkedList<>(outerInitialCapacity, bucketsInnerCapacity, createArray);
+        if (DEBUG) {
+
+            enter(b -> b.add("oldBuckets", oldBuckets).hex("oldNode", oldNode).add("newBuckets", newBuckets).hex("newNode", newNode));
+        }
+
+        final T value = oldBuckets.getObjectValue(oldNode);
+
+        newBuckets.setObjectValue(newNode, value);
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     final void clearBaseLongToObjectBucketMap() {

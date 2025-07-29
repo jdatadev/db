@@ -26,7 +26,7 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
     private int numElements;
 
     public TwoDimensionalArray(int outerInitialCapacity, IntFunction<T[][]> createOuterArray, int innerInitialCapacity, IntFunction<T[]> createInnerArray) {
-        super(outerInitialCapacity, createOuterArray, true);
+        super(outerInitialCapacity, false, createOuterArray, true);
 
         Checks.isInitialCapacity(innerInitialCapacity);
         Objects.requireNonNull(createInnerArray);
@@ -56,9 +56,19 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
     @Override
     public void clear() {
 
-        super.clear();
+        if (DEBUG) {
+
+            enter();
+        }
+
+        clearArray();
 
         this.numElements = 0;
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     public int getNumOuterElements() {
@@ -165,7 +175,7 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
 
     public void add(int index, T value) {
 
-        Objects.checkIndex(index, getNumOuterElements() + 1);
+        Checks.checkIndex(index, getNumOuterElements() + 1);
         Objects.requireNonNull(value);
 
         if (DEBUG) {
@@ -327,9 +337,36 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
     }
 
     @Override
+    protected void clearInnerArray(T[] innerArray, long startIndex, long numElements) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected int getOuterArrayCapacity() {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     protected long getInnerElementCapacity() {
 
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected int getOuterArrayLength(T[][] outerArray) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected T[][] copyOuterArray(T[][] outerArray, int newCapacity) {
+
+        Objects.requireNonNull(outerArray);
+        Checks.isGreaterThan(newCapacity, outerArray.length);
+
+        return Arrays.copyOf(outerArray, newCapacity);
     }
 
     @Override
@@ -338,14 +375,8 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
         return outerArray[index];
     }
 
-    @Override
-    protected T[][] copyOuterArray(T[][] outerArray, int newCapacity) {
-
-        return Arrays.copyOf(outerArray, newCapacity);
-    }
-
     private void checkOuterIndex(int index) {
 
-        Objects.checkIndex(index, getNumOuterElements());
+        Checks.checkIndex(index, getNumOuterElements());
     }
 }

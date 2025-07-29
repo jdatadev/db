@@ -5,7 +5,7 @@ import org.jutils.ast.objects.typereference.TypeReference;
 import org.jutils.language.common.names.IArrayOfLongsAllocator;
 import org.jutils.parse.context.Context;
 
-abstract class BaseSQLCondition extends CustomExpression implements SQLCondition {
+abstract class BaseSQLCondition extends CustomExpression implements ISQLCondition {
 
     BaseSQLCondition(Context context) {
         super(context);

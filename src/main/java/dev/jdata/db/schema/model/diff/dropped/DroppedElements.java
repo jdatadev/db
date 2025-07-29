@@ -12,7 +12,7 @@ import dev.jdata.db.utils.allocators.IMutableIntSetAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class DroppedElements<T extends IMutableIntSet>  extends ObjectCacheNode implements IDroppedElements {
+public final class DroppedElements<T extends IMutableIntSet> extends ObjectCacheNode implements IDroppedElements {
 
     private static final int DROPPED_OBJECTS_INITIAL_CAPACITY_EXPONENT = 0;
     private static final int DROPPED_COLUMNS_MAP_INITIAL_CAPACITY_EXPONENT = 0;

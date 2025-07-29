@@ -3,7 +3,9 @@ package dev.jdata.db.utils.adt.hashed.helpers;
 import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
+import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.scalars.Integers;
 
@@ -78,7 +80,7 @@ public class MaxDistance {
 
             if (distance <= 255) {
 
-                operations.getMaxDistances(set)[putIndex] = Integers.checkUnsignedIntToUnsignedByte(distance);
+                operations.getMaxDistances(set)[putIndex] = Integers.checkUnsignedIntToUnsignedByteAsByte(distance);
 
                 result = newAdded;
                 break;
@@ -175,7 +177,7 @@ public class MaxDistance {
 
             if (distance <= 255) {
 
-                operations.getMaxDistances(hashed)[putIndex] = Integers.checkUnsignedIntToUnsignedByte(distance);
+                operations.getMaxDistances(hashed)[putIndex] = Integers.checkUnsignedIntToUnsignedByteAsByte(distance);
 
                 result = IntPutResult.makePutResult(newAdded, putIndex);
 
@@ -277,7 +279,7 @@ public class MaxDistance {
 
             if (distance <= 255) {
 
-                operations.getMaxDistances(hashed)[putIndex] = Integers.checkUnsignedIntToUnsignedByte(distance);
+                operations.getMaxDistances(hashed)[putIndex] = Integers.checkUnsignedIntToUnsignedByteAsByte(distance);
 
                 result = IntPutResult.makePutResult(newAdded, putIndex);
 
@@ -355,7 +357,7 @@ public class MaxDistance {
 
             if (distance <= 255) {
 
-                operations.getMaxDistances(hashed)[putIndex] = Integers.checkUnsignedIntToUnsignedByte(distance);
+                operations.getMaxDistances(hashed)[putIndex] = Integers.checkUnsignedIntToUnsignedByteAsByte(distance);
 
                 result = IntPutResult.makePutResult(newAdded, putIndex);
 
@@ -379,6 +381,19 @@ public class MaxDistance {
 
     public static int computeDistance(int putIndex, int hashArrayIndex, int capacity) {
 
+        Checks.isIndex(putIndex);
+        Checks.isIndex(hashArrayIndex);
+        Checks.isCapacityAboveZero(capacity);
+        Checks.checkIndex(putIndex, capacity);
+        Checks.checkIndex(hashArrayIndex, capacity);
+
         return putIndex >= hashArrayIndex ? putIndex - hashArrayIndex : capacity - hashArrayIndex + putIndex;
+    }
+
+    public static byte[] copyMaxDistances(byte[] maxDistances) {
+
+        Objects.requireNonNull(maxDistances);
+
+        return Array.copyOf(maxDistances);
     }
 }

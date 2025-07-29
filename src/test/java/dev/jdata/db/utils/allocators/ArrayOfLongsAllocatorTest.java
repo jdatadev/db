@@ -23,25 +23,25 @@ public final class ArrayOfLongsAllocatorTest extends BaseArrayExactLengthAllocat
     }
 
     @Override
-    long[] allocate(ArrayOfLongsAllocator allocator, int minimumCapacity) {
+    protected long[] allocate(ArrayOfLongsAllocator allocator, int minimumCapacity) {
 
         return allocator.allocateArrayOfLongs(minimumCapacity);
     }
 
     @Override
-    ArrayOfLongsAllocator createAllocator() {
+    protected ArrayOfLongsAllocator createAllocator() {
 
         return new ArrayOfLongsAllocator();
     }
 
     @Override
-    long[][] allocateArray(int length) {
+    protected long[][] allocateArray(int length) {
 
         return new long[length][];
     }
 
     @Override
-    void free(ArrayOfLongsAllocator allocator, long[] instance) {
+    protected void free(ArrayOfLongsAllocator allocator, long[] instance) {
 
         allocator.freeArrayOfLongs(instance);
     }

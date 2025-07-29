@@ -1,15 +1,16 @@
 package dev.jdata.db.utils.adt.maps;
 
 import java.util.Objects;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
+import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.lists.BaseLargeList.BaseValuesFactory;
+import dev.jdata.db.utils.adt.hashed.helpers.IntBuckets;
 import dev.jdata.db.utils.adt.lists.BaseLargeSinglyLinkedList;
 import dev.jdata.db.utils.adt.lists.BaseValues;
+import dev.jdata.db.utils.adt.lists.LargeLists;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.BiIntToObjectFunction;
 
@@ -22,43 +23,63 @@ abstract class BaseIntegerKeyBucketMap<
 
         extends BaseIntCapacityExponentMap<KEYS> {
 
+    private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INTEGER_KEY_BUCKET_MAP;
+
+    static final long NO_LONG_NODE = LargeLists.NO_LONG_NODE;
+
     abstract LIST createBuckets(int outerInitialCapacity, int bucketsInnerCapacity);
 
-    private final int bucketsInnerCapacity;
-
     private LIST buckets;
-    private VALUES values;
-
-    BaseIntegerKeyBucketMap(MAP toCopy, BiConsumer<KEYS, KEYS> copyHashedContent, Function<VALUES, VALUES> copyValues) {
-        super(toCopy, copyHashedContent);
-
-        final BaseIntegerKeyBucketMap<?, ?, ?, ?, ?> other = toCopy;
-
-        this.bucketsInnerCapacity = other.bucketsInnerCapacity;
-
-        this.values = copyValues.apply(toCopy.getValues());
-    }
-
-    BaseIntegerKeyBucketMap(int initialCapacityExponent, float loadFactor, int bucketsInnerCapacityExponent, IntFunction<KEYS> createHashed, Consumer<KEYS> clearHashed,
-            BiIntToObjectFunction<LIST> createBuckets, BaseValuesFactory<LIST_T, LIST, VALUES> valuesFactory) {
-        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, loadFactor, bucketsInnerCapacityExponent, createHashed, clearHashed, createBuckets, valuesFactory);
-    }
 
     BaseIntegerKeyBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent, IntFunction<KEYS> createHashed,
-            Consumer<KEYS> clearHashed, BiIntToObjectFunction<LIST> createBuckets, BaseValuesFactory<LIST_T, LIST, VALUES> valuesFactory) {
+            Consumer<KEYS> clearHashed, BiIntToObjectFunction<LIST> createBuckets) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createHashed, clearHashed);
 
-        Checks.isCapacityExponent(bucketsInnerCapacityExponent);
+        Checks.isIntCapacityExponent(bucketsInnerCapacityExponent);
+        Objects.requireNonNull(createBuckets);
 
-        final int bucketsInnerCapacity = this.bucketsInnerCapacity = CapacityExponents.computeCapacity(bucketsInnerCapacityExponent);
+        if (DEBUG) {
 
-        this.buckets = createBuckets.apply(BUCKETS_OUTER_INITIAL_CAPACITY, bucketsInnerCapacity);
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
+                    .add("bucketsInnerCapacityExponent", bucketsInnerCapacityExponent).add("clearHashed", clearHashed).add("createBuckets", createBuckets));
+        }
 
-        this.values = createValues(valuesFactory);
+        final int bucketsOuterCapacity = DEFAULT_BUCKETS_OUTER_INITIAL_CAPACITY;
+        final int bucketsInnerCapacity = CapacityExponents.computeIntCapacityFromExponent(bucketsInnerCapacityExponent);
+
+        IntBuckets.checkIntNodeOuterCapacity(bucketsOuterCapacity);
+        IntBuckets.checkIntNodeInnerCapacity(bucketsInnerCapacity);
+
+        this.buckets = createBuckets.apply(bucketsOuterCapacity, bucketsInnerCapacity);
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    BaseIntegerKeyBucketMap(MAP toCopy, Function<KEYS, KEYS> copyHashed) {
+        super(toCopy, copyHashed);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy).add("copyHashed", copyHashed));
+        }
+
+        if (Boolean.TRUE) {
+
+            throw new UnsupportedOperationException();
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     final int getBucketsInnerCapacity() {
-        return bucketsInnerCapacity;
+
+        return buckets.getInnerArrayCapacity();
     }
 
     final LIST getBuckets() {
@@ -70,19 +91,10 @@ abstract class BaseIntegerKeyBucketMap<
         this.buckets = Objects.requireNonNull(buckets);
     }
 
-    final VALUES getValues() {
-        return values;
-    }
-
     final void clearMap() {
 
         clearHashed();
 
         buckets.clear();
-    }
-
-    private VALUES createValues(BaseValuesFactory<LIST_T, LIST, VALUES> valuesFactory) {
-
-        return valuesFactory.create(1);
     }
 }

@@ -1,13 +1,14 @@
 package dev.jdata.db.utils.adt.hashed.helpers;
 
 import java.util.Objects;
-import java.util.function.Consumer;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.checks.AssertionContants;
+import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
+import dev.jdata.db.utils.scalars.Integers;
 
 public class HashArray {
 
@@ -22,7 +23,7 @@ public class HashArray {
     public static int getIndexScanHashArrayToMaxKeyMask(int[] hashArray, int key, int keyMask, int max) {
 
         Objects.requireNonNull(hashArray);
-        NonBucket.checkIsHashArrayElement(key);
+        IntNonBucket.checkIsHashArrayElement(key);
         Checks.isLengthAboveZero(max);
 
         if (DEBUG) {
@@ -45,7 +46,7 @@ public class HashArray {
     public static int getIndexScanHashArrayToMaxHashArrayIndex(int[] hashArray, int element, int hashArrayIndex, int max) {
 
         Objects.requireNonNull(hashArray);
-        NonBucket.checkIsHashArrayElement(element);
+        IntNonBucket.checkIsHashArrayElement(element);
         Checks.isIndex(hashArrayIndex);
         Checks.isLengthAboveOrAtZero(max);
 
@@ -58,7 +59,9 @@ public class HashArray {
 
         final int hashArrayLength = hashArray.length;
 
-        int found = NO_INDEX;
+        final int noIndex = NO_INDEX;
+
+        int found = noIndex;
 
         for (int i = hashArrayIndex; remaining != 0 && i < hashArrayLength; ++ i, -- remaining) {
 
@@ -69,7 +72,7 @@ public class HashArray {
             }
         }
 
-        if (found == NO_INDEX) {
+        if (found == noIndex) {
 
             for (int i = 0; remaining != 0 && i < hashArrayIndex; ++ i, -- remaining) {
 
@@ -105,7 +108,9 @@ public class HashArray {
 
         final int hashArrayLength = hashArray.length;
 
-        int found = NO_INDEX;
+        final int noIndex = NO_INDEX;
+
+        int found = noIndex;
 
         for (int i = hashArrayIndex; remaining != 0 && i < hashArrayLength; ++ i, -- remaining) {
 
@@ -116,7 +121,7 @@ public class HashArray {
             }
         }
 
-        if (found == NO_INDEX) {
+        if (found == noIndex) {
 
             for (int i = 0; remaining != 0 && i < hashArrayIndex; ++ i, -- remaining) {
 
@@ -139,7 +144,7 @@ public class HashArray {
     public static int getIndexScanHashArrayToMaxKeyMask(long[] hashArray, long key, int keyMask, int max) {
 
         Objects.requireNonNull(hashArray);
-        NonBucket.checkIsHashArrayElement(key);
+        LongNonBucket.checkIsHashArrayElement(key);
         Checks.isLengthAboveZero(max);
 
         if (DEBUG) {
@@ -162,7 +167,7 @@ public class HashArray {
     public static int getIndexScanHashArrayToMaxHashArrayIndex(long[] hashArray, long element, int hashArrayIndex, int max) {
 
         Objects.requireNonNull(hashArray);
-        NonBucket.checkIsHashArrayElement(element);
+        LongNonBucket.checkIsHashArrayElement(element);
         Checks.isIndex(hashArrayIndex);
         Checks.isLengthAboveOrAtZero(max);
 
@@ -175,7 +180,9 @@ public class HashArray {
 
         final int hashArrayLength = hashArray.length;
 
-        int found = NO_INDEX;
+        final int noIndex = NO_INDEX;
+
+        int found = noIndex;
 
         for (int i = hashArrayIndex; remaining != 0 && i < hashArrayLength; ++ i, -- remaining) {
 
@@ -186,7 +193,7 @@ public class HashArray {
             }
         }
 
-        if (found == NO_INDEX) {
+        if (found == noIndex) {
 
             for (int i = 0; remaining != 0 && i < hashArrayIndex; ++ i, -- remaining) {
 
@@ -209,7 +216,7 @@ public class HashArray {
     public static int getIndexScanEntireHashArray(int[] hashArray, int key, int keyMask) {
 
         Checks.isNotEmpty(hashArray);
-        NonBucket.checkIsHashArrayElement(key);
+        IntNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -218,9 +225,31 @@ public class HashArray {
 
         final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
 
+        final int result = getIndexScanEntireHashArrayIndex(hashArray, key, hashArrayIndex);
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+        }
+
+        return result;
+    }
+
+    public static int getIndexScanEntireHashArrayIndex(int[] hashArray, int key, int hashArrayIndex) {
+
+        Checks.isNotEmpty(hashArray);
+        Checks.checkArrayIndex(hashArray, hashArrayIndex);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
+        }
+
         final int hashArrayLength = hashArray.length;
 
-        int found = NO_INDEX;
+        final int noIndex = NO_INDEX;
+
+        int found = noIndex;
 
         for (int i = hashArrayIndex; i < hashArrayLength; ++ i) {
 
@@ -231,7 +260,7 @@ public class HashArray {
             }
         }
 
-        if (found == NO_INDEX) {
+        if (found == noIndex) {
 
             for (int i = 0; i < hashArrayIndex; ++ i) {
 
@@ -243,14 +272,14 @@ public class HashArray {
             }
         }
 
-        if (found == NO_INDEX) {
+        if (found == noIndex) {
 
             throw new IllegalStateException();
         }
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
         }
 
         return found;
@@ -268,24 +297,47 @@ public class HashArray {
 
         final int hashArrayIndex = HashFunctions.objectHashArrayIndex(key, keyMask);
 
+        final int result = getIndexScanEntireHashArrayIndex(hashArray, key, hashArrayIndex);
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+        }
+
+        return result;
+    }
+
+    public static <K> int getIndexScanEntireHashArrayIndex(K[] hashArray, K key, int hashArrayIndex) {
+
+        Checks.isNotEmpty(hashArray);
+        Objects.requireNonNull(key);
+        Checks.checkArrayIndex(hashArray, hashArrayIndex);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
+        }
+
         final int hashArrayLength = hashArray.length;
 
-        int found = NO_INDEX;
+        final int noIndex = NO_INDEX;
+
+        int found = noIndex;
 
         for (int i = hashArrayIndex; i < hashArrayLength; ++ i) {
 
-            if (hashArray[i].equals(key)) {
+            if (key.equals(hashArray[i])) {
 
                 found = i;
                 break;
             }
         }
 
-        if (found == NO_INDEX) {
+        if (found == noIndex) {
 
             for (int i = 0; i < hashArrayIndex; ++ i) {
 
-                if (hashArray[i].equals(key)) {
+                if (key.equals(hashArray[i])) {
 
                     found = i;
                     break;
@@ -293,14 +345,14 @@ public class HashArray {
             }
         }
 
-        if (found == NO_INDEX) {
+        if (found == noIndex) {
 
             throw new IllegalStateException();
         }
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
         }
 
         return found;
@@ -316,11 +368,13 @@ public class HashArray {
             PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
-        final int noElement = NonBucket.NO_ELEMENT;
+        final int noElement = IntNonBucket.NO_ELEMENT;
 
         final int hashArrayLength = hashArray.length;
 
-        int found = NO_INDEX;
+        final int noIndex = NO_INDEX;
+
+        int found = noIndex;
 
         boolean newAdded = false;
 
@@ -349,14 +403,12 @@ public class HashArray {
                     PrintDebug.debug(debugClass, "add to map existing foundIndex=" + i);
                 }
 
-                hashArray[i] = value;
-
                 found = i;
                 break;
             }
         }
 
-        if (found == NO_INDEX) {
+        if (found == noIndex) {
 
             for (int i = 0; i < hashArrayIndex; ++ i) {
 
@@ -383,8 +435,6 @@ public class HashArray {
                         PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
                     }
 
-                    hashArray[i] = value;
-
                     found = i;
                     break;
                 }
@@ -393,10 +443,7 @@ public class HashArray {
 
         if (ASSERT) {
 
-            if (found == NO_INDEX) {
-
-                throw new IllegalStateException();
-            }
+            Assertions.areNotEqual(found, noIndex);
         }
 
         final long result = IntPutResult.makePutResult(newAdded, found);
@@ -409,113 +456,288 @@ public class HashArray {
         return result;
     }
 
-    public static final <P> int removeAndReturnIndex(int[] hashArray, int value, int keyMask, P parameter, Consumer<P> decreaseNumElements) {
+    public static long add(long[] hashArray, long value, int hashArrayIndex) {
 
-        Objects.requireNonNull(hashArray);
-        NonBucket.checkIsHashArrayElement(value);
-        Objects.requireNonNull(decreaseNumElements);
-
-        if (DEBUG) {
-
-            PrintDebug.enter(debugClass, b -> b.add("value", value).add("keyMask", keyMask).add("parameter", parameter).add("decreaseNumElements", decreaseNumElements));
-        }
-
-        final int hashArrayIndex = HashFunctions.hashArrayIndex(value, keyMask);
+        Checks.isNotEmpty(hashArray);
+        Checks.isIndex(hashArrayIndex);
 
         if (DEBUG) {
 
-            PrintDebug.debugFormatln(debugClass, "lookup hashArrayIndex=%d value=%d keyMask=0x%08x", hashArrayIndex, value, keyMask);
+            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
+
+        final long noElement = LongNonBucket.NO_ELEMENT;
 
         final int hashArrayLength = hashArray.length;
 
-        int noIndex = HashArray.NO_INDEX;
-        int removedIndex = noIndex;
-        final int noElement = NonBucket.NO_ELEMENT;
+        final int noIndex = NO_INDEX;
 
-        boolean done = false;
+        int found = noIndex;
+
+        boolean newAdded = false;
 
         for (int i = hashArrayIndex; i < hashArrayLength; ++ i) {
 
-            final int mapKey = hashArray[i];
+            final long mapKey = hashArray[i];
 
-            if (mapKey == value) {
+            if (mapKey == noElement) {
 
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "remove from map foundIndex=" + i);
+                    PrintDebug.debug(debugClass, "add to map new foundIndex=" + i);
                 }
 
-                hashArray[i] = noElement;
+                hashArray[i] = value;
 
-                removedIndex = i;
+                found = i;
+
+                newAdded = true;
                 break;
             }
-            else if (mapKey == noElement) {
+            else if (mapKey == value) {
 
-                done = true;
+                if (DEBUG) {
 
+                    PrintDebug.debug(debugClass, "add to map existing foundIndex=" + i);
+                }
+
+                found = i;
                 break;
             }
         }
 
-        if (removedIndex == noIndex && !done) {
+        if (found == noIndex) {
 
             for (int i = 0; i < hashArrayIndex; ++ i) {
 
-                final int mapKey = hashArray[i];
+                final long mapKey = hashArray[i];
 
-                if (mapKey == value) {
+                if (mapKey == noElement) {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "remove from map foundIndex=" + i);
+                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
                     }
 
-                    hashArray[i] = noElement;
+                    hashArray[i] = value;
 
-                    removedIndex = i;
+                    found = i;
+
+                    newAdded = true;
                     break;
                 }
-                else if (mapKey == noElement) {
+                else if (mapKey == value) {
 
-                    if (ASSERT) {
+                    if (DEBUG) {
 
-                        done = true;
+                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
                     }
 
+                    found = i;
                     break;
                 }
             }
         }
-
-        final boolean removed = removedIndex != noIndex;
 
         if (ASSERT) {
 
-            if (!removed && !done) {
+            Assertions.areNotEqual(found, noIndex);
+        }
 
-                throw new IllegalStateException();
+        final long result = IntPutResult.makePutResult(newAdded, found);
+
+        if (DEBUG) {
+
+            PrintDebug.exitWithBinary(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+        }
+
+        return result;
+    }
+
+    public static <T> long add(T[] hashArray, T value, int hashArrayIndex) {
+
+        Checks.isNotEmpty(hashArray);
+        Objects.requireNonNull(value);
+        Checks.isIndex(hashArrayIndex);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+        }
+
+        @SuppressWarnings("unchecked")
+        final T noElement = (T)ObjectNonBucket.NO_KEY;
+
+        final int hashArrayLength = hashArray.length;
+
+        final int noIndex = NO_INDEX;
+
+        int found = noIndex;
+
+        boolean newAdded = false;
+
+        for (int i = hashArrayIndex; i < hashArrayLength; ++ i) {
+
+            final T mapKey = hashArray[i];
+
+            if (mapKey == noElement) {
+
+                if (DEBUG) {
+
+                    PrintDebug.debug(debugClass, "add to map new foundIndex=" + i);
+                }
+
+                hashArray[i] = value;
+
+                found = i;
+
+                newAdded = true;
+                break;
+            }
+            else if (mapKey.equals(value)) {
+
+                if (DEBUG) {
+
+                    PrintDebug.debug(debugClass, "add to map existing foundIndex=" + i);
+                }
+
+                found = i;
+                break;
             }
         }
 
-        if (removed) {
+        if (found == noIndex) {
 
-            decreaseNumElements.accept(parameter);
+            for (int i = 0; i < hashArrayIndex; ++ i) {
+
+                final T mapKey = hashArray[i];
+
+                if (mapKey == noElement) {
+
+                    if (DEBUG) {
+
+                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
+                    }
+
+                    hashArray[i] = value;
+
+                    found = i;
+
+                    newAdded = true;
+                    break;
+                }
+                else if (mapKey.equals(value)) {
+
+                    if (DEBUG) {
+
+                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
+                    }
+
+                    found = i;
+                    break;
+                }
+            }
+        }
+
+        if (ASSERT) {
+
+            Assertions.areNotEqual(found, noIndex);
+        }
+
+        final long result = IntPutResult.makePutResult(newAdded, found);
+
+        if (DEBUG) {
+
+            PrintDebug.exitWithBinary(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+        }
+
+        return result;
+    }
+
+    public static int removeAndReturnIndexScanEntire(int[] hashArray, int key, int keyMask) {
+
+        Objects.requireNonNull(hashArray);
+        IntNonBucket.checkIsHashArrayElement(key);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask));
+        }
+
+        final int indexOfRemoved = getIndexScanEntireHashArray(hashArray, key, keyMask);
+
+        if (indexOfRemoved == NO_INDEX) {
+
+            throw new IllegalStateException();
+        }
+
+        hashArray[indexOfRemoved] = IntNonBucket.NO_ELEMENT;
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, indexOfRemoved, b -> b.add("key", key).add("keyMask", keyMask));
+        }
+
+        return indexOfRemoved;
+    }
+
+    public static <P> int removeAndReturnIndexScanToMax(int[] hashArray, int key, int keyMask, byte[] maxDistances) {
+
+        Objects.requireNonNull(hashArray);
+        IntNonBucket.checkIsHashArrayElement(key);
+        Objects.requireNonNull(maxDistances);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask).add("maxDistances", maxDistances));
+        }
+
+        final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
+
+        final int indexToRemove = removeAndReturnIndexScanToMax(hashArray, key, hashArrayIndex, maxDistances[hashArrayIndex]);
+
+        if (indexToRemove != NO_INDEX) {
+
+            maxDistances[hashArrayIndex] = Integers.checkUnsignedIntToUnsignedByteAsByte(MaxDistance.computeDistance(indexToRemove, hashArrayIndex, hashArray.length));
         }
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, removedIndex);
+            PrintDebug.exit(debugClass, indexToRemove, b -> b.add("key", key).add("keyMask", keyMask).add("maxDistances", maxDistances));
         }
 
-        return removedIndex;
+        return indexToRemove;
+    }
+
+    private static int removeAndReturnIndexScanToMax(int[] hashArray, int key, int hashArrayIndex, int max) {
+
+        Objects.requireNonNull(hashArray);
+        IntNonBucket.checkIsHashArrayElement(key);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
+        }
+
+        final int indexToRemove = HashArray.getIndexScanHashArrayToMaxHashArrayIndex(hashArray, key, hashArrayIndex, max);
+
+        if (indexToRemove != NO_INDEX) {
+
+            hashArray[indexToRemove] = IntNonBucket.NO_ELEMENT;
+        }
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, indexToRemove, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
+        }
+
+        return indexToRemove;
     }
 
     public static int getIndexScanEntireHashArray(long[] hashArray, long key, int keyMask) {
 
         Checks.isNotEmpty(hashArray);
-        NonBucket.checkIsHashArrayElement(key);
+        LongNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -524,9 +746,32 @@ public class HashArray {
 
         final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
 
+        final int result = getIndexScanEntireHashArrayIndex(hashArray, key, hashArrayIndex);
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+        }
+
+        return result;
+    }
+
+    public static int getIndexScanEntireHashArrayIndex(long[] hashArray, long key, int hashArrayIndex) {
+
+        Checks.isNotEmpty(hashArray);
+        LongNonBucket.checkIsHashArrayElement(key);
+        Checks.checkArrayIndex(hashArray, hashArrayIndex);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
+        }
+
+        final int noIndex = NO_INDEX;
+
         final int hashArrayLength = hashArray.length;
 
-        int found = NO_INDEX;
+        int found = noIndex;
 
         for (int i = hashArrayIndex; i < hashArrayLength; ++ i) {
 
@@ -537,7 +782,7 @@ public class HashArray {
             }
         }
 
-        if (found == NO_INDEX) {
+        if (found == noIndex) {
 
             for (int i = 0; i < hashArrayIndex; ++ i) {
 
@@ -549,16 +794,176 @@ public class HashArray {
             }
         }
 
-        if (found == NO_INDEX) {
+        if (found == noIndex) {
 
             throw new IllegalStateException();
         }
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).hex("hashArrayIndex", hashArrayIndex));
         }
 
         return found;
+    }
+
+    public static int removeAndReturnIndexScanEntire(long[] hashArray, long key, int keyMask) {
+
+        Objects.requireNonNull(hashArray);
+        LongNonBucket.checkIsHashArrayElement(key);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask));
+        }
+
+        final int indexOfRemoved = getIndexScanEntireHashArray(hashArray, key, keyMask);
+
+        if (indexOfRemoved == NO_INDEX) {
+
+            throw new IllegalStateException();
+        }
+
+        hashArray[indexOfRemoved] = LongNonBucket.NO_ELEMENT;
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, indexOfRemoved, b -> b.add("key", key).add("keyMask", keyMask));
+        }
+
+        return indexOfRemoved;
+    }
+
+    public static <P> int removeAndReturnIndexScanToMax(long[] hashArray, long key, int keyMask, byte[] maxDistances) {
+
+        Objects.requireNonNull(hashArray);
+        LongNonBucket.checkIsHashArrayElement(key);
+        Objects.requireNonNull(maxDistances);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask).add("maxDistances", maxDistances));
+        }
+
+        final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
+
+        final int indexToRemove = removeAndReturnIndexScanToMax(hashArray, key, hashArrayIndex, maxDistances[hashArrayIndex]);
+
+        if (indexToRemove != NO_INDEX) {
+
+            maxDistances[hashArrayIndex] = Integers.checkUnsignedIntToUnsignedByteAsByte(MaxDistance.computeDistance(indexToRemove, hashArrayIndex, hashArray.length));
+        }
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, indexToRemove, b -> b.add("key", key).add("keyMask", keyMask).add("maxDistances", maxDistances));
+        }
+
+        return indexToRemove;
+    }
+
+    private static int removeAndReturnIndexScanToMax(long[] hashArray, long key, int hashArrayIndex, int max) {
+
+        Objects.requireNonNull(hashArray);
+        LongNonBucket.checkIsHashArrayElement(key);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
+        }
+
+        final int indexToRemove = HashArray.getIndexScanHashArrayToMaxHashArrayIndex(hashArray, key, hashArrayIndex, max);
+
+        if (indexToRemove != NO_INDEX) {
+
+            hashArray[indexToRemove] = LongNonBucket.NO_ELEMENT;
+        }
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, indexToRemove, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
+        }
+
+        return indexToRemove;
+    }
+
+    public static <T> int removeAndReturnIndexScanEntire(T[] hashArray, T key, int keyMask, T noKey) {
+
+        Objects.requireNonNull(hashArray);
+        Objects.requireNonNull(key);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask).add("noKey", noKey));
+        }
+
+        final int indexOfRemoved = getIndexScanEntireHashArray(hashArray, key, keyMask);
+
+        if (indexOfRemoved == NO_INDEX) {
+
+            throw new IllegalStateException();
+        }
+
+        hashArray[indexOfRemoved] = noKey;
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, indexOfRemoved, b -> b.add("key", key).add("keyMask", keyMask).add("noKey", noKey));
+        }
+
+        return indexOfRemoved;
+    }
+
+    public static <T> int removeAndReturnIndexScanToMax(T[] hashArray, T key, int keyMask, T noKey, byte[] maxDistances) {
+
+        Objects.requireNonNull(hashArray);
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(maxDistances);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask).add("noKey", noKey).add("maxDistances", maxDistances));
+        }
+
+        final int hashArrayIndex = HashFunctions.objectHashArrayIndex(key, keyMask);
+
+        final int indexToRemove = removeAndReturnIndexScanToMax(hashArray, key, hashArrayIndex, noKey, maxDistances[hashArrayIndex]);
+
+        if (indexToRemove != NO_INDEX) {
+
+            maxDistances[hashArrayIndex] = Integers.checkUnsignedIntToUnsignedByteAsByte(MaxDistance.computeDistance(indexToRemove, hashArrayIndex, hashArray.length));
+        }
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, indexToRemove, b -> b.add("key", key).add("keyMask", keyMask).add("noKey", noKey).add("maxDistances", maxDistances));
+        }
+
+        return indexToRemove;
+    }
+
+    private static <T> int removeAndReturnIndexScanToMax(T[] hashArray, T key, int hashArrayIndex, T noKey, int max) {
+
+        Objects.requireNonNull(hashArray);
+        Objects.requireNonNull(key);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("noKey", noKey).add("max", max));
+        }
+
+        final int indexToRemove = getIndexScanHashArrayToMaxHashArrayIndex(hashArray, key, hashArrayIndex, max);
+
+        if (indexToRemove != NO_INDEX) {
+
+            hashArray[indexToRemove] = noKey;
+        }
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, indexToRemove, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("noKey", noKey).add("max", max));
+        }
+
+        return indexToRemove;
     }
 }

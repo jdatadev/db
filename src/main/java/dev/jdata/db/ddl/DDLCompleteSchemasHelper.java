@@ -79,7 +79,7 @@ public class DDLCompleteSchemasHelper extends DDLSchemasHelper {
         final COMPLETE_SCHEMA_MAPS completeSchemaMaps;
 
         try {
-            for (long i = 0; i < numSQLStatements; ++ i) {
+            for (long i = 0L; i < numSQLStatements; ++ i) {
 
                 final BaseSQLStatement sqlStatement = sqlStatements.get(i);
 

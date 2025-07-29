@@ -25,27 +25,33 @@ public class AssertionContants {
 
     public static final boolean ASSERT_LOCK_TABLE = ASSERT_LOCKING;
 
-    private static final boolean ASSERT_HASHED = Boolean.FALSE;
-    private static final boolean ASSERT_MAPS = Boolean.FALSE;
-    private static final boolean ASSERT_SETS = Boolean.FALSE;
-    private static final boolean ASSERT_BIT_BUFFERS = Boolean.FALSE;
-    private static final boolean ASSERT_BITS_UTIL = Boolean.FALSE;
+    private static final boolean ASSERT_ARRAY = Boolean.TRUE;
+    private static final boolean ASSERT_HASHED = Boolean.TRUE;
+    private static final boolean ASSERT_MAPS = Boolean.TRUE;
+    private static final boolean ASSERT_SETS = Boolean.TRUE;
 
-    public static final boolean ASSERT_ROW_CACHE = Boolean.FALSE;
+    public static final boolean ASSERT_BIT_BUFFER = Boolean.TRUE;
+    private static final boolean ASSERT_BITS_UTIL = Boolean.TRUE;
+
+    public static final boolean ASSERT_ROW_CACHE = Boolean.TRUE;
+
+    public static final boolean ASSERT_BASE_ARRAY = ASSERT_ARRAY;
+    public static final boolean ASSERT_BASE_ANY_LARGE_ARRAY = ASSERT_ARRAY;
 
     public static final boolean ASSERT_HASH_ARRAY = ASSERT_HASHED;
+    public static final boolean ASSERT_LARGE_HASH_ARRAY = ASSERT_HASHED;
+
+    public static final boolean ASSERT_BASE_CAPACITY_HASHED = ASSERT_HASHED;
 
     public static final boolean ASSERT_BASE_MAP = ASSERT_MAPS;
     public static final boolean ASSERT_BASE_EXPONENT_MAP = ASSERT_MAPS;
 
-    public static final boolean ASSERT_BASE_INT_KEY_NON_BUCKET_MAP = ASSERT_MAPS;
-    public static final boolean ASSERT_BASE_OBJECT_NON_CONTAINS_KEY_NON_BUCKET_MAP = ASSERT_MAPS;
     public static final boolean ASSERT_INT_TO_OBJECT_NON_BUCKET_MAP = ASSERT_MAPS;
 
-    public static final boolean ASSERT_BASE_LONG_NON_BUCKET_MAP = ASSERT_MAPS;
     public static final boolean ASSERT_LONG_TO_OBJECT_NON_BUCKET_MAP = ASSERT_MAPS;
 
-    public static final boolean ASSERT_BASE_OBJECT_NON_BUCKET_MAP = ASSERT_MAPS;
+    public static final boolean ASSERT_BASE_INT_CAPACITY_EXPONENT_ARRAY_HASHED = ASSERT_MAPS;
+    public static final boolean ASSERT_BASE_LONG_CAPACITY_EXPONENT_ARRAY_HASHED = ASSERT_MAPS;
 
     public static final boolean ASSERT_BITS_UTIL_GET_RANGE = ASSERT_BITS_UTIL;
 }

@@ -3,7 +3,7 @@ package dev.jdata.db.engine.server.network.protocol;
 import dev.jdata.db.DBException;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class ProtocolDecodeException extends DBException  {
+public final class ProtocolDecodeException extends DBException {
 
     private static final long serialVersionUID = 1L;
 

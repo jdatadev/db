@@ -1,7 +1,7 @@
 package dev.jdata.db.utils.adt.maps;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
+import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
 
 public final class MutableIntToIntNonRemoveNonBucketMap extends BaseIntToIntNonRemoveNonBucketMap implements IMutableIntToIntNonRemoveStaticMap {
 
@@ -9,20 +9,50 @@ public final class MutableIntToIntNonRemoveNonBucketMap extends BaseIntToIntNonR
 
     public MutableIntToIntNonRemoveNonBucketMap(int initialCapacityExponent) {
         super(initialCapacityExponent);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     public MutableIntToIntNonRemoveNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     public MutableIntToIntNonRemoveNonBucketMap(MutableIntToIntNonRemoveNonBucketMap toCopy) {
         super(toCopy);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
     public int put(int key, int value, int defaultPreviousValue) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        IntNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 

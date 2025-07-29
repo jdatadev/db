@@ -5,20 +5,50 @@ import java.util.Objects;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseLongToIntNonBucketMap<M extends IBaseLongToIntMapCommon<M>> extends BaseLongArrayNonBucketMap<int[]> implements IBaseLongToIntMapCommon<M> {
+abstract class BaseLongToIntNonBucketMap<M extends IBaseLongToIntMapCommon<M>> extends BaseLongArrayKeysNonBucketMap<int[]> implements IBaseLongToIntMapCommon<M> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_TO_INT_NON_BUCKET_MAP;
 
     BaseLongToIntNonBucketMap(int initialCapacityExponent) {
         super(initialCapacityExponent, int[]::new);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseLongToIntNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor, int[]::new);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    BaseLongToIntNonBucketMap(BaseLongToIntNonBucketMap toCopy) {
+    BaseLongToIntNonBucketMap(BaseLongToIntNonBucketMap<M> toCopy) {
         super(toCopy, (a1, a2) -> System.arraycopy(a1, 0, a2, 0, a1.length));
+
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override

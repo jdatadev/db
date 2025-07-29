@@ -19,7 +19,7 @@ public final class NodeObjectCacheTest extends BaseAllocatorTest<NodeObjectCache
     }
 
     @Override
-    NodeObjectCache<TestObject> createAllocator() {
+    protected NodeObjectCache<TestObject> createAllocator() {
 
         return new NodeObjectCache<>(TestObject::new);
     }
@@ -31,13 +31,13 @@ public final class NodeObjectCacheTest extends BaseAllocatorTest<NodeObjectCache
     }
 
     @Override
-    TestObject[] allocateArray(int length) {
+    protected TestObject[] allocateArray(int length) {
 
         return new TestObject[length];
     }
 
     @Override
-    void free(NodeObjectCache<TestObject> allocator, TestObject instance) {
+    protected void free(NodeObjectCache<TestObject> allocator, TestObject instance) {
 
         allocator.free(instance);
     }

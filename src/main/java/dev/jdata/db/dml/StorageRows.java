@@ -27,7 +27,6 @@ public abstract class StorageRows<T> implements IElements {
         return numRows;
     }
 
-    @Deprecated
     public final int getNumRows() {
         return numRows;
     }

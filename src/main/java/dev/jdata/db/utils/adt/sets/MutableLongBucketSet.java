@@ -12,15 +12,15 @@ public final class MutableLongBucketSet extends BaseLongBucketSet implements IMu
     }
 
     public MutableLongBucketSet() {
-
+        this(DEFAULT_INITIAL_CAPACITY_EXPONENT);
     }
 
     public MutableLongBucketSet(int initialCapacityExponent) {
-        super(initialCapacityExponent);
+        this(initialCapacityExponent, DEFAULT_LOAD_FACTOR);
     }
 
     public MutableLongBucketSet(int initialCapacityExponent, float loadFactor) {
-        super(initialCapacityExponent, loadFactor);
+        super(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, loadFactor, DEFAULT_BUCKETS_INNER_CAPACITY_EXPONENT);
     }
 
     private MutableLongBucketSet(long[] values) {
@@ -30,7 +30,17 @@ public final class MutableLongBucketSet extends BaseLongBucketSet implements IMu
     @Override
     public void clear() {
 
+        if (DEBUG) {
+
+            enter();
+        }
+
         clearBaseLongBucketSet();
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
@@ -75,7 +85,7 @@ public final class MutableLongBucketSet extends BaseLongBucketSet implements IMu
             enter(b -> b.add("value", value));
         }
 
-        final boolean result = removeAtMostOneElement(value);
+        final boolean result = removeElement(value);
 
         if (DEBUG) {
 

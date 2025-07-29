@@ -17,7 +17,7 @@ abstract class BaseObjectArrayListTest<T> extends BaseElementsAggregatesTest<T> 
         }
     }
 
-    void checkNumElements(BaseObjectArrayList<?> list, int expectedNumElements) {
+    protected void checkNumElements(BaseObjectArrayList<?> list, int expectedNumElements) {
 
         assertThat(list.isEmpty()).isEqualTo(expectedNumElements == 0);
         assertThat(list.getNumElements()).isEqualTo(expectedNumElements);

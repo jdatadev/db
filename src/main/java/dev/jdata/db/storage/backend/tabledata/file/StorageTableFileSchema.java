@@ -71,7 +71,7 @@ public final class StorageTableFileSchema {
             else {
                 final StorageTableFileColumn other = (StorageTableFileColumn)object;
 
-                result = bitOffset == other.bitOffset && nullValueBitmapIndex == other.nullValueBitmapIndex  && numBits == other.numBits;
+                result = bitOffset == other.bitOffset && nullValueBitmapIndex == other.nullValueBitmapIndex && numBits == other.numBits;
             }
 
             return result;

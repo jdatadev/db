@@ -9,6 +9,7 @@ import org.junit.experimental.categories.Category;
 import dev.jdata.db.test.unit.BaseTest;
 import dev.jdata.db.utils.adt.elements.IIntIterableElements.IForEach;
 import dev.jdata.db.utils.adt.elements.IIntIterableElements.IForEachWithResult;
+import dev.jdata.db.utils.jdk.adt.lists.Lists;
 
 abstract class BaseIntegerIndexListTest<T extends IMutableIntegerList> extends BaseTest {
 

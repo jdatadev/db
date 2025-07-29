@@ -76,7 +76,6 @@ public final class SetupMessage extends ProtocolMessage {
         currentOffset += numDatabaseNameBytes;
         currentLength -= numDatabaseNameBytes;
 
-        final int numCharsetNameBytes = decodeZeroTerminatedASCIIString(byteBuffer, currentOffset, Math.min(currentLength, DBConstants.MAX_CHARSET_NAME_LENGTH), databaseName,
-                allocator);
+        decodeZeroTerminatedASCIIString(byteBuffer, currentOffset, Math.min(currentLength, DBConstants.MAX_CHARSET_NAME_LENGTH), charsetName, allocator);
     }
 }

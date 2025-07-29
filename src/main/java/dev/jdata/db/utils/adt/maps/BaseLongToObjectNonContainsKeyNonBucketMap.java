@@ -4,28 +4,47 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
-import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
+import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 
-abstract class BaseLongToObjectNonContainsKeyNonBucketMap<T>
-
-        extends BaseLongToObjectNonBucketMap<T, ILongToObjectStaticMapCommon<T>>
-        implements ILongToObjectStaticMapCommon<T> {
+abstract class BaseLongToObjectNonContainsKeyNonBucketMap<T> extends BaseLongToObjectNonBucketMap<T, ILongToObjectStaticMapCommon<T>> implements ILongToObjectStaticMapCommon<T> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_TO_OBJECT_NON_CONTAINS_NON_BUCKET_MAP;
 
-    BaseLongToObjectNonContainsKeyNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createArray) {
-        super(initialCapacityExponent, createArray);
+    BaseLongToObjectNonContainsKeyNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createValuesArray) {
+        super(initialCapacityExponent, createValuesArray);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    BaseLongToObjectNonContainsKeyNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createArray);
+    BaseLongToObjectNonContainsKeyNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createValuesArray) {
+        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
+                    .add("createValuesArray", createValuesArray));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
     public final T get(long key) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        LongNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -34,7 +53,7 @@ abstract class BaseLongToObjectNonContainsKeyNonBucketMap<T>
 
         final T result;
 
-        final int index = getIndexScanEntireHashArray(key, getKeyMask());
+        final int index = HashArray.getIndexScanEntireHashArray(getHashed(), key, getKeyMask());
 
         if (index != NO_INDEX) {
 
@@ -53,14 +72,14 @@ abstract class BaseLongToObjectNonContainsKeyNonBucketMap<T>
     }
 
     @Override
-    protected final int getHashArrayIndex(long key, int keyMask) {
+    protected final int scanHashArrayForIndex(long key, int keyMask) {
 
         if (DEBUG) {
 
             enter(b -> b.add("key", key).add("keyMask", keyMask));
         }
 
-        final int result = getIndexScanEntireHashArray(key, keyMask);
+        final int result = HashArray.getIndexScanEntireHashArray(getHashed(), key, keyMask);
 
         if (DEBUG) {
 
@@ -70,31 +89,23 @@ abstract class BaseLongToObjectNonContainsKeyNonBucketMap<T>
         return result;
     }
 
-    final T putValue(int key, T value, T defaultPreviousValue) {
+    final T putValue(long key, T value, T defaultPreviousValue) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        LongNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
             enter(b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
         }
 
-        final T result;
-
         final long putResult = put(key);
+
         final int index = IntPutResult.getPutIndex(putResult);
+        final T[] values = getValues();
 
-        if (index != NO_INDEX) {
+        final T result = IntPutResult.getPutNewAdded(putResult) ? defaultPreviousValue : values[index];
 
-            final T[] values = getValues();
-
-            result = IntPutResult.getPutNewAdded(putResult) ? values[index] : defaultPreviousValue;
-
-            values[index] = value;
-        }
-        else {
-            throw new IllegalStateException();
-        }
+        values[index] = value;
 
         if (DEBUG) {
 

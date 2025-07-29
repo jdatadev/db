@@ -4,6 +4,11 @@ public class DebugConstants {
 
     public static final boolean DEBUG_STRING_STORER = Boolean.FALSE;
 
+    private static final boolean DEBUG_STRING_CACHE = Boolean.FALSE;
+
+    public static final boolean DEBUG_BASE_STRING_CACHE = DEBUG_STRING_CACHE;
+    public static final boolean DEBUG_BUCKETS_STRING_CACHE = DEBUG_STRING_CACHE;
+
     private static final boolean DEBUG_SESSION_MANAGEMENT = Boolean.FALSE;
 
     public static final boolean DEBUG_DB_SESSION = DEBUG_SESSION_MANAGEMENT;
@@ -34,19 +39,51 @@ public class DebugConstants {
 
     public static final boolean DEBUG_BIT_BUFFER = Boolean.FALSE;
 
+    public static final boolean DEBUG_BASE_ARRAY = DEBUG_ARRAYS;
+
+    public static final boolean DEBUG_BASE_ONE_DIMENSIONAL_ARRAY = DEBUG_ARRAYS;
+
+    public static final boolean DEBUG_BASE_INTEGER_ARRAY = DEBUG_ARRAYS;
+
+    public static final boolean DEBUG_BASE_INT_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_MUTABLE_INT_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_BASE_LONG_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_LONG_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_MUTABLE_LONG_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_OBJECT_ARRAY = DEBUG_ARRAYS;
+
+    public static final boolean DEBUG_LARGE_ONE_DIMENSIONAL_ARRAY_CAPACITY_ALGORITHM = DEBUG_ARRAYS;
+    public static final boolean DEBUG_BASE_ANY_LARGE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_BASE_LARGE_ONE_DIMENSIONAL_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_BASE_LARGE_EXPONENT_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_LARGE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_LARGE_LIMIT_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_BASE_LARGE_BYTE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_LARGE_BYTE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_LARGE_INT_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_LARGE_LONG_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_LARGE_OBJECT_ARRAY = DEBUG_ARRAYS;
+
     public static final boolean DEBUG_TWO_DIMENSIONAL_ARRAY = DEBUG_ARRAYS;
     public static final boolean DEBUG_LARGE_CHAR_ARRAY = DEBUG_ARRAYS;
 
     public static final boolean DEBUG_HASH_ARRAY = DEBUG_HASHED;
+    public static final boolean DEBUG_LARGE_HASH_ARRAY = DEBUG_HASHED;
+
     public static final boolean DEBUG_MAX_DISTANCE = DEBUG_HASHED;
 
     public static final boolean DEBUG_BASE_HASHED = DEBUG_HASHED;
+    public static final boolean DEBUG_BASE_CAPACITY_HASHED = DEBUG_HASHED;
     public static final boolean DEBUG_BASE_INT_CAPACITY_HASHED = DEBUG_HASHED;
-    public static final boolean DEBUG_BASE_ARRAY_HASHED = DEBUG_HASHED;
-    public static final boolean DEBUG_BASE_EXPONENT_HASHED = DEBUG_HASHED;
+    public static final boolean DEBUG_BASE_INT_CAPACITY_ARRAY_HASHED = DEBUG_HASHED;
+    public static final boolean DEBUG_BASE_INT_CAPACITY_EXPONENT_ARRAY_HASHED = DEBUG_HASHED;
+    public static final boolean DEBUG_BASE_LONG_CAPACITY_HASHED = DEBUG_HASHED;
+    public static final boolean DEBUG_BASE_LONG_CAPACITY_ARRAY_HASHED = DEBUG_HASHED;
+    public static final boolean DEBUG_BASE_LONG_CAPACITY_EXPONENT_ARRAY_HASHED = DEBUG_HASHED;
 
-    public static final boolean DEBUG_BASE_INT_NON_BUCKET_MAP = DEBUG_MAPS;
-    public static final boolean DEBUG_BASE_INT_NON_BUCKET_ARRAY_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_INT_CAPACITY_EXPONENT_MAP = DEBUG_MAPS;
+
+    public static final boolean DEBUG_BASE_INT_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
 
     public static final boolean DEBUG_BASE_INT_TO_OBJECT_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_MUTABLE_INT_TO_OBJECT_NON_BUCKET_MAP = DEBUG_MAPS;
@@ -91,12 +128,22 @@ public class DebugConstants {
     public static final boolean DEBUG_BASE_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_MUTABLE_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
 
-    public static final boolean DEBUG_BASE_LARGE_LONG_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_LARGE_ARRAY_KEYS_VALUES_MAP = DEBUG_MAPS;
+
+    public static final boolean DEBUG_BASE_LARGE_INTEGER_KEY_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_LARGE_INT_KEY_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_LARGE_INT_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
+
+    public static final boolean DEBUG_BASE_LARGE_LONG_KEY_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_LARGE_LONG_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
+
+    public static final boolean DEBUG_BASE_INTEGER_KEY_BUCKET_MAP = DEBUG_MAPS;
 
     public static final boolean DEBUG_BASE_INT_BUCKET_MAP = DEBUG_MAPS;
 
     public static final boolean DEBUG_BASE_LONG_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_MUTABLE_LONG_TO_INT_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_MUTABLE_LONG_TO_OBJECT_BUCKET_MAP = DEBUG_MAPS;
 
     public static final boolean DEBUG_BASE_INT_NON_BUCKET_SET = DEBUG_SETS;
 

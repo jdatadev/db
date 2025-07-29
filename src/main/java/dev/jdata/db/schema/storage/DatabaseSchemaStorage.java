@@ -142,7 +142,7 @@ public final class DatabaseSchemaStorage<T extends CompleteSchemaMaps<?>> implem
         Objects.requireNonNull(databaseSchemaVersion);
 
         final int schemaVersionNumber = databaseSchemaVersion.getVersionNumber();
-        final String schemaVersionNumberString = stringCache.getString(schemaVersionNumber);
+        final String schemaVersionNumberString = stringCache.getOrAddString(schemaVersionNumber);
         final RelativeDirectoryPath directoryPath = fileSystemAccess.directoryPathOf(schemaVersionNumberString);
 
         fileSystemAccess.createDirectory(directoryPath);

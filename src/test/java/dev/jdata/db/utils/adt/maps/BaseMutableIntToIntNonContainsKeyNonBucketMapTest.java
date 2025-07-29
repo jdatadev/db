@@ -8,7 +8,7 @@ abstract class BaseMutableIntToIntNonContainsKeyNonBucketMapTest<
 
                 M extends IIntToIntStaticMapCommon & IClearable & IIntToIntCommonMapMutators>
 
-        extends BaseMutableIntToIntegerOrObjectTest<int[], M> {
+        extends BaseMutableIntToIntegerOrObjectNonBucketMapTest<int[], M> {
 
     @Override
     final int[] createValuesArray(int length) {
@@ -41,13 +41,13 @@ abstract class BaseMutableIntToIntNonContainsKeyNonBucketMapTest<
     }
 
     @Override
-    final <P> void forEachKeysAndValues(M map, P parameter) {
+    final <P> void forEachKeyAndValueWithNullFunction(M map, P parameter) {
 
         map.forEachKeyAndValue(parameter, null);
     }
 
     @Override
-    final <P> void forEachKeysAndValues(M map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
+    final <P> void forEachKeyAndValue(M map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
 
         map.forEachKeyAndValue(parameter, (k, v, p) -> {
 

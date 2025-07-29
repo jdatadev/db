@@ -1,8 +1,9 @@
 package dev.jdata.db.data.locktable;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
-import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
+import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 import dev.jdata.db.utils.adt.maps.BaseLongKeyNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
@@ -46,7 +47,7 @@ final class LockTableRowsMap extends BaseLongKeyNonBucketMap<LockTableRowsMap.Ro
     @Override
     public long getLockIndex(long key) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        LongNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -86,7 +87,7 @@ final class LockTableRowsMap extends BaseLongKeyNonBucketMap<LockTableRowsMap.Ro
     @Override
     public void put(long key, long lock, long lockInfoListsHeadNode, long lockInfoListsTailNode) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        LongNonBucket.checkIsHashArrayElement(key);
         Checks.isNotNegative(lockInfoListsHeadNode);
         Checks.isNotNegative(lockInfoListsTailNode);
 
@@ -118,7 +119,7 @@ final class LockTableRowsMap extends BaseLongKeyNonBucketMap<LockTableRowsMap.Ro
             enter(b -> b.add("key", key));
         }
 
-        if (removeAndReturnIndex(key) != NO_INDEX) {
+        if (HashArray.removeAndReturnIndexScanEntire(getHashed(), key, getKeyMask()) == NO_INDEX) {
 
             throw new IllegalStateException();
         }
@@ -173,7 +174,7 @@ final class LockTableRowsMap extends BaseLongKeyNonBucketMap<LockTableRowsMap.Ro
     }
 
     @Override
-    protected int getHashArrayIndex(long key, int keyMask) {
+    protected int scanHashArrayForIndex(long key, int keyMask) {
 
         throw new UnsupportedOperationException();
     }

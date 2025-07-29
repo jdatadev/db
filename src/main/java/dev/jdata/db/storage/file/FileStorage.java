@@ -9,6 +9,7 @@ import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
+import dev.jdata.db.utils.scalars.Integers;
 
 public abstract class FileStorage extends ObjectCacheNode {
 
@@ -64,7 +65,7 @@ public abstract class FileStorage extends ObjectCacheNode {
 
         Checks.containsOnly(fileName, startOfSequenceNoIndex + 1, numSequenceNoCharacters - 1, c -> c >= '0' && c <= '9');
 
-        final int result = Integer.parseUnsignedInt(fileName, fileNamePrefixLength + 1, fileNameLength, 10);
+        final int result = Integers.parseUnsignedInt(fileName, fileNamePrefixLength + 1, fileNameLength, 10);
 
         if (DEBUG) {
 

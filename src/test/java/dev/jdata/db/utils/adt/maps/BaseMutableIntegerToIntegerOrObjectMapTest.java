@@ -8,7 +8,7 @@ import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.sets.MutableIntBucketSet;
 import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & IClearable> extends BaseIntegerToIntegerOrObjectTest<K, V, M> {
+abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & IClearable> extends BaseIntegerToIntegerOrObjectMapTest<K, V, M> {
 
     abstract M createMap(int initialCapacityExponent);
 
@@ -27,6 +27,8 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
 
         assertThat(map).isEmpty();
         assertThat(map).hasNumElements(0L);
+
+        final boolean supportsGetWithDefaultValue = supportsGetWithDefaultValue();
 
         for (int numElements = 1; numElements <= MAX_ELEMENTS; numElements *= 10) {
 
@@ -50,7 +52,9 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
 
             for (int i = 0; i < numElements; ++ i) {
 
-                assertThat(get(map, i)).isEqualTo(value(i));
+                final int getResult = supportsGetWithDefaultValue ? getWithDefaultValue(map, i, -1) : get(map, i);
+
+                assertThat(getResult).isEqualTo(value(i));
 
                 assertThat(map).isNotEmpty();
                 assertThat(map).hasNumElements(numElements);
@@ -68,6 +72,7 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
     @Category(UnitTest.class)
     public final void testPutGetAndRemoveNewMap() {
 
+        final boolean supportsGetWithDefaultValue = supportsGetWithDefaultValue();
         final boolean supportsRemoveNonAdded = supportsRemoveNonAdded();
 
         for (int numElements = 1; numElements <= MAX_ELEMENTS; numElements *= 10) {
@@ -89,7 +94,9 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
 
             for (int i = 0; i < numElements; ++ i) {
 
-                assertThat(get(map, i)).isEqualTo(value(i));
+                final int getResult = supportsGetWithDefaultValue ? getWithDefaultValue(map, i, -1) : get(map, i);
+
+                assertThat(getResult).isEqualTo(value(i));
 
                 assertThat(map).isNotEmpty();
                 assertThat(map).hasNumElements(numElements);
@@ -136,6 +143,8 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
         assertThat(map).isEmpty();
         assertThat(map).hasNumElements(0L);
 
+        final boolean supportsGetWithDefaultValue = supportsGetWithDefaultValue();
+
         for (int numElements = 1; numElements < MAX_ELEMENTS; numElements *= 10) {
 
             for (int i = 0; i < numElements; ++ i) {
@@ -148,7 +157,9 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
 
             for (int i = 0; i < numElements; ++ i) {
 
-                assertThat(get(map, i)).isEqualTo(value(i));
+                final int getResult = supportsGetWithDefaultValue ? getWithDefaultValue(map, i, -1) : get(map, i);
+
+                assertThat(getResult).isEqualTo(value(i));
 
                 assertThat(map).isNotEmpty();
                 assertThat(map).hasNumElements(numElements);
@@ -199,41 +210,56 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
         assertThat(map).isNotEmpty();
         assertThat(map).hasNumElements(2L);
 
-        assertThat(removeWithDefaultValue(map, removeKey, -1)).isEqualTo(removeKey == key1 ? 123 : 234);
+        if (supportsRemoveNonAdded()) {
+
+            assertThat(removeWithDefaultValue(map, removeKey, -1)).isEqualTo(removeKey == key1 ? 123 : 234);
+        }
+        else {
+            remove(map, removeKey);
+        }
 
         assertThat(map).isNotEmpty();
         assertThat(map).hasNumElements(1L);
 
-        assertThat(get(map, removeKey == key1 ? key2 : key1)).isEqualTo(removeKey == key1 ? 234 : 123);
+        final int key = removeKey == key1 ? key2 : key1;
+        final int getResult = supportsGetWithDefaultValue() ? getWithDefaultValue(map, key, -1) : get(map, key);
+
+        assertThat(getResult).isEqualTo(removeKey == key1 ? 234 : 123);
 
         put(map, removeKey == key1 ? key1 : key2, removeKey == key1 ? 123 : 234, -1);
 
         assertThat(map).isNotEmpty();
         assertThat(map).hasNumElements(2L);
 
-        assertThat(get(map, key1)).isEqualTo(123);
-        assertThat(get(map, key2)).isEqualTo(234);
+        final int key1GetResult = supportsGetWithDefaultValue() ? getWithDefaultValue(map, key1, -1) : get(map, key1);
+        assertThat(key1GetResult).isEqualTo(123);
+
+        final int key2GetResult = supportsGetWithDefaultValue() ? getWithDefaultValue(map, key2, -1) : get(map, key2);
+        assertThat(key2GetResult).isEqualTo(234);
     }
 
     @Test
     @Category(UnitTest.class)
     public final void testRemoveAndReturnDefaultValue() {
 
-        final M map = createMap(0);
+        if (supportsRemoveNonAdded()) {
 
-        assertThat(map).isEmpty();
+            final M map = createMap(0);
 
-        assertThat(removeWithDefaultValue(map, 123, 345)).isEqualTo(345);
+            assertThat(map).isEmpty();
 
-        put(map, 123, 234, -1);
+            assertThat(removeWithDefaultValue(map, 123, 345)).isEqualTo(345);
 
-        assertThat(map).isNotEmpty();
-        assertThat(map).hasNumElements(1L);
+            put(map, 123, 234, -1);
 
-        assertThat(removeWithDefaultValue(map, 123, 345)).isEqualTo(234);
+            assertThat(map).isNotEmpty();
+            assertThat(map).hasNumElements(1L);
 
-        assertThat(map).isEmpty();
-        assertThat(map).hasNumElements(0L);
+            assertThat(removeWithDefaultValue(map, 123, 345)).isEqualTo(234);
+
+            assertThat(map).isEmpty();
+            assertThat(map).hasNumElements(0L);
+        }
     }
 
     @Test
@@ -266,10 +292,16 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
         final M map = createMap(CapacityExponents.computeCapacityExponent(keysLength));
 
         final int defaultValue = -1;
+        final boolean supportsContainsKey = supportsContainsKey();
 
         for (int i = 0; i < keysLength; ++ i) {
 
-            assertThat(put(map, keys[i], values[i], defaultValue)).isEqualTo(defaultValue);
+            final int previousValue = put(map, keys[i], values[i], defaultValue);
+
+            if (supportsContainsKey) {
+
+                assertThat(previousValue).isEqualTo(defaultValue);
+            }
         }
 
         return map;
@@ -288,7 +320,9 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
 
         assertThat(value).isNotEqualTo(defaultValue);
 
-        assertThat(put(map, integer, value, defaultValue)).isEqualTo(alreadyContainsValue ? value : defaultValue);
+        final int previousValue = put(map, integer, value, defaultValue);
+
+        assertThat(previousValue).isEqualTo(alreadyContainsValue ? value : defaultValue);
     }
 
     private void checkGetKeys(M map, int numElements) {

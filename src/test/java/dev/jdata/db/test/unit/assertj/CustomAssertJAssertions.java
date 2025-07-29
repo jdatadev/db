@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import dev.jdata.db.utils.adt.KeyElements;
 import dev.jdata.db.utils.adt.KeySetElements;
-import dev.jdata.db.utils.adt.arrays.IArray;
+import dev.jdata.db.utils.adt.arrays.IOneDimensionalArrayCommon;
 import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.adt.maps.ILongContainsKeyMap;
 import dev.jdata.db.utils.adt.maps.IMapOfCollection;
@@ -18,9 +18,9 @@ public class CustomAssertJAssertions extends org.assertj.core.api.Assertions {
         return new ElementsAssert(actual);
     }
 
-    public static ArrayAssert assertThat(IArray actual) {
+    public static OneDimensionalArrayAssert assertThat(IOneDimensionalArrayCommon actual) {
 
-        return new ArrayAssert(actual);
+        return new OneDimensionalArrayAssert(actual);
     }
 
     public static KeyElementsAssert assertThat(KeyElements actual) {

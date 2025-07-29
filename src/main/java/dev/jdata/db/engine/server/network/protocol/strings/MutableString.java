@@ -31,7 +31,7 @@ public final class MutableString extends CharString implements IClearable {
     public void set(CharBuffer charBuffer, int offset, int length, CharArrayAllocator allocator) {
 
         Checks.isExactlyZero(charBuffer.position());
-        Objects.checkFromIndexSize(offset, charBuffer.limit(), length);
+        Checks.checkFromIndexSize(offset, charBuffer.limit(), length);
         Objects.requireNonNull(allocator);
 
         final char[] dst = checkCapacity(length, allocator, (a, l) -> l);

@@ -52,8 +52,6 @@ final class SimpleFileTableDataStorageBackend extends BaseFileTableDataStorageBa
             throw new IllegalArgumentException();
         }
 
-        final int totalNumRowBytes = BitBufferUtil.numBytesExact(totalNumRowBits);
-
         final int numBitsAdded = RowBitsUtil.addRowData(storageTableFileSchema, outputRowBuffer, outputRowBufferBitOffset, outputRowBuffer, 0, rowDataNumBits);
 
         final int numBytesAdded = BitBufferUtil.numBytesExact(numBitsAdded);

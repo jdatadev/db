@@ -4,17 +4,29 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.Capacity;
-import dev.jdata.db.utils.adt.IClearable;
-import dev.jdata.db.utils.adt.IContains;
+import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.checks.AssertionContants;
+import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.debug.PrintDebug;
+import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseAnyLargeArray<O, I> implements IContains, IClearable {
+abstract class BaseAnyLargeArray<O, I> extends BaseArray implements PrintDebug {
 
+    private static final boolean DEBUG = DebugConstants.DEBUG_BASE_ANY_LARGE_ARRAY;
+
+    private static final boolean ASSERT = AssertionContants.ASSERT_BASE_ANY_LARGE_ARRAY;
+
+    protected static int DEFAULT_INITIAL_OUTER_CAPACITY = 0;
+
+    protected abstract int getOuterArrayCapacity();
     protected abstract long getInnerElementCapacity();
 
-    protected abstract I getInnerArray(O outerArray, int index);
+    protected abstract int getOuterArrayLength(O outerArray);
     protected abstract O copyOuterArray(O outerArray, int newCapacity);
+
+    protected abstract I getInnerArray(O outerArray, int index);
+    protected abstract void clearInnerArray(I innerArray, long startIndex, long numElements);
 
     private final IntFunction<O> createOuterArray;
     private final boolean isNumInnerElementsRequired;
@@ -24,9 +36,16 @@ abstract class BaseAnyLargeArray<O, I> implements IContains, IClearable {
 
     private int numOuterUtilizedEntries;
 
-    BaseAnyLargeArray(int initialOuterCapacity, IntFunction<O> createOuterArray, boolean requiresInnerArrayNumElements) {
+    BaseAnyLargeArray(int initialOuterCapacity, boolean hasClearValue, IntFunction<O> createOuterArray, boolean requiresInnerArrayNumElements) {
+        super(hasClearValue);
 
         Checks.isLengthAboveOrAtZero(initialOuterCapacity);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialOuterCapacity", initialOuterCapacity).add("createOuterArray", createOuterArray)
+                    .add("requiresInnerArrayNumElements", requiresInnerArrayNumElements));
+        }
 
         this.createOuterArray = Objects.requireNonNull(createOuterArray);
         this.isNumInnerElementsRequired = requiresInnerArrayNumElements;
@@ -42,6 +61,55 @@ abstract class BaseAnyLargeArray<O, I> implements IContains, IClearable {
         }
 
         this.numOuterUtilizedEntries = 0;
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @FunctionalInterface
+    protected interface IOuterAndInnerArraysCopier<T> {
+
+        void copy(T source, T dest, int numElements);
+    }
+
+    BaseAnyLargeArray(BaseAnyLargeArray<O, I> toCopy, IOuterAndInnerArraysCopier<O> copyOuterAndInnerArrays) {
+        super(toCopy);
+
+        Objects.requireNonNull(toCopy);
+        Objects.requireNonNull(copyOuterAndInnerArrays);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy).add("copyOuterAndInnerArrays", copyOuterAndInnerArrays));
+        }
+
+        final IntFunction<O> createOuterArray = this.createOuterArray = toCopy.createOuterArray;
+
+        this.isNumInnerElementsRequired = toCopy.isNumInnerElementsRequired;
+
+        final O toCopyOuterArray = toCopy.outerArray;
+
+        if (toCopyOuterArray != null) {
+
+            final O thisOuterArray = this.outerArray = createOuterArray.apply(toCopy.getOuterArrayCapacity());
+
+            copyOuterAndInnerArrays.copy(thisOuterArray, toCopyOuterArray, numOuterUtilizedEntries);
+
+            this.innerArrayNumElements = Array.copyOf(toCopy.innerArrayNumElements);
+        }
+        else {
+            this.outerArray = null;
+            this.innerArrayNumElements = null;
+        }
+
+        this.numOuterUtilizedEntries = toCopy.numOuterUtilizedEntries;
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
@@ -50,40 +118,101 @@ abstract class BaseAnyLargeArray<O, I> implements IContains, IClearable {
         return numOuterUtilizedEntries == 0;
     }
 
-    @Override
-    public void clear() {
+    protected void clearArray() {
 
-        if (innerArrayNumElements != null) {
+        if (DEBUG) {
 
-            Arrays.fill(innerArrayNumElements, 0, getNumOuterUtilizedEntries(), 0);
+            enter();
+        }
+
+        final int numOuter = getNumOuterUtilizedEntries();
+        final int[] innerNum = innerArrayNumElements;
+
+        if (innerNum != null) {
+
+            Arrays.fill(innerNum, 0, numOuter, 0);
         }
 
         this.numOuterUtilizedEntries = 0;
+
+        if (DEBUG) {
+
+            exit();
+        }
+
+        if (shouldClear()) {
+
+            clearInnerArrays(numOuter, 0, getInnerElementCapacity());
+        }
+    }
+
+    protected long getArrayElementCapacity() {
+
+        return getOuterArrayCapacity() * getInnerElementCapacity();
     }
 
     protected final O getOuterArray() {
         return outerArray;
     }
 
+    protected final I getInnerArray(int outerIndex) {
+
+        return getInnerArray(outerArray, outerIndex);
+    }
+
     protected final int getNumInnerElements(int outerIndex) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("outerIndex", outerIndex));
+        }
+
+        if (ASSERT) {
+
+            Assertions.isTrue(isNumInnerElementsRequired);
+        }
 
         checkOuterIndex(outerIndex);
 
-        return innerArrayNumElements[outerIndex];
+        final int result = innerArrayNumElements[outerIndex];
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
     }
 
     final O reallocateOuterArrayAndInnerArrayNumElementsWithExistingLength(int outerArrayLength) {
 
         Checks.isLengthAboveZero(outerArrayLength);
 
+        if (DEBUG) {
+
+            enter(b -> b.add("outerArrayLength", outerArrayLength));
+        }
+
         final int newCapacity = outerArrayLength << 2;
 
-        return reallocateOuterArrayAndInnerArrayNumElements(newCapacity);
+        final O result = reallocateOuterArrayAndInnerArrayNumElements(newCapacity);
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
     }
 
     final O reallocateOuterArrayAndInnerArrayNumElements(int newCapacity) {
 
         Checks.isCapacity(newCapacity);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("newCapacity", newCapacity));
+        }
 
         final O result = copyOuterArray(outerArray, newCapacity);
 
@@ -96,6 +225,11 @@ abstract class BaseAnyLargeArray<O, I> implements IContains, IClearable {
                     : new int[newCapacity];
         }
 
+        if (DEBUG) {
+
+            exit(result);
+        }
+
         return result;
     }
 
@@ -103,26 +237,27 @@ abstract class BaseAnyLargeArray<O, I> implements IContains, IClearable {
 
         Checks.areNotSame(this.outerArray, outerArray);
 
-        this.outerArray = Objects.requireNonNull(outerArray);
-    }
+        if (DEBUG) {
 
-    long getRemainderOfLastInnerArray(int outerIndex) {
-
-        Checks.areEqual(outerIndex, numOuterUtilizedEntries - 1);
-
-        if (!isNumInnerElementsRequired()) {
-
-            throw new UnsupportedOperationException();
+            enter(b -> b.add("outerArray", outerArray));
         }
 
-        return Capacity.getRemainderOfLastInnerArray(outerIndex, numOuterUtilizedEntries, getInnerElementCapacity(), getNumInnerElements(outerIndex));
+        this.outerArray = Objects.requireNonNull(outerArray);
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     final <P> O allocateInitialOuterArrayAndInnerArrayElements(int numOuter) {
 
         Checks.isLengthAboveZero(numOuter);
 
-        incrementNumOuterUtilizedEntries(numOuter, numOuter);
+        if (DEBUG) {
+
+            enter(b -> b.add("numOuter", numOuter));
+        }
 
         final O outerArray = createOuterArray.apply(numOuter);
 
@@ -130,12 +265,22 @@ abstract class BaseAnyLargeArray<O, I> implements IContains, IClearable {
 
         setOuterArray(outerArray);
 
+        if (DEBUG) {
+
+            exit(outerArray);
+        }
+
         return outerArray;
     }
 
     final void allocateInitialNumInnerElementsIfRequired(int numToAllocate) {
 
         Checks.isLengthAboveZero(numToAllocate);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("numToAllocate", numToAllocate));
+        }
 
         if (isNumInnerElementsRequired()) {
 
@@ -146,45 +291,111 @@ abstract class BaseAnyLargeArray<O, I> implements IContains, IClearable {
 
             this.innerArrayNumElements = new int[numToAllocate];
         }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     final void clearNumInnerElementsIfRequired(int outerIndex) {
 
+        if (DEBUG) {
+
+            enter(b -> b.add("outerIndex", outerIndex));
+        }
+
         setNumInnerElementsIfRequired(outerIndex, 0);
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     final void setNumInnerElementsIfRequired(int outerIndex, int numElements) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("outerIndex", outerIndex).add("numElements", numElements));
+        }
 
         if (isNumInnerElementsRequired()) {
 
             setNumInnerElements(outerIndex, numElements);
         }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    protected final void setNumInnerElements(int outerIndex, int numElements) {
+    protected final void setNumInnerElements(int outerIndex, long numElements) {
 
         checkOuterIndex(outerIndex);
         Checks.isNumElements(numElements);
 
-        innerArrayNumElements[outerIndex] = numElements;
+        if (DEBUG) {
+
+            enter(b -> b.add("outerIndex", outerIndex).add("numElements", numElements));
+        }
+
+        innerArrayNumElements[outerIndex] = Integers.checkUnsignedLongToUnsignedInt(numElements);
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     final void incrementNumInnerElements(int outerIndex) {
 
         Checks.isIndex(outerIndex);
 
+        if (DEBUG) {
+
+            enter(b -> b.add("outerIndex", outerIndex));
+        }
+
         ++ innerArrayNumElements[outerIndex];
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    private void clearInnerArrays(int numOuter, long startIndex, long innerElementsCapacity) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("numOuter", numOuter).add("startIndex", startIndex).add("innerElementsCapacity", innerElementsCapacity));
+        }
+
+        clearInnerArrays(this, numOuter, startIndex, innerElementsCapacity, (a, s, n, i) -> i.clearInnerArray(a, s, n));
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @FunctionalInterface
-    interface ArrayClearer<T, P> {
+    private interface ArrayClearer<T, P> {
 
-        void clear(T array, int startIndex, int numElements, P parameter);
+        void clear(T array, long startIndex, long numElements, P parameter);
     }
 
-    final <P> void clearArrays(P parameter, int numOuter, int startIndex, int innerCapacity, ArrayClearer<I, P> arrayClearer) {
+    private <P> void clearInnerArrays(P parameter, int numOuter, long startIndex, long innerElementsCapacity, ArrayClearer<I, P> arrayClearer) {
 
         Objects.requireNonNull(arrayClearer);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("parameter", parameter).add("numOuter", numOuter).add("startIndex", startIndex).add("innerElementsCapacity", innerElementsCapacity)
+                    .add("arrayClearer", arrayClearer));
+        }
 
         final O outer = outerArray;
 
@@ -194,8 +405,13 @@ abstract class BaseAnyLargeArray<O, I> implements IContains, IClearable {
 
             if (arrayClearer != null) {
 
-                arrayClearer.clear(a, startIndex, innerCapacity, parameter);
+                arrayClearer.clear(a, startIndex, innerElementsCapacity, parameter);
             }
+        }
+
+        if (DEBUG) {
+
+            exit();
         }
     }
 
@@ -209,19 +425,49 @@ abstract class BaseAnyLargeArray<O, I> implements IContains, IClearable {
         Checks.isGreaterThan(numOuterUtilizedEntries, this.numOuterUtilizedEntries);
         Checks.isLessThanOrEqualTo(numOuterUtilizedEntries, maxValue);
 
+        if (DEBUG) {
+
+            enter(b -> b.add("numOuterUtilizedEntries", numOuterUtilizedEntries).add("maxValue", maxValue));
+        }
+
         this.numOuterUtilizedEntries = numOuterUtilizedEntries;
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     final void incrementNumOuterUtilizedEntries() {
 
+        if (DEBUG) {
+
+            enter();
+        }
+
         ++ numOuterUtilizedEntries;
+
+        if (DEBUG) {
+
+            exit(numOuterUtilizedEntries);
+        }
     }
 
-    final void incrementNumOuterUtilizedEntries(int numAdditional, int maxValue) {
+    final void increaseNumOuterUtilizedEntries(int numAdditional, int maxValue) {
 
         Checks.isLessThanOrEqualTo(numOuterUtilizedEntries + numAdditional, maxValue);
 
+        if (DEBUG) {
+
+            enter(b -> b.add("numAdditional", numAdditional).add("maxValue", maxValue));
+        }
+
         numOuterUtilizedEntries += numAdditional;
+
+        if (DEBUG) {
+
+            exit(numOuterUtilizedEntries);
+        }
     }
 
     private boolean isNumInnerElementsRequired() {

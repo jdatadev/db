@@ -7,7 +7,7 @@ public abstract class BaseLargeIntMultiHeadSinglyLinkedList<
 
         extends BaseLargeIntSinglyLinkedList<INSTANCE, LIST, VALUES> {
 
-    protected BaseLargeIntMultiHeadSinglyLinkedList(int initialOuterCapacity, int innerCapacity, BaseValuesFactory<int[], LIST, VALUES> valuesFactory) {
+    protected BaseLargeIntMultiHeadSinglyLinkedList(int initialOuterCapacity, int innerCapacity, ILargeListValuesFactory<int[], LIST, VALUES> valuesFactory) {
         super(initialOuterCapacity, innerCapacity, valuesFactory);
     }
 
@@ -21,41 +21,42 @@ public abstract class BaseLargeIntMultiHeadSinglyLinkedList<
         return findValueNode(value, headNode);
     }
 
-    public final long addHead(INSTANCE instance, int value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    public final long addHead(INSTANCE instance, int value, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         return addHeadValue(instance, value, headNode, tailNode, headNodeSetter, tailNodeSetter);
     }
 
-    public final long addTail(INSTANCE instance, int value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    public final long addTail(INSTANCE instance, int value, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
         return addTailValue(instance, value, headNode, tailNode, headNodeSetter, tailNodeSetter);
     }
 
-    public final long removeNode(INSTANCE instance, long node, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter, LongNodeSetter<INSTANCE> tailNodeSetter) {
+    public final long removeNode(INSTANCE instance, long toRemove, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter, ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
-        removeNodeByFindingPreviousNode(instance, node, headNode, tailNode, headNodeSetter, tailNodeSetter);
+        removeNodeByFindingPreviousNode(instance, toRemove, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
-        return getValue(node);
+        return getValue(toRemove);
     }
 
-    public final long removeNodeByValue(INSTANCE instance, int value, long headNode, long tailNode, LongNodeSetter<INSTANCE> headNodeSetter,
-            LongNodeSetter<INSTANCE> tailNodeSetter) {
+    public final long removeNodeByValue(INSTANCE instance, int value, long headNode, long tailNode, ILongNodeSetter<INSTANCE> headNodeSetter,
+            ILongNodeSetter<INSTANCE> tailNodeSetter) {
 
-        long previousNode = NO_NODE;
+        final long noNode = NO_NODE;
 
-        long removedNode = BaseList.NO_NODE;
+        long previousNode = noNode;
+        long removedNode = noNode;
 
-        for (long n = headNode; n != NO_NODE; n = getNextNode(n)) {
+        for (long node = headNode; node != noNode; node = getNextNode(node)) {
 
-            if (getValue(n) == value) {
+            if (getValue(node) == value) {
 
-                removeNode(instance, n, previousNode, headNode, tailNode, headNodeSetter, tailNodeSetter);
+                removeNode(instance, node, previousNode, headNode, tailNode, headNodeSetter, tailNodeSetter);
 
-                removedNode = n;
+                removedNode = node;
                 break;
             }
 
-            previousNode = n;
+            previousNode = node;
         }
 
         return removedNode;

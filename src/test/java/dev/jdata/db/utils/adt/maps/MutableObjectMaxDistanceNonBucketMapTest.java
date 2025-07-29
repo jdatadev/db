@@ -33,9 +33,7 @@ public final class MutableObjectMaxDistanceNonBucketMapTest
     @Override
     int get(MutableObjectMaxDistanceNonBucketMap<Integer, String> map, int key) {
 
-        final String value = map.get(integerToKey(key), integerToValue(-1));
-
-        return valueToInteger(value);
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -47,13 +45,13 @@ public final class MutableObjectMaxDistanceNonBucketMapTest
     }
 
     @Override
-    <P> void forEachKeysAndValues(MutableObjectMaxDistanceNonBucketMap<Integer, String> map, P parameter) {
+    <P> void forEachKeyAndValueWithNullFunction(MutableObjectMaxDistanceNonBucketMap<Integer, String> map, P parameter) {
 
         map.forEachKeyAndValue(parameter, null);
     }
 
     @Override
-    <P> void forEachKeysAndValues(MutableObjectMaxDistanceNonBucketMap<Integer, String> map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
+    <P> void forEachKeyAndValue(MutableObjectMaxDistanceNonBucketMap<Integer, String> map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
 
         map.forEachKeyAndValue(parameter, (k, v, p) -> {
 

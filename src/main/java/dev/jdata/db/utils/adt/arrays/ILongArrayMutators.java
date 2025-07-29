@@ -4,5 +4,5 @@ public interface ILongArrayMutators {
 
     void add(long value);
 
-    void set(int index, long value);
+    void set(long index, long value);
 }

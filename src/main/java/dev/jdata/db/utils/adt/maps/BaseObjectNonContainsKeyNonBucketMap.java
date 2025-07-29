@@ -1,46 +1,53 @@
 package dev.jdata.db.utils.adt.maps;
 
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.hashed.HashFunctions;
-import dev.jdata.db.utils.adt.hashed.HashedConstants;
+import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
-import dev.jdata.db.utils.checks.AssertionContants;
 
-abstract class BaseObjectNonContainsKeyNonBucketMap<K, V> extends BaseObjectToObjectNonBucketMap<K, V, IObjectToObjectStaticMapCommon<K, V>> implements IObjectToObjectStaticMapCommon<K, V> {
+abstract class BaseObjectNonContainsKeyNonBucketMap<K, V>
+
+        extends BaseObjectToObjectNonBucketMap<K, V, IObjectToObjectStaticMapCommon<K, V>>
+        implements IObjectToObjectStaticMapCommon<K, V> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_OBJECT_NON_CONTAINS_KEY_NON_BUCKET_MAP;
 
-    private static final boolean ASSERT = AssertionContants.ASSERT_BASE_OBJECT_NON_CONTAINS_KEY_NON_BUCKET_MAP;
-
-    private static final Object NO_KEY = null;
     private static final Object NO_VALUE = null;
 
     private final IntFunction<V[]> createValues;
 
     private V[] values;
 
-    protected BaseObjectNonContainsKeyNonBucketMap(int initialCapacityExponent, IntFunction<K[]> createKeyArray, IntFunction<V[]> createValues) {
-        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, HashedConstants.DEFAULT_LOAD_FACTOR, createKeyArray, createValues);
+    protected BaseObjectNonContainsKeyNonBucketMap(int initialCapacityExponent, IntFunction<K[]> createKeysArray, IntFunction<V[]> createValuesArray) {
+        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, DEFAULT_LOAD_FACTOR, createKeysArray, createValuesArray);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createKeysArray", createKeysArray).add("createValuesArray", createValuesArray));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    BaseObjectNonContainsKeyNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<K[]> createKeyArray,
+    BaseObjectNonContainsKeyNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<K[]> createKeysArray,
             IntFunction<V[]> createValuesArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createKeyArray, createValuesArray);
+        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createKeysArray, createValuesArray);
 
         if (DEBUG) {
 
             enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createValues", createValuesArray));
+                    .add("createKeysArray", createKeysArray).add("createValuesArray", createValuesArray));
         }
 
         this.createValues = Objects.requireNonNull(createValuesArray);
 
-        this.values = createValuesArray.apply(computeCapacity());
+        this.values = createValuesArray.apply(getCapacity());
 
         clearValues(values);
 
@@ -53,11 +60,21 @@ abstract class BaseObjectNonContainsKeyNonBucketMap<K, V> extends BaseObjectToOb
     BaseObjectNonContainsKeyNonBucketMap(BaseObjectNonContainsKeyNonBucketMap<K, V> toCopy, BiConsumer<V[], V[]> copyValuesContent) {
         super(toCopy);
 
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy).add("copyValuesContent", copyValuesContent));
+        }
+
         final IntFunction<V[]> createValues = this.createValues = toCopy.createValues;
 
         final V[] values = this.values = createValues.apply(getCapacity());
 
         copyValuesContent.accept(toCopy.values, values);
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
@@ -70,7 +87,7 @@ abstract class BaseObjectNonContainsKeyNonBucketMap<K, V> extends BaseObjectToOb
             enter(b -> b.add("key", key));
         }
 
-        final int index = getIndex(key);
+        final int index = HashArray.getIndexScanEntireHashArray(getHashed(), key, getKeyMask());
 
         @SuppressWarnings("unchecked")
         final V noValue = (V)NO_VALUE;
@@ -105,124 +122,30 @@ abstract class BaseObjectNonContainsKeyNonBucketMap<K, V> extends BaseObjectToOb
         return result;
     }
 
-    @Override
-    protected final K[] rehash(K[] hashArray, int newCapacity, int newKeyMask) {
-
-        if (DEBUG) {
-
-            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).hex("newKeyMask", newKeyMask));
-        }
-
-        final K[] newHashArray = createHashedNonCleared(newCapacity);
-
-        clearHashArray(newHashArray);
-
-        final V[] newValuesArray = createValues.apply(newCapacity);
-
-        final int hashArrayLength = hashArray.length;
-
-        @SuppressWarnings("unchecked")
-        final V noKey = (V)NO_KEY;
-
-        for (int i = 0; i < hashArrayLength; ++ i) {
-
-            final K key = hashArray[i];
-
-            if (key != noKey) {
-
-                final int newIndex = IntPutResult.getPutIndex(put(newHashArray, key));
-
-                newHashArray[newIndex] = key;
-
-                put(values, i, newValuesArray, newIndex);
-            }
-        }
-
-        this.values = newValuesArray;
-
-        if (DEBUG) {
-
-            exit(newHashArray, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).hex("newKeyMask", newKeyMask));
-        }
-
-        return newHashArray;
-    }
-
-    protected final int getIndex(K key) {
+    final V putValue(K key, V value, V defaultPreviousValue) {
 
         Objects.requireNonNull(key);
 
         if (DEBUG) {
 
-            enter(b -> b.add("key", key));
+            enter(b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
         }
 
-        final int hashArrayIndex = HashFunctions.objectHashArrayIndex(key, getKeyMask());
+        final long putResult = put(key);
 
-        final K[] hashArray = getHashed();
+        final V[] values = getValues();
+        final int index = IntPutResult.getPutIndex(putResult);
 
-        final int hashArrayLength = hashArray.length;
+        final V result = IntPutResult.getPutNewAdded(putResult) ? defaultPreviousValue : values[index];
 
-        @SuppressWarnings("unchecked")
-        final V noKey = (V)NO_KEY;
-
-        int found = NO_INDEX;
-
-        for (int i = hashArrayIndex; i < hashArrayLength; ++ i) {
-
-            final K hashArrayKey = hashArray[i];
-
-            if (hashArrayKey != noKey && hashArrayKey.equals(key)) {
-
-                found = i;
-                break;
-            }
-        }
-
-        if (found == NO_INDEX) {
-
-            for (int i = 0; i < hashArrayIndex; ++ i) {
-
-                final K hashArrayKey = hashArray[i];
-
-                if (hashArrayKey != noKey && hashArrayKey.equals(key)) {
-
-                    found = i;
-                    break;
-                }
-            }
-        }
+        values[index] = value;
 
         if (DEBUG) {
 
-            exit(found, b -> b.add("key", key));
+            exit(result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
         }
 
-        return found;
-    }
-
-    final int removeAndReturnIndex(K key) {
-
-        Objects.requireNonNull(key);
-
-        if (DEBUG) {
-
-            enter(b -> b.add("key", key));
-        }
-
-        final int removedIndex = removeAndReturnIndexIfExists(key);
-
-        if (removedIndex == NO_INDEX) {
-
-            throw new IllegalArgumentException();
-        }
-
-        if (DEBUG) {
-
-            exit(removedIndex);
-        }
-
-        return removedIndex;
+        return result;
     }
 
     final void clearBaseObjectNonBucketMap() {
@@ -238,119 +161,6 @@ abstract class BaseObjectNonContainsKeyNonBucketMap<K, V> extends BaseObjectToOb
 
             exit();
         }
-    }
-
-    private long put(K[] hashArray, K key) {
-
-        if (DEBUG) {
-
-            enter(b -> b.add("hashArray", hashArray).add("key", key));
-        }
-
-        final int hashArrayIndex = HashFunctions.objectHashArrayIndex(key, getKeyMask());
-
-        if (DEBUG) {
-
-            debugFormatln("lookup hashArrayIndex=%d key=%s keyMask=0x%08x", hashArrayIndex, key.toString(), getKeyMask());
-        }
-
-        final int hashArrayLength = hashArray.length;
-
-        @SuppressWarnings("unchecked")
-        final V noKey = (V)NO_KEY;
-
-        int found = NO_INDEX;
-
-        boolean newAdded = false;
-
-        for (int i = hashArrayIndex; i < hashArrayLength; ++ i) {
-
-            final K mapKey = hashArray[i];
-
-            if (mapKey == noKey) {
-
-                if (DEBUG) {
-
-                    debug("add to map new foundIndex=" + i);
-                }
-
-                hashArray[i] = key;
-
-                found = i;
-
-                newAdded = true;
-                break;
-            }
-            else if (mapKey.equals(key)) {
-
-                if (DEBUG) {
-
-                    debug("add to map existing foundIndex=" + i);
-                }
-
-                hashArray[i] = key;
-
-                found = i;
-                break;
-            }
-        }
-
-        if (found == NO_INDEX) {
-
-            for (int i = 0; i < hashArrayIndex; ++ i) {
-
-                final K mapKey = hashArray[i];
-
-                if (mapKey == noKey) {
-
-                    if (DEBUG) {
-
-                        debug("add to map foundIndex=" + i);
-                    }
-
-                    hashArray[i] = key;
-
-                    found = i;
-
-                    newAdded = true;
-                    break;
-                }
-                else if (mapKey.equals(key)) {
-
-                    if (DEBUG) {
-
-                        debug("add to map foundIndex=" + i);
-                    }
-
-                    hashArray[i] = key;
-
-                    found = i;
-                    break;
-                }
-            }
-        }
-
-        if (ASSERT) {
-
-            if (found == NO_INDEX) {
-
-                throw new IllegalStateException();
-            }
-        }
-
-        final long result = IntPutResult.makePutResult(newAdded, found);
-
-        if (DEBUG) {
-
-            exitWithBinary(result, b -> b.add("hashArray", hashArray).add("key", key));
-        }
-
-        return result;
-    }
-
-    private static <K> void clearHashArray(K[] hashArray) {
-
-        Arrays.fill(hashArray, NO_KEY);
     }
 
     @Override

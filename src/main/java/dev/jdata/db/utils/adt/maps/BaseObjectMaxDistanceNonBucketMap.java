@@ -5,6 +5,7 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
+import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance.MaxDistanceObjectMapOperations;
 
@@ -20,20 +21,51 @@ abstract class BaseObjectMaxDistanceNonBucketMap<K, V>
     BaseObjectMaxDistanceNonBucketMap(int initialCapacityExponent, IntFunction<K[]> createKeysArray, IntFunction<V[]> createValuesArray) {
         super(initialCapacityExponent, createKeysArray, createValuesArray);
 
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createKeysArray", createKeysArray).add("createValuesArray", createValuesArray));
+        }
+
         initialize();
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseObjectMaxDistanceNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<K[]> createKeysArray,
             IntFunction<V[]> createValuesArray) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createKeysArray, createValuesArray);
 
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
+                    .add("createKeysArray", createKeysArray).add("createValuesArray", createValuesArray));
+        }
+
         initialize();
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseObjectMaxDistanceNonBucketMap(BaseObjectMaxDistanceNonBucketMap<K, V> toCopy) {
         super(toCopy);
 
-        initialize();
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy));
+        }
+
+        this.maxDistances = MaxDistance.copyMaxDistances(toCopy.maxDistances);
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     private void initialize() {
@@ -106,20 +138,20 @@ abstract class BaseObjectMaxDistanceNonBucketMap<K, V>
     }
 
     @Override
-    protected final K[] rehash(K[] hashArray, int newCapacity, int newKeyMask) {
+    protected final K[] rehash(K[] hashArray, int newCapacity, int newCapacityExponent, int newKeyMask) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newKeyMask", newKeyMask));
+            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).add("newKeyMask", newKeyMask));
         }
 
         this.maxDistances = new byte[newCapacity];
 
-        final K[] result = super.rehash(hashArray, newCapacity, newKeyMask);
+        final K[] result = super.rehash(hashArray, newCapacity, newCapacityExponent, newKeyMask);
 
         if (DEBUG) {
 
-            exit(result);
+            exit(result, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).add("newKeyMask", newKeyMask));
         }
 
         return result;
@@ -179,6 +211,8 @@ abstract class BaseObjectMaxDistanceNonBucketMap<K, V>
 
     final V putMaxDistance(K key, V value, V defaultPreviousValue) {
 
+        Objects.requireNonNull(key);
+
         if (DEBUG) {
 
             enter(b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
@@ -191,6 +225,30 @@ abstract class BaseObjectMaxDistanceNonBucketMap<K, V>
         if (DEBUG) {
 
             exit(result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
+        }
+
+        return result;
+    }
+
+    final int removeMaxDistance(K key) {
+
+        Objects.requireNonNull(key);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("key", key));
+        }
+
+        final int result = HashArray.removeAndReturnIndexScanToMax(getHashed(), key, getKeyMask(), getNoKey(), maxDistances);
+
+        if (result != NO_INDEX) {
+
+            decrementNumElements();
+        }
+
+        if (DEBUG) {
+
+            exit(result, b -> b.add("key", key));
         }
 
         return result;

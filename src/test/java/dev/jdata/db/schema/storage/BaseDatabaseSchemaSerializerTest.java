@@ -17,7 +17,9 @@ import org.jutils.parse.ParserException;
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.ddl.DDLSchemasHelper.SchemaObjectIdAllocator;
 import dev.jdata.db.ddl.allocators.DDLCompleteSchemaCachedObjects;
+import dev.jdata.db.engine.database.BucketsStringCache;
 import dev.jdata.db.engine.database.DatabaseStringManagement;
+import dev.jdata.db.engine.database.IStringCache;
 import dev.jdata.db.engine.database.StringManagement;
 import dev.jdata.db.engine.database.StringStorer;
 import dev.jdata.db.engine.server.SQLAllocator;
@@ -190,9 +192,10 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
 
         final CharacterBuffersAllocator characterBuffersAllocator = new CharacterBuffersAllocator();
         final DatabaseStringManagement databaseStringManagement = new DatabaseStringManagement(characterBuffersAllocator, stringStorer);
+        final IStringCache stringCache = new BucketsStringCache(0, 0);
         final StringManagement stringManagement = new StringManagement();
 
-        stringManagement.initialize(databaseStringManagement, stringBuffers);
+        stringManagement.initialize(databaseStringManagement, stringBuffers, stringCache);
 
         final SchemaObjectIdAllocator<Void> schemaObjectIdAllocatorObject = new SchemaObjectIdAllocator<>(AllocationType.HEAP, null,
                 (t, p) -> schemaObjectIdAllocator.applyAsInt(t));

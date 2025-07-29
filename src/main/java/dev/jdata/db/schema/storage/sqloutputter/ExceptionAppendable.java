@@ -2,6 +2,8 @@ package dev.jdata.db.schema.storage.sqloutputter;
 
 import java.util.Objects;
 
+import dev.jdata.db.utils.checks.Checks;
+
 public interface ExceptionAppendable<P, E extends Exception> {
 
     void append(char c, P parameter) throws E;
@@ -16,7 +18,7 @@ public interface ExceptionAppendable<P, E extends Exception> {
     default void append(CharSequence charSequence, int starIndex, int numCharacters, P parameter) throws E {
 
         Objects.requireNonNull(charSequence);
-        Objects.checkFromIndexSize(starIndex, numCharacters, charSequence.length());
+        Checks.checkFromIndexSize(starIndex, numCharacters, charSequence.length());
 
         final int endIndex = starIndex + numCharacters;
 

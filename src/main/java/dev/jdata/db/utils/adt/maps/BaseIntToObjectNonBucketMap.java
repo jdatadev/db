@@ -5,16 +5,25 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.adt.maps.Maps.IIntForEachAppend;
 import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseIntToObjectNonBucketMap<T, M extends IBaseIntToObjectMapCommon<T, M>> extends BaseIntArrayNonBucketMap<T[]> implements IBaseIntToObjectMapCommon<T, M> {
+abstract class BaseIntToObjectNonBucketMap<T, M extends IBaseIntToObjectMapCommon<T, M>> extends BaseIntArrayKeysNonBucketMap<T[]> implements IBaseIntToObjectMapCommon<T, M> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_TO_OBJECT_NON_BUCKET_MAP;
 
     BaseIntToObjectNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createValuesArray) {
-        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, HashedConstants.DEFAULT_LOAD_FACTOR, createValuesArray);
+        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, DEFAULT_LOAD_FACTOR, createValuesArray);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseIntToObjectNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createValuesArray) {
@@ -34,6 +43,16 @@ abstract class BaseIntToObjectNonBucketMap<T, M extends IBaseIntToObjectMapCommo
 
     BaseIntToObjectNonBucketMap(BaseIntToObjectNonBucketMap<T, M> toCopy) {
         super(toCopy, (a1, a2) -> System.arraycopy(a1, 0, a2, 0, a1.length));
+
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override

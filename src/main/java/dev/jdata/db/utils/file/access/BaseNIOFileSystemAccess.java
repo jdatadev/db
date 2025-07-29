@@ -266,11 +266,6 @@ public abstract class BaseNIOFileSystemAccess implements IAbsoluteFileSystemAcce
         return relativePathAllocator.allocateFilePath();
     }
 
-    private PathImpl allocatePathImpl() {
-
-        return pathObjectsAllocator.allocatePathImpl();
-    }
-
     @Override
     public final void moveAtomically(AbsoluteFilePath srcFilePath, AbsoluteFilePath dstFilePath) throws IOException {
 
@@ -404,13 +399,6 @@ public abstract class BaseNIOFileSystemAccess implements IAbsoluteFileSystemAcce
         }
 
         return FileChannel.open(filePath.getPath(), openOptions);
-    }
-
-    private AbsoluteDirectoryPath checkFileSystem(AbsoluteDirectoryPath directoryPath) {
-
-        checkFileSystemNIO(directoryPath.getPath());
-
-        return directoryPath;
     }
 
     private AbsoluteFilePath checkFileSystem(AbsoluteFilePath filePath) {

@@ -7,6 +7,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import dev.jdata.db.utils.adt.elements.IElements.IElementEqualityTester;
+import dev.jdata.db.utils.adt.strings.StringBuilders;
 import dev.jdata.db.utils.checks.Checks;
 
 public class ByIndex {
@@ -138,12 +139,6 @@ public class ByIndex {
         boolean equals(T byIndex1, long startIndex1, P1 parameter1, T byIndex2, long startIndex2, P2 parameter2, DELEGATE delegate);
     }
 
-    private static <T, P1, P2, DELEGATE> boolean equals(T byIndex1, long startIndex1, P1 parameter1, T byIndex2, long startIndex2, P2 parameter2, long numElements,
-            IByIndexEqualityTester<T, P1, P2, DELEGATE> equalityTester) {
-
-        return equals(byIndex1, startIndex1, parameter1, byIndex2, startIndex2, parameter2, numElements, null, equalityTester);
-    }
-
     public static <T, P1, P2, DELEGATE> boolean equals(T byIndex1, long startIndex1, P1 parameter1, T byIndex2, long startIndex2, P2 parameter2, long numElements,
             DELEGATE delegate, IByIndexEqualityTester<T, P1, P2, DELEGATE> equalityTester) {
 
@@ -258,7 +253,7 @@ public class ByIndex {
 
             prefixAdder.accept(byIndex, sb);
 
-            if (!sb.isEmpty()) {
+            if (!StringBuilders.isEmpty(sb)) {
 
                 sb.append(' ');
             }

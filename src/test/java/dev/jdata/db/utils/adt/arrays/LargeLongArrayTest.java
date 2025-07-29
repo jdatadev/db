@@ -7,7 +7,13 @@ public final class LargeLongArrayTest extends BaseLargeArrayTest<long[][], long[
     @Override
     LargeLongArray createArray(int initialOuterCapacity, int innerCapacityExponent) {
 
-        return new LargeLongArray(initialOuterCapacity, innerCapacityExponent, null);
+        return new LargeLongArray(initialOuterCapacity, innerCapacityExponent);
+    }
+
+    @Override
+    LargeLongArray createArray(int initialOuterCapacity, int innerCapacityExponent, int clearValue) {
+
+        return new LargeLongArray(initialOuterCapacity, innerCapacityExponent, clearValue);
     }
 
     @Override

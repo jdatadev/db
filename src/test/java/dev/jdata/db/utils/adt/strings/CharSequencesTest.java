@@ -1,9 +1,17 @@
 package dev.jdata.db.utils.adt.strings;
 
+import java.util.Random;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import dev.jdata.db.utils.adt.CapacityExponents;
+import dev.jdata.db.utils.adt.hashed.HashFunctions;
+import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.function.CharPredicate;
+import dev.jdata.db.utils.scalars.Integers;
 
 public final class CharSequencesTest extends BaseCharSequencesTest {
 
@@ -62,5 +70,106 @@ public final class CharSequencesTest extends BaseCharSequencesTest {
         assertThat(CharSequences.hasFirstCharacterAndRemaining(charSequenceString, numCharaters, Character::isAlphabetic,
                 c -> Character.isAlphabetic(c) || Character.isDigit(c)))
             .isEqualTo(expectedResult);
+    }
+
+    @Test
+    @Category(AdhocTest.class)
+    public void testCharSequenceHash() {
+
+        final int[] percentages = new int[] { 10, 25, 50, 75, 100 };
+
+        final Random random = new Random(1L);
+
+        for (int capacityExponent = 0; capacityExponent < 24; ++ capacityExponent) {
+
+            for (int percentage : percentages) {
+
+                final long now = System.currentTimeMillis();
+
+                final int numCollisions = checkCharSequenceHash(capacityExponent, percentage, b -> generateRandomString(b, random));
+
+                final int numCollisionsPercent = (numCollisions * 100) / CapacityExponents.computeIntCapacityFromExponent(capacityExponent);
+
+                final long time = System.currentTimeMillis() - now;
+
+                System.out.println("test char sequence hash capacityExponent=" + capacityExponent + " numCollisions=" + numCollisions
+                        + " numCollisionsPercent=" + numCollisionsPercent + " time=" + time + " percentage=" + percentage);
+            }
+        }
+    }
+
+    private static void generateRandomString(StringBuilder sb, Random random) {
+
+        final int length = random.nextInt(30);
+
+        for (int j = 0; j < length; ++ j) {
+
+            final int codePointOffset = random.nextInt(127 - ' ');
+
+            final char c = (char)(' ' + codePointOffset);
+
+            sb.append(c);
+        }
+    }
+
+    private int checkCharSequenceHash(int capacityExponent, int capacityPercentage, Consumer<StringBuilder> generateKey) {
+
+        Checks.isLessThan(capacityExponent, Integer.SIZE - 1);
+
+        final int capacity = 1 << capacityExponent;
+        final int keyMask = CapacityExponents.makeIntKeyMask(capacityExponent);
+
+        final long[] keys = new long[capacity];
+        final StringBuilder sb = new StringBuilder();
+
+        int numCollisions = 0;
+
+        final int numElements = (capacity * capacityPercentage) / 100;
+
+        for (int i = 0; i < numElements; ++ i) {
+
+            generateKey.accept(sb);
+
+            final long hash = CharSequences.longHashCode(sb, capacityExponent);
+
+            sb.setLength(0);
+
+            final long longHashArrayIndex = HashFunctions.longHashArrayIndex(hash, keyMask);
+
+            final int hashArrayIndex = Integers.checkUnsignedLongToUnsignedInt(longHashArrayIndex);
+
+            if (keys[hashArrayIndex] > 0) {
+
+                ++ numCollisions;
+            }
+
+            ++ keys[hashArrayIndex];
+        }
+
+        return numCollisions;
+    }
+
+    @Override
+    boolean isASCIIAlphaNumeric(String string) {
+
+        return CharSequences.isASCIIAlphaNumeric(string);
+    }
+
+    @Override
+    boolean isASCIIAlphaNumeric(String string, CharPredicate additionalPredicate) {
+
+        return CharSequences.isASCIIAlphaNumeric(string, additionalPredicate);
+    }
+
+    @Override
+    boolean containsAny(String string, CharPredicate predicate) {
+
+        return CharSequences.containsAny(string, predicate);
+    }
+
+    @Override
+    boolean containsAny(String string, int startIndex, int numCharacters, CharPredicate predicate) {
+
+        return CharSequences.containsAny(string, startIndex, numCharacters, predicate);
     }
 }

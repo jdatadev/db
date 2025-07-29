@@ -4,18 +4,12 @@ import java.util.List;
 
 public final class MutableIntToObjectMaxDistanceNonBucketMapTest
 
-        extends BaseMutableIntToIntegerOrObjectMaxDistanceTest<Integer[], MutableIntToObjectMaxDistanceNonBucketMap<Integer>> {
+        extends BaseMutableIntToIntegerOrObjectMaxDistanceMapTest<Integer[], MutableIntToObjectMaxDistanceNonBucketMap<Integer>> {
 
     @Override
     MutableIntToObjectMaxDistanceNonBucketMap<Integer> createMap(int initialCapacityExponent) {
 
         return new MutableIntToObjectMaxDistanceNonBucketMap<>(initialCapacityExponent, Integer[]::new);
-    }
-
-    @Override
-    int[] createKeysArray(int length) {
-
-        return new int[length];
     }
 
     @Override
@@ -43,13 +37,13 @@ public final class MutableIntToObjectMaxDistanceNonBucketMapTest
     }
 
     @Override
-    <P> void forEachKeysAndValues(MutableIntToObjectMaxDistanceNonBucketMap<Integer> map, P parameter) {
+    <P> void forEachKeyAndValueWithNullFunction(MutableIntToObjectMaxDistanceNonBucketMap<Integer> map, P parameter) {
 
         map.forEachKeyAndValue(parameter, null);
     }
 
     @Override
-    <P> void forEachKeysAndValues(MutableIntToObjectMaxDistanceNonBucketMap<Integer> map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
+    <P> void forEachKeyAndValue(MutableIntToObjectMaxDistanceNonBucketMap<Integer> map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
 
         map.forEachKeyAndValue(parameter, (k, v, p) -> {
 

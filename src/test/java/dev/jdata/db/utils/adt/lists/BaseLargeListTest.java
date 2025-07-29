@@ -3,11 +3,10 @@ package dev.jdata.db.utils.adt.lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import dev.jdata.db.test.unit.BaseTest;
 import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.adt.elements.ILongElements.IContainsOnlyPredicate;
 
-abstract class BaseLargeListTest<T extends BaseLargeList<?, ?, ?> & ILargeList & IElements> extends BaseTest {
+abstract class BaseLargeListTest<T extends BaseLargeList<?, ?, ?> & ILargeList & IElements> extends BaseLongNodeListTest {
 
     abstract T createLargeList(int initialOuterCapacity, int innerCapacity);
 
@@ -117,10 +116,10 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?, ?> & ILargeList &
         removeNode(list, node2, node3);
         checkElements(list, 345L, 123L);
 
-        removeNode(list, node3, BaseList.NO_NODE);
+        removeNode(list, node3, NO_NODE);
         checkElements(list, 123L);
 
-        removeNode(list, node1, BaseList.NO_NODE);
+        removeNode(list, node1, NO_NODE);
 
         checkNoElements(list);
     }
@@ -360,13 +359,13 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?, ?> & ILargeList &
         final long node1 = addHead(list, 123L);
         checkFreeListIsEmpty(list);
 
-        removeNode(list, node1, BaseList.NO_NODE);
+        removeNode(list, node1, NO_NODE);
         checkFreeListElements(list, node1);
 
         final long node2 = addHead(list, 234L);
         checkFreeListIsEmpty(list);
 
-        removeNode(list, node2, BaseList.NO_NODE);
+        removeNode(list, node2, NO_NODE);
         checkFreeListElements(list, node2);
 
         final long node3 = addHead(list, 345L);
@@ -377,7 +376,7 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?, ?> & ILargeList &
 
         removeNode(list, node4, node5);
         removeNode(list, node3, node5);
-        removeNode(list, node5, BaseList.NO_NODE);
+        removeNode(list, node5, NO_NODE);
 
         checkFreeListElements(list, node5, node3, node4);
     }
@@ -393,13 +392,13 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?, ?> & ILargeList &
         final long node1 = addHead(list, 123L);
         checkFreeListIsEmpty(list);
 
-        removeTailNode(list, BaseList.NO_NODE);
+        removeTailNode(list, NO_NODE);
         checkFreeListElements(list, node1);
 
         final long node2 = addHead(list, 234L);
         checkFreeListIsEmpty(list);
 
-        removeTailNode(list, BaseList.NO_NODE);
+        removeTailNode(list, NO_NODE);
         checkFreeListElements(list, node2);
 
         final long node3 = addHead(list, 345L);
@@ -408,7 +407,7 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?, ?> & ILargeList &
         checkFreeListIsEmpty(list);
 
         removeTailNode(list, node4);
-        removeTailNode(list, BaseList.NO_NODE);
+        removeTailNode(list, NO_NODE);
 
         checkFreeListElements(list, node4, node3);
     }
@@ -469,14 +468,6 @@ abstract class BaseLargeListTest<T extends BaseLargeList<?, ?, ?> & ILargeList &
 
         assertThat(list).isEmpty();
         assertThat(list).hasNumElements(0L);
-    }
-
-    private static <T extends BaseLargeList<?, ?, ?> & IElements> void checkElements(long headNode, T list, long ... elements) {
-
-        assertThat(list).isNotEmpty();
-        assertThat(list).hasNumElements(elements.length);
-
-        assertThat(list.toListArrayValues(headNode)).isEqualTo(elements);
     }
 
     static <T extends BaseLargeList<?, ?, ?>> void checkFreeListIsEmpty(T list) {

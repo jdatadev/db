@@ -10,6 +10,26 @@ import dev.jdata.db.utils.function.CharPredicate;
 
 public class Strings {
 
+    public static String repeat(String string, int times) {
+
+        final int stringLength = string.length();
+        final int resultLength = stringLength * times;
+
+        final char[] charArray = new char[resultLength];
+
+        int dstIndex = 0;
+
+        for (int i = 0; i < times; ++ i) {
+
+            for (int j = 0; j < stringLength; ++ j) {
+
+                charArray[dstIndex ++] = string.charAt(j);
+            }
+        }
+
+        return new String(charArray);
+    }
+
     public static boolean isAllLowerCase(String string) {
 
         return containsOnly(string, Character::isLowerCase);
@@ -30,9 +50,19 @@ public class Strings {
         return string;
     }
 
-    private static boolean isASCIIAlphaNumeric(String string) {
+    public static boolean containsAny(String string, CharPredicate predicate) {
 
-        return isASCIIAlphaNumeric(string, c -> true);
+        return CharSequences.containsAny(string, predicate);
+    }
+
+    public static boolean containsAny(String string, int startIndex, int numCharacters, CharPredicate predicate) {
+
+        return CharSequences.containsAny(string, startIndex, numCharacters, predicate);
+    }
+
+    public static boolean isASCIIAlphaNumeric(String string) {
+
+        return CharSequences.isASCIIAlphaNumeric(string);
     }
 
     public static boolean isASCIIAlphaNumeric(String string, CharPredicate additionalPredicate) {
@@ -136,6 +166,21 @@ public class Strings {
         for (int i = 0; i < length; ++ i) {
 
             charArray[i] = charSequence.charAt(i);
+        }
+
+        return String.copyValueOf(charArray);
+    }
+
+    public static String of(CharSequence charSequence, int startIndex, int numCharacters) {
+
+        Objects.requireNonNull(charSequence);
+        Checks.checkFromIndexSize(startIndex, numCharacters, charSequence.length());
+
+        final char[] charArray = new char[numCharacters];
+
+        for (int i = 0; i < numCharacters; ++ i) {
+
+            charArray[i] = charSequence.charAt(startIndex + i);
         }
 
         return String.copyValueOf(charArray);

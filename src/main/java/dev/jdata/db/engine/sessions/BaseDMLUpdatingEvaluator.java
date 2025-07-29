@@ -17,7 +17,7 @@ import dev.jdata.db.sql.ast.statements.dml.SQLDeleteStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateValues;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.arrays.ILongArray;
+import dev.jdata.db.utils.adt.arrays.ILongArrayCommon;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 
 class BaseDMLUpdatingEvaluator {
@@ -53,12 +53,12 @@ class BaseDMLUpdatingEvaluator {
     @FunctionalInterface
     private interface EvaluatedUpdateValuesProcessor<E extends Exception> {
 
-        void processEvaluatedValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArray rowIds,
+        void processEvaluatedValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArrayCommon rowIds,
                 BaseDMLUpdatingEvaluatorParameter evaluatorParameter) throws OverflowException;
     }
 
     private static <E extends EvaluateException> void evaluteUpdateValues(ASTList<SQLColumnValueUpdateValue> values, SQLColumnValueUpdateValues updateValues,
-            ILongArray rowIds, BaseDMLUpdatingEvaluatorParameter evaluatorParameter, EvaluatedUpdateValuesProcessor<E> evaluatedValuesProcessor)
+            ILongArrayCommon rowIds, BaseDMLUpdatingEvaluatorParameter evaluatorParameter, EvaluatedUpdateValuesProcessor<E> evaluatedValuesProcessor)
                     throws EvaluateException {
 
         final int numColumns = values.size();
@@ -83,7 +83,7 @@ class BaseDMLUpdatingEvaluator {
         }
     }
 
-    private static void storeUpdateValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArray rowIds,
+    private static void storeUpdateValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArrayCommon rowIds,
             BaseDMLUpdatingEvaluatorParameter evaluatorParameter) throws OverflowException {
 
         final Transaction transaction = evaluatorParameter.getTransaction();

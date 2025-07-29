@@ -1,7 +1,6 @@
 package dev.jdata.db.data;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.IContains;
@@ -44,7 +43,7 @@ public class RowDataNumBits implements RowDataNumBitsGetter, IContains, IClearab
     @Override
     public final boolean isNull(int columnIndex) {
 
-        Objects.checkIndex(columnIndex, numColumns);
+        Checks.checkIndex(columnIndex, numColumns);
 
         return rowDataNumBits[columnIndex] == 0;
     }
@@ -52,7 +51,7 @@ public class RowDataNumBits implements RowDataNumBitsGetter, IContains, IClearab
     @Override
     public final int getNumBits(int columnIndex) {
 
-        Objects.checkIndex(columnIndex, numColumns);
+        Checks.checkIndex(columnIndex, numColumns);
 
         return rowDataNumBits[columnIndex];
     }
@@ -73,7 +72,7 @@ public class RowDataNumBits implements RowDataNumBitsGetter, IContains, IClearab
 
     private void setNumBits(int columnIndex, int numBits) {
 
-        Objects.checkIndex(columnIndex, numColumns);
+        Checks.checkIndex(columnIndex, numColumns);
         Checks.isColumnIndex(columnIndex);
         Checks.isNumBits(numBits);
 

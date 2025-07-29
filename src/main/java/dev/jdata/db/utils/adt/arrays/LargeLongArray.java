@@ -4,35 +4,123 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.ObjLongConsumer;
 
-import dev.jdata.db.utils.adt.IClearable;
+import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.elements.ByIndex;
 import dev.jdata.db.utils.adt.strings.StringBuilders;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.debug.PrintDebug;
+import dev.jdata.db.utils.scalars.Integers;
 
-public final class LargeLongArray extends LargeLimitArray<long[][], long[]> implements IClearable, ILongArray {
+public final class LargeLongArray extends LargeLimitArray<long[][], long[]> implements IMutableLongArray {
 
-    private static final ArrayClearer<long[], Long> arrayClearer = (a, s, n, p) -> {
+    private static final boolean DEBUG = DebugConstants.DEBUG_LARGE_LONG_ARRAY;
 
-        if  (p != null) {
+    private static final Class<?> debugClass = LargeLongArray.class;
 
-            Arrays.fill(a, s, s + n, p.longValue());
+    public static LargeLongArray copyOf(LargeLongArray toCopy) {
+
+        Objects.requireNonNull(toCopy);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("toCopy", toCopy));
         }
-    };
 
-    private final Long clearValue;
+        final LargeLongArray result = new LargeLongArray(toCopy);
 
-    public LargeLongArray(int initialOuterCapacity, int innerCapacityExponent, Long clearValue) {
-        super(initialOuterCapacity, long[][]::new, a -> a.length, innerCapacityExponent);
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result);
+        }
+
+        return result;
+    }
+
+    private final long clearValue;
+
+    public LargeLongArray(int initialOuterCapacity, int innerCapacityExponent) {
+        this(initialOuterCapacity, innerCapacityExponent, 0L, false);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialOuterCapacity", initialOuterCapacity).add("innerCapacityExponent", innerCapacityExponent));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    public LargeLongArray(int initialOuterCapacity, int innerCapacityExponent, long clearValue) {
+        this(initialOuterCapacity, innerCapacityExponent, clearValue, true);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialOuterCapacity", initialOuterCapacity).add("innerCapacityExponent", innerCapacityExponent).add("clearValue", clearValue));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    LargeLongArray(int initialOuterCapacity, int innerCapacityExponent, long clearValue, boolean hasClearValue) {
+        super(initialOuterCapacity, innerCapacityExponent, hasClearValue, long[][]::new);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialOuterCapacity", initialOuterCapacity).add("innerCapacityExponent", innerCapacityExponent).add("clearValue", clearValue)
+                    .add("hasClearValue", hasClearValue));
+        }
 
         this.clearValue = clearValue;
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    private LargeLongArray(LargeLongArray toCopy) {
+        super(toCopy, (s, d, n) -> {
+
+            final int length = s.length;
+
+            Checks.areEqual(length, d.length);
+
+            for (int i = 0; i < n; ++ i) {
+
+                final long[] a = s[i];
+
+                d[i] = a != null ? Array.copyOf(a) : null;
+            }
+        });
+
+        this.clearValue = toCopy.clearValue;
+    }
+
+    @Override
+    public long getCapacity() {
+
+        return getArrayElementCapacity();
     }
 
     @Override
     public void clear() {
 
-        super.clear();
+        if (DEBUG) {
 
-        clearArrays(clearValue, arrayClearer);
+            enter();
+        }
+
+        clearArray();
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
@@ -44,63 +132,102 @@ public final class LargeLongArray extends LargeLimitArray<long[][], long[]> impl
     @Override
     public long get(long index) {
 
-        Objects.checkIndex(index, getLimit());
+        Checks.checkIndex(index, getLimit());
 
         return getOuterArray()[getOuterIndex(index)][getInnerElementIndex(index)];
     }
 
+    @Override
     public void add(long value) {
 
-        final long[] array = checkCapacity();
+        if (DEBUG) {
 
-        final long index = getAndIncrementLimit();
+            enter(b -> b.add("value", value));
+        }
+
+        final long limit = getLimit();
+
+        final long[] array = checkCapacityForOneAppendedElementAndReturnInnerArray(limit);
+
+        final long index = limit;
+
+        incrementLimit();
 
         array[getInnerElementIndex(index)] = value;
+
+        if (DEBUG) {
+
+            exit(value);
+        }
     }
 
+    @Override
     public void set(long index, long value) {
 
         Checks.isIndexNotOutOfBounds(index);
 
-        final int outerIndex = ensureCapacityAndLimit(index);
+        if (DEBUG) {
+
+            enter(b -> b.add("index", index).add("value", value));
+        }
+
+        final int outerIndex = ensureCapacityAndLimitAndReturnOuterIndex(index, shouldClear());
 
         getOuterArray()[outerIndex][getInnerElementIndex(index)] = value;
-    }
 
-    @Override
-    protected long[][] copyOuterArray(long[][] outerArray, int capacity) {
+        if (DEBUG) {
 
-        return Arrays.copyOf(outerArray, capacity);
+            exit();
+        }
     }
 
     @Override
     protected int getOuterArrayLength(long[][] outerArray) {
 
+        Objects.requireNonNull(outerArray);
+
         return outerArray.length;
+    }
+
+    @Override
+    protected long[][] copyOuterArray(long[][] outerArray, int newCapacity) {
+
+        Objects.requireNonNull(outerArray);
+        Checks.isGreaterThanOrEqualTo(newCapacity, outerArray.length);
+
+        return Arrays.copyOf(outerArray, newCapacity);
     }
 
     @Override
     protected long[] getInnerArray(long[][] outerArray, int index) {
 
+        Objects.requireNonNull(outerArray);
+        Checks.checkArrayIndex(outerArray, index);
+
         return outerArray[index];
     }
 
     @Override
-    protected long[] abstractCreateAndSetInnerArray(long[][] outerArray, int outerIndex, int innerArrayLength) {
+    protected void clearInnerArray(long[] innerArray, long startIndex, long numElements) {
+
+        Objects.requireNonNull(innerArray);
+        Checks.checkFromIndexSize(startIndex, numElements, innerArray.length);
+
+        assertShouldClear();
+
+        Arrays.fill(innerArray, Integers.checkUnsignedLongToUnsignedInt(startIndex), Integers.checkUnsignedLongToUnsignedInt(startIndex + numElements), clearValue);
+    }
+
+    @Override
+    protected long[] abstractCreateAndSetInnerArray(long[][] outerArray, int outerIndex, long innerArrayElementCapacity) {
+
+        Objects.requireNonNull(outerArray);
+        Checks.checkArrayIndex(outerArray, outerIndex);
+        Checks.isCapacity(innerArrayElementCapacity);
+
+        final int innerArrayLength = Integers.checkUnsignedLongToUnsignedInt(innerArrayElementCapacity);
 
         return outerArray[outerIndex] = new long[innerArrayLength];
-    }
-
-    @Override
-    protected long[] checkCapacity() {
-
-        return checkCapacity(clearValue, arrayClearer);
-    }
-
-    @Override
-    int ensureCapacityAndLimit(long index) {
-
-        return ensureCapacityAndLimit(index, clearValue, arrayClearer);
     }
 
     @Override

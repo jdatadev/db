@@ -11,6 +11,7 @@ import java.util.function.LongPredicate;
 import java.util.function.LongToIntFunction;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
+import java.util.function.ToLongFunction;
 
 import dev.jdata.db.utils.adt.elements.ByIndex;
 import dev.jdata.db.utils.adt.elements.ByIndex.IByIndexElementEqualityTester;
@@ -23,7 +24,7 @@ import dev.jdata.db.utils.scalars.Integers;
 
 public class Array {
 
-    private static <T, P> long count(T[] array, P parameter, BiPredicate<T, P> predicate) {
+    public static <T, P> long count(T[] array, P parameter, BiPredicate<T, P> predicate) {
 
         Objects.requireNonNull(array);
         Objects.requireNonNull(predicate);
@@ -41,7 +42,7 @@ public class Array {
         return count;
     }
 
-    private static <T> long closureOrConstantCount(T[] array, Predicate<T> predicate) {
+    public static <T> long closureOrConstantCount(T[] array, Predicate<T> predicate) {
 
         Objects.requireNonNull(array);
         Objects.requireNonNull(predicate);
@@ -78,7 +79,7 @@ public class Array {
         return sum;
     }
 
-    public static <T> int max(T[] array, int defaultValue, ToIntFunction<T> mapper) {
+    public static <T> int maxInt(T[] array, int defaultValue, ToIntFunction<T> mapper) {
 
         Objects.requireNonNull(array);
         Objects.requireNonNull(mapper);
@@ -89,6 +90,28 @@ public class Array {
         for (T element : array) {
 
             final int value = mapper.applyAsInt(element);
+
+            if (value > max) {
+
+                max = value;
+                found = true;
+            }
+        }
+
+        return found ? max : defaultValue;
+    }
+
+    public static <T> long maxLong(T[] array, long defaultValue, ToLongFunction<T> mapper) {
+
+        Objects.requireNonNull(array);
+        Objects.requireNonNull(mapper);
+
+        long max = Long.MIN_VALUE;
+        boolean found = false;
+
+        for (T element : array) {
+
+            final long value = mapper.applyAsLong(element);
 
             if (value > max) {
 
@@ -131,7 +154,7 @@ public class Array {
     public static <T, P> T findAtMostOne(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
 
         Objects.requireNonNull(array);
-        Objects.checkFromIndexSize(startIndex, numElements, array.length);
+        Checks.checkFromIndexSize(startIndex, numElements, array.length);
         Objects.requireNonNull(predicate);
 
         T result = null;
@@ -229,6 +252,13 @@ public class Array {
         return result;
     }
 
+    public static byte[] copyOf(byte[] toCopy) {
+
+        Objects.requireNonNull(toCopy);
+
+        return Arrays.copyOf(toCopy, toCopy.length);
+    }
+
     public static int[] copyOf(int[] toCopy) {
 
         Objects.requireNonNull(toCopy);
@@ -261,11 +291,6 @@ public class Array {
         int apply(int element, P parameter);
     }
 
-    public static <P> int[] closureOrConstantMapInt(int[] array, IntToIntFunction mapper) {
-
-        return mapInt(array, mapper, (e, p) -> p.apply(e));
-    }
-
     public static <P> int[] mapInt(int[] array, P parameter, IntMapper<P> mapper) {
 
         Objects.requireNonNull(array);
@@ -281,6 +306,11 @@ public class Array {
         }
 
         return result;
+    }
+
+    public static <P> int[] closureOrConstantMapInt(int[] array, IntToIntFunction mapper) {
+
+        return mapInt(array, mapper, (e, p) -> p.apply(e));
     }
 
     public static <T> int[] closureOrConstantMapToInt(T[] toMap, ToIntFunction<T> mapper) {
@@ -349,7 +379,7 @@ public class Array {
 
         Objects.requireNonNull(values);
 
-        return toByteArray(values, Integers::checkUnsignedIntToUnsignedByte);
+        return toByteArray(values, Integers::checkUnsignedIntToUnsignedByteAsByte);
     }
 
     private static byte[] toByteArray(int[] values, IntToByteFunction intToByteFunction) {
@@ -413,6 +443,27 @@ public class Array {
         System.arraycopy(array, startIndex, array, startIndex + delta, numElements);
     }
 
+    public static <T> boolean equals(T[] array1, int startIndex1, T[] array2, int startIndex2, int numElements) {
+
+        Objects.requireNonNull(array1);
+        Checks.checkFromIndexSize(startIndex1, numElements, array1.length);
+        Objects.requireNonNull(array2);
+        Checks.checkFromIndexSize(startIndex2, numElements, array2.length);
+
+        boolean equals = true;
+
+        for (int i = 0; i < numElements; ++ i) {
+
+            if (!Objects.equals(array1[startIndex1 + i], array2[startIndex2 + i])) {
+
+                equals = false;
+                break;
+            }
+        }
+
+        return equals;
+    }
+
     @FunctionalInterface
     public interface IArrayEqualityTester<T, P1, P2> extends IByIndexElementEqualityTester<T, P1, P2> {
 
@@ -445,7 +496,7 @@ public class Array {
     public static String toString(byte[] array, int startIndex, int numElements) {
 
         Objects.requireNonNull(array);
-        Objects.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkFromToIndex(startIndex, numElements, array.length);
 
         return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[(int)i]));
     }
@@ -453,7 +504,7 @@ public class Array {
     public static String toString(int[] array, int startIndex, int numElements) {
 
         Objects.requireNonNull(array);
-        Objects.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkFromToIndex(startIndex, numElements, array.length);
 
         return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[(int)i]));
     }
@@ -461,7 +512,7 @@ public class Array {
     public static String toString(int[] array, int startIndex, int numElements, IntPredicate predicate) {
 
         Objects.requireNonNull(array);
-        Objects.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(predicate);
 
         return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[(int)i]), (a, i, b) -> b.append(a[(int)i]));
@@ -470,7 +521,7 @@ public class Array {
     public static void toString(int[] array, int startIndex, int numElements, StringBuilder sb, IntPredicate predicate) {
 
         Objects.requireNonNull(array);
-        Objects.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(sb);
         Objects.requireNonNull(predicate);
 
@@ -480,7 +531,7 @@ public class Array {
     public static void toString(int[] array, int startIndex, int numElements, StringBuilder sb, IntPredicate predicate, IntByIndexStringAdder<int[]> byIndexStringAdder) {
 
         Objects.requireNonNull(array);
-        Objects.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(sb);
         Objects.requireNonNull(predicate);
 
@@ -491,7 +542,7 @@ public class Array {
     public static String toString(long[] array, int startIndex, int numElements, LongPredicate predicate) {
 
         Objects.requireNonNull(array);
-        Objects.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(predicate);
 
         return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[(int)i]), (a, i, b) -> b.append(a[(int)i]));
@@ -500,7 +551,7 @@ public class Array {
     public static void toString(long[] array, int startIndex, int numElements, StringBuilder sb, LongPredicate predicate) {
 
         Objects.requireNonNull(array);
-        Objects.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(sb);
         Objects.requireNonNull(predicate);
 

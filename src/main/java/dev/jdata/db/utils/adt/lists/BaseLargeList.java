@@ -33,7 +33,7 @@ public abstract class BaseLargeList<
     }
 
     @FunctionalInterface
-    public interface BaseValuesFactory<T, U extends BaseInnerOuterList<T, U, V>, V extends BaseValues<T, U, V>> {
+    public interface ILargeListValuesFactory<T, U extends BaseInnerOuterList<T, U, V>, V extends BaseValues<T, U, V>> {
 
         V create(int initialOuterCapacity);
     }
@@ -52,7 +52,7 @@ public abstract class BaseLargeList<
 
     abstract void clearNumElements();
 
-    BaseLargeList(int initialOuterCapacity, int innerNodeCapacity, BaseValuesFactory<LIST_T, LIST, VALUES> valuesFactory) {
+    BaseLargeList(int initialOuterCapacity, int innerNodeCapacity, ILargeListValuesFactory<LIST_T, LIST, VALUES> valuesFactory) {
         super(valuesFactory.create(initialOuterCapacity), 32);
 
         Checks.isInitialCapacity(initialOuterCapacity);
@@ -87,6 +87,15 @@ public abstract class BaseLargeList<
         this.freeListHead = NO_NODE;
     }
 
+    public final int getOuterArrayCapacity() {
+
+        return next.length;
+    }
+
+    public final int getInnerArrayCapacity() {
+        return innerArrayCapacity;
+    }
+
     @Override
     public final long getNextNode(long node) {
 
@@ -98,7 +107,7 @@ public abstract class BaseLargeList<
         return next.length;
     }
 
-    final <I> void clearNodes(I instance, long headNode, LongNodeSetter<I> headNodeSetter, LongNodeSetter<I> tailNodeSetter) {
+    final <I> void clearNodes(I instance, long headNode, ILongNodeSetter<I> headNodeSetter, ILongNodeSetter<I> tailNodeSetter) {
 
         for (long node = headNode; node != NO_NODE; node = getNextNode(node)) {
 
@@ -157,7 +166,9 @@ public abstract class BaseLargeList<
 
             int numNodes = (int)array[0];
 
-            if (numNodes == array.length - 1) {
+            final int arrayLengthMinusNumElementsLength = array.length - 1;
+
+            if (numNodes == arrayLengthMinusNumElementsLength) {
 
                 final VALUES values = getValues();
 

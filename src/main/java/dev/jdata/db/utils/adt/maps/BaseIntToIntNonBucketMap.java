@@ -3,23 +3,52 @@ package dev.jdata.db.utils.adt.maps;
 import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseIntToIntNonBucketMap<M extends IBaseIntToIntMapCommon<M>> extends BaseIntArrayNonBucketMap<int[]> implements IBaseIntToIntMapCommon<M> {
+abstract class BaseIntToIntNonBucketMap<M extends IBaseIntToIntMapCommon<M>> extends BaseIntArrayKeysNonBucketMap<int[]> implements IBaseIntToIntMapCommon<M> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_TO_INT_NON_BUCKET_MAP;
 
     BaseIntToIntNonBucketMap(int initialCapacityExponent) {
-        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, HashedConstants.DEFAULT_LOAD_FACTOR);
+        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, DEFAULT_LOAD_FACTOR);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseIntToIntNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor, int[]::new);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    BaseIntToIntNonBucketMap(BaseIntToIntNonRemoveNonBucketMap toCopy) {
+    BaseIntToIntNonBucketMap(BaseIntToIntNonBucketMap<M> toCopy) {
         super(toCopy, (a1, a2) -> System.arraycopy(a1, 0, a2, 0, a1.length));
+
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override

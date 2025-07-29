@@ -105,6 +105,12 @@ public final class MutableLongIndexList extends BaseLongIndexList implements IMu
     }
 
     @Override
+    public long getCapacity() {
+
+        return elementsArray.length;
+    }
+
+    @Override
     public void addTail(long value) {
 
         final int arrayLength = elementsArray.length;

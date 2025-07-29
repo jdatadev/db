@@ -7,10 +7,10 @@ import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.ISQLAllocator;
+import dev.jdata.db.sql.ast.ISQLFreeable;
 import dev.jdata.db.utils.adt.lists.LongIndexList;
-import dev.jdata.db.utils.allocators.IFreeable;
 
-public final class SQLDropConstraintOperation extends SQLAlterTableConstraintOperation implements IFreeable<ISQLAllocator> {
+public final class SQLDropConstraintOperation extends SQLAlterTableConstraintOperation implements ISQLFreeable {
 
     private final LongIndexList names;
 

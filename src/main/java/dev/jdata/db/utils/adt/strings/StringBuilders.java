@@ -2,6 +2,8 @@ package dev.jdata.db.utils.adt.strings;
 
 import java.util.Objects;
 
+import dev.jdata.db.utils.checks.Checks;
+
 public class StringBuilders {
 
     public static enum Case {
@@ -11,6 +13,30 @@ public class StringBuilders {
     }
 
     static final String HEX_PREFIX = "0x";
+
+    public static boolean isEmpty(StringBuilder sb) {
+
+        return sb.length() == 0;
+    }
+
+    public static void repeat(StringBuilder sb, String string, int times) {
+
+        Checks.isNotEmpty(string);
+        Checks.isAboveZero(times);
+
+        final int stringLength = string.length();
+        final int resultLength = stringLength * times;
+
+        sb.ensureCapacity(sb.length() + resultLength);
+
+        for (int i = 0; i < times; ++ i) {
+
+            for (int j = 0; j < stringLength; ++ j) {
+
+                sb.append(string.charAt(j));
+            }
+        }
+    }
 
     public static void format(StringBuilder sb, String format, Object ... arguments) {
 

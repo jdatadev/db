@@ -31,13 +31,13 @@ abstract class BaseMutableLongToObjectNonContainsKeyNonBucketMapTest<T, M extend
     }
 
     @Override
-    final <P> void forEachKeysAndValues(M map, P parameter) {
+    final <P> void forEachKeyAndValueWithNullFunction(M map, P parameter) {
 
         map.forEachKeyAndValue(parameter, null);
     }
 
     @Override
-    final <P> void forEachKeysAndValues(M map, P parameter, List<Integer> keysDst, List<Integer> valuesDst,
+    final <P> void forEachKeyAndValue(M map, P parameter, List<Integer> keysDst, List<Integer> valuesDst,
             List<P> parameters) {
 
         map.forEachKeyAndValue(parameter, (k, v, p) -> {

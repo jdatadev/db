@@ -1,8 +1,6 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.test.unit.BaseTest;
-
-abstract class BaseLargeMultiHeadListTest extends BaseTest {
+abstract class BaseLargeMultiHeadListTest extends BaseLongNodeListTest {
 
     static final class TestList {
 

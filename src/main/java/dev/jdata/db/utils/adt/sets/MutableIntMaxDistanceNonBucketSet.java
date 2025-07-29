@@ -1,7 +1,6 @@
 package dev.jdata.db.utils.adt.sets;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.allocators.IIntSetAllocator;
 
@@ -10,7 +9,7 @@ public final class MutableIntMaxDistanceNonBucketSet extends BaseIntMaxDistanceN
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_INT_MAX_DISTANCE_NON_BUCKET_SET;
 
     public MutableIntMaxDistanceNonBucketSet(int initialCapacityExponent) {
-        super(initialCapacityExponent, HashedConstants.DEFAULT_LOAD_FACTOR);
+        super(initialCapacityExponent, DEFAULT_LOAD_FACTOR);
     }
 
     public MutableIntMaxDistanceNonBucketSet(int initialCapacityExponent, float loadFactor) {
@@ -63,7 +62,7 @@ public final class MutableIntMaxDistanceNonBucketSet extends BaseIntMaxDistanceN
             enter(b -> b.add("value", value));
         }
 
-        final int index = removeAndReturnIndex(value);
+        final int index = removeMaxDistance(value);
 
         final boolean result = index != HashArray.NO_INDEX;
 

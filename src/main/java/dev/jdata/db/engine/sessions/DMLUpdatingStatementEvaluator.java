@@ -21,7 +21,7 @@ import dev.jdata.db.sql.ast.statements.dml.SQLInsertStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateValues;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.arrays.ILongArray;
+import dev.jdata.db.utils.adt.arrays.ILongArrayCommon;
 import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -36,7 +36,7 @@ public class DMLUpdatingStatementEvaluator {
 
         evaluatorParameter.initializeForDMLUpdateOperation(table);
 
-        final RowDataNumBits rowDataNumBits = evaluatorParameter.getRowDataNumBitsAndOffsets();
+        final RowDataNumBits rowDataNumBits = evaluatorParameter.getRowDataNumBits();
 
         Checks.isEmpty(rowDataNumBits);
 
@@ -80,7 +80,7 @@ public class DMLUpdatingStatementEvaluator {
             throws OverflowException {
 
         final int tableId = evaluatorParameter.getTableId();
-        final RowDataNumBits rowDataNumBits = evaluatorParameter.getRowDataNumBitsAndOffsets();
+        final RowDataNumBits rowDataNumBits = evaluatorParameter.getRowDataNumBits();
         final TableAndColumnNames tableAndColumnNames = evaluatorParameter.getTableAndColumnNames();
 
         if (Array.closureOrConstantContains(values, e -> !e.isResolved())) {
@@ -118,7 +118,7 @@ public class DMLUpdatingStatementEvaluator {
 
         evaluatorParameter.initializeForDMLUpdateOperation(table);
 
-        final RowDataNumBits rowDataNumBits = evaluatorParameter.getRowDataNumBitsAndOffsets();
+        final RowDataNumBits rowDataNumBits = evaluatorParameter.getRowDataNumBits();
 
         Checks.isEmpty(rowDataNumBits);
 
@@ -160,12 +160,12 @@ public class DMLUpdatingStatementEvaluator {
     @FunctionalInterface
     private interface EvaluatedUpdateValuesProcessor<E extends Exception> {
 
-        void processEvaluatedValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArray rowIds,
+        void processEvaluatedValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArrayCommon rowIds,
                 DMLUpdatingEvaluatorParameter evaluatorParameter) throws OverflowException;
     }
 
     private static <E extends EvaluateException> void evaluteUpdateValues(ASTList<SQLColumnValueUpdateValue> values, SQLColumnValueUpdateValues updateValues,
-            ILongArray rowIds, DMLUpdatingEvaluatorParameter evaluatorParameter, EvaluatedUpdateValuesProcessor<E> evaluatedValuesProcessor) throws EvaluateException {
+            ILongArrayCommon rowIds, DMLUpdatingEvaluatorParameter evaluatorParameter, EvaluatedUpdateValuesProcessor<E> evaluatedValuesProcessor) throws EvaluateException {
 
         final int numColumns = values.size();
 
@@ -189,7 +189,7 @@ public class DMLUpdatingStatementEvaluator {
         }
     }
 
-    private static void storeUpdateValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArray rowIds,
+    private static void storeUpdateValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArrayCommon rowIds,
             DMLUpdatingEvaluatorParameter evaluatorParameter) throws OverflowException {
 
         final Transaction transaction = evaluatorParameter.getTransaction();
@@ -226,7 +226,7 @@ public class DMLUpdatingStatementEvaluator {
 
         evaluatorParameter.initializeForDMLUpdateOperation(table);
 
-        final RowDataNumBits rowDataNumBits = evaluatorParameter.getRowDataNumBitsAndOffsets();
+        final RowDataNumBits rowDataNumBits = evaluatorParameter.getRowDataNumBits();
 
         Checks.isEmpty(rowDataNumBits);
 

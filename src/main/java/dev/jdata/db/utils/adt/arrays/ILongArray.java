@@ -1,7 +1,5 @@
 package dev.jdata.db.utils.adt.arrays;
 
-import dev.jdata.db.utils.adt.byindex.ILongByIndex;
-
-public interface ILongArray extends ILongByIndex, IArray {
+public interface ILongArray extends IImmutableArray, ILongArrayCommon {
 
 }

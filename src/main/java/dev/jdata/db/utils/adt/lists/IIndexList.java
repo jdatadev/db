@@ -2,7 +2,7 @@ package dev.jdata.db.utils.adt.lists;
 
 import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 
-public interface IIndexList<T> extends IIndexListGetters<T> {
+public interface IIndexList<T> extends IIndexListCommon<T> {
 
     public static <T> IIndexList<T> empty() {
 

@@ -5,7 +5,6 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.adt.maps.Maps.IObjectForEachAppend;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -17,7 +16,7 @@ abstract class BaseObjectToObjectNonBucketMap<K, V, M extends IBaseObjectToObjec
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_OBJECT_TO_OBJECT_NON_BUCKET_MAP;
 
     BaseObjectToObjectNonBucketMap(int initialCapacityExponent, IntFunction<K[]> createKeysArray, IntFunction<V[]> createValuesArray) {
-        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, HashedConstants.DEFAULT_LOAD_FACTOR, createKeysArray, createValuesArray);
+        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, DEFAULT_LOAD_FACTOR, createKeysArray, createValuesArray);
     }
 
     BaseObjectToObjectNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<K[]> createKeysArray,

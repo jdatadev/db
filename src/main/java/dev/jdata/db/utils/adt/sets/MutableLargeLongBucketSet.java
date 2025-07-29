@@ -1,7 +1,6 @@
 package dev.jdata.db.utils.adt.sets;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.hashed.HashedConstants;
 
 public final class MutableLargeLongBucketSet extends BaseLargeLongBucketSet implements IMutableLongSet {
 
@@ -12,26 +11,52 @@ public final class MutableLargeLongBucketSet extends BaseLargeLongBucketSet impl
         return new MutableLargeLongBucketSet(initialOuterCapacity, innerCapacityExponent, values);
     }
 
-    public MutableLargeLongBucketSet() {
+    public MutableLargeLongBucketSet(int initialOuterCapacityExponent, int innerCapacityExponent) {
+        this(initialOuterCapacityExponent, innerCapacityExponent, DEFAULT_LOAD_FACTOR);
 
+        if (DEBUG) {
+
+            enter(b -> b.add("initialOuterCapacityExponent", initialOuterCapacityExponent).add("innerCapacityExponent", innerCapacityExponent));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    public MutableLargeLongBucketSet(int initialOuterCapacity, int innerCapacityExponent) {
-        super(initialOuterCapacity, innerCapacityExponent);
+    public MutableLargeLongBucketSet(int initialOuterCapacityExponent, int innerCapacityExponent, float loadFactor) {
+        super(initialOuterCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, innerCapacityExponent, loadFactor);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialOuterCapacityExponent", initialOuterCapacityExponent).add("innerCapacityExponent", innerCapacityExponent).add("loadFactor", loadFactor));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    public MutableLargeLongBucketSet(int initialOuterCapacity, int innerCapacityExponent, float loadFactor) {
-        super(initialOuterCapacity, innerCapacityExponent, loadFactor);
-    }
-
-    private MutableLargeLongBucketSet(int initialOuterCapacity, int innerCapacityExponent, long[] values) {
-        super(initialOuterCapacity, innerCapacityExponent, HashedConstants.DEFAULT_LOAD_FACTOR);
+    private MutableLargeLongBucketSet(int initialOuterCapacityExponent, int innerCapacityExponent, long[] values) {
+        super(initialOuterCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, innerCapacityExponent, DEFAULT_LOAD_FACTOR);
     }
 
     @Override
     public void clear() {
 
+        if (DEBUG) {
+
+            enter();
+        }
+
         clearBaseLargeLongBucketSet();
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
@@ -76,7 +101,7 @@ public final class MutableLargeLongBucketSet extends BaseLargeLongBucketSet impl
             enter(b -> b.add("value", value));
         }
 
-        final boolean result = removeAtMostOneValue(value);
+        final boolean result = removeElement(value);
 
         if (DEBUG) {
 

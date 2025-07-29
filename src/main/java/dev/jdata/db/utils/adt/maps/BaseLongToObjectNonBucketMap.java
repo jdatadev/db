@@ -5,27 +5,57 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.adt.maps.Maps.ILongForEachAppend;
 import dev.jdata.db.utils.checks.Checks;
 
 abstract class BaseLongToObjectNonBucketMap<T, M extends IBaseLongToObjectMapCommon<T, M>>
 
-        extends BaseLongArrayNonBucketMap<T[]>
+        extends BaseLongArrayKeysNonBucketMap<T[]>
         implements IBaseLongToObjectMapCommon<T, M> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_TO_OBJECT_NON_BUCKET_MAP;
 
     BaseLongToObjectNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createValuesArray) {
-        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, HashedConstants.DEFAULT_LOAD_FACTOR, createValuesArray);
+        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, DEFAULT_LOAD_FACTOR, createValuesArray);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseLongToObjectNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createValuesArray) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
+                    .add("createValuesArray", createValuesArray));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseLongToObjectNonBucketMap(BaseLongToObjectNonBucketMap<T, M> toCopy) {
         super(toCopy, (a1, a2) -> System.arraycopy(a1, 0, a2, 0, a1.length));
+
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override

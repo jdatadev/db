@@ -1,6 +1,5 @@
 package dev.jdata.db.engine.database;
 
-import java.util.List;
 import java.util.Objects;
 
 import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
@@ -15,7 +14,6 @@ import dev.jdata.db.utils.adt.arrays.LargeLongArray;
 import dev.jdata.db.utils.adt.sets.MutableLargeLongBucketSet;
 import dev.jdata.db.utils.allocators.ArrayAllocator;
 import dev.jdata.db.utils.allocators.ByteArrayByteBufferAllocator;
-import dev.jdata.db.utils.allocators.ListAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.allocators.ObjectCache;
 
@@ -39,7 +37,7 @@ public final class DatabasesAllocators implements IDatabasesAllocators {
 
         UtilAllocators() {
 
-            this.largeLongArrayCache = new ObjectCache<>(() -> new LargeLongArray(LARGE_OUTER_INITIAL_CAPACITY, LARGE_INNER_CAPACITY_EXPONENT, null), LargeLongArray[]::new);
+            this.largeLongArrayCache = new ObjectCache<>(() -> new LargeLongArray(LARGE_OUTER_INITIAL_CAPACITY, LARGE_INNER_CAPACITY_EXPONENT), LargeLongArray[]::new);
             this.transactionSelectCache = new NodeObjectCache<>(TransactionSelect::new);
             this.largeLongSetCache = new ObjectCache<>(() -> new MutableLargeLongBucketSet(LARGE_OUTER_INITIAL_CAPACITY, LARGE_INNER_CAPACITY_EXPONENT), MutableLargeLongBucketSet[]::new);
 
@@ -99,7 +97,6 @@ public final class DatabasesAllocators implements IDatabasesAllocators {
 
     private final NodeObjectCache<DMLUpdatingEvaluatorParameter> evaluatorParameterCache;
     private final NodeObjectCache<DMLUpdatingPreparedEvaluatorParameter> preparedStatementevaluatorParameterCache;
-    private final ListAllocator listAllocator;
 
     public DatabasesAllocators(INumStorageBitsGetter numStorageBitsGetter) {
 
@@ -113,8 +110,6 @@ public final class DatabasesAllocators implements IDatabasesAllocators {
 
         this.preparedStatementevaluatorParameterCache = new NodeObjectCache<>(() -> new DMLUpdatingPreparedEvaluatorParameter(utilAllocators.expressionEvaluatorArrayAllocator,
                 numStorageBitsGetter, utilAllocators.byteArrayByteBufferAllocator, utilAllocators. largeLongArrayAllocator, utilAllocators.insertRowArrayAllocator));
-
-        this.listAllocator = new ListAllocator(Object[]::new);
     }
 
     @Override
@@ -139,17 +134,5 @@ public final class DatabasesAllocators implements IDatabasesAllocators {
     public void freeDMLPreparedStatementEvaluatorParameter(DMLUpdatingPreparedEvaluatorParameter evaluatorParameter) {
 
         preparedStatementevaluatorParameterCache.free(evaluatorParameter);
-    }
-
-    @Override
-    public <T> List<T> allocateList(int minimumCapacity) {
-
-        return listAllocator.allocateList(minimumCapacity);
-    }
-
-    @Override
-    public void freeList(List<?> list) {
-
-        listAllocator.freeList(list);
     }
 }

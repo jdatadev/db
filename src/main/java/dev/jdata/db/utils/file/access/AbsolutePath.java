@@ -120,7 +120,7 @@ abstract class AbsolutePath extends BasePath {
         return pathImpl;
     }
 
-    @Deprecated
+    @Deprecated // utilize MutableFile for avoiding allocation
     final File toFile() {
 
         return new File(asString(true));

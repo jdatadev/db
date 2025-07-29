@@ -1,18 +1,12 @@
 package dev.jdata.db.utils.adt.maps;
 
-import java.util.Arrays;
-
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
-import dev.jdata.db.utils.adt.hashed.HashedConstants;
-import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
-import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
-import dev.jdata.db.utils.adt.lists.BaseLargeList.BaseValuesFactory;
+import dev.jdata.db.utils.adt.hashed.helpers.LongBuckets;
 import dev.jdata.db.utils.adt.lists.BaseLargeLongMultiHeadSinglyLinkedList;
-import dev.jdata.db.utils.adt.lists.BaseList;
 import dev.jdata.db.utils.adt.lists.BaseLongValues;
-import dev.jdata.db.utils.adt.lists.LongNodeSetter;
+import dev.jdata.db.utils.adt.lists.ILongNodeSetter;
 import dev.jdata.db.utils.function.BiIntToObjectFunction;
 import dev.jdata.db.utils.scalars.Integers;
 
@@ -26,8 +20,8 @@ abstract class BaseLongKeyBucketMap<
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_BUCKET_MAP;
 
-    private static final LongNodeSetter<BaseLongKeyBucketMap<?, ?, ?>> headSetter = (i, h) -> i.scratchHashArray[i.scratchHashArrayIndex] = h;
-    private static final LongNodeSetter<BaseLongKeyBucketMap<?, ?, ?>> tailSetter = (i, t) -> { };
+    private static final ILongNodeSetter<BaseLongKeyBucketMap<?, ?, ?>> headSetter = (i, h) -> i.scratchHashArray[i.scratchHashArrayIndex] = h;
+    private static final ILongNodeSetter<BaseLongKeyBucketMap<?, ?, ?>> tailSetter = (i, t) -> { };
 
     private static final long NEW_ADDED_MASK = 1L << 63;
 
@@ -43,29 +37,46 @@ abstract class BaseLongKeyBucketMap<
 
     static long makePutResult(long putResult, boolean newAdded) {
 
-        return newAdded ? putResult : (putResult | NEW_ADDED_MASK);
+        return newAdded ? (putResult | NEW_ADDED_MASK) : putResult;
     }
 
     private int scratchHashArrayIndex;
     private long[] scratchHashArray;
 
-    BaseLongKeyBucketMap(int initialCapacityExponent, BiIntToObjectFunction<LIST> createBuckets, BaseValuesFactory<long[], LIST, VALUES> valuesFactory) {
-        this(initialCapacityExponent, HashedConstants.DEFAULT_LOAD_FACTOR, createBuckets, valuesFactory);
+    abstract void rehashPut(LIST oldBuckets, long oldNode, LIST newBuckets, long newNode);
+
+    BaseLongKeyBucketMap(int initialCapacityExponent, BiIntToObjectFunction<LIST> createBuckets) {
+        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, DEFAULT_LOAD_FACTOR, createBuckets);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createBuckets", createBuckets));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    BaseLongKeyBucketMap(int initialCapacityExponent, float loadFactor, BiIntToObjectFunction<LIST> createBuckets, BaseValuesFactory<long[], LIST, VALUES> valuesFactory) {
-        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, loadFactor, BUCKETS_INNER_CAPACITY_EXPONENT, createBuckets, valuesFactory);
-    }
+    BaseLongKeyBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, BiIntToObjectFunction<LIST> createBuckets) {
+        this(initialCapacityExponent, capacityExponentIncrease, loadFactor, DEFAULT_BUCKETS_INNER_CAPACITY_EXPONENT, createBuckets);
 
-    BaseLongKeyBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, BiIntToObjectFunction<LIST> createBuckets,
-            BaseValuesFactory<long[], LIST, VALUES> valuesFactory) {
-        this(initialCapacityExponent, capacityExponentIncrease, loadFactor, BUCKETS_INNER_CAPACITY_EXPONENT, createBuckets, valuesFactory);
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
+                    .add("createBuckets", createBuckets));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     private BaseLongKeyBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent,
-            BiIntToObjectFunction<LIST> createBuckets, BaseValuesFactory<long[], LIST, VALUES> valuesFactory) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, bucketsInnerCapacityExponent, long[]::new, BaseLongKeyBucketMap::clearHashArray, createBuckets,
-                valuesFactory);
+            BiIntToObjectFunction<LIST> createBuckets) {
+        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, bucketsInnerCapacityExponent, long[]::new, BaseLongKeyBucketMap::clearHashArray, createBuckets);
     }
 
     @Override
@@ -76,9 +87,7 @@ abstract class BaseLongKeyBucketMap<
             enter(b -> b.add("key", key));
         }
 
-        final int index = IntPutResult.getPutIndex(key);
-
-        final boolean result = index != NO_INDEX;
+        final boolean result = getValueNode(key) != NO_LONG_NODE;
 
         if (DEBUG) {
 
@@ -111,11 +120,11 @@ abstract class BaseLongKeyBucketMap<
     }
 
     @Override
-    protected final long[] rehash(long[] hashArray, int newCapacity, int keyMask) {
+    protected final long[] rehash(long[] hashArray, int newCapacity, int newCapacityExponent, int keyMask) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).hex("keyMask", keyMask));
+            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).hex("keyMask", keyMask));
         }
 
         final long[] newBucketHeadNodesHashArray = new long[newCapacity];
@@ -132,7 +141,7 @@ abstract class BaseLongKeyBucketMap<
 
         final int hashArrayLength = hashArray.length;
 
-        final long noNode = BaseList.NO_NODE;
+        final long noNode = NO_LONG_NODE;
 
         for (int i = 0; i < hashArrayLength; ++ i) {
 
@@ -142,20 +151,25 @@ abstract class BaseLongKeyBucketMap<
 
                 for (long node = bucketHeadNode; node != noNode; node = oldBuckets.getNextNode(node)) {
 
-                    put(newBucketHeadNodesHashArray, oldBuckets.getValue(node));
+                    final long key = oldBuckets.getValue(node);
+
+                    final long putResult = put(newBucketHeadNodesHashArray, newBuckets, key);
+                    final long newNode = getPutResultNode(putResult);
+
+                    rehashPut(oldBuckets, node, newBuckets, newNode);
                 }
             }
         }
 
         if (DEBUG) {
 
-            exit(newBucketHeadNodesHashArray, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).hex("keyMask", keyMask));
+            exit(newBucketHeadNodesHashArray, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).hex("keyMask", keyMask));
         }
 
         return newBucketHeadNodesHashArray;
     }
 
-    final <S, D> void keysAndValues(long[] keysDst, S src, D dst, MapIndexValueSetter<S, D> valueSetter) {
+    final <S, D> void keysAndValues(long[] keysDst, S src, D dst, IIntMapIndexValueSetter<S, D> valueSetter) {
 
         if (DEBUG) {
 
@@ -168,7 +182,7 @@ abstract class BaseLongKeyBucketMap<
 
         int dstIndex = 0;
 
-        final long noNode = BaseList.NO_NODE;
+        final long noNode = NO_LONG_NODE;
 
         final LIST b = getBuckets();
 
@@ -176,19 +190,16 @@ abstract class BaseLongKeyBucketMap<
 
             final long bucketHeadNode = bucketHeadNodesHashArray[i];
 
-            if (bucketHeadNode != noNode) {
+            for (long node = bucketHeadNode; node != noNode; node = b.getNextNode(node)) {
 
-                for (long node = bucketHeadNode; node != BaseList.NO_NODE; node = b.getNextNode(node)) {
+                keysDst[dstIndex] = b.getValue(node);
 
-                    keysDst[dstIndex] = bucketHeadNode;
+                if (dst != null) {
 
-                    if (dst != null) {
-
-                        valueSetter.setValue(src, i, dst, dstIndex);
-                    }
-
-                    ++ dstIndex;
+                    valueSetter.setValue(src, i, dst, dstIndex);
                 }
+
+                ++ dstIndex;
             }
         }
 
@@ -200,7 +211,7 @@ abstract class BaseLongKeyBucketMap<
 
     final long getValueNode(long key) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        LongBuckets.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -213,7 +224,9 @@ abstract class BaseLongKeyBucketMap<
 
         final long bucketHeadNode = bucketHeadNodesHashArray[hashArrayIndex];
 
-        final long result = bucketHeadNode != BaseList.NO_NODE ? getBuckets().findNodeWithValue(key, bucketHeadNode) : BaseList.NO_NODE;
+        final long noNode = NO_LONG_NODE;
+
+        final long result = bucketHeadNode != noNode ? getBuckets().findNodeWithValue(key, bucketHeadNode) : noNode;
 
         if (DEBUG) {
 
@@ -225,7 +238,7 @@ abstract class BaseLongKeyBucketMap<
 
     final long putValueAndReturnNode(long key) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        LongBuckets.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -234,24 +247,24 @@ abstract class BaseLongKeyBucketMap<
 
         checkCapacity(1);
 
-        final long result = put(getHashed(), key);
+        final long putResult = put(getHashed(), getBuckets(), key);
 
-        if (isNewAdded(result)) {
+        if (isNewAdded(putResult)) {
 
             incrementNumElements();
         }
 
         if (DEBUG) {
 
-            exit(result, b -> b.add("key", key));
+            exitWithHex(putResult, b -> b.add("key", key));
         }
 
-        return result;
+        return putResult;
     }
 
     final long removeElementAndReturnValueNode(long key) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        LongBuckets.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
@@ -271,9 +284,11 @@ abstract class BaseLongKeyBucketMap<
         final long[] bucketHeadNodesHashArray = getHashed();
         final long bucketHeadNode = bucketHeadNodesHashArray[hashArrayIndex];
 
-        if (bucketHeadNode == BaseList.NO_NODE) {
+        final long noNode = NO_LONG_NODE;
 
-            removedNode = BaseList.NO_NODE;
+        if (bucketHeadNode == noNode) {
+
+            removedNode = noNode;
         }
         else {
             this.scratchHashArrayIndex = hashArrayIndex;
@@ -283,15 +298,15 @@ abstract class BaseLongKeyBucketMap<
             final MAP mapThis = (MAP)this;
 
             @SuppressWarnings("unchecked")
-            final LongNodeSetter<MAP> hSetter = (LongNodeSetter<MAP>)headSetter;
+            final ILongNodeSetter<MAP> hSetter = (ILongNodeSetter<MAP>)headSetter;
 
             @SuppressWarnings("unchecked")
-            final LongNodeSetter<MAP> tSetter = (LongNodeSetter<MAP>)tailSetter;
+            final ILongNodeSetter<MAP> tSetter = (ILongNodeSetter<MAP>)tailSetter;
 
-            removedNode = getBuckets().removeAtMostOneNodeByValue(mapThis, key, bucketHeadNode, BaseList.NO_NODE, hSetter, tSetter);
+            removedNode = getBuckets().removeAtMostOneNodeByValue(mapThis, key, bucketHeadNode, noNode, hSetter, tSetter);
         }
 
-        if (removedNode == BaseList.NO_NODE) {
+        if (removedNode != noNode) {
 
             decrementNumElements();
         }
@@ -304,11 +319,11 @@ abstract class BaseLongKeyBucketMap<
         return removedNode;
     }
 
-    private long put(long[] bucketHeadNodesHashArray, long key) {
+    private long put(long[] bucketHeadNodesHashArray, LIST buckets, long key) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("bucketHeadNodesHashArray", bucketHeadNodesHashArray).add("key", key));
+            enter(b -> b.add("bucketHeadNodesHashArray", bucketHeadNodesHashArray).add("buckets", buckets).add("key", key));
         }
 
         final int keyMask = getKeyMask();
@@ -321,13 +336,13 @@ abstract class BaseLongKeyBucketMap<
             debugFormatln("lookup hashArrayIndex=%d key=%d keyMask=0x%08x bucketHeadNode=0x%016x", hashArrayIndex, key, keyMask, bucketHeadNode);
         }
 
-        final LIST buckets = getBuckets();
-
         final long result;
 
         final long previousNode = buckets.findNodeWithValue(key, bucketHeadNode);
 
-        if (previousNode != BaseList.NO_NODE) {
+        final long noNode = NO_LONG_NODE;
+
+        if (previousNode != noNode) {
 
             result = makePutResult(previousNode, false);
         }
@@ -339,19 +354,19 @@ abstract class BaseLongKeyBucketMap<
             final MAP mapThis = (MAP)this;
 
             @SuppressWarnings("unchecked")
-            final LongNodeSetter<MAP> hSetter = (LongNodeSetter<MAP>)headSetter;
+            final ILongNodeSetter<MAP> hSetter = (ILongNodeSetter<MAP>)headSetter;
 
             @SuppressWarnings("unchecked")
-            final LongNodeSetter<MAP> tSetter = (LongNodeSetter<MAP>)tailSetter;
+            final ILongNodeSetter<MAP> tSetter = (ILongNodeSetter<MAP>)tailSetter;
 
-            final long node = buckets.addHead(mapThis, key, bucketHeadNode, BaseList.NO_NODE, hSetter, tSetter);
+            final long node = buckets.addHead(mapThis, key, bucketHeadNode, noNode, hSetter, tSetter);
 
             result = makePutResult(node, true);
         }
 
         if (DEBUG) {
 
-            exit(result, b -> b.add("bucketHeadNodesHashArray", bucketHeadNodesHashArray).add("key", key));
+            exitWithHex(result, b -> b.add("bucketHeadNodesHashArray", bucketHeadNodesHashArray).add("buckets", buckets).add("key", key));
         }
 
         return result;
@@ -364,7 +379,7 @@ abstract class BaseLongKeyBucketMap<
 
     private static void clearHashArray(long[] bucketHeadNodesHashArray) {
 
-        Arrays.fill(bucketHeadNodesHashArray, BaseList.NO_NODE);
+        LongBuckets.clearHashArray(bucketHeadNodesHashArray);
     }
 
     @Override
@@ -376,7 +391,7 @@ abstract class BaseLongKeyBucketMap<
 
         final long[] bucketHeadNodesHashArray = getHashed();
 
-        Array.toString(bucketHeadNodesHashArray, 0, bucketHeadNodesHashArray.length, sb, e -> e != BaseList.NO_NODE);
+        Array.toString(bucketHeadNodesHashArray, 0, bucketHeadNodesHashArray.length, sb, e -> e != NO_LONG_NODE);
 
         sb.append(']');
 

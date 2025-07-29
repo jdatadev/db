@@ -6,9 +6,9 @@ import java.nio.charset.Charset;
 import java.sql.JDBCType;
 
 import dev.jdata.db.data.RowDataNumBits;
-import dev.jdata.db.engine.database.DMLException;
 import dev.jdata.db.engine.database.EvaluateException;
-import dev.jdata.db.engine.database.IDatabaseExecuteOperations.SelectResultWriter;
+import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.ISelectResultWriter;
+import dev.jdata.db.engine.database.operations.exceptions.DMLException;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLDMLUpdatingStatement;
@@ -51,7 +51,7 @@ public interface Session {
     IDatabaseSessionStatus getStatus();
 
     <E extends Exception> void executeDMLSelectSQL(SQLSelectStatement sqlSelectStatement, DMLSelectEvaluatorParameter eEvaluatorParameter,
-            SelectResultWriter<E> selectResultWriter) throws DMLException, E;
+            ISelectResultWriter<E> selectResultWriter) throws DMLException, E;
 
     long executeDMUpdatingLStatement(SQLDMLUpdatingStatement sqlDMLUpdatingStatement, DMLUpdatingEvaluatorParameter evaluatorParameter) throws EvaluateException;
 

@@ -1,14 +1,15 @@
 package dev.jdata.db.engine.database;
 
-import org.jutils.io.strings.StringResolver.CharacterBuffer;
-
 public interface IStringCache {
 
-    String getString(CharSequence charSequence);
+    boolean contains(CharSequence charSequence);
 
-    String getString(int i);
+    String getOrAddString(CharSequence charSequence, int startIndex, int numCharacters);
 
-    String getLowerCaseString(CharSequence charSequence);
+    default String getOrAddString(CharSequence charSequence) {
 
-    String makeString(CharacterBuffer[] characterBuffers, int numCharacterBuffers);
+        return getOrAddString(charSequence, 0, charSequence.length());
+    }
+
+    String getOrAddString(int i);
 }

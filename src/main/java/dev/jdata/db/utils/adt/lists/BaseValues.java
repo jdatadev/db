@@ -5,6 +5,8 @@ public abstract class BaseValues<
                 LIST extends BaseList<LIST_T, LIST, VALUES>,
                 VALUES extends BaseValues<LIST_T, LIST, VALUES>> {
 
+    static final long NO_NODE = BaseInnerOuterList.NO_NODE;
+
     protected abstract void reallocateOuter(int newOuterLength);
     protected abstract void allocateInner(int outerIndex, int innerCapacity);
 

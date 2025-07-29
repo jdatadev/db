@@ -6,7 +6,9 @@ import dev.jdata.db.utils.checks.Checks;
 public abstract class BaseInnerOuterList<
                 LIST_T,
                 LIST extends BaseInnerOuterList<LIST_T, LIST, VALUES>,
-                VALUES extends BaseValues<LIST_T, LIST, VALUES>> extends BaseList<LIST_T, LIST, VALUES> {
+                VALUES extends BaseValues<LIST_T, LIST, VALUES>>
+
+        extends BaseList<LIST_T, LIST, VALUES> {
 
     private final int outerShift;
     private final long innerMask;

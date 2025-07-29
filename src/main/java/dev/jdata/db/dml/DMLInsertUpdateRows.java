@@ -62,7 +62,7 @@ public abstract class DMLInsertUpdateRows<T extends DMLInsertUpdateRows.InsertUp
 
     public final void setColumnMapping(int index, int tableColumn) {
 
-        Objects.checkIndex(index, numColumns);
+        Checks.checkIndex(index, numColumns);
         Checks.isColumnIndex(tableColumn);
 
         tableColumns[index] = tableColumn;
@@ -79,7 +79,7 @@ public abstract class DMLInsertUpdateRows<T extends DMLInsertUpdateRows.InsertUp
 
     public final int getTableColumn(int index) {
 
-        Objects.checkIndex(index, numColumns);
+        Checks.checkIndex(index, numColumns);
 
         return tableColumns[index];
     }

@@ -5,10 +5,10 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharsetEncoder;
 import java.util.Objects;
 
-import dev.jdata.db.engine.database.IDatabaseExecuteOperations.DataWriter;
+import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.IDataWriter;
 import dev.jdata.db.utils.checks.Checks;
 
-class ByteBufferDataWriter implements DataWriter<RuntimeException> {
+class ByteBufferDataWriter implements IDataWriter<RuntimeException> {
 
     private ByteBuffer byteBuffer;
     private CharsetEncoder charsetEncoder;

@@ -12,9 +12,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.test.unit.BaseTest;
-import dev.jdata.db.utils.adt.lists.Lists;
-import dev.jdata.db.utils.adt.sets.Sets;
 import dev.jdata.db.utils.function.CheckedExceptionFunction;
+import dev.jdata.db.utils.jdk.adt.lists.Lists;
+import dev.jdata.db.utils.jdk.adt.sets.Sets;
 
 public final class PathIOUtilTest extends BaseTest {
 

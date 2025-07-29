@@ -312,7 +312,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
                 s.setParsedName(parsedColumnName);
 
-                final Column existingColumn = table.findAtMostOneColumn(s, (c, p) ->  parsedEqualsStored(p, c));
+                final Column existingColumn = table.findAtMostOneColumn(s, (c, p) -> parsedEqualsStored(p, c));
 
                 if (existingColumn == null) {
 

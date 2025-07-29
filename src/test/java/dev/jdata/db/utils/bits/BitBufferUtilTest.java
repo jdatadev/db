@@ -7,6 +7,7 @@ import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.test.unit.BaseTest;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.function.IntToIntFunction;
 import dev.jdata.db.utils.scalars.Integers;
 
 public final class BitBufferUtilTest extends BaseTest {
@@ -137,19 +138,88 @@ public final class BitBufferUtilTest extends BaseTest {
         checkNumBytesExact(31, -1);
         checkNumBytesExact(32, 4);
         checkNumBytesExact(33, -1);
-   }
+    }
 
-    private void checkNumBytesExact(int numBits, int numBytes) {
+    private void checkNumBytesExact(int numBits, int expectedNumBytes) {
+
+        checkNumBytesExact(numBits, expectedNumBytes, BitBufferUtil::numBytesExact);
+        checkNumBytesExact(numBits, expectedNumBytes, n -> Integers.checkUnsignedLongToUnsignedInt(BitBufferUtil.numBytesExact((long)n)));
+    }
+
+    private void checkNumBytesExact(int numBits, int expectedNumBytes, IntToIntFunction numBytesExact) {
 
         Checks.isNotNegative(numBits);
 
-        if (numBytes == -1) {
+        if (expectedNumBytes == -1) {
 
-            assertThatThrownBy(() -> BitBufferUtil.numBytesExact(numBits)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> numBytesExact.apply(numBits)).isInstanceOf(IllegalArgumentException.class);
         }
-        else if (numBytes >= 0) {
+        else if (expectedNumBytes >= 0) {
 
-            assertThat(BitBufferUtil.numBytesExact(numBits)).isEqualTo(numBytes);
+            assertThat(numBytesExact.apply(numBits)).isEqualTo(expectedNumBytes);
+        }
+        else {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testByteOffsetExact() {
+
+        checkByteOffsetExact(0, 0);
+        checkByteOffsetExact(1, -1);
+        checkByteOffsetExact(2, -1);
+        checkByteOffsetExact(3, -1);
+        checkByteOffsetExact(4, -1);
+        checkByteOffsetExact(5, -1);
+        checkByteOffsetExact(6, -1);
+        checkByteOffsetExact(7, -1);
+        checkByteOffsetExact(8, 1);
+        checkByteOffsetExact(9, -1);
+        checkByteOffsetExact(10, -1);
+        checkByteOffsetExact(11, -1);
+        checkByteOffsetExact(12, -1);
+        checkByteOffsetExact(13, -1);
+        checkByteOffsetExact(14, -1);
+        checkByteOffsetExact(15, -1);
+        checkByteOffsetExact(16, 2);
+        checkByteOffsetExact(17, -1);
+        checkByteOffsetExact(18, -1);
+        checkByteOffsetExact(19, -1);
+        checkByteOffsetExact(20, -1);
+        checkByteOffsetExact(21, -1);
+        checkByteOffsetExact(22, -1);
+        checkByteOffsetExact(23, -1);
+        checkByteOffsetExact(24, 3);
+        checkByteOffsetExact(25, -1);
+        checkByteOffsetExact(26, -1);
+        checkByteOffsetExact(27, -1);
+        checkByteOffsetExact(28, -1);
+        checkByteOffsetExact(29, -1);
+        checkByteOffsetExact(30, -1);
+        checkByteOffsetExact(31, -1);
+        checkByteOffsetExact(32, 4);
+        checkByteOffsetExact(33, -1);
+    }
+
+    private void checkByteOffsetExact(int numBits, int expectedNumBytes) {
+
+        checkByteOffsetExact(numBits, expectedNumBytes, BitBufferUtil::byteOffsetExact);
+        checkByteOffsetExact(numBits, expectedNumBytes, n -> Integers.checkUnsignedLongToUnsignedInt(BitBufferUtil.byteOffsetExact((long)n)));
+    }
+
+    private void checkByteOffsetExact(int numBits, int expectedNumBytes, IntToIntFunction byteOffsetExact) {
+
+        Checks.isNotNegative(numBits);
+
+        if (expectedNumBytes == -1) {
+
+            assertThatThrownBy(() -> byteOffsetExact.apply(numBits)).isInstanceOf(IllegalArgumentException.class);
+        }
+        else if (expectedNumBytes >= 0) {
+
+            assertThat(byteOffsetExact.apply(numBits)).isEqualTo(expectedNumBytes);
         }
         else {
             throw new IllegalArgumentException();
@@ -325,13 +395,9 @@ public final class BitBufferUtilTest extends BaseTest {
     @Category(UnitTest.class)
     public void testSetShortOffset() {
 
-        final byte[] buffer = new byte[4];
-
         final int value = 0b111000110010;
 
         final int offset = 0;
-
-//        BitBufferUtil.setIntValue(buffer, value, false, 0, 32);
 
         checkSetShortStartsAtMSB(value, offset, 12, 0b11100011, 0b00100000, 0b00000000, 0b00000000);
         checkSetShortStartsAtMSB(value, offset, 13, 0b01110001, 0b10010000, 0b00000000, 0b00000000);
@@ -344,13 +410,9 @@ public final class BitBufferUtilTest extends BaseTest {
     @Category(UnitTest.class)
     public void testSetShortNumBits() {
 
-        final byte[] buffer = new byte[4];
-
         final int value = 0b111000110010;
 
         final int numBits = 12;
-
-//        BitBufferUtil.setIntValue(buffer, value, false, 0, 32);
 
         checkSetShortStartsAtMSB(value, 0,  numBits, 0b11100011, 0b00100000, 0b00000000, 0b00000000);
         checkSetShortStartsAtMSB(value, 1,  numBits, 0b01110001, 0b10010000, 0b00000000, 0b00000000);
@@ -592,13 +654,9 @@ public final class BitBufferUtilTest extends BaseTest {
     @Category(UnitTest.class)
     public void testSetIntOffset() {
 
-        final byte[] buffer = new byte[4];
-
         final int value = 0b111000110010;
 
         final int offset = 0;
-
-//        BitBufferUtil.setIntValue(buffer, value, false, 0, 32);
 
         checkSetIntStartsAtMSB(value, offset, 12, 0b11100011, 0b00100000, 0b00000000, 0b00000000);
         checkSetIntStartsAtMSB(value, offset, 13, 0b01110001, 0b10010000, 0b00000000, 0b00000000);
@@ -627,13 +685,9 @@ public final class BitBufferUtilTest extends BaseTest {
     @Category(UnitTest.class)
     public void testSetIntNumBits() {
 
-        final byte[] buffer = new byte[4];
-
         final int value = 0b111000110010;
 
         final int numBits = 12;
-
-//        BitBufferUtil.setIntValue(buffer, value, false, 0, 32);
 
         checkSetIntStartsAtMSB(value, 0,  numBits, 0b11100011, 0b00100000, 0b00000000, 0b00000000);
         checkSetIntStartsAtMSB(value, 1,  numBits, 0b01110001, 0b10010000, 0b00000000, 0b00000000);
@@ -1007,13 +1061,9 @@ public final class BitBufferUtilTest extends BaseTest {
     @Category(UnitTest.class)
     public void testSetLongOffset() {
 
-        final byte[] buffer = new byte[8];
-
         final int value = 0b111000110010;
 
         final int offset = 0;
-
-//        BitBufferUtil.setIntValue(buffer, value, false, 0, 64);
 
         checkSetLongStartsAtMSB(value, offset, 12, 0b11100011, 0b00100000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000);
         checkSetLongStartsAtMSB(value, offset, 13, 0b01110001, 0b10010000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000);
@@ -1062,13 +1112,9 @@ public final class BitBufferUtilTest extends BaseTest {
     @Category(UnitTest.class)
     public void testSetLongNumBits() {
 
-        final byte[] buffer = new byte[8];
-
         final int value = 0b111000110010;
 
         final int numBits = 12;
-
-//        BitBufferUtil.setIntValue(buffer, value, false, 0, 64);
 
         checkSetLongStartsAtMSB(value, 0,  numBits, 0b11100011, 0b00100000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000);
         checkSetLongStartsAtMSB(value, 1,  numBits, 0b01110001, 0b10010000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000);

@@ -1,11 +1,85 @@
 package dev.jdata.db.utils.scalars;
 
+import java.util.function.ToIntFunction;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.test.unit.BaseTest;
 
 public final class IntegersTest extends BaseTest {
+
+    @Test
+    @Category(UnitTest.class)
+    public void testParseUnsignedInt() {
+
+        checkParseUnsignedInt(Integers::parseUnsignedInt);
+        checkParseUnsignedInt(s -> Integers.parseUnsignedInt((CharSequence)s));
+        checkParseUnsignedInt(s -> Integers.parseUnsignedInt(s, 0, s.length(), 10));
+    }
+
+    private static void checkParseUnsignedInt(ToIntFunction<String> parse) {
+
+        assertThatThrownBy(() -> parse.applyAsInt("-1")).isInstanceOf(NumberFormatException.class);
+        assertThatThrownBy(() -> parse.applyAsInt(String.valueOf(Integer.MAX_VALUE + 1L))).isInstanceOf(NumberFormatException.class);
+
+        checkParseIntCommon(parse);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testParseSignedInt() {
+
+        checkParseSignedInt(Integers::parseSignedInt);
+        checkParseSignedInt(s -> Integers.parseSignedInt((CharSequence)s));
+        checkParseSignedInt(s -> Integers.parseSignedInt(s, 0, s.length(), 10));
+    }
+
+    private static void checkParseSignedInt(ToIntFunction<String> parse) {
+
+        assertThatThrownBy(() -> parse.applyAsInt("-")).isInstanceOf(NumberFormatException.class);
+        assertThatThrownBy(() -> parse.applyAsInt("-0")).isInstanceOf(NumberFormatException.class);
+        assertThatThrownBy(() -> parse.applyAsInt("-00")).isInstanceOf(NumberFormatException.class);
+        assertThatThrownBy(() -> parse.applyAsInt(String.valueOf(Integer.MIN_VALUE))).isInstanceOf(NumberFormatException.class);
+        assertThatThrownBy(() -> parse.applyAsInt(String.valueOf(Integer.MIN_VALUE - 1L))).isInstanceOf(NumberFormatException.class);
+
+        checkParseIntCommon(parse);
+
+        checkParseSignedInt("-1", -1, parse);
+        checkParseSignedInt("-123", -123, parse);
+
+        final int intMinValuePlusOne = Integer.MIN_VALUE + 1;
+
+        checkParseSignedInt(String.valueOf(intMinValuePlusOne), intMinValuePlusOne, parse);
+    }
+
+    private static void checkParseSignedInt(String string, int expectedResult, ToIntFunction<String> parse) {
+
+        assertThat(parse.applyAsInt(string)).isEqualTo(expectedResult);
+    }
+
+    private static void checkParseIntCommon(ToIntFunction<String> parse) {
+
+        assertThatThrownBy(() -> parse.applyAsInt(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> parse.applyAsInt("")).isInstanceOf(NumberFormatException.class);
+        assertThatThrownBy(() -> parse.applyAsInt(" ")).isInstanceOf(NumberFormatException.class);
+        assertThatThrownBy(() -> parse.applyAsInt(" 1")).isInstanceOf(NumberFormatException.class);
+        assertThatThrownBy(() -> parse.applyAsInt("00")).isInstanceOf(NumberFormatException.class);
+        assertThatThrownBy(() -> parse.applyAsInt("01")).isInstanceOf(NumberFormatException.class);
+        assertThatThrownBy(() -> parse.applyAsInt("a")).isInstanceOf(NumberFormatException.class);
+        assertThatThrownBy(() -> parse.applyAsInt(String.valueOf(Integer.MAX_VALUE + 1L))).isInstanceOf(NumberFormatException.class);
+
+        checkParseInt("0", 0, parse);
+        checkParseInt("1", 1, parse);
+        checkParseInt("100", 100, parse);
+        checkParseInt("123", 123, parse);
+        checkParseInt(String.valueOf(Integer.MAX_VALUE), Integer.MAX_VALUE, parse);
+    }
+
+    private static void checkParseInt(String string, int expectedResult, ToIntFunction<String> parse) {
+
+        assertThat(parse.applyAsInt(string)).isEqualTo(expectedResult);
+    }
 
     @Test
     @Category(UnitTest.class)
@@ -37,20 +111,67 @@ public final class IntegersTest extends BaseTest {
 
     @Test
     @Category(UnitTest.class)
-    public void testCheckUnsignedIntToUnsignedByte() {
+    public void testCheckUnsignedIntToUnsignedByteAsByte() {
 
-        assertThat(Integers.checkUnsignedIntToUnsignedByte(0)).isEqualTo((byte)0);
+        assertThat(Integers.checkUnsignedIntToUnsignedByteAsByte(0)).isEqualTo((byte)0);
 
         for (int i = 0; i < 8; ++ i) {
 
-            assertThat(Integers.checkUnsignedIntToUnsignedByte(1 << i)).isEqualTo((byte)(1 << i));
+            assertThat(Integers.checkUnsignedIntToUnsignedByteAsByte(1 << i)).isEqualTo((byte)(1 << i));
         }
 
         for (int i = 8; i < 32; ++ i) {
 
             final int closureI = i;
 
-            assertThatThrownBy(() -> Integers.checkUnsignedIntToUnsignedByte(1 << closureI)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Integers.checkUnsignedIntToUnsignedByteAsByte(1 << closureI)).isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testCheckUnsignedIntToUnsignedByteAsShort() {
+
+        assertThat(Integers.checkUnsignedIntToUnsignedByteAsShort(0)).isEqualTo((short)0);
+
+        for (int i = 0; i < 8; ++ i) {
+
+            assertThat(Integers.checkUnsignedIntToUnsignedByteAsShort(1 << i)).isEqualTo((short)(1 << i));
+        }
+
+        for (int i = 8; i < 32; ++ i) {
+
+            final int closureI = i;
+
+            assertThatThrownBy(() -> Integers.checkUnsignedIntToUnsignedByteAsShort(1 << closureI)).isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testCheckIntToShort() {
+
+        assertThatThrownBy(() -> Integers.checkIntToShort(Short.MIN_VALUE - 1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Integers.checkIntToShort(Short.MAX_VALUE + 1)).isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(Integers.checkIntToShort(Short.MIN_VALUE)).isEqualTo(Short.MIN_VALUE);
+        assertThat(Integers.checkIntToShort(0)).isEqualTo((short)0);
+        assertThat(Integers.checkIntToShort(Short.MAX_VALUE)).isEqualTo(Short.MAX_VALUE);
+
+        for (int i = 0; i < 15; ++ i) {
+
+            assertThat(Integers.checkIntToShort(1 << i)).isEqualTo((short)(1 << i));
+            assertThat(Integers.checkIntToShort(- (1 << i))).isEqualTo((short)(- (1 << i)));
+        }
+
+        assertThatThrownBy(() -> Integers.checkIntToShort(1 << 15)).isInstanceOf(IllegalArgumentException.class);
+
+        for (int i = 16; i < 31; ++ i) {
+
+            final int closureI = i;
+
+            assertThatThrownBy(() -> Integers.checkIntToShort(1 << closureI)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Integers.checkIntToShort(- (1 << closureI))).isInstanceOf(IllegalArgumentException.class);
         }
     }
 

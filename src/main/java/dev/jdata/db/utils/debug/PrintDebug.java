@@ -188,6 +188,13 @@ public interface PrintDebug {
         return this;
     }
 
+    default PrintDebug exitWithHex(long result) {
+
+        exitWithHex(getClass(), result);
+
+        return this;
+    }
+
     default PrintDebug exit(Consumer<NameValueBuilder> consumer) {
 
         exit(getClass(), consumer);
@@ -226,6 +233,34 @@ public interface PrintDebug {
     default PrintDebug exitWithBinary(long result, Consumer<NameValueBuilder> consumer) {
 
         exitWithBinary(getClass(), result, consumer);
+
+        return this;
+    }
+
+    default PrintDebug exitWithHex(byte result, Consumer<NameValueBuilder> consumer) {
+
+        exitWithHex(getClass(), result, consumer);
+
+        return this;
+    }
+
+    default PrintDebug exitWithHex(short result, Consumer<NameValueBuilder> consumer) {
+
+        exitWithHex(getClass(), result, consumer);
+
+        return this;
+    }
+
+    default PrintDebug exitWithHex(int result, Consumer<NameValueBuilder> consumer) {
+
+        exitWithHex(getClass(), result, consumer);
+
+        return this;
+    }
+
+    default PrintDebug exitWithHex(long result, Consumer<NameValueBuilder> consumer) {
+
+        exitWithHex(getClass(), result, consumer);
 
         return this;
     }
@@ -362,6 +397,26 @@ public interface PrintDebug {
         exit(javaClass, binaryString(result), consumer);
     }
 
+    public static void exitWithHex(Class<?> javaClass, byte result, Consumer<NameValueBuilder> consumer) {
+
+        exit(javaClass, hexString(result), consumer);
+    }
+
+    public static void exitWithHex(Class<?> javaClass, short result, Consumer<NameValueBuilder> consumer) {
+
+        exit(javaClass, hexString(result), consumer);
+    }
+
+    public static void exitWithHex(Class<?> javaClass, int result, Consumer<NameValueBuilder> consumer) {
+
+        exit(javaClass, hexString(result), consumer);
+    }
+
+    public static void exitWithHex(Class<?> javaClass, long result, Consumer<NameValueBuilder> consumer) {
+
+        exit(javaClass, hexString(result), consumer);
+    }
+
     public static void debug(Class<?> javaClass, String message) {
 
         println(javaClass, "DEBUG " + getMethodName() + ' ' + message);
@@ -379,7 +434,7 @@ public interface PrintDebug {
 
     public static void debug(Class<?> javaClass, String message, Consumer<NameValueBuilder> consumer) {
 
-        debug(javaClass, message  + ' ' + NameValueBuilder.build(consumer));
+        debug(javaClass, message + ' ' + NameValueBuilder.build(consumer));
     }
 
     public static void println(Class<?> javaClass, String message) {

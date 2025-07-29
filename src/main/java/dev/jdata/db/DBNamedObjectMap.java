@@ -185,7 +185,7 @@ public abstract class DBNamedObjectMap<T extends DBNamedObject, M extends DBName
         boolean result;
 
         final long[] thisKeys = thisMap.keys();
-        final long[] otherKeys  = otherMap.keys();
+        final long[] otherKeys = otherMap.keys();
 
         final int num = thisKeys.length;
 

@@ -14,7 +14,7 @@ public final class ObjectCacheTest extends BaseAllocatorTest<StringBuilder, Obje
     }
 
     @Override
-    ObjectCache<StringBuilder> createAllocator() {
+    protected ObjectCache<StringBuilder> createAllocator() {
 
         return new ObjectCache<>(StringBuilder::new, StringBuilder[]::new);
     }
@@ -26,13 +26,13 @@ public final class ObjectCacheTest extends BaseAllocatorTest<StringBuilder, Obje
     }
 
     @Override
-    StringBuilder[] allocateArray(int length) {
+    protected StringBuilder[] allocateArray(int length) {
 
         return new StringBuilder[length];
     }
 
     @Override
-    void free(ObjectCache<StringBuilder> allocator, StringBuilder instance) {
+    protected void free(ObjectCache<StringBuilder> allocator, StringBuilder instance) {
 
         allocator.free(instance);
     }

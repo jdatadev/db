@@ -4,10 +4,13 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import dev.jdata.db.utils.adt.elements.ILongElements.IContainsOnlyPredicate;
-import dev.jdata.db.utils.adt.elements.ILongElements.LongElementPredicate;
+import dev.jdata.db.utils.adt.elements.ILongElements.ILongElementPredicate;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseLongValues<LIST extends BaseInnerOuterList<long[], LIST, U>, U extends BaseValues<long[], LIST, U>> extends BaseValues<long[], LIST, U> {
+public abstract class BaseLongValues<
+
+                LIST extends BaseInnerOuterList<long[], LIST, VALUES>,
+                VALUES extends BaseValues<long[], LIST, VALUES>> extends BaseValues<long[], LIST, VALUES> {
 
     private static final long NO_NODE = BaseInnerOuterList.NO_NODE;
 
@@ -38,32 +41,32 @@ public abstract class BaseLongValues<LIST extends BaseInnerOuterList<long[], LIS
         values[outerIndex] = new long[innerCapacity];
     }
 
-    final long getValue(BaseInnerOuterList<long[], LIST, U> list, long node) {
+    final long getValue(BaseInnerOuterList<long[], LIST, VALUES> list, long node) {
 
         return values[list.getOuterIndex(node)][list.getInnerIndex(node)];
     }
 
-    final void setValue(BaseInnerOuterList<long[], LIST, U> list, long node, long value) {
+    final void setValue(BaseInnerOuterList<long[], LIST, VALUES> list, long node, long value) {
 
         values[list.getOuterIndex(node)][list.getInnerIndex(node)] = value;
     }
 
-    final boolean containsValue(BaseInnerOuterList<long[], LIST, U> list, long value, long headNode) {
+    final boolean containsValue(BaseInnerOuterList<long[], LIST, VALUES> list, long value, long headNode) {
 
         return findValueNode(list, value, headNode) != NO_NODE;
     }
 
-    final <P> boolean containsValue(BaseInnerOuterList<long[], LIST, U> list, long headNode, P parameter, LongElementPredicate<P> predicate) {
+    final <P> boolean containsValue(BaseInnerOuterList<long[], LIST, VALUES> list, long headNode, P parameter, ILongElementPredicate<P> predicate) {
 
         return findValueNode(list, headNode, parameter, predicate) != NO_NODE;
     }
 
-    final boolean containsOnlyValue(BaseInnerOuterList<long[], LIST, U> list, long value, long headNode) {
+    final boolean containsOnlyValue(BaseInnerOuterList<long[], LIST, VALUES> list, long value, long headNode) {
 
         return containsOnlyValue(list, value, headNode, (i, l) -> i == l);
     }
 
-    final boolean containsOnlyValue(BaseInnerOuterList<long[], LIST, U> list, long value, long headNode, IContainsOnlyPredicate containsOnlyPredicate) {
+    final boolean containsOnlyValue(BaseInnerOuterList<long[], LIST, VALUES> list, long value, long headNode, IContainsOnlyPredicate containsOnlyPredicate) {
 
         boolean containsOnly = false;
 
@@ -82,7 +85,7 @@ public abstract class BaseLongValues<LIST extends BaseInnerOuterList<long[], LIS
         return containsOnly;
     }
 
-    final long findValueNode(BaseInnerOuterList<long[], LIST, U> list, long value, long headNode) {
+    final long findValueNode(BaseInnerOuterList<long[], LIST, VALUES> list, long value, long headNode) {
 
         long found = NO_NODE;
 
@@ -98,7 +101,7 @@ public abstract class BaseLongValues<LIST extends BaseInnerOuterList<long[], LIS
         return found;
     }
 
-    final <P> long findValueNode(BaseInnerOuterList<long[], LIST, U> list, long headNode, P parameter, LongElementPredicate<P> predicate) {
+    final <P> long findValueNode(BaseInnerOuterList<long[], LIST, VALUES> list, long headNode, P parameter, ILongElementPredicate<P> predicate) {
 
         long found = NO_NODE;
 
@@ -116,7 +119,7 @@ public abstract class BaseLongValues<LIST extends BaseInnerOuterList<long[], LIS
         return found;
     }
 
-    final <P> long findNodeValue(BaseInnerOuterList<long[], LIST, U> list, long defaultValue, long headNode, P parameter, LongElementPredicate<P> predicate) {
+    final <P> long findNodeValue(BaseInnerOuterList<long[], LIST, VALUES> list, long defaultValue, long headNode, P parameter, ILongElementPredicate<P> predicate) {
 
         long found = defaultValue;
 

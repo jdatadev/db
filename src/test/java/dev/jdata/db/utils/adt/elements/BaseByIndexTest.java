@@ -12,6 +12,8 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
 
     protected abstract <T, R> R[] map(T[] array, IntFunction<R[]> createMappedArray, Function<T, R> mapper);
 
+    protected abstract <T> boolean equals(T[] array1, int startIndex1, T[] array2, int startIndex2, int numElements);
+
     @FunctionalInterface
     public interface IByIndexTestEqualityTester<T, P> {
 
@@ -426,9 +428,9 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
             NumElementsGetter<U> numElementsGetter, ElementComparator<E> elementComparator) {
 
         checkCopyIntElements(create, copy, elementGetter, numElementsGetter, elementComparator);
-        checkCopyIntElements(create, copy, elementGetter, numElementsGetter, elementComparator, 123);
-        checkCopyIntElements(create, copy, elementGetter, numElementsGetter, elementComparator, 123, 234);
-        checkCopyIntElements(create, copy, elementGetter, numElementsGetter, elementComparator, 123, 234, 345);
+        checkCopyIntElements(create, copy, elementGetter, numElementsGetter, elementComparator, 12);
+        checkCopyIntElements(create, copy, elementGetter, numElementsGetter, elementComparator, 12, 23);
+        checkCopyIntElements(create, copy, elementGetter, numElementsGetter, elementComparator, 12, 23, 34);
     }
 
     private static <T, U, E> void checkCopyIntElements(Function<int[], T> create, Function<T, U> copy, ElementGetter<U, E> elementGetter,

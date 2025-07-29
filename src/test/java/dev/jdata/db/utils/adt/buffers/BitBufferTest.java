@@ -6,13 +6,14 @@ import org.junit.experimental.categories.Category;
 import dev.jdata.db.test.unit.BaseTest;
 import dev.jdata.db.utils.adt.CapacityExponents;
 import dev.jdata.db.utils.bits.BitBufferUtil;
+import dev.jdata.db.utils.math.Sign;
 import dev.jdata.db.utils.scalars.Integers;
 
 public final class BitBufferTest extends BaseTest {
 
     @Test
     @Category(UnitTest.class)
-    public void testBitBufferAddLongToCapacityExponent3() {
+    public void testBitBufferAddUnsignedLongToCapacityExponent3() {
 
         final BitBuffer buffer = new BitBuffer(3);
 
@@ -34,7 +35,7 @@ public final class BitBufferTest extends BaseTest {
 
         final BitBuffer buffer = new BitBuffer(innerBytesCapacityExponent);
 
-        final int innerBytesCapacity = CapacityExponents.computeCapacity(innerBytesCapacityExponent);
+        final int innerBytesCapacity = CapacityExponents.computeIntCapacityFromExponent(innerBytesCapacityExponent);
 
         final int numLongs = innerBytesCapacity / Long.BYTES;
 
@@ -60,33 +61,84 @@ public final class BitBufferTest extends BaseTest {
 
             for (int numValues = 1; numValues < 10; ++ numValues) {
 
-                checkBitBufferAddAndGetScalars(capacityExponent, numValues);
+                checkBitBufferAddAndGetScalars(capacityExponent, numValues, Sign.PLUS);
+                checkBitBufferAddAndGetScalars(capacityExponent, numValues, Sign.MINUS);
             }
         }
     }
 
-    private void checkBitBufferAddAndGetScalars(int capacityExponent, int numValues) {
+    private void checkBitBufferAddAndGetScalars(int capacityExponent, int numValues, Sign sign) {
 
         final BitBuffer buffer = new BitBuffer(capacityExponent);
 
         long bitOffset = 0L;
 
+        final int numBitsPerByte = Byte.SIZE;
+
         for (int i = 0; i < numValues; ++ i) {
 
-            final short shortValue = Integers.checkUnsignedIntToUnsignedShort(123 + i);
+            final byte signedByteValue = Integers.checkIntToByte(sign.apply(12 + i));
 
-            buffer.addUnsignedShort(shortValue);
-            assertThat(buffer.getUnsignedShort(bitOffset)).isEqualTo(shortValue);
+            buffer.addSignedByte(signedByteValue);
+            assertThat(buffer.getSignedByte(bitOffset)).isEqualTo(signedByteValue);
 
-            bitOffset += 2L * 8L;
+            bitOffset += 1L * numBitsPerByte;
             assertThat(buffer.getBitOffset()).isEqualTo(bitOffset);
 
-            final long longValue = 234L + i;
+            final short unsignedByteValue = Integers.checkUnsignedIntToUnsignedByteAsShort(234 + i);
 
-            buffer.addUnsignedLong(longValue);
-            assertThat(buffer.getUnsignedLong(bitOffset)).isEqualTo(longValue);
+            buffer.addUnsignedByte(unsignedByteValue);
+            assertThat(buffer.getUnsignedByte(bitOffset)).isEqualTo(unsignedByteValue);
 
-            bitOffset += 8L * 8L;
+            bitOffset += 1L * numBitsPerByte;
+            assertThat(buffer.getBitOffset()).isEqualTo(bitOffset);
+
+            final short signedShortValue = Integers.checkIntToShort(sign.apply(345 + i));
+
+            buffer.addSignedShort(signedShortValue);
+            assertThat(buffer.getSignedShort(bitOffset)).isEqualTo(signedShortValue);
+
+            bitOffset += 2L * numBitsPerByte;
+            assertThat(buffer.getBitOffset()).isEqualTo(bitOffset);
+
+            final int unsignedShortValue = Integers.checkUnsignedIntToUnsignedShort(456 + i);
+
+            buffer.addUnsignedShort(unsignedShortValue);
+            assertThat(buffer.getUnsignedShort(bitOffset)).isEqualTo(unsignedShortValue);
+
+            bitOffset += 2L * numBitsPerByte;
+            assertThat(buffer.getBitOffset()).isEqualTo(bitOffset);
+
+            final int signedIntValue = sign.apply(567 + i);
+
+            buffer.addSignedInt(signedIntValue);
+            assertThat(buffer.getSignedInt(bitOffset)).isEqualTo(signedIntValue);
+
+            bitOffset += 4L * numBitsPerByte;
+            assertThat(buffer.getBitOffset()).isEqualTo(bitOffset);
+
+            final long unsignedIntValue = 678 + i;
+
+            buffer.addUnsignedInt(unsignedIntValue);
+            assertThat(buffer.getUnsignedInt(bitOffset)).isEqualTo(unsignedIntValue);
+
+            bitOffset += 4L * numBitsPerByte;
+            assertThat(buffer.getBitOffset()).isEqualTo(bitOffset);
+
+            final long signedLongValue = sign.apply(789L + i);
+
+            buffer.addSignedLong(signedLongValue);
+            assertThat(buffer.getSignedLong(bitOffset)).isEqualTo(signedLongValue);
+
+            bitOffset += 8L * numBitsPerByte;
+            assertThat(buffer.getBitOffset()).isEqualTo(bitOffset);
+
+            final long unsignedLongValue = 890L + i;
+
+            buffer.addUnsignedLong(unsignedLongValue);
+            assertThat(buffer.getUnsignedLong(bitOffset)).isEqualTo(unsignedLongValue);
+
+            bitOffset += 8L * numBitsPerByte;
             assertThat(buffer.getBitOffset()).isEqualTo(bitOffset);
         }
     }

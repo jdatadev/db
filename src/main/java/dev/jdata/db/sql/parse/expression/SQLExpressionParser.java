@@ -277,7 +277,7 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
 
         if (tokenLength <= minLongDigits) {
 
-            final long longValue = stringResolver.asLong(stringRef);
+            final long longValue = stringResolver.asUnsignedLong(stringRef);
 
             scratchIntegerValue.setLongInteger(isNegative ? longValue : -longValue);
         }

@@ -17,7 +17,7 @@ import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.function.CharPredicate;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class LargeCharArray extends LargeLimitArray<char[][], char[]> implements PrintDebug {
+public final class LargeCharArray extends LargeLimitArray<char[][], char[]> implements IMutableArray, PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_LARGE_CHAR_ARRAY;
 
@@ -27,45 +27,70 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
         void each(long index, LargeCharArray largeCharArray, P parameter);
     }
 
-    private <P> void forEachIndexAndString(P parameter, IForEachStringIndex<P> forEachStringIndex) {
+    private static final char TERMINATOR_CHAR = '\0';
+
+    private final char clearValue;
+
+    public LargeCharArray(int initialOuterCapacity, int innerCapacityExponent) {
+        this(initialOuterCapacity, innerCapacityExponent, '\0', true);
 
         if (DEBUG) {
 
-            enter(b -> b.add("parameter", parameter).add("forEachStringIndex", forEachStringIndex));
-        }
-
-        final long num = getLimit();
-
-        long stringIndex = 0L;
-
-        for (long i = stringIndex; i < num; ++ i) {
-
-            final char c = get(i);
-
-            if (c == TERMINATOR_CHAR) {
-
-                forEachStringIndex.each(stringIndex, this, parameter);
-
-                stringIndex = i + 1;
-            }
+            enter(b -> b.add("initialOuterCapacity", initialOuterCapacity).add("innerCapacityExponent", innerCapacityExponent));
         }
 
         if (DEBUG) {
 
-            exit(b -> b.add("parameter", parameter).add("forEachStringIndex", forEachStringIndex));
+            exit();
         }
     }
 
-    private static final char TERMINATOR_CHAR = '\0';
+    public LargeCharArray(int initialOuterCapacity, int innerCapacityExponent, char clearValue) {
+        this(initialOuterCapacity, innerCapacityExponent, clearValue, true);
 
-    public LargeCharArray(int initialOuterCapacity, int innerCapacityExponent) {
-        super(initialOuterCapacity, char[][]::new, a -> a.length, innerCapacityExponent);
+        if (DEBUG) {
+
+            enter(b -> b.add("initialOuterCapacity", initialOuterCapacity).add("innerCapacityExponent", innerCapacityExponent).add("clearValue", clearValue));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    private LargeCharArray(int initialOuterCapacity, int innerCapacityExponent, char clearValue, boolean hasClearValue) {
+        super(initialOuterCapacity, innerCapacityExponent, hasClearValue, char[][]::new);
+
+        this.clearValue = clearValue;
+    }
+
+    @Override
+    public long getCapacity() {
+
+        return getArrayElementCapacity();
+    }
+
+    @Override
+    public void clear() {
+
+        if (DEBUG) {
+
+            enter();
+        }
+
+        clearArray();
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     public boolean containsOnly(long index, CharPredicate predicate) {
 
         Checks.isIndex(index);
-        Objects.checkIndex(index, getLimit());
+        Checks.checkIndex(index, getLimit());
 
         boolean containsOnly = true;
 
@@ -76,7 +101,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
         char[] buffer = buffers[bufferNo];
 
-        final int endBufferOffset = getInnerNumAllocateElements() - 1;
+        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerNumAllocateElements()) - 1;
 
         for (;;) {
 
@@ -108,7 +133,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
     public String asString(long index) {
 
-        Objects.checkIndex(index, getLimit());
+        Checks.checkIndex(index, getLimit());
 
         final long length = getStringLength(index);
 
@@ -123,7 +148,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
     public void asString(long index, StringBuilder sb) {
 
-        Objects.checkIndex(index, getLimit());
+        Checks.checkIndex(index, getLimit());
         Objects.requireNonNull(sb);
 
         final long length = getStringLength(index);
@@ -139,7 +164,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
         char[] buffer = buffers[bufferNo];
 
-        final int endBufferOffset = getInnerNumAllocateElements() - 1;
+        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerNumAllocateElements()) - 1;
 
         for (;;) {
 
@@ -171,8 +196,8 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
     public boolean equals(long index, LargeCharArray otherCharArray, long otherIndex, boolean caseSensitive) {
 
-        Objects.checkIndex(index, getLimit());
-        Objects.checkIndex(otherIndex, otherCharArray.getLimit());
+        Checks.checkIndex(index, getLimit());
+        Checks.checkIndex(otherIndex, otherCharArray.getLimit());
 
         int bufferNo = getOuterIndex(index);
         int bufferOffset = getInnerElementIndex(index);
@@ -182,11 +207,11 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
         final char[][] buffers = getOuterArray();
         char[] buffer = buffers[bufferNo];
-        final int endBufferOffset = getInnerNumAllocateElements() - 1;
+        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerNumAllocateElements()) - 1;
 
         final char[][] otherBuffers = otherCharArray.getOuterArray();
         char[] otherBuffer = otherBuffers[otherBufferNo];
-        final int otherEndBufferOffset = otherCharArray.getInnerNumAllocateElements() - 1;
+        final int otherEndBufferOffset = Integers.checkUnsignedLongToUnsignedInt(otherCharArray.getInnerNumAllocateElements()) - 1;
 
         boolean equals = true;
 
@@ -239,7 +264,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
     public <P, R, E extends Exception> R makeString(long index, P parameter, ICharactersBufferAllocator charactersBufferAllocator,
             CharactersToString<P, R, E> charactersToString) throws E {
 
-        Objects.checkIndex(index, getLimit());
+        Checks.checkIndex(index, getLimit());
         Objects.requireNonNull(charactersBufferAllocator);
         Objects.requireNonNull(charactersToString);
 
@@ -263,7 +288,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
         int offset = bufferOffset;
 
-        final int endBufferOffset = getInnerCapacity() - 1;
+        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerElementCapacity()) - 1;
 
         long remaining = length;
 
@@ -307,7 +332,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
     public long getStringLength(long index) {
 
-        Objects.checkIndex(index, getLimit());
+        Checks.checkIndex(index, getLimit());
 
         long length = 0L;
 
@@ -318,7 +343,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
         char[] buffer = buffers[bufferNo];
 
-        final int endBufferOffset = getInnerNumAllocateElements() - 1;
+        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerNumAllocateElements()) - 1;
 
         for (;;) {
 
@@ -347,8 +372,8 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
     public boolean matches(long index, CharSequence charSequence, int offset, int length, boolean caseSensitive) {
 
-        Objects.checkIndex(index, getLimit());
-        Objects.checkFromIndexSize(offset, length, charSequence.length());
+        Checks.checkIndex(index, getLimit());
+        Checks.checkFromIndexSize(offset, length, charSequence.length());
 
         boolean equals = true;
 
@@ -359,7 +384,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
         char[] buffer = buffers[bufferNo];
 
-        final int endBufferOffset= getInnerNumAllocateElements() - 1;
+        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerNumAllocateElements()) - 1;
 
         for (int i = 0; i < length; ++ i) {
 
@@ -399,7 +424,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
     public boolean matches(long index, CharacterBuffer[] characterBuffers, int numCharacterBuffers, boolean caseSensitive) {
 
-        Objects.checkIndex(index, getLimit());
+        Checks.checkIndex(index, getLimit());
         Checks.isNotEmpty(characterBuffers);
         Checks.isLengthAboveZero(numCharacterBuffers);
 
@@ -433,7 +458,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
     public char get(long index) {
 
-        Objects.checkIndex(index, getLimit());
+        Checks.checkIndex(index, getLimit());
 
         return getOuterArray()[getOuterIndex(index)][getInnerElementIndex(index)];
     }
@@ -469,12 +494,15 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
     private void add(CharSequence charSequence, int offset, int length, boolean addTerminator) {
 
         Objects.requireNonNull(charSequence);
-        Objects.checkFromIndexSize(offset, length, charSequence.length());
+        Checks.checkFromIndexSize(offset, length, charSequence.length());
         Checks.isLengthAboveZero(length);
 
-        checkCapacity(length + 1);
+        final int numAdditional = length + 1;
+        final long limit = getLimit();
 
-        final long index = getLimit();
+        checkCapacityWithNewLimit(limit, limit + numAdditional, shouldClear());
+
+        final long index = limit;
 
         int bufferNo = getOuterIndex(index);
         int bufferOffset = getInnerElementIndex(index);
@@ -483,7 +511,7 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
         char[] buffer = buffers[bufferNo];
 
-        final int endBufferOffset = getInnerNumAllocateElements() - 1;
+        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerNumAllocateElements()) - 1;
 
         for (int i = 0; i < length; ++ i) {
 
@@ -517,9 +545,13 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
     public void add(char value) {
 
-        final char[] array = checkCapacity();
+        final long limit = getLimit();
 
-        final long index = getAndIncrementLimit();
+        final char[] array = checkCapacityForOneAppendedElementAndReturnInnerArray(limit);
+
+        final long index = limit;
+
+        incrementLimit();
 
         array[getInnerElementIndex(index)] = value;
     }
@@ -528,19 +560,24 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
 
         Checks.isIndex(index);
 
-        final int outerIndex = ensureCapacityAndLimit(index);
+        final int outerIndex = ensureCapacityAndLimitAndReturnOuterIndex(index, shouldClear());
 
         getOuterArray()[outerIndex][getInnerElementIndex(index)] = value;
     }
 
     @Override
-    protected char[][] copyOuterArray(char[][] outerArray, int capacity) {
+    protected char[][] copyOuterArray(char[][] outerArray, int newCapacity) {
 
-        return Arrays.copyOf(outerArray, capacity);
+        Objects.requireNonNull(outerArray);
+        Checks.isGreaterThan(newCapacity, outerArray.length);
+
+        return Arrays.copyOf(outerArray, newCapacity);
     }
 
     @Override
     protected int getOuterArrayLength(char[][] outerArray) {
+
+        Objects.requireNonNull(outerArray);
 
         return outerArray.length;
     }
@@ -548,13 +585,62 @@ public final class LargeCharArray extends LargeLimitArray<char[][], char[]> impl
     @Override
     protected char[] getInnerArray(char[][] outerArray, int index) {
 
+        Objects.requireNonNull(outerArray);
+        Checks.checkArrayIndex(outerArray, index);
+
         return outerArray[index];
     }
 
     @Override
-    protected char[] abstractCreateAndSetInnerArray(char[][] outerArray, int outerIndex, int innerArrayLength) {
+    protected void clearInnerArray(char[] innerArray, long startIndex, long numElements) {
+
+        Objects.requireNonNull(innerArray);
+        Checks.checkFromIndexSize(startIndex, numElements, innerArray.length);
+
+        assertShouldClear();
+
+        Arrays.fill(innerArray, Integers.checkUnsignedLongToUnsignedInt(startIndex), Integers.checkUnsignedLongToUnsignedInt(startIndex + numElements), clearValue);
+    }
+
+    @Override
+    protected char[] abstractCreateAndSetInnerArray(char[][] outerArray, int outerIndex, long innerArrayElementCapacity) {
+
+        Objects.requireNonNull(outerArray);
+        Checks.checkArrayIndex(outerArray, outerIndex);
+        Checks.isCapacity(innerArrayElementCapacity);
+
+        final int innerArrayLength = Integers.checkUnsignedLongToUnsignedInt(innerArrayElementCapacity);
 
         return outerArray[outerIndex] = new char[innerArrayLength];
+    }
+
+    private <P> void forEachIndexAndString(P parameter, IForEachStringIndex<P> forEachStringIndex) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("parameter", parameter).add("forEachStringIndex", forEachStringIndex));
+        }
+
+        final long num = getLimit();
+
+        long stringIndex = 0L;
+
+        for (long i = stringIndex; i < num; ++ i) {
+
+            final char c = get(i);
+
+            if (c == TERMINATOR_CHAR) {
+
+                forEachStringIndex.each(stringIndex, this, parameter);
+
+                stringIndex = i + 1;
+            }
+        }
+
+        if (DEBUG) {
+
+            exit(b -> b.add("parameter", parameter).add("forEachStringIndex", forEachStringIndex));
+        }
     }
 
     @Override

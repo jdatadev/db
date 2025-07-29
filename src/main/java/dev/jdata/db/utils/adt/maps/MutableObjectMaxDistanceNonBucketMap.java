@@ -4,7 +4,6 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.hashed.HashFunctions;
 
 public final class MutableObjectMaxDistanceNonBucketMap<K, V> extends BaseObjectMaxDistanceNonBucketMap<K, V> implements IMutableObjectDynamicMap<K, V> {
 
@@ -12,11 +11,32 @@ public final class MutableObjectMaxDistanceNonBucketMap<K, V> extends BaseObject
 
     public MutableObjectMaxDistanceNonBucketMap(int initialCapacityExponent, IntFunction<K[]> createKeysArray, IntFunction<V[]> createValuesArray) {
         super(initialCapacityExponent, createKeysArray, createValuesArray);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createKeysArray", createKeysArray).add("createValuesArray", createValuesArray));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     public MutableObjectMaxDistanceNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<K[]> createKeysArray,
             IntFunction<V[]> createValuesArray) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createKeysArray, createValuesArray);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
+                    .add("createKeysArray", createKeysArray).add("createValuesArray", createValuesArray));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
@@ -42,14 +62,28 @@ public final class MutableObjectMaxDistanceNonBucketMap<K, V> extends BaseObject
     @Override
     public V removeAndReturnPrevious(K key, V defaultValue) {
 
+        Objects.requireNonNull(key);
+
         if (DEBUG) {
 
             enter(b -> b.add("key", key).add("defaultValue", defaultValue));
         }
 
-        final int index = removeAndReturnIndexIfExists(key);
+        final V result;
 
-        final V result = index != NO_INDEX ? getValues()[index] : defaultValue;
+        final int indexToRemove = removeMaxDistance(key);
+
+        if (indexToRemove != NO_INDEX) {
+
+            final V[] values = getValues();
+
+            result = values[indexToRemove];
+
+            values[indexToRemove] = null;
+        }
+        else {
+            result = defaultValue;
+        }
 
         if (DEBUG) {
 
@@ -62,14 +96,26 @@ public final class MutableObjectMaxDistanceNonBucketMap<K, V> extends BaseObject
     @Override
     public boolean remove(K key) {
 
+        Objects.requireNonNull(key);
+
         if (DEBUG) {
 
             enter(b -> b.add("key", key));
         }
 
-        final int hashArrayIndex = HashFunctions.objectHashArrayIndex(key, getKeyMask());
+        final boolean result;
 
-        final boolean result = removeAndReturnIndexIfExists(key, hashArrayIndex) != NO_INDEX;
+        final int indexToRemove = removeMaxDistance(key);
+
+        if (indexToRemove != NO_INDEX) {
+
+            getValues()[indexToRemove] = null;
+
+            result = true;
+        }
+        else {
+            result = false;
+        }
 
         if (DEBUG) {
 

@@ -166,17 +166,6 @@ public final class SQLParserHelper<
         indexListAllocator.freeIndexList(sqlStatements);
     }
 
-    private static <T, U extends IndexList.IndexListBuilder<T, ?, U> > IndexList<T> toIndexList(IAddableList<T> addableList, IndexListAllocator<T, ?, U, ?> indexListAllocator) {
-
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(addableList.getNumElements());
-
-        final IndexList.IndexListBuilder<T, ?, ?> indexListBuilder = IndexList.createBuilder(numElements, indexListAllocator);
-
-        toIndexList(addableList, numElements, indexListBuilder);
-
-        return indexListBuilder.build();
-    }
-
     private static <T> void toIndexList(IAddableList<T> addableList, IndexList.IndexListBuilder<T, ?, ?> indexListBuilder) {
 
         final int numElements = Integers.checkUnsignedLongToUnsignedInt(addableList.getNumElements());

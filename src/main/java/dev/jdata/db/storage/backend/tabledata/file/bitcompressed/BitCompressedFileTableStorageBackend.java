@@ -81,7 +81,7 @@ final class BitCompressedFileTableStorageBackend extends BaseFileTableDataStorag
             numExistingBits = 0;
         }
 
-        final int numBitsAdded = RowBitsUtil.addRowData(storageTableFileSchema, inputRowBuffer, inputRowBufferBitOffset, outputRowBuffer, numExistingBits, rowDataNumBits);
+        RowBitsUtil.addRowData(storageTableFileSchema, inputRowBuffer, inputRowBufferBitOffset, outputRowBuffer, numExistingBits, rowDataNumBits);
 
         if (hasLeftOverBits) {
 

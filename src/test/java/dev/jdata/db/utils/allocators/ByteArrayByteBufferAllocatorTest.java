@@ -5,19 +5,19 @@ import java.nio.ByteBuffer;
 public final class ByteArrayByteBufferAllocatorTest extends ByteBufferAllocatorTest<ByteArrayByteBufferAllocator> {
 
     @Override
-    ByteArrayByteBufferAllocator createAllocator() {
+    protected ByteArrayByteBufferAllocator createAllocator() {
 
         return new ByteArrayByteBufferAllocator();
     }
 
     @Override
-    ByteBuffer allocate(ByteArrayByteBufferAllocator allocator, int minimumCapacity) {
+    protected ByteBuffer allocate(ByteArrayByteBufferAllocator allocator, int minimumCapacity) {
 
         return allocator.allocateByteArrayByteBuffer(minimumCapacity);
     }
 
     @Override
-    void free(ByteArrayByteBufferAllocator allocator, ByteBuffer instance) {
+    protected void free(ByteArrayByteBufferAllocator allocator, ByteBuffer instance) {
 
         allocator.freeByteBuffer(instance);
     }

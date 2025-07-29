@@ -7,6 +7,8 @@ import java.util.Objects;
 
 import dev.jdata.db.data.cache.DataCache;
 import dev.jdata.db.engine.database.Database.DatabaseState;
+import dev.jdata.db.engine.database.operations.IDatabaseOperations;
+import dev.jdata.db.engine.database.operations.exceptions.DMLException;
 import dev.jdata.db.engine.descriptorables.BaseDescriptorable;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.engine.sessions.DMLUpdatingEvaluatorParameter;
@@ -14,7 +16,7 @@ import dev.jdata.db.engine.sessions.DMLUpdatingPreparedEvaluatorParameter;
 import dev.jdata.db.engine.sessions.Session;
 import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
 import dev.jdata.db.engine.sessions.Sessions;
-import dev.jdata.db.engine.statements.SQLStatements;
+import dev.jdata.db.engine.statements.SQLStatementsCache;
 import dev.jdata.db.engine.transactions.Transaction;
 import dev.jdata.db.engine.transactions.Transactions;
 import dev.jdata.db.schema.DatabaseSchemaManager;
@@ -26,7 +28,7 @@ import dev.jdata.db.sql.parse.SQLString;
 import dev.jdata.db.utils.State;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class Database extends BaseDescriptorable<DatabaseState> implements IDatabaseOperations, IDatabase {
+public final class Database extends BaseDescriptorable<DatabaseState> implements IDatabaseOperations {
 
     public interface DMLEvaluatorParameterAllocator {
 
@@ -71,7 +73,7 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
 //    private final Tables tables;
 //    private final Indices indices;
 
-    private final SQLStatements sqlStatements;
+    private final SQLStatementsCache sqlStatements;
 
     private final Sessions sessions;
 
@@ -99,7 +101,7 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
 //        this.tables = new Tables(schemas, parameters.getInitialRowIds());
 //        this.indices = new Indices();
 
-        this.sqlStatements = new SQLStatements();
+        this.sqlStatements = new SQLStatementsCache();
 
         this.sessions = new Sessions(parameters.getLargeObjectStorer());
 
@@ -136,7 +138,6 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
         return 0;
     }
 
-    @Override
     public int addSession(Charset charset) {
 
         return sessions.addSession(charset).getSessionId();
@@ -149,7 +150,6 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
         return getSession(sessionId).getCharset();
     }
 
-    @Override
     public void closeSession(int sessionId) {
 
         try {
@@ -168,7 +168,7 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
     }
 
     @Override
-    public <E extends Exception> void executeDMLSelectSQL(int sessionId, SQLSelectStatement sqlStatement, SelectResultWriter<E> selectResultWriter) {
+    public <E extends Exception> void executeDMLSelectSQL(int sessionId, SQLSelectStatement sqlStatement, ISelectResultWriter<E> selectResultWriter) {
 
         throw new UnsupportedOperationException();
     }

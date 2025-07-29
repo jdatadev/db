@@ -7,12 +7,12 @@ import dev.jdata.db.test.unit.BaseTest;
 
 abstract class BaseAllocatorTest<T, A> extends BaseTest {
 
-    abstract A createAllocator();
+    protected abstract A createAllocator();
 
     abstract T allocate(A allocator);
-    abstract T[] allocateArray(int length);
+    protected abstract T[] allocateArray(int length);
 
-    abstract void free(A allocator, T instance);
+    protected abstract void free(A allocator, T instance);
 
     abstract boolean freesInSameOrder();
 

@@ -3,355 +3,441 @@ package dev.jdata.db.utils.adt.arrays;
 import java.util.Objects;
 import java.util.function.IntFunction;
 import java.util.function.ObjLongConsumer;
-import java.util.function.ToIntFunction;
 
-import dev.jdata.db.utils.adt.Capacity;
-import dev.jdata.db.utils.adt.elements.ICapacity;
+import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.arrays.LargeOneDimensionalArrayCapacityAlgorithm.OneDimensionalArrayCapacityOperations;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseLargeOneDimensionalArray<O, I> extends BaseAnyLargeArray<O, I> implements ICapacity {
+abstract class BaseLargeOneDimensionalArray<O, I> extends BaseAnyLargeArray<O, I> {
+
+    private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LARGE_ONE_DIMENSIONAL_ARRAY;
 
     protected abstract int getOuterIndex(long index);
+    protected abstract I abstractCreateAndSetInnerArray(O outerArray, int outerIndex, long innerArrayElementCapacity);
 
-    protected abstract I abstractCreateAndSetInnerArray(O outerArray, int outerIndex, int innerArrayLength);
-
-    private final int innerCapacity;
-    private final ToIntFunction<O> getOuterArrayLength;
-
-    private final int innerNumAllocateElements;
+    private final long innerElementCapacity;
+    private final long innerNumAllocateElements;
 
     private int numOuterAllocatedInnerArrays;
 
-    BaseLargeOneDimensionalArray(int initialOuterCapacity, int innerCapacity, int numInitialOuterAllocatedInnerArrays, IntFunction<O> createOuterArray,
-            ToIntFunction<O> getOuterArrayLength, boolean requiresInnerArrayNumElements) {
-        super(initialOuterCapacity, createOuterArray, requiresInnerArrayNumElements);
+    BaseLargeOneDimensionalArray(int initialOuterCapacity, long innerElementsCapacity, int numInitialOuterAllocatedInnerArrays, boolean hasClearValue,
+            IntFunction<O> createOuterArray, boolean requiresInnerArrayNumElements) {
+        super(initialOuterCapacity, hasClearValue, createOuterArray, requiresInnerArrayNumElements);
 
-        this.innerCapacity = Checks.isInitialCapacity(innerCapacity);
-        this.getOuterArrayLength = Objects.requireNonNull(getOuterArrayLength);
+        if (DEBUG) {
 
-        this.innerNumAllocateElements = innerCapacity;
+            enter(b -> b.add("initialOuterCapacity", initialOuterCapacity).add("innerElementsCapacity", innerElementsCapacity)
+                    .add("numInitialOuterAllocatedInnerArrays", numInitialOuterAllocatedInnerArrays).add("createOuterArray", createOuterArray)
+                    .add("requiresInnerArrayNumElements", requiresInnerArrayNumElements));
+        }
+
+        this.innerElementCapacity = Checks.isInitialCapacity(innerElementsCapacity);
+
+        this.innerNumAllocateElements = innerElementsCapacity;
 
         this.numOuterAllocatedInnerArrays = Checks.isLengthAboveOrAtZero(numInitialOuterAllocatedInnerArrays);
-    }
 
-    @Override
-    public final long getCapacity() {
+        if (DEBUG) {
 
-        return numOuterAllocatedInnerArrays * (long)innerCapacity;
-    }
-
-    protected final int getInnerCapacity() {
-        return innerCapacity;
-    }
-
-    @Override
-    protected long getInnerElementCapacity() {
-
-        return getInnerCapacity();
-    }
-
-    final <P> void clearArrays(P parameter, ArrayClearer<I, P> arrayClearer) {
-
-        clearArrays(parameter, getNumOuterUtilizedEntries(), 0, innerCapacity, arrayClearer);
-    }
-
-    final long getRemainderOfLastInnerArrayWithLimit(int expectedOuterIndex, long limit) {
-
-        return Capacity.getRemainderOfLastInnerArrayWithLimit(expectedOuterIndex, limit, getNumOuterUtilizedEntries(), getInnerElementCapacity());
-    }
-
-    final int checkCapacityForOneAppendedElementAndReturnOuterIndex() {
-
-        final int numOuterAllocated = numOuterAllocatedInnerArrays;
-        final int numOuterUtilized = getNumOuterUtilizedEntries();
-
-        final int result;
-
-        if (numOuterAllocated == 0) {
-
-            result = allocateInitialOuterAndInnerArray();
+            exit();
         }
-        else if (numOuterUtilized == 0) {
+    }
 
-            incrementNumOuterUtilizedEntries();
+    BaseLargeOneDimensionalArray(BaseLargeOneDimensionalArray<O, I> toCopy, IOuterAndInnerArraysCopier<O> copyOuterAndInnerArrays) {
+        super(toCopy, copyOuterAndInnerArrays);
 
-            result = 0;
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy).add("copyOuterAndInnerArrays", copyOuterAndInnerArrays));
         }
-        else {
-            final int outerIndex = numOuterUtilized - 1;
 
-            final long numFreeInnerElements = getRemainderOfLastInnerArray(outerIndex);
+        this.innerElementCapacity = toCopy.innerElementCapacity;
+        this.innerNumAllocateElements = toCopy.innerNumAllocateElements;
 
-            if (numFreeInnerElements == 0L) {
+        this.numOuterAllocatedInnerArrays = toCopy.numOuterAllocatedInnerArrays;
 
-                if (numOuterUtilized < numOuterAllocated) {
+        if (DEBUG) {
 
-                    result = numOuterUtilized;
+            exit();
+        }
+    }
 
-                    clearNumInnerElementsIfRequired(result);
+    private long getAllocatedInnerArrayElementsCapacity() {
 
-                    incrementNumOuterUtilizedEntries();
-                }
-                else {
-                    result = reallocateOuterArray(numOuterUtilized, getOuterArrayLength);
-                }
-            }
-            else {
-                result = outerIndex;
-            }
+        if (DEBUG) {
+
+            enter();
+        }
+
+        final long result = numOuterAllocatedInnerArrays * getInnerElementCapacity();
+
+        if (DEBUG) {
+
+            exit(result);
         }
 
         return result;
     }
 
-    private int allocateInitialOuterAndInnerArray() {
+    @Override
+    protected final int getOuterArrayCapacity() {
 
-        allocateInitialOuterAndInnerArrays(1L, null, null);
+        if (DEBUG) {
 
-        return 0;
+            enter();
+        }
+
+        final O outerArray = getOuterArray();
+
+        final int result = outerArray != null ? getOuterArrayLength(outerArray) : 0;
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
     }
 
-    final <P> O allocateInitialOuterAndInnerArrays(long numAdditional, P parameter, ArrayClearer<I, P> arrayClearer) {
+    @Override
+    protected final long getInnerElementCapacity() {
 
-        Checks.isLengthAboveZero(numAdditional);
+        return innerElementCapacity;
+    }
 
-        final int numOuter = computeNumOuter(numAdditional, innerCapacity);
+    private static final OneDimensionalArrayCapacityOperations<BaseLargeOneDimensionalArray<?, Object>, Object> arrayCapacityOperations
+            = new OneDimensionalArrayCapacityOperations<BaseLargeOneDimensionalArray<?, Object>, Object>() {
 
-        incrementNumOuterAllocatedInnerArrays(numOuter);
+                @Override
+                public void allocateInitialOuterAndInnerArrays(BaseLargeOneDimensionalArray<?, Object> instance, int numOuter, boolean clearInnerArrays) {
+
+                    instance.allocateInitialOuterAndInnerArrays(numOuter, clearInnerArrays);
+                }
+
+                @Override
+                public void reallocateOuterAndAllocateInnerArrays(BaseLargeOneDimensionalArray<?, Object> instance, int newOuterCapacity, boolean clearInnerArrays) {
+
+                    instance.reallocateOuterAndAllocateInnerArrays(newOuterCapacity, clearInnerArrays);
+                }
+
+                @Override
+                public void increaseNumOuterAllocatedInnerArrays(BaseLargeOneDimensionalArray<?, Object> instance, int numAdditional) {
+
+                    instance.increaseNumOuterAllocatedInnerArrays(numAdditional);
+                }
+
+                @Override
+                public void increaseNumOuterUtilizedEntries(BaseLargeOneDimensionalArray<?, Object> instance, int numAdditional, int maxValue) {
+
+                    instance.increaseNumOuterUtilizedEntries(numAdditional, maxValue);
+                }
+            };
+
+    final I checkCapacityForOneAppendedElementAndReturnInnerArray(long limit) {
+
+        Checks.isArrayLimit(limit);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("limit", limit));
+        }
+
+        final int outerIndex = checkCapacityForOneAppendedElementAndReturnOuterIndex(limit);
+
+        final I result = getInnerArray(outerIndex);
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
+    protected final int checkCapacityForOneAppendedElementAndReturnOuterIndex(long limit) {
+
+        Checks.isArrayLimit(limit);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("limit", limit));
+        }
+
+        final int result = checkCapacityWithNewLimitAndReturnOuterIndex(limit, limit + 1);
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
+    private O allocateInitialOuterAndInnerArrays(int numOuter, boolean clearInnerArrays) {
+
+        Checks.isLengthAboveZero(numOuter);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("numOuter", numOuter));
+        }
 
         final O outerArray = allocateInitialOuterArrayAndInnerArrayElements(numOuter);
 
-        allocateInnerArrays(outerArray, 0, numOuter, parameter, arrayClearer);
+        allocateInnerArrays(outerArray, 0, numOuter, clearInnerArrays);
+
+        if (DEBUG) {
+
+            exit(outerArray);
+        }
 
         return outerArray;
     }
 
-    final int reallocateOuterArray(int numOuterUtilizedEntries, ToIntFunction<O> getArrayLength) {
+    protected final I checkCapacityWithNewLimitAndReturnInnerArray(long limit, long newLimit, boolean clearInnerArrays) {
 
-        Checks.isNumElements(numOuterUtilizedEntries);
+        if (DEBUG) {
 
-        final O outerArray = getOuterArray();
-        final int outerArrayLength = getArrayLength.applyAsInt(outerArray);
-
-        final O updatedOuterArray;
-
-        if (numOuterUtilizedEntries == outerArrayLength) {
-
-            updatedOuterArray = reallocateOuterArrayAndInnerArrayNumElementsWithExistingLength(outerArrayLength);
-        }
-        else if (numOuterUtilizedEntries > outerArrayLength) {
-
-            throw new IllegalStateException();
-        }
-        else {
-            updatedOuterArray = outerArray;
+            enter(b -> b.add("limit", limit).add("newLimit", newLimit).add("clearInnerArrays", clearInnerArrays));
         }
 
-        final int resultIndex = numOuterUtilizedEntries;
+        final int outerIndex = checkCapacityWithNewLimitAndReturnOuterIndex(limit, newLimit, clearInnerArrays);
 
-        createAndSetInnerArray(updatedOuterArray, resultIndex, getInnerNumAllocateElements());
+        final I result = getInnerArray(outerIndex);
 
-        clearNumInnerElementsIfRequired(resultIndex);
+        if (DEBUG) {
 
-        incrementNumOuterAllocatedInnerArrays();
-        incrementNumOuterUtilizedEntries();
+            exit(result);
+        }
 
-        return resultIndex;
+        return result;
     }
 
-    protected I checkCapacity() {
+    final <P> void checkCapacityWithNewLimit(long limit, long newLimit, boolean clearInnerArrays) {
 
-        return checkCapacity(null, null);
+        if (DEBUG) {
+
+            enter(b -> b.add("limit", limit).add("newLimit", newLimit).add("clearInnerArrays", clearInnerArrays));
+        }
+
+        checkCapacityWithNewLimitAndReturnOuterIndex(limit, newLimit, clearInnerArrays);
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    final <P> I checkCapacity(P parameter, ArrayClearer<I, P> arrayClearer) {
+    private <P> int checkCapacityWithNewLimitAndReturnOuterIndex(long limit, long newLimit) {
 
-         return checkCapacity(1L, parameter, arrayClearer);
+        if (DEBUG) {
+
+            enter(b -> b.add("limit", limit).add("newLimit", newLimit));
+        }
+
+        final int result = checkCapacityWithNewLimitAndReturnOuterIndex(limit, newLimit, false);
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
     }
 
-    protected final <P> I checkCapacity(long numAdditional) {
+    protected final int checkCapacityWithNewLimitAndReturnOuterIndex(long limit, long newLimit, boolean clearInnerArrays) {
 
-        return checkCapacity(numAdditional, null, null);
-    }
+        Checks.isArrayLimit(limit);
+        Checks.isArrayLimit(newLimit);
+        Checks.isGreaterThanOrEqualTo(newLimit, limit);
 
-    final <P> I checkCapacity(long numAdditional, P parameter, ArrayClearer<I, P> arrayClearer) {
+        if (DEBUG) {
 
-        final int outerIndex = checkCapacityAndReturnOuterIndex(numAdditional, parameter, arrayClearer);
+            enter(b -> b.add("limit", limit).add("newLimit", newLimit));
+        }
 
-        return getInnerArray(getOuterArray(), outerIndex);
-    }
+        final int result;
 
-    protected final <P> int checkCapacityAndReturnOuterIndex(long numAdditional) {
+        final long allocatedInnerArrayElementsCapacity = getAllocatedInnerArrayElementsCapacity();
 
-        return checkCapacityAndReturnOuterIndex(numAdditional, null, null);
-    }
-
-    final <P> int checkCapacityAndReturnOuterIndex(long numAdditional, P parameter, ArrayClearer<I, P> arrayClearer) {
-
-        Checks.isLengthAboveZero(numAdditional);
-
-        final int numOuterAllocatedInnerArrays = getNumOuterAllocatedInnerArrays();
         final int numOuterUtilizedEntries = getNumOuterUtilizedEntries();
 
-        final long innerElementCapacity = getInnerElementCapacity();
+        if (newLimit < allocatedInnerArrayElementsCapacity) {
 
-        final int resultIndex;
+            final int outerIndex = computeOuterIndexFromLimit(limit);
 
-        if (numOuterAllocatedInnerArrays == 0) {
+            if (outerIndex >= numOuterUtilizedEntries) {
 
-            allocateInitialOuterAndInnerArrays(numAdditional, parameter, arrayClearer);
+                increaseNumOuterUtilizedEntries(outerIndex - numOuterUtilizedEntries + 1, getNumOuterAllocatedInnerArrays());
+            }
 
-            resultIndex = 0;
+            result = outerIndex;
         }
         else {
-            final long lastInnerRemaining;
+            @SuppressWarnings("unchecked")
+            final OneDimensionalArrayCapacityOperations<BaseLargeOneDimensionalArray<O, I>, I> capacityOperations
+                    = (OneDimensionalArrayCapacityOperations<BaseLargeOneDimensionalArray<O, I>, I>)(OneDimensionalArrayCapacityOperations<?, ?>)arrayCapacityOperations;
 
-            if (numOuterUtilizedEntries == 0) {
-
-                lastInnerRemaining = innerElementCapacity;
-                resultIndex = 0;
-            }
-            else {
-                final int lastOuterIndex = numOuterUtilizedEntries - 1;
-
-                lastInnerRemaining = getRemainderOfLastInnerArray(lastOuterIndex);
-                resultIndex = lastInnerRemaining != 0L ? lastOuterIndex : numOuterUtilizedEntries;
-            }
-
-            if (numAdditional > lastInnerRemaining) {
-
-                final int numAdditionalOuter = computeNumAdditionalOuter(numAdditional, lastInnerRemaining, innerElementCapacity);
-
-                final int totalOuterAllocatedInnerArrays = numOuterUtilizedEntries + numAdditionalOuter;
-
-                if (totalOuterAllocatedInnerArrays > numOuterAllocatedInnerArrays) {
-
-                    reallocateOuterAndAllocateInnerArrays(totalOuterAllocatedInnerArrays, numOuterAllocatedInnerArrays, parameter, arrayClearer);
-                }
-                else {
-                    incrementNumOuterUtilizedEntries(numAdditionalOuter, numOuterAllocatedInnerArrays);
-                }
-            }
-            else {
-                if (numOuterUtilizedEntries == 0) {
-
-                    incrementNumOuterUtilizedEntries();
-                }
-            }
+            result = LargeOneDimensionalArrayCapacityAlgorithm.checkCapacityAndReturnOuterIndex(this, limit, newLimit, getNumOuterAllocatedInnerArrays(),
+                    getNumOuterUtilizedEntries(), getInnerElementCapacity(), clearInnerArrays, capacityOperations);
         }
 
-        return resultIndex;
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
     }
 
-    final <P> O reallocateOuterAndAllocateInnerArrays(int newOuterCapacity, int startOuterIndex, P parameter, ArrayClearer<I, P> arrayClearer) {
+    private O reallocateOuterAndAllocateInnerArrays(int newOuterCapacity, boolean clearInnerArrays) {
 
         final int existingNumOuterAllocatedInnerArrays = numOuterAllocatedInnerArrays;
         Checks.isGreaterThan(newOuterCapacity, existingNumOuterAllocatedInnerArrays);
 
-        final int existingNumOuterUtilizedEntries = getNumOuterUtilizedEntries();
-        Checks.areEqual(startOuterIndex, existingNumOuterAllocatedInnerArrays);
+        if (DEBUG) {
 
-        incrementNumOuterAllocatedInnerArrays(newOuterCapacity - existingNumOuterAllocatedInnerArrays);
-        incrementNumOuterUtilizedEntries(newOuterCapacity - existingNumOuterUtilizedEntries, getNumOuterAllocatedInnerArrays());
+            enter(b -> b.add("newOuterCapacity", newOuterCapacity));
+        }
 
         final O outerArray = reallocateOuterArrayAndInnerArrayNumElements(newOuterCapacity);
 
         final int numInnerToAllocate = newOuterCapacity - existingNumOuterAllocatedInnerArrays;
 
-        allocateInnerArrays(outerArray, existingNumOuterAllocatedInnerArrays, numInnerToAllocate, parameter, arrayClearer);
+        allocateInnerArrays(outerArray, existingNumOuterAllocatedInnerArrays, numInnerToAllocate, clearInnerArrays);
+
+        if (DEBUG) {
+
+            exit(outerArray);
+        }
 
         return outerArray;
     }
 
-    private <P> void allocateInnerArrays(O outerArray, int startIndex, int numOuter, P parameter, ArrayClearer<I, P> arrayClearer) {
+    private void allocateInnerArrays(O outerArray, int startIndex, int numOuter, boolean clear) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("outerArray", outerArray).add("startIndex", startIndex).add("numOuter", numOuter).add("clear", clear));
+        }
 
         for (int i = 0; i < numOuter; ++ i) {
 
             final int index = startIndex + i;
 
-            final I a = createAndSetInnerArray(outerArray, index, innerNumAllocateElements);
+            final long toAllocate = getInnerNumAllocateElements();
 
-            if (arrayClearer != null) {
+            final I a = createAndSetInnerArray(outerArray, index, toAllocate);
 
-                arrayClearer.clear(a, 0, innerCapacity, parameter);
+            if (clear) {
+
+                clearInnerArray(a, 0, toAllocate);
             }
+        }
+
+        if (DEBUG) {
+
+            exit();
         }
     }
 
-    final <INCREASE_LIMIT_PARAMETER, CLEAR_ARRAY_PARAMETER> int ensureCapacityAndLimit(long index, long limit, INCREASE_LIMIT_PARAMETER increaseLimitParameter,
-            CLEAR_ARRAY_PARAMETER clearArrayParameter, ObjLongConsumer<INCREASE_LIMIT_PARAMETER> limitIncreaser, ArrayClearer<I, CLEAR_ARRAY_PARAMETER> arrayClearer) {
+    <INCREASE_LIMIT_PARAMETER> int ensureCapacityAndLimitAndReturnOuterIndex(long index, long limit, INCREASE_LIMIT_PARAMETER increaseLimitParameter,
+            ObjLongConsumer<INCREASE_LIMIT_PARAMETER> limitIncreaser, boolean clearInnerArrays) {
 
         Checks.isIndex(index);
         Checks.isArrayLimit(limit);
         Objects.requireNonNull(limitIncreaser);
 
-        final long capacity = getCapacity();
+        if (DEBUG) {
+
+            enter(b -> b.add("index", index).add("limit", limit).add("increaseLimitParameter", increaseLimitParameter).add("limitIncreaser", limitIncreaser)
+                    .add("clearInnerArrays", clearInnerArrays));
+        }
+
+        final long allocatedInnerArrayElementsCapacity = getAllocatedInnerArrayElementsCapacity();
 
         if (index >= limit) {
 
-            if (index >= capacity) {
+            final long newLimit = index + 1;
 
-                checkCapacity(index - capacity + 1, clearArrayParameter, arrayClearer);
+            if (index >= allocatedInnerArrayElementsCapacity) {
+
+                checkCapacityWithNewLimit(limit, newLimit, clearInnerArrays);
+            }
+            else {
+                final int numOuter = getNumOuterUtilizedEntries();
+
+                final long innerElementCapacity = getInnerElementCapacity();
+
+                final int requiredNumOuter = Integers.checkUnsignedLongToUnsignedInt(newLimit / innerElementCapacity);
+
+                if (requiredNumOuter > numOuter) {
+
+                    setNumOuterUtilizedEntries(requiredNumOuter, numOuterAllocatedInnerArrays);
+                }
             }
 
-            limitIncreaser.accept(increaseLimitParameter, index - limit + 1);
+            limitIncreaser.accept(increaseLimitParameter, newLimit - limit);
         }
 
         final int outerIndex = getOuterIndex(index);
 
-        final int numOuterUtilizedEntries = getNumOuterUtilizedEntries();
+        if (DEBUG) {
 
-        if (outerIndex >= numOuterUtilizedEntries) {
-
-            incrementNumOuterUtilizedEntries(outerIndex - numOuterUtilizedEntries + 1, getNumOuterAllocatedInnerArrays());
+            exit(outerIndex);
         }
 
         return outerIndex;
     }
 
-    final I createAndSetInnerArray(O outerArray, int outerIndex, int innerArrayLength) {
+    private I createAndSetInnerArray(O outerArray, int outerIndex, long innerArrayElementCapacity) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("outerArray", outerArray).add("outerIndex", outerIndex).add("innerArrayElementCapacity", innerArrayElementCapacity));
+        }
 
         if (getInnerArray(outerArray, outerIndex) != null) {
 
             throw new IllegalStateException();
         }
 
-        return abstractCreateAndSetInnerArray(outerArray, outerIndex, innerArrayLength);
+        final I result = abstractCreateAndSetInnerArray(outerArray, outerIndex, innerArrayElementCapacity);
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
     }
 
-    static int computeNumAdditionalOuter(long numAdditional, long lastInnerRemaining, long innerElementCapacity) {
-
-        Checks.isGreaterThan(numAdditional, lastInnerRemaining);
-
-        return computeNumOuter(numAdditional - lastInnerRemaining, innerElementCapacity);
-    }
-
-    private static int computeNumOuter(long numAdditional, long innerElementCapacity) {
-
-        Checks.isLengthAboveZero(numAdditional);
-        Checks.isLengthAboveZero(innerElementCapacity);
-
-        return Integers.checkUnsignedLongToUnsignedInt(((numAdditional - 1) / innerElementCapacity) + 1);
-    }
-
-    final int getNumOuterAllocatedInnerArrays() {
+    int getNumOuterAllocatedInnerArrays() {
         return numOuterAllocatedInnerArrays;
     }
 
-    private void incrementNumOuterAllocatedInnerArrays() {
+    private void increaseNumOuterAllocatedInnerArrays(int numAdditional) {
 
-        ++ numOuterAllocatedInnerArrays;
-    }
+        if (DEBUG) {
 
-    final void incrementNumOuterAllocatedInnerArrays(int numAdditional) {
-
-        Checks.isLengthAboveZero(numAdditional);
+            enter(b -> b.add("numAdditional", numAdditional));
+        }
 
         this.numOuterAllocatedInnerArrays += numAdditional;
+
+        if (DEBUG) {
+
+            exit(numOuterAllocatedInnerArrays);
+        }
     }
 
-    final int getInnerNumAllocateElements() {
+    final long getInnerNumAllocateElements() {
         return innerNumAllocateElements;
+    }
+
+    private int computeOuterIndexFromLimit(long limit) {
+
+        return getOuterIndex(limit);
     }
 }

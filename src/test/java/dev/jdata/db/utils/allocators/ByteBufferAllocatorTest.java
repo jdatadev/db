@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 abstract class ByteBufferAllocatorTest<A extends ByteBufferAllocator> extends BaseBufferAllocatorTest<ByteBuffer, A> {
 
     @Override
-    final ByteBuffer[] allocateArray(int length) {
+    protected final ByteBuffer[] allocateArray(int length) {
 
         return new ByteBuffer[length];
     }

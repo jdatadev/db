@@ -9,6 +9,12 @@ public final class LargeIntArrayTest extends BaseLargeArrayTest<int[][], int[], 
     }
 
     @Override
+    LargeIntArray createArray(int initialOuterCapacity, int innerCapacityExponent, int clearValue) {
+
+        return new LargeIntArray(initialOuterCapacity, innerCapacityExponent, clearValue);
+    }
+
+    @Override
     int getValue(LargeIntArray array, long index) {
 
         return array.get(index);

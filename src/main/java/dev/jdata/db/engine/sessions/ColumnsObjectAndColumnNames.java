@@ -11,8 +11,8 @@ import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.sql.ast.statements.dml.SQLObjectName;
 import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.maps.MutableLongToIntWithRemoveNonBucketMap;
 import dev.jdata.db.utils.adt.maps.ILongToIntCommonMapGetters;
+import dev.jdata.db.utils.adt.maps.MutableLongToIntWithRemoveNonBucketMap;
 import dev.jdata.db.utils.allocators.ILongToIntMapAllocator;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -142,6 +142,6 @@ abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject> {
 
     private void checkColumnsObjectId(int columnsObjectId) {
 
-        Objects.checkIndex(columnsObjectId, maxColumnsObjectId + 1);
+        Checks.checkIndex(columnsObjectId, maxColumnsObjectId + 1);
     }
 }

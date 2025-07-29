@@ -5,7 +5,7 @@ import java.util.Objects;
 
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
-import dev.jdata.db.data.RowDataNumBitsAndOffsets;
+import dev.jdata.db.data.RowDataNumBits;
 import dev.jdata.db.dml.DMLInsertRows;
 import dev.jdata.db.dml.DMLUpdateRows;
 import dev.jdata.db.dml.DMLUpdateRows.UpdateRow;
@@ -22,7 +22,7 @@ abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParamet
     private final IByteArrayByteBufferAllocator byteArrayByteBufferAllocator;
     private final ILargeLongArrayAllocator largeLongArrayAllocator;
 
-    private final RowDataNumBitsAndOffsets rowDataNumBitsAndOffsets;
+    private final RowDataNumBits rowDataNumBits;
 
     private final DMLInsertRows insertRows;
     private final DMLUpdateRows updateRows;
@@ -48,7 +48,7 @@ abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParamet
         this.byteArrayByteBufferAllocator = Objects.requireNonNull(byteArrayByteBufferAllocator);
         this.largeLongArrayAllocator = Objects.requireNonNull(largeLongArrayAllocator);
 
-        this.rowDataNumBitsAndOffsets = new RowDataNumBitsAndOffsets(DBConstants.MAX_COLUMNS);
+        this.rowDataNumBits = new RowDataNumBits(DBConstants.MAX_COLUMNS);
 
         this.insertRows = new DMLInsertRows();
         this.updateRows = new DMLUpdateRows();
@@ -105,9 +105,8 @@ abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParamet
         return tableId;
     }
 
-    @Deprecated // only RowDataNumBits?
-    final RowDataNumBitsAndOffsets getRowDataNumBitsAndOffsets() {
-        return rowDataNumBitsAndOffsets;
+    final RowDataNumBits getRowDataNumBits() {
+        return rowDataNumBits;
     }
 
     final DMLInsertRows getInsertRows() {

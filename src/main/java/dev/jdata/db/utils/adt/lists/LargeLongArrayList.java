@@ -5,6 +5,8 @@ import java.util.Objects;
 
 import dev.jdata.db.utils.adt.Capacity;
 import dev.jdata.db.utils.adt.arrays.LargeArray;
+import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.scalars.Integers;
 
 @Deprecated // currently not in use
 public final class LargeLongArrayList extends LargeArray<long[][], long[]> implements IMutableLongIndexList {
@@ -12,7 +14,13 @@ public final class LargeLongArrayList extends LargeArray<long[][], long[]> imple
     private long numElements;
 
     public LargeLongArrayList(int initialOuterCapacity, int innerCapacityExponent) {
-        super(initialOuterCapacity, long[][]::new, a -> a.length, innerCapacityExponent);
+        super(initialOuterCapacity, innerCapacityExponent, false, long[][]::new);
+    }
+
+    @Override
+    public long getCapacity() {
+
+        return getArrayElementCapacity();
     }
 
     @Override
@@ -24,7 +32,7 @@ public final class LargeLongArrayList extends LargeArray<long[][], long[]> imple
     @Override
     public void clear() {
 
-        super.clear();
+        clearArray();
 
         this.numElements = 0L;
     }
@@ -97,7 +105,7 @@ public final class LargeLongArrayList extends LargeArray<long[][], long[]> imple
                     }
                 }
 
-            final long remaining = Capacity.getRemainderOfLastInnerArrayWithLimit(numCompleteOuter - 1, numElements, getNumOuterUtilizedEntries(), innerElementCapacity);
+            final long remaining = Capacity.getRemainderOfLastInnerArrayWithLimit(innerElementCapacity, numElements, getNumOuterUtilizedEntries(), numCompleteOuter - 1);
             final long num = remaining;
 
             final long[] inner = array[numCompleteOuter];
@@ -136,7 +144,7 @@ public final class LargeLongArrayList extends LargeArray<long[][], long[]> imple
 
             final int numOuter = getNumOuterUtilizedEntries();
             final int numOuterMinusOne = numOuter - 1;
-            final int innerCapacity = getInnerCapacity();
+            final long innerElementCapacity = getInnerElementCapacity();
 
             int i;
 
@@ -146,7 +154,7 @@ public final class LargeLongArrayList extends LargeArray<long[][], long[]> imple
 
                     final long[] array = arrays[i];
 
-                    for (int j = 0; j < innerCapacity; ++ j) {
+                    for (int j = 0; j < innerElementCapacity; ++ j) {
 
                         if (array[j] == value) {
 
@@ -179,16 +187,20 @@ public final class LargeLongArrayList extends LargeArray<long[][], long[]> imple
     @Override
     public void addTail(long value) {
 
-        checkCapacity();
+        final long limit = numElements;
 
-        final long index = this.numElements ++;
+        final int outerIndex = checkCapacityForOneAppendedElementAndReturnOuterIndex(limit);
 
-        getOuterArray()[getOuterIndex(index)][getInnerElementIndex(index)] = value;
+        final long index = limit;
+
+        ++ numElements;
+
+        getOuterArray()[outerIndex][getInnerElementIndex(index)] = value;
     }
 
     public void set(long index, long value) {
 
-        Objects.checkIndex(index, numElements);
+        Checks.checkIndex(index, numElements);
 
         getOuterArray()[getOuterIndex(index)][getInnerElementIndex(index)] = value;
     }
@@ -206,25 +218,45 @@ public final class LargeLongArrayList extends LargeArray<long[][], long[]> imple
     }
 
     @Override
-    protected long[][] copyOuterArray(long[][] outerArray, int capacity) {
-
-        return Arrays.copyOf(outerArray, capacity);
-    }
-
-    @Override
     protected int getOuterArrayLength(long[][] outerArray) {
+
+        Objects.requireNonNull(outerArray);
 
         return outerArray.length;
     }
 
     @Override
+    protected long[][] copyOuterArray(long[][] outerArray, int newCapacity) {
+
+        Objects.requireNonNull(outerArray);
+        Checks.checkArrayLength(outerArray, newCapacity);
+
+        return Arrays.copyOf(outerArray, newCapacity);
+    }
+
+    @Override
     protected long[] getInnerArray(long[][] outerArray, int index) {
+
+        Objects.requireNonNull(outerArray);
+        Checks.checkArrayIndex(outerArray, index);
 
         return outerArray[index];
     }
 
     @Override
-    protected long[] abstractCreateAndSetInnerArray(long[][] outerArray, int outerIndex, int innerArrayLength) {
+    protected void clearInnerArray(long[] innerArray, long startIndex, long numElements) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected long[] abstractCreateAndSetInnerArray(long[][] outerArray, int outerIndex, long innerArrayElementCapacity) {
+
+        Objects.requireNonNull(outerArray);
+        Checks.checkArrayIndex(outerArray, outerIndex);
+        Checks.isCapacity(innerArrayElementCapacity);
+
+        final int innerArrayLength = Integers.checkUnsignedLongToUnsignedInt(innerArrayElementCapacity);
 
         return outerArray[outerIndex] = new long[innerArrayLength];
     }

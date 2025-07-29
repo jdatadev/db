@@ -15,9 +15,9 @@ public class BitBufferUtil {
 
     private static final Class<?> debugClass = BitBufferUtil.class;
 
-    public static boolean isNumBitsOnByteBoundary(int numBits) {
+    public static boolean isNumBitsOnByteBoundary(long numBits) {
 
-        return (numBits & 0x7) == 0;
+        return (numBits & 0x7L) == 0;
     }
 
     public static boolean isBitOffsetOnByteBoundary(long bitOffset) {
@@ -63,6 +63,36 @@ public class BitBufferUtil {
         }
 
         return numBits >>> 3;
+    }
+
+    public static long numBytesExact(long numBits) {
+
+        if (!isNumBitsOnByteBoundary(numBits)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return numBits >>> 3;
+    }
+
+    public static int byteOffsetExact(int bitOffset) {
+
+        if (!isBitOffsetOnByteBoundary(bitOffset)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return bitOffset >>> 3;
+    }
+
+    public static long byteOffsetExact(long bitOffset) {
+
+        if (!isBitOffsetOnByteBoundary(bitOffset)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return bitOffset >>> 3;
     }
 
     public static int numLeftoverBits(long bitOffset) {
@@ -280,10 +310,11 @@ public class BitBufferUtil {
 
             throw new UnsupportedOperationException();
         }
+        else {
+            if (value < 0L) {
 
-        if (!signed && value < 0) {
-
-            throw new IllegalArgumentException();
+                throw new IllegalArgumentException();
+            }
         }
 
         final int valueNumBits = BitsUtil.getNumStorageBits(value, signed, numBitsToScan);

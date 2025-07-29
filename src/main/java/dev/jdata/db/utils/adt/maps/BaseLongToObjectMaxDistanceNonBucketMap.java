@@ -5,14 +5,12 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
+import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
+import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance.MaxDistanceLongMapOperations;
-import dev.jdata.db.utils.adt.hashed.helpers.NonBucket;
 
-abstract class BaseLongToObjectMaxDistanceNonBucketMap<T>
-
-        extends BaseLongToObjectNonBucketMap<T, ILongToObjectDynamicMapCommon<T>>
-        implements ILongToObjectDynamicMapCommon<T> {
+abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObjectNonBucketMap<T, ILongToObjectDynamicMapCommon<T>> implements ILongToObjectDynamicMapCommon<T> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_TO_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP;
 
@@ -21,19 +19,50 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T>
     BaseLongToObjectMaxDistanceNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createValuesArray) {
         super(initialCapacityExponent, createValuesArray);
 
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
+        }
+
         initialize();
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseLongToObjectMaxDistanceNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createValuesArray) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
 
+        if (DEBUG) {
+
+            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
+                    .add("createValuesArray", createValuesArray));
+        }
+
         initialize();
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     BaseLongToObjectMaxDistanceNonBucketMap(BaseLongToObjectMaxDistanceNonBucketMap<T> toCopy) {
         super(toCopy);
 
-        initialize();
+        if (DEBUG) {
+
+            enter(b -> b.add("toCopy", toCopy));
+        }
+
+        this.maxDistances = MaxDistance.copyMaxDistances(toCopy.maxDistances);
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     private void initialize() {
@@ -49,7 +78,7 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T>
             enter(b -> b.add("key", key));
         }
 
-        final boolean result = getHashArrayIndex(key, getKeyMask()) != NO_INDEX;
+        final boolean result = scanHashArrayForIndex(key, getKeyMask()) != NO_INDEX;
 
         if (DEBUG) {
 
@@ -62,14 +91,14 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T>
     @Override
     public final T get(long key, T defaultValue) {
 
-        NonBucket.checkIsHashArrayElement(key);
+        LongNonBucket.checkIsHashArrayElement(key);
 
         if (DEBUG) {
 
             enter(b -> b.add("key", key).add("defaultValue", defaultValue));
         }
 
-        final int index = getHashArrayIndex(key, getKeyMask());
+        final int index = scanHashArrayForIndex(key, getKeyMask());
 
         final T result = index != NO_INDEX ? getValues()[index] : defaultValue;
 
@@ -82,7 +111,7 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T>
     }
 
     @Override
-    protected final int getHashArrayIndex(long key, int keyMask) {
+    protected final int scanHashArrayForIndex(long key, int keyMask) {
 
         if (DEBUG) {
 
@@ -91,7 +120,7 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T>
 
         final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
 
-        final int result = getIndexScanHashArrayToMax(key, hashArrayIndex, maxDistances[hashArrayIndex]);
+        final int result = HashArray.getIndexScanHashArrayToMaxHashArrayIndex(getHashed(), key, hashArrayIndex, maxDistances[hashArrayIndex]);
 
         if (DEBUG) {
 
@@ -102,20 +131,20 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T>
     }
 
     @Override
-    protected final long[] rehash(long[] hashArray, int newCapacity, int newKeyMask) {
+    protected final long[] rehash(long[] hashArray, int newCapacity, int newCapacityExponent, int newKeyMask) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newKeyMask", newKeyMask));
+            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).add("newKeyMask", newKeyMask));
         }
 
         this.maxDistances = new byte[newCapacity];
 
-        final long[] result = super.rehash(hashArray, newCapacity, newKeyMask);
+        final long[] result = super.rehash(hashArray, newCapacity, newCapacityExponent, newKeyMask);
 
         if (DEBUG) {
 
-            exit(result);
+            exit(result, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).add("newKeyMask", newKeyMask));
         }
 
         return result;
@@ -175,6 +204,8 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T>
 
     final T putMaxDistance(long key, T value, T defaultPreviousValue) {
 
+        LongNonBucket.checkIsHashArrayElement(key);
+
         if (DEBUG) {
 
             enter(b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
@@ -187,6 +218,30 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T>
         if (DEBUG) {
 
             exit(result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
+        }
+
+        return result;
+    }
+
+    final int removeMaxDistance(long key) {
+
+        LongNonBucket.checkIsHashArrayElement(key);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("key", key));
+        }
+
+        final int result = HashArray.removeAndReturnIndexScanToMax(getHashed(), key, getKeyMask(), maxDistances);
+
+        if (result != NO_INDEX) {
+
+            decrementNumElements();
+        }
+
+        if (DEBUG) {
+
+            exit(result, b -> b.add("key", key));
         }
 
         return result;

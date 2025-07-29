@@ -4,5 +4,5 @@ public interface IIntArrayMutators {
 
     void add(int value);
 
-    void set(int index, int value);
+    void set(long index, int value);
 }

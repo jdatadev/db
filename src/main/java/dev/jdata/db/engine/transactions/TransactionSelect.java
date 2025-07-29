@@ -42,7 +42,7 @@ public final class TransactionSelect extends ObjectCacheNode implements IClearab
 
         this.tableId = Checks.isTableId(tableId);
 
-        final long numColumns = selectColumns.getNumElements();
+        final long numColumns = selectColumns.getLimit();
 
         this.conditionOperator = numColumns > 1 ? Objects.requireNonNull(conditionOperator) : conditionOperator;
 
@@ -100,7 +100,7 @@ public final class TransactionSelect extends ObjectCacheNode implements IClearab
 
     public int getNumSelectColumns() {
 
-        return (int)selectColumns.getNumElements();
+        return (int)selectColumns.getLimit();
     }
 
     public ILongSetGetters getRowIdsToFilter() {

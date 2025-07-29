@@ -3,7 +3,6 @@ package dev.jdata.db.utils.checks;
 import java.math.BigDecimal;
 import java.nio.Buffer;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -11,7 +10,7 @@ import java.util.function.Predicate;
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.utils.adt.IContains;
-import dev.jdata.db.utils.adt.arrays.IArray;
+import dev.jdata.db.utils.adt.arrays.IOneDimensionalArrayGetters;
 import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.strings.CharSequences;
@@ -20,6 +19,16 @@ import dev.jdata.db.utils.adt.strings.Strings;
 import dev.jdata.db.utils.function.CharPredicate;
 
 public class Checks {
+
+    public static boolean isTrue(boolean value) {
+
+        if (!value) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return value;
+    }
 
     public static <T> T isNull(T value, boolean expectNonNull) {
 
@@ -115,6 +124,16 @@ public class Checks {
         return value;
     }
 
+    public static int isExactlyZero(int value) {
+
+        if (value != 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return value;
+    }
+
     public static long isExactlyOne(long value) {
 
         if (value != 1L) {
@@ -123,6 +142,186 @@ public class Checks {
         }
 
         return value;
+    }
+
+    public static void checkFromIndexSize(int fromIndex, int size, int length) {
+
+        if (fromIndex < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (size < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (fromIndex + size > length) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (length < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+    public static void checkFromIndexSize(long fromIndex, long size, long length) {
+
+        if (fromIndex < 0L) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (size < 0L) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (fromIndex + size > length) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (length < 0L) {
+
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+    public static void checkFromToIndex(int fromIndex, int toIndex, int length) {
+
+        if (fromIndex < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (fromIndex > toIndex) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (toIndex > length) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (length < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+    public static void checkFromIndexNum(int fromIndex, int num, int limit) {
+
+        if (fromIndex < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (num < 0) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (limit < 0) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (num == 0) {
+
+            if (limit == 0) {
+
+                if (fromIndex != 0) {
+
+                    throw new IndexOutOfBoundsException();
+                }
+            }
+            else if (fromIndex >= limit) {
+
+                throw new IndexOutOfBoundsException();
+            }
+        }
+        else {
+            if (fromIndex >= limit) {
+
+                throw new IndexOutOfBoundsException();
+            }
+            else if (fromIndex + num > limit) {
+
+                throw new IllegalArgumentException();
+            }
+        }
+    }
+
+    public static void checkIndex(int index, int length) {
+
+        if (index < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (index >= length) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (length < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+    public static void checkIndex(long index, long length) {
+
+        if (index < 0L) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (index >= length) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (length < 0L) {
+
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+    public static <T> void checkArrayIndex(int[] array, int index) {
+
+        if (index < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (index >= array.length) {
+
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+    public static <T> void checkArrayIndex(long[] array, int index) {
+
+        if (index < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (index >= array.length) {
+
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+    public static <T> void checkArrayIndex(T[] array, int index) {
+
+        if (index < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (index >= array.length) {
+
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+    public static <T> void checkArrayLength(T[] array, int length) {
+
+        if (length < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (length > array.length) {
+
+            throw new IndexOutOfBoundsException();
+        }
     }
 
     public static long isWithinRangeInclusive(long value, long lower, long upper) {
@@ -169,6 +368,46 @@ public class Checks {
         }
     }
 
+    public static void isLessThan(int value1, int value2) {
+
+        if (value1 >= value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void isLessThanOrEqualTo(int value1, int value2) {
+
+        if (value1 > value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void isGreaterThan(int value1, int value2) {
+
+        if (value1 <= value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void isGreaterThanOrEqualTo(int value1, int value2) {
+
+        if (value1 < value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void areEqual(int value1, int value2) {
+
+        if (value1 != value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
     public static void isLessThan(long value1, long value2) {
 
         if (value1 >= value2) {
@@ -201,7 +440,7 @@ public class Checks {
         }
     }
 
-    public static void areEqual(int value1, int value2) {
+    public static void areEqual(long value1, long value2) {
 
         if (value1 != value2) {
 
@@ -209,7 +448,79 @@ public class Checks {
         }
     }
 
-    public static void areEqual(long value1, long value2) {
+    public static void isLessThan(float value1, float value2) {
+
+        if (value1 >= value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void isLessThanOrEqualTo(float value1, float value2) {
+
+        if (value1 > value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void isGreaterThan(float value1, float value2) {
+
+        if (value1 <= value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void isGreaterThanOrEqualTo(float value1, float value2) {
+
+        if (value1 < value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void areEqual(float value1, float value2) {
+
+        if (value1 != value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void isLessThan(double value1, double value2) {
+
+        if (value1 >= value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void isLessThanOrEqualTo(double value1, double value2) {
+
+        if (value1 > value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void isGreaterThan(double value1, double value2) {
+
+        if (value1 <= value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void isGreaterThanOrEqualTo(double value1, double value2) {
+
+        if (value1 < value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void areEqual(double value1, double value2) {
 
         if (value1 != value2) {
 
@@ -250,11 +561,13 @@ public class Checks {
 
     public static float isLoadFactor(float value) {
 
-        if (value < 0.01) {
+        final float margin = 0.01f;
+
+        if (value < margin) {
 
             throw new IllegalArgumentException();
         }
-        else if (value >= 1.0f) {
+        else if (value > 1.0f - margin) {
 
             throw new IllegalArgumentException();
         }
@@ -361,7 +674,7 @@ public class Checks {
 
         final boolean result;
 
-        if (dbName.isEmpty()) {
+        if (dbName.length() == 0) {
 
             result = false;
         }
@@ -384,6 +697,16 @@ public class Checks {
         }
 
         return string;
+    }
+
+    public static CharSequence isNotEmpty(CharSequence charSequence) {
+
+        if (charSequence.length() == 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return charSequence;
     }
 
     public static String isNotEmptyWithNoBlanks(String string) {
@@ -671,6 +994,26 @@ public class Checks {
         return numElements;
     }
 
+    public static long isNumElementsAboveZero(long numElements) {
+
+        if (numElements < 1L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return numElements;
+    }
+
+    public static int isArrayLimit(int limit) {
+
+        if (limit < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return limit;
+    }
+
     public static long isArrayLimit(long limit) {
 
         if (limit < 0L) {
@@ -679,6 +1022,16 @@ public class Checks {
         }
 
         return limit;
+    }
+
+    public static int isArrayCapacity(int capacity) {
+
+        if (capacity < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return capacity;
     }
 
     public static void areSameNumElements(IElements elements1, IElements elements2) {
@@ -697,7 +1050,7 @@ public class Checks {
         }
     }
 
-    public static void isSameLimit(IArray array1, IArray array2) {
+    public static void isSameLimit(IOneDimensionalArrayGetters array1, IOneDimensionalArrayGetters array2) {
 
         if (array1.getLimit() != array2.getLimit()) {
 
@@ -745,20 +1098,42 @@ public class Checks {
         return capacity;
     }
 
-    private static final int MAX_CAPACITY_EXPONENT = Integer.SIZE - 1;
+    public static int isCapacityAboveZero(int capacity) {
 
-    public static int isInitialCapacityExponent(int initialCapacityExponent) {
+        if (capacity < 1) {
 
-        return isCapacityExponent(initialCapacityExponent);
+            throw new IllegalArgumentException();
+        }
+
+        return capacity;
     }
 
-    public static int isCapacityExponent(int capacityExponent) {
+    public static long isCapacityAboveZero(long capacity) {
+
+        if (capacity < 1L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return capacity;
+    }
+
+    public static final int MAX_INT_CAPACITY_EXPONENT = Integer.SIZE - 2;
+
+    public static final int MAX_LONG_CAPACITY_EXPONENT = Long.SIZE - 2;
+
+    public static int isInitialIntCapacityExponent(int initialCapacityExponent) {
+
+        return isIntCapacityExponent(initialCapacityExponent);
+    }
+
+    public static int isIntCapacityExponent(int capacityExponent) {
 
         if (capacityExponent < 0) {
 
             throw new IllegalArgumentException();
         }
-        else if (capacityExponent > MAX_CAPACITY_EXPONENT) {
+        else if (capacityExponent > MAX_INT_CAPACITY_EXPONENT) {
 
             throw new IllegalArgumentException();
         }
@@ -766,18 +1141,51 @@ public class Checks {
         return capacityExponent;
     }
 
-    public static int isCapacityExponentIncrease(int capacityExponentIncrease) {
+    public static int isLongCapacityExponent(int capacityExponent) {
+
+        if (capacityExponent < 0) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (capacityExponent > MAX_LONG_CAPACITY_EXPONENT) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return capacityExponent;
+    }
+
+    public static int isIntCapacityExponentIncrease(int capacityExponentIncrease) {
 
         if (capacityExponentIncrease < 1) {
 
             throw new IllegalArgumentException();
         }
-        else if (capacityExponentIncrease > MAX_CAPACITY_EXPONENT) {
+        else if (capacityExponentIncrease > MAX_INT_CAPACITY_EXPONENT) {
 
             throw new IllegalArgumentException();
         }
 
         return capacityExponentIncrease;
+    }
+
+    public static int isLongCapacityExponentIncrease(int capacityExponentIncrease) {
+
+        if (capacityExponentIncrease < 1) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (capacityExponentIncrease > MAX_LONG_CAPACITY_EXPONENT) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return capacityExponentIncrease;
+    }
+
+    public static int isCapacityExponentIncrease(int capacityExponentIncrease, boolean longCapacity) {
+
+        return longCapacity ? isLongCapacityExponentIncrease(capacityExponentIncrease) : isIntCapacityExponentIncrease(capacityExponentIncrease);
     }
 
     public static int isOffset(int offset) {
@@ -1028,7 +1436,7 @@ public class Checks {
 
     public static void checkBuffer(Buffer buffer, int offset, int length) {
 
-        Objects.checkFromIndexSize(offset, length, buffer.remaining());
+        checkFromIndexSize(offset, length, buffer.remaining());
     }
 
     public static <T extends Buffer> T isEmpty(T buffer) {

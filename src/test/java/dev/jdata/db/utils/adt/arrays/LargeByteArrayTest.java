@@ -11,6 +11,12 @@ public final class LargeByteArrayTest extends BaseLargeArrayTest<byte[][], byte[
     }
 
     @Override
+    LargeByteArray createArray(int initialOuterCapacity, int innerCapacityExponent, int clearValue) {
+
+        return new LargeByteArray(initialOuterCapacity, innerCapacityExponent, Integers.checkIntToByte(clearValue));
+    }
+
+    @Override
     int getValue(LargeByteArray array, long index) {
 
         return array.get(index);
@@ -26,5 +32,17 @@ public final class LargeByteArrayTest extends BaseLargeArrayTest<byte[][], byte[
     void setValue(LargeByteArray array, long index, int value) {
 
         array.set(index, Integers.checkIntToByte(value));
+    }
+
+    @Override
+    int getNumIterations() {
+
+        return Byte.MAX_VALUE / 2;
+    }
+
+    @Override
+    int getOffset() {
+
+        return Byte.MAX_VALUE / 2;
     }
 }

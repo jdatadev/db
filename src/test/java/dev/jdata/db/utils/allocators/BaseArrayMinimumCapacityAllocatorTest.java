@@ -3,7 +3,7 @@ package dev.jdata.db.utils.allocators;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-abstract class BaseArrayMinimumCapacityAllocatorTest<T, A> extends BaseArrayAllocatorTest<T, A> {
+public abstract class BaseArrayMinimumCapacityAllocatorTest<T, A> extends BaseArrayAllocatorTest<T, A> {
 
     @Test
     @Category(UnitTest.class)

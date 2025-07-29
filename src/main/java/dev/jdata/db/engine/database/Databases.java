@@ -6,6 +6,7 @@ import java.nio.charset.Charset;
 import java.util.Objects;
 
 import dev.jdata.db.engine.database.Database.DatabaseState;
+import dev.jdata.db.engine.database.operations.IDatabaseOperations;
 import dev.jdata.db.engine.descriptorables.BaseSingleTypeDescriptorables;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
@@ -39,7 +40,7 @@ public final class Databases extends BaseSingleTypeDescriptorables<DatabaseState
 
         final int result;
 
-        final String dbNameString = stringCache.getString(dbName);
+        final String dbNameString = stringCache.getOrAddString(dbName);
 
         synchronized (databaseByName) {
 
@@ -57,7 +58,7 @@ public final class Databases extends BaseSingleTypeDescriptorables<DatabaseState
 
         Database database;
 
-        final String dbNameString = stringCache.getString(dbName);
+        final String dbNameString = stringCache.getOrAddString(dbName);
 
         synchronized (databaseByName) {
 
@@ -82,7 +83,7 @@ public final class Databases extends BaseSingleTypeDescriptorables<DatabaseState
 
         Database database;
 
-        final String dbNameString = stringCache.getString(dbName);
+        final String dbNameString = stringCache.getOrAddString(dbName);
 
         synchronized (databaseByName) {
 

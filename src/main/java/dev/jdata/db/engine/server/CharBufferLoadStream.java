@@ -5,6 +5,8 @@ import java.util.Objects;
 
 import org.jutils.io.loadstream.LoadStream;
 
+import dev.jdata.db.utils.checks.Checks;
+
 final class CharBufferLoadStream extends LoadStream<RuntimeException> {
 
     private CharBuffer charBuffer;
@@ -32,7 +34,7 @@ final class CharBufferLoadStream extends LoadStream<RuntimeException> {
     @Override
     public long read(char[] buffer, int offset, int length) {
 
-        Objects.checkFromIndexSize(offset, length, buffer.length);
+        Checks.checkFromIndexSize(offset, length, buffer.length);
 
         final int toRead = Math.min(charBuffer.remaining(), length);
 

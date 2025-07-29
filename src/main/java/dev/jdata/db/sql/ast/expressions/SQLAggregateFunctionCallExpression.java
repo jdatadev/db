@@ -11,7 +11,7 @@ public final class SQLAggregateFunctionCallExpression extends BaseSQLFunctionCal
     }
 
     @Override
-    public <P, R, E extends Exception> R visitSQLExpression(SQLExpressionVisitor<P, R, E> visitor, P parameter) throws E  {
+    public <P, R, E extends Exception> R visitSQLExpression(SQLExpressionVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onAggregateFunctionCall(this, parameter);
     }

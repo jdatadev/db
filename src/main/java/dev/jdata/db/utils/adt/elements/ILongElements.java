@@ -3,7 +3,7 @@ package dev.jdata.db.utils.adt.elements;
 public interface ILongElements {
 
     @FunctionalInterface
-    public interface LongElementPredicate<P> {
+    public interface ILongElementPredicate<P> {
 
         boolean test(long value, P parameter);
     }

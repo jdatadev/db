@@ -2,27 +2,25 @@ package dev.jdata.db.engine.sessions;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import dev.jdata.db.engine.descriptorables.BaseSingleTypeDescriptorables;
 import dev.jdata.db.engine.sessions.DBSession.LargeObjectStorer;
-import dev.jdata.db.utils.adt.lists.Lists;
+import dev.jdata.db.utils.adt.lists.HeapMutableIndexList;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class Sessions extends BaseSingleTypeDescriptorables<DBSession.SessionState, DBSession> {
 
     private final LargeObjectStorer<IOException> largeObjectStorer;
 
-    private final List<DBSession> sessions;
+    private final HeapMutableIndexList<DBSession> sessions;
 
     public Sessions(LargeObjectStorer<IOException> largeObjectStorer) {
         super(DBSession[]::new);
 
         this.largeObjectStorer = Objects.requireNonNull(largeObjectStorer);
 
-        this.sessions = new ArrayList<>();
+        this.sessions = new HeapMutableIndexList<>(DBSession[]::new, 0);
     }
 
     public Session addSession(Charset charset) {
@@ -60,11 +58,11 @@ public final class Sessions extends BaseSingleTypeDescriptorables<DBSession.Sess
 
         Objects.requireNonNull(session);
 
-        if (Lists.containsInstance(sessions, session)) {
+        if (sessions.containsInstance(session)) {
 
             throw new IllegalArgumentException();
         }
 
-        sessions.add(session);
+        sessions.addTail(session);
     }
 }

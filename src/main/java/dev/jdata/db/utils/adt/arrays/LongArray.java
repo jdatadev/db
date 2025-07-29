@@ -1,74 +1,63 @@
 package dev.jdata.db.utils.adt.arrays;
 
-import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.IClearable;
+import java.util.Objects;
 
-public final class LongArray implements ILongArray, IClearable, ILongArrayMutators {
+import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.debug.PrintDebug;
 
-    private static final int DEFAULT_INNER_CAPACITY_EXPONENT = 10;
+public final class LongArray extends BaseLongArray implements ILongArray {
 
-    private final LargeLongArray delegate;
+    private static final boolean DEBUG = DebugConstants.DEBUG_LONG_ARRAY;
 
-    public LongArray(int initialCapacity) {
-        this(CapacityExponents.computeArrayOuterCapacity(initialCapacity, DEFAULT_INNER_CAPACITY_EXPONENT), DEFAULT_INNER_CAPACITY_EXPONENT);
+    private static final Class<?> debugClass = LongArray.class;
+
+    public static LongArray of(long ... values) {
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("values", values));
+        }
+
+        final LongArray result = new LongArray(values);
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result);
+        }
+
+        return result;
     }
 
-    public LongArray(int initialOuterCapacity, int innerCapacityExponent) {
+    public static LongArray copyOf(LongArray toCopy) {
 
-        this.delegate = new LargeLongArray(initialOuterCapacity, innerCapacityExponent, null);
+        Objects.requireNonNull(toCopy);
+
+        if (DEBUG) {
+
+            PrintDebug.enter(debugClass, b -> b.add("toCopy", toCopy));
+        }
+
+        final LongArray result = new LongArray(toCopy);
+
+        if (DEBUG) {
+
+            PrintDebug.exit(debugClass, result);
+        }
+
+        return result;
     }
 
-    @Override
-    public long getCapacity() {
-
-        return delegate.getCapacity();
+    private LongArray(long[] elements) {
+        super(elements, elements.length, false);
     }
 
-    @Override
-    public void clear() {
-
-        delegate.clear();
-    }
-
-    @Override
-    public long getLimit() {
-
-        return delegate.getLimit();
-    }
-
-    @Override
-    public boolean isEmpty() {
-
-        return delegate.isEmpty();
-    }
-
-    @Override
-    public void toString(long index, StringBuilder sb) {
-
-        delegate.toString(index, sb);
-    }
-
-    @Override
-    public long get(long index) {
-
-        return delegate.get(index);
-    }
-
-    @Override
-    public void add(long value) {
-
-        delegate.add(value);
+    private LongArray(LongArray toCopy) {
+        super(toCopy);
     }
 
     @Override
-    public void set(int index, long value) {
+    long[] reallocate(long[] elements, int newCapacity) {
 
-        delegate.set(index, value);
-    }
-
-    @Override
-    public String toString() {
-
-        return getClass().getSimpleName() + " [delegate=" + delegate + "]";
+        throw new UnsupportedOperationException();
     }
 }
