@@ -24,7 +24,7 @@ import dev.jdata.db.sql.ast.statements.BaseSQLDDLOperationStatement;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLDMLUpdatingStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLSelectStatement;
-import dev.jdata.db.sql.parse.SQLString;
+import dev.jdata.db.sql.parse.ISQLString;
 import dev.jdata.db.utils.State;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -201,7 +201,7 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
         return name;
     }
 
-    int prepareStatement(int sessionId, BaseSQLStatement sqlStatement, SQLString sqlString) {
+    int prepareStatement(int sessionId, BaseSQLStatement sqlStatement, ISQLString sqlString) {
 
         Checks.isSessionDescriptor(sessionId);
         Objects.requireNonNull(sqlStatement);

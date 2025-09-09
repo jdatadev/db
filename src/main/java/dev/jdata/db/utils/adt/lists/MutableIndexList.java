@@ -1,18 +1,20 @@
 package dev.jdata.db.utils.adt.lists;
 
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.elements.IObjectIterableElements;
 import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.allocators.InstanceAllocator;
+import dev.jdata.db.utils.checks.Checks;
 
 public abstract class MutableIndexList<T> extends BaseIndexList<T> implements IMutableIndexList<T> {
 
-    static abstract class MutableIndexListAllocator<T, U extends MutableIndexList<T>> extends InstanceAllocator<T> {
+    public static abstract class MutableIndexListAllocator<T, U extends MutableIndexList<T>> extends InstanceAllocator<T> {
 
         abstract U allocateMutableIndexList(int minimumCapacity);
-        abstract void freeMutableIndexList(U list);
+        public abstract void freeMutableIndexList(U list);
     }
 
     @SafeVarargs
@@ -21,6 +23,14 @@ public abstract class MutableIndexList<T> extends BaseIndexList<T> implements IM
         Objects.requireNonNull(instances);
 
         return new HeapMutableIndexList<>(AllocationType.HEAP, instances);
+    }
+
+    public static <T, U extends MutableIndexList<T>, V extends MutableIndexListAllocator<T, U>> U create(int minimumCapacity, V listAllocator) {
+
+        Checks.isCapacity(minimumCapacity);
+        Objects.requireNonNull(listAllocator);
+
+        return listAllocator.allocateMutableIndexList(minimumCapacity);
     }
 
     private MutableIndexList(AllocationType allocationType) {
@@ -39,8 +49,8 @@ public abstract class MutableIndexList<T> extends BaseIndexList<T> implements IM
         super(allocationType, instances);
     }
 
-    MutableIndexList(IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
-        super(createElementsArray, toCopy);
+    <U> MutableIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<U> toCopy, Function<U,T> mapper) {
+        super(allocationType, createElementsArray, toCopy, mapper);
     }
 
     private MutableIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {

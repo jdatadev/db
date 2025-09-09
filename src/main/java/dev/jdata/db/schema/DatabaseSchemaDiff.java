@@ -4,14 +4,14 @@ import java.util.Objects;
 
 import dev.jdata.db.schema.model.DatabaseSchemaModelObject;
 import dev.jdata.db.sql.ast.statements.BaseSQLDDLOperationStatement;
-import dev.jdata.db.sql.parse.SQLString;
+import dev.jdata.db.sql.parse.ISQLString;
 
 public final class DatabaseSchemaDiff extends DatabaseSchemaModelObject {
 
     private final BaseSQLDDLOperationStatement sqlDDLStatement;
-    private final SQLString sqlString;
+    private final ISQLString sqlString;
 
-    public DatabaseSchemaDiff(AllocationType allocationType, DatabaseId databaseId, BaseSQLDDLOperationStatement sqlDDLStatement, SQLString sqlString) {
+    public DatabaseSchemaDiff(AllocationType allocationType, DatabaseId databaseId, BaseSQLDDLOperationStatement sqlDDLStatement, ISQLString sqlString) {
         super(allocationType, databaseId);
 
         this.sqlDDLStatement = Objects.requireNonNull(sqlDDLStatement);
@@ -22,7 +22,7 @@ public final class DatabaseSchemaDiff extends DatabaseSchemaModelObject {
         return sqlDDLStatement;
     }
 
-    public SQLString getSQLString() {
+    public ISQLString getSQLString() {
         return sqlString;
     }
 }

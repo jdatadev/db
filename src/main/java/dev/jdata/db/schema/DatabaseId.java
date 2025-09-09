@@ -13,6 +13,10 @@ public final class DatabaseId {
         this.name = Checks.isDatabaseName(name);
     }
 
+    public String getName() {
+        return name;
+    }
+
     @Override
     public int hashCode() {
 

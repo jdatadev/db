@@ -7,14 +7,14 @@ import dev.jdata.db.schema.model.objects.SchemaObject;
 
 abstract class BaseSchemaObjectState {
 
-    private final SchemaMap<? extends SchemaObject, ?, ?, ?, ?> map;
+    private final SchemaMap<? extends SchemaObject, ?, ?> map;
 
-    BaseSchemaObjectState(SchemaMap<? extends SchemaObject, ?, ?, ?, ?> map) {
+    BaseSchemaObjectState(SchemaMap<? extends SchemaObject, ?, ?> map) {
 
         this.map = Objects.requireNonNull(map);
     }
 
-    final SchemaMap<? extends SchemaObject, ?, ?, ?, ?> getMap() {
+    final SchemaMap<? extends SchemaObject, ?, ?> getMap() {
         return map;
     }
 }

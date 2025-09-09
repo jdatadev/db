@@ -9,6 +9,7 @@ import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class TableBuilder {
@@ -22,7 +23,7 @@ public final class TableBuilder {
     private final int tableId;
 
     private final StringStorer stringStorer;
-    private final IndexList.IndexListBuilder<Column, ?, ?> columnsBuilder;
+    private final IndexListBuilder<Column, ?, ?> columnsBuilder;
 
     private int columnIdSequenceNo;
 
@@ -61,6 +62,6 @@ public final class TableBuilder {
 
         final String hashTableName = HashNameStrings.getHashNameString(name);
 
-        return new Table(stringStorer.getOrAddStringRef(name), stringStorer.getOrAddStringRef(hashTableName), tableId, columnsBuilder.build());
+        return new Table(stringStorer.getOrAddStringRef(name), stringStorer.getOrAddStringRef(hashTableName), tableId, columnsBuilder.buildHeapAllocated());
     }
 }

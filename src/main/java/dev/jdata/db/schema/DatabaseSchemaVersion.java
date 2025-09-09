@@ -34,6 +34,11 @@ public final class DatabaseSchemaVersion implements Comparable<DatabaseSchemaVer
         return versionNumber == INITIAL_VERSION;
     }
 
+    public DatabaseSchemaVersion next() {
+
+        return new DatabaseSchemaVersion(versionNumber + 1);
+    }
+
     @Override
     public int hashCode() {
 

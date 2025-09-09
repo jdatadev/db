@@ -1,13 +1,14 @@
 package dev.jdata.db.utils.adt.lists;
 
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.checks.Checks;
 
 public final class HeapMutableIndexList<T> extends MutableIndexList<T> implements IHeapMutableIndexList<T> {
 
-    static final class HeapMutableIndexListAllocator<T> extends MutableIndexListAllocator<T, HeapMutableIndexList<T>> {
+    public static final class HeapMutableIndexListAllocator<T> extends MutableIndexListAllocator<T, HeapMutableIndexList<T>> {
 
         private final IntFunction<T[]> createElementsArray;
 
@@ -33,7 +34,16 @@ public final class HeapMutableIndexList<T> extends MutableIndexList<T> implement
         Objects.requireNonNull(createElementsArray);
         Objects.requireNonNull(toCopy);
 
-        return new HeapMutableIndexList<>(createElementsArray, toCopy);
+        return new HeapMutableIndexList<>(createElementsArray, toCopy, Function.identity());
+    }
+
+    public static <T, U> HeapMutableIndexList<T> copyOf(IntFunction<T[]> createElementsArray, IIndexList<U> toCopy, Function<U, T> mapper) {
+
+        Objects.requireNonNull(createElementsArray);
+        Objects.requireNonNull(toCopy);
+        Objects.requireNonNull(mapper);
+
+        return new HeapMutableIndexList<>(createElementsArray, toCopy, mapper);
     }
 
     public static <T> HeapMutableIndexList<T> from(IntFunction<T[]> createElementsArray) {
@@ -68,8 +78,8 @@ public final class HeapMutableIndexList<T> extends MutableIndexList<T> implement
         this(AllocationType.HEAP, createElementsArray, initialCapacity);
     }
 
-    private HeapMutableIndexList(IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
-        super(createElementsArray, toCopy);
+    private <U> HeapMutableIndexList(IntFunction<T[]> createElementsArray, IIndexList<U> toCopy, Function<U, T> mapper) {
+        super(AllocationType.HEAP, createElementsArray, toCopy, mapper);
     }
 
     private HeapMutableIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, int initialCapacity) {

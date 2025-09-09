@@ -4,6 +4,7 @@ public class DBConstants {
 
     public static final int INITIAL_DESCRIPTORABLE = 0;
 
+    public static final int NO_SCHEMA_OBJECT_ID = -1;
     public static final int INITIAL_SCHEMA_OBJECT_ID = 0;
 
     public static final int INITIAL_COLUMN_ID = INITIAL_SCHEMA_OBJECT_ID;

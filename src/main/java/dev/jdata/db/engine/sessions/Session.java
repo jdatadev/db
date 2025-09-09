@@ -13,7 +13,7 @@ import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLDMLUpdatingStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLSelectStatement;
-import dev.jdata.db.sql.parse.SQLString;
+import dev.jdata.db.sql.parse.ISQLString;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 
 public interface Session {
@@ -55,7 +55,7 @@ public interface Session {
 
     long executeDMUpdatingLStatement(SQLDMLUpdatingStatement sqlDMLUpdatingStatement, DMLUpdatingEvaluatorParameter evaluatorParameter) throws EvaluateException;
 
-    int prepareStatement(BaseSQLStatement sqlStatement, SQLString sqlString);
+    int prepareStatement(BaseSQLStatement sqlStatement, ISQLString sqlString);
 
     <E extends Exception> long executePreparedStatement(int preparedStatementId, PreparedStatementParameters preparedStatementParameters,
             DMLUpdatingPreparedEvaluatorParameter evaluatorParameter, ExecuteSQLResultWriter<E> resultWriter) throws EvaluateException, E;

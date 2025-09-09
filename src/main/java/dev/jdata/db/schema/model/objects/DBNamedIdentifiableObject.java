@@ -23,6 +23,12 @@ public abstract class DBNamedIdentifiableObject extends DBNamedObject {
         this.id = toCopy.id;
     }
 
+    DBNamedIdentifiableObject(DBNamedIdentifiableObject toCopy, int newId) {
+        super(toCopy);
+
+        this.id = Checks.isSchemaObjectId(newId);
+    }
+
     public final int getId() {
         return id;
     }

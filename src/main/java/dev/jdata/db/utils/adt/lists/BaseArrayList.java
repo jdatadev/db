@@ -78,14 +78,14 @@ abstract class BaseArrayList<T> extends BaseADTList {
     @FunctionalInterface
     interface MakeFromElementsFunction<T, P, R> {
 
-        R apply(T elements, int numElements, P parameter);
+        R apply(IntFunction<T> createElementsArray, T elements, int numElements, P parameter);
     }
 
-    final <P, R> R makeFromElements(P parameter, MakeFromElementsFunction<T, P, R> makeFromElements) {
+    <P, R> R makeFromElements(P parameter, MakeFromElementsFunction<T, P, R> makeFromElements) {
 
         Objects.requireNonNull(makeFromElements);
 
-        return makeFromElements.apply(elementsArray, numElements, parameter);
+        return makeFromElements.apply(createElementsArray, elementsArray, numElements, parameter);
     }
 
     @Override

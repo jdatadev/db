@@ -7,27 +7,13 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 import dev.jdata.db.utils.file.access.AbsoluteDirectoryPath;
-import dev.jdata.db.utils.file.access.BaseNIOFileSystemAccess;
+import dev.jdata.db.utils.file.access.IAbsoluteFileSystemAccess;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.paths.PathIOUtil;
 
-public final class TestFileSystemAccess extends BaseNIOFileSystemAccess implements Closeable {
+public final class TestFileSystemAccess implements Closeable {
 
-    public static IRelativeFileSystemAccess create() throws IOException {
-
-        final TestFileSystemAccess testFileSystemAccess = createTestFileSystemAccess();
-
-        return create(testFileSystemAccess);
-    }
-
-    public static IRelativeFileSystemAccess create(TestFileSystemAccess testFileSystemAccess) throws IOException {
-
-        Objects.requireNonNull(testFileSystemAccess);
-
-        return IRelativeFileSystemAccess.create(testFileSystemAccess.rootDirectoryPath, testFileSystemAccess);
-    }
-
-    public static TestFileSystemAccess createTestFileSystemAccess() throws IOException {
+    public static TestFileSystemAccess create() throws IOException {
 
         final Path tempDirectory = Files.createTempDirectory("dbtest");
 
@@ -38,11 +24,10 @@ public final class TestFileSystemAccess extends BaseNIOFileSystemAccess implemen
     private final AbsoluteDirectoryPath rootDirectoryPath;
 
     private TestFileSystemAccess(Path tempDirectory) throws IOException {
-        super(tempDirectory.getFileSystem());
 
         this.tempDirectory = Objects.requireNonNull(tempDirectory);
 
-        this.rootDirectoryPath = directoryPathOf(tempDirectory);
+        this.rootDirectoryPath = createAbsolute().directoryPathOf(tempDirectory);
     }
 
     @Override
@@ -51,7 +36,21 @@ public final class TestFileSystemAccess extends BaseNIOFileSystemAccess implemen
         PathIOUtil.deleteRecursively(tempDirectory);
     }
 
+    public Path getRootPath() {
+        return tempDirectory;
+    }
+
     public AbsoluteDirectoryPath getRootDirectoryPath() {
         return rootDirectoryPath;
+    }
+
+    public IAbsoluteFileSystemAccess createAbsolute() throws IOException {
+
+        return IAbsoluteFileSystemAccess.ofHeapAllocated(tempDirectory.getFileSystem());
+    }
+
+    public IRelativeFileSystemAccess createRelative() throws IOException {
+
+        return IRelativeFileSystemAccess.create(rootDirectoryPath, createAbsolute());
     }
 }

@@ -23,8 +23,8 @@ public final class FileTableStorageFileTest extends BaseFileTableStorageFileTest
         FileTestData(int sequenceNo, long startRowId, long initialTransactionId) throws IOException {
             super(sequenceNo, startRowId, initialTransactionId);
 
-            this.testFileSystemAccess = TestFileSystemAccess.createTestFileSystemAccess();
-            this.fileSystemAccess = TestFileSystemAccess.create(testFileSystemAccess);
+            this.testFileSystemAccess = TestFileSystemAccess.create();
+            this.fileSystemAccess = testFileSystemAccess.createRelative();
         }
 
         @Override

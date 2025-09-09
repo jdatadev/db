@@ -16,16 +16,16 @@ import dev.jdata.db.utils.allocators.NodeObjectCache;
 
 public final class CachedDiffSchemaMaps extends DiffSchemaMaps<CachedSchemaMap<?>> {
 
-    public static final class CacheDiffSchemaMapsBuilderAllocator
+    public static final class CacheSimpleDiffSchemaMapsBuilderAllocator
 
-            extends DiffSchemaMapsBuilderAllocator<CachedSchemaMap<?>, CachedBuilder, CachedDiffSchemaMaps>
+            extends SimpleDiffSchemaMapsBuilderAllocator<CachedSchemaMap<?>, CachedDiffSchemaMapsBuilder, CachedDiffSchemaMaps>
             implements IAllocators {
 
-        private final NodeObjectCache<CachedBuilder> objectCache;
+        private final NodeObjectCache<CachedDiffSchemaMapsBuilder> objectCache;
 
-        public CacheDiffSchemaMapsBuilderAllocator() {
+        public CacheSimpleDiffSchemaMapsBuilderAllocator() {
 
-            this.objectCache = new NodeObjectCache<>(CachedBuilder::new);
+            this.objectCache = new NodeObjectCache<>(CachedDiffSchemaMapsBuilder::new);
         }
 
         @Override
@@ -33,17 +33,17 @@ public final class CachedDiffSchemaMaps extends DiffSchemaMaps<CachedSchemaMap<?
 
             Objects.requireNonNull(statisticsGatherer);
 
-            statisticsGatherer.addNodeObjectCache("objectCache", CachedBuilder.class, objectCache);
+            statisticsGatherer.addNodeObjectCache("objectCache", CachedDiffSchemaMapsBuilder.class, objectCache);
         }
 
         @Override
-        CachedBuilder allocateDiffSchemaMapsBuilder() {
+        CachedDiffSchemaMapsBuilder allocateDiffSchemaMapsBuilder() {
 
             return objectCache.allocate();
         }
 
         @Override
-        void freeDiffSchemaMapsBuilder(CachedBuilder builder) {
+        void freeDiffSchemaMapsBuilder(CachedDiffSchemaMapsBuilder builder) {
 
             Objects.requireNonNull(builder);
 
@@ -51,9 +51,9 @@ public final class CachedDiffSchemaMaps extends DiffSchemaMaps<CachedSchemaMap<?
         }
     }
 
-    public static final class CachedBuilder extends DiffSchemaMaps.DiffSchemaMapsBuilder<CachedSchemaMap<?>, CachedDiffSchemaMaps, CachedBuilder> {
+    public static final class CachedDiffSchemaMapsBuilder extends SimpleDiffSchemaMapsBuilder<CachedSchemaMap<?>, CachedDiffSchemaMaps, CachedDiffSchemaMapsBuilder> {
 
-        public CachedBuilder() {
+        public CachedDiffSchemaMapsBuilder() {
             super(CachedSchemaMap[]::new);
         }
 
@@ -66,7 +66,7 @@ public final class CachedDiffSchemaMaps extends DiffSchemaMaps<CachedSchemaMap<?
         }
 
         @Override
-        protected SchemaMap<?, ?, ?, ?, ?> makeEmptySchema() {
+        protected SchemaMap<?, ?, ?> makeEmptySchema() {
 
             return CachedSchemaMap.empty();
         }

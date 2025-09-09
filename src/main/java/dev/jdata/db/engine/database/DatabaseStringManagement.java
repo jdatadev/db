@@ -22,7 +22,7 @@ public final class DatabaseStringManagement {
         this.stringStorer = Objects.requireNonNull(stringStorer);
     }
 
-    public long resolveParsedStringRef(StringResolver parserStringResolver, long stringRef) {
+    public long storeParsedStringRef(StringResolver parserStringResolver, long stringRef) {
 
         Objects.requireNonNull(parserStringResolver);
         StringRef.checkIsString(stringRef);

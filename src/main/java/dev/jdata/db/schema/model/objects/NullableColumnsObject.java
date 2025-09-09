@@ -6,6 +6,7 @@ import org.jutils.io.strings.StringResolver;
 import org.jutils.io.strings.StringResolver.RefStringResolver;
 
 import dev.jdata.db.utils.adt.elements.ByIndex;
+import dev.jdata.db.utils.adt.lists.HeapIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.scalars.Integers;
 
@@ -13,16 +14,22 @@ abstract class NullableColumnsObject extends ColumnsObject {
 
     private final int numNullableColumns;
 
-    NullableColumnsObject(long parsedName, long hashName, int id, IIndexList<Column> columns) {
+    NullableColumnsObject(long parsedName, long hashName, int id, HeapIndexList<Column> columns) {
         super(parsedName, hashName, id, columns);
 
         this.numNullableColumns = countNullableColumns(columns);
     }
 
-    NullableColumnsObject(SchemaObject toCopy, IIndexList<Column> columns) {
+    NullableColumnsObject(NullableColumnsObject toCopy, HeapIndexList<Column> columns) {
         super(toCopy, columns);
 
         this.numNullableColumns = countNullableColumns(columns);
+    }
+
+    NullableColumnsObject(NullableColumnsObject toCopy, int newSchemaObjectId) {
+        super(toCopy, newSchemaObjectId);
+
+        this.numNullableColumns = toCopy.numNullableColumns;
     }
 
     private static int countNullableColumns(IIndexList<Column> columns) {

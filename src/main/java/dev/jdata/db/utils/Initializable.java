@@ -39,6 +39,16 @@ public class Initializable {
         return Objects.requireNonNull(value);
     }
 
+    public static <T> T checkIsInitialized(T existing) {
+
+        if (existing == null) {
+
+            throw new IllegalStateException();
+        }
+
+        return existing;
+    }
+
     public static <T> T checkResettable(T existing) {
 
         if (existing == null) {

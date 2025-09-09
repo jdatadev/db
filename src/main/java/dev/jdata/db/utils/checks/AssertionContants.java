@@ -5,7 +5,6 @@ public class AssertionContants {
     private static final boolean ASSERT_SCHEMA = Boolean.TRUE;
 
     public static final boolean ASSERT_DB_NAMED_OBJECT_MAP = ASSERT_SCHEMA;
-    public static final boolean ASSERT_BASE_SCHEMA_MAP = ASSERT_SCHEMA;
     public static final boolean ASSERT_SCHEMA_MAP = ASSERT_SCHEMA;
 
     private static final boolean ASSERT_SESSION = Boolean.TRUE;

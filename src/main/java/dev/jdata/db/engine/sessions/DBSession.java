@@ -20,7 +20,7 @@ import dev.jdata.db.sql.ast.statements.dml.SQLDeleteStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLInsertStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLSelectStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateStatement;
-import dev.jdata.db.sql.parse.SQLString;
+import dev.jdata.db.sql.parse.ISQLString;
 import dev.jdata.db.utils.State;
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.checks.AssertionContants;
@@ -161,7 +161,7 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
     }
 
     @Override
-    public int prepareStatement(BaseSQLStatement sqlStatement, SQLString sqlString) {
+    public int prepareStatement(BaseSQLStatement sqlStatement, ISQLString sqlString) {
 
         return preparedStatements.addPreparedStatement(sqlStatement, sqlString);
     }

@@ -4,17 +4,17 @@ import java.util.Objects;
 
 import dev.jdata.db.schema.allocators.model.diff.dropped.DroppedSchemaObjectsAllocator;
 import dev.jdata.db.schema.allocators.schemas.DatabaseSchemasAllocator;
-import dev.jdata.db.schema.model.diff.dropped.DroppedSchemaObjects;
+import dev.jdata.db.schema.model.diff.dropped.DroppedElementsSchemaObjects;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 
 public final class CacheDatabaseSchemasAllocator extends DatabaseSchemasAllocator {
 
-    private final NodeObjectCache<DroppedSchemaObjects> droppedSchemaObjectsCache;
+    private final NodeObjectCache<DroppedElementsSchemaObjects> droppedSchemaObjectsCache;
 
     public CacheDatabaseSchemasAllocator(DroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator) {
         super(droppedSchemaObjectsAllocator);
 
-        this.droppedSchemaObjectsCache = new NodeObjectCache<>(DroppedSchemaObjects::new);
+        this.droppedSchemaObjectsCache = new NodeObjectCache<>(DroppedElementsSchemaObjects::new);
     }
 
     @Override
@@ -24,17 +24,17 @@ public final class CacheDatabaseSchemasAllocator extends DatabaseSchemasAllocato
 
         super.gatherStatistics(statisticsGatherer);
 
-        statisticsGatherer.addNodeObjectCache("droppedSchemaObjectsCache", DroppedSchemaObjects.class, droppedSchemaObjectsCache);
+        statisticsGatherer.addNodeObjectCache("droppedSchemaObjectsCache", DroppedElementsSchemaObjects.class, droppedSchemaObjectsCache);
     }
 
     @Override
-    public DroppedSchemaObjects allocateDroppedSchemaObjects() {
+    public DroppedElementsSchemaObjects allocateDroppedElementsSchemaObjects() {
 
         return droppedSchemaObjectsCache.allocate();
     }
 
     @Override
-    public void freeDroppedSchemaObjects(DroppedSchemaObjects droppedSchemaObjects) {
+    public void freeDroppedElementsSchemaObjects(DroppedElementsSchemaObjects droppedSchemaObjects) {
 
         Objects.requireNonNull(droppedSchemaObjects);
 

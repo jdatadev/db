@@ -9,6 +9,7 @@ import dev.jdata.db.schema.model.cache.CachedSchemaMapBuilder;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.utils.adt.lists.CachedIndexList;
 import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
 import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 
@@ -17,7 +18,7 @@ public final class CacheSchemaMapBuilderAllocator<T extends SchemaObject>
         extends SchemaMapBuilderAllocator<
                         T,
                         CachedIndexList<T>,
-                        CachedIndexList.CachedIndexListBuilder<T>,
+                        CachedIndexListBuilder<T>,
                         CacheIndexListAllocator<T>,
                         CachedSchemaMap<T>,
                         CachedSchemaMapBuilder<T>> {

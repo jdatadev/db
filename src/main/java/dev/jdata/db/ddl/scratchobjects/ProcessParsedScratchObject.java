@@ -26,6 +26,6 @@ abstract class ProcessParsedScratchObject extends ObjectCacheNode implements IRe
 
     final long getParsedStringRef(long stringRef) {
 
-        return stringManagement.resolveParsedStringRef(stringRef);
+        return stringManagement.storeParsedStringRef(stringRef);
     }
 }

@@ -6,13 +6,11 @@ import java.util.function.IntFunction;
 import dev.jdata.db.schema.allocators.model.SchemaMapBuilderAllocator;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.utils.adt.lists.HeapIndexList;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
 import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
 import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 
-public final class HeapSchemaMap<T extends SchemaObject>
-
-        extends SchemaMap<T, HeapIndexList<T>, HeapIndexListBuilder<T>, HeapIndexListAllocator<T>, HeapSchemaMap<T>> {
+public final class HeapSchemaMap<T extends SchemaObject> extends SchemaMap<T, HeapIndexList<T>, HeapSchemaMap<T>> {
 
     public static final class HeapSchemaMapBuilderAllocator<T extends SchemaObject>
 

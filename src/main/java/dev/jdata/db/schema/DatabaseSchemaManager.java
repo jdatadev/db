@@ -7,14 +7,16 @@ import dev.jdata.db.schema.allocators.effective.heap.HeapAllEffectiveSchemaAlloc
 import dev.jdata.db.schema.model.databaseschema.BaseDatabaseSchema;
 import dev.jdata.db.schema.model.databaseschema.CompleteDatabaseSchema;
 import dev.jdata.db.schema.model.diff.DiffDatabaseSchema;
-import dev.jdata.db.schema.model.diff.dropped.DroppedSchemaObjects;
-import dev.jdata.db.schema.model.diff.dropped.IDroppedSchemaObjects;
+import dev.jdata.db.schema.model.diff.InitialDiffDatabaseSchema;
+import dev.jdata.db.schema.model.diff.dropped.DroppedElementsSchemaObjects;
+import dev.jdata.db.schema.model.diff.dropped.IDroppedElementsSchemaObjects;
 import dev.jdata.db.schema.model.effective.EffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
-import dev.jdata.db.schema.model.schemamaps.HeapCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
 import dev.jdata.db.utils.adt.lists.HeapMutableIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.allocators.IFreeing;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -26,7 +28,7 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
     private final HeapDatabasesSchemaManagerAllocator databasesSchemaManagerAllocator;
 
     private final int[] objectIdAllocators;
-    private final DroppedSchemaObjects droppedSchemaObjects;
+    private final DroppedElementsSchemaObjects droppedElementsSchemaObjects;
 
     private int schemaVersionNumber;
 
@@ -37,16 +39,16 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
         Objects.requireNonNull(completeDatabaseSchema);
         Objects.requireNonNull(databasesSchemaManagerAllocator);
 
-        return new DatabaseSchemaManager(AllocationType.HEAP, databaseId, completeDatabaseSchema, IIndexList.empty(), databasesSchemaManagerAllocator);
+        return new DatabaseSchemaManager(AllocationType.HEAP, databaseId, completeDatabaseSchema, IndexList.empty(), databasesSchemaManagerAllocator);
     }
 
-    DatabaseSchemaManager(AllocationType allocationType, DatabaseId databaseId, CompleteDatabaseSchema initialCompleteSchema, IIndexList<DiffDatabaseSchema> diffSchemas,
-            HeapDatabasesSchemaManagerAllocator databasesSchemaManagerAllocator) {
+    private DatabaseSchemaManager(AllocationType allocationType, DatabaseId databaseId, CompleteDatabaseSchema initialCompleteSchema,
+            IndexList<InitialDiffDatabaseSchema> initialDiffSchemas, HeapDatabasesSchemaManagerAllocator databasesSchemaManagerAllocator) {
         super(allocationType, databaseId);
 
         Objects.requireNonNull(initialCompleteSchema);
-        Checks.areNotEqual(databaseId, initialCompleteSchema.getDatabaseId());
-        Checks.areElements(diffSchemas, databaseId, (e, n) -> e.getDatabaseId().equals(n));
+        Checks.areEqual(databaseId, initialCompleteSchema.getDatabaseId());
+        Checks.areElements(initialDiffSchemas, databaseId, (e, n) -> e.getDatabaseId().equals(n));
         Objects.requireNonNull(databasesSchemaManagerAllocator);
 
         final DatabaseSchemaVersion completeSchemaVersion = initialCompleteSchema.getVersion();
@@ -56,30 +58,30 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
             throw new IllegalArgumentException();
         }
 
-        if (diffSchemas.get(0).getVersion().getVersionNumber() != completeSchemaVersion.getVersionNumber() + 1) {
+        if (!initialDiffSchemas.isEmpty() && initialDiffSchemas.get(0).getVersion().getVersionNumber() != completeSchemaVersion.getVersionNumber() + 1) {
 
             throw new IllegalArgumentException();
         }
 
-        checkVersionNumber(diffSchemas);
+        checkVersionNumber(initialDiffSchemas);
 
         this.initialCompleteSchema = initialCompleteSchema;
-        this.diffSchemas = HeapMutableIndexList.copyOf(DiffDatabaseSchema[]::new, diffSchemas);
+        this.diffSchemas = HeapMutableIndexList.copyOf(DiffDatabaseSchema[]::new, initialDiffSchemas, s -> (DiffDatabaseSchema)s);
         this.databasesSchemaManagerAllocator = databasesSchemaManagerAllocator;
 
-        this.objectIdAllocators = computeObjectIdAllocators(initialCompleteSchema, diffSchemas);
+        this.objectIdAllocators = computeObjectIdAllocators(initialCompleteSchema, initialDiffSchemas);
 
-        this.schemaVersionNumber = diffSchemas.getTail().getVersion().getVersionNumber();
+        this.schemaVersionNumber = initialDiffSchemas.isEmpty() ? DatabaseSchemaVersion.NO_VERSION : initialDiffSchemas.getTail().getVersion().getVersionNumber();
 
-        this.droppedSchemaObjects = databasesSchemaManagerAllocator.allocateDroppedSchemaObjects();
+        this.droppedElementsSchemaObjects = databasesSchemaManagerAllocator.allocateDroppedElementsSchemaObjects();
 
-        diffSchemas.forEach(this, (s, i) -> {
+        initialDiffSchemas.forEach(this, (s, i) -> {
 
             i.addDiffSchemaDroppedObjects(s);
         });
     }
 
-    private static int[] computeObjectIdAllocators(CompleteDatabaseSchema initialCompleteSchema, IIndexList<DiffDatabaseSchema> diffSchemas) {
+    private static int[] computeObjectIdAllocators(CompleteDatabaseSchema initialCompleteSchema, IIndexList<InitialDiffDatabaseSchema> initialDiffSchemas) {
 
         final DDLObjectType[] ddlObjectTypes = DDLObjectType.values();
         final int numDDLObjectTypes = ddlObjectTypes.length;
@@ -90,10 +92,10 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
 
         for (int i = 0; i < numDDLObjectTypes; ++ i) {
 
-            final DDLObjectType objectType = ddlObjectTypes[i];
+            final DDLObjectType ddlObjectType = ddlObjectTypes[i];
 
-            final int completeMaxId = initialCompleteSchema.computeMaxId(objectType, defaultValue);
-            final int diffMaxId = computeMaxObjectId(objectType, defaultValue, diffSchemas);
+            final int completeMaxId = initialCompleteSchema.computeMaxId(ddlObjectType, defaultValue);
+            final int diffMaxId = computeMaxObjectId(ddlObjectType, defaultValue, initialDiffSchemas);
 
             objectIdAllocators[i] = Math.max(completeMaxId, diffMaxId);
         }
@@ -113,63 +115,27 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
 
         checkIsAllocated();
 
-        instance.freeDroppedSchemaObjects(droppedSchemaObjects);
+        instance.freeDroppedElementsSchemaObjects(droppedElementsSchemaObjects);
     }
 
-    public synchronized void addDiffSchema(DiffDatabaseSchema diffDatabaseSchema) {
+    private synchronized void addDiffSchema(InitialDiffDatabaseSchema initialDiffSchema) {
 
-        Objects.requireNonNull(diffDatabaseSchema);
+        Objects.requireNonNull(initialDiffSchema);
 
         checkIsAllocated();
 
-        diffSchemas.addTail(diffDatabaseSchema);
+        diffSchemas.addTail(initialDiffSchema);
 
-        addDiffSchemaDroppedObjects(diffDatabaseSchema);
+        addDiffSchemaDroppedObjects(initialDiffSchema);
     }
 
     private void addDiffSchemaDroppedObjects(DiffDatabaseSchema diffDatabaseSchema) {
 
-        final IDroppedSchemaObjects dropped = diffDatabaseSchema.getDroppedSchemaObjects();
+        final IDroppedElementsSchemaObjects dropped = diffDatabaseSchema.getDroppedSchemaObjects();
 
-        droppedSchemaObjects.add(dropped, databasesSchemaManagerAllocator.getDroppedSchemaObjectsAllocator());
-    }
-/*
-    private void dropSchemaObject(DDLObjectType ddlObjectType, SchemaObject schemaObject) {
-
-        Objects.requireNonNull(ddlObjectType);
-        Objects.requireNonNull(schemaObject);
-
-        if (!ddlObjectType.getSchemaObjectType().equals(schemaObject.getClass())) {
-
-            throw new IllegalArgumentException();
-        }
-
-        droppedSchemaObjects.addDroppedSchemaObject(ddlObjectType, schemaObject, databasesSchemaManagerAllocator.getDroppedSchemaObjectsAllocator());
+        droppedElementsSchemaObjects.add(dropped, databasesSchemaManagerAllocator.getDroppedSchemaObjectsAllocator());
     }
 
-    private void dropColumn(DDLObjectType ddlObjectType, ColumnsObject columnsObject, Column column) {
-
-        Objects.requireNonNull(ddlObjectType);
-        Objects.requireNonNull(columnsObject);
-
-        if (!ddlObjectType.hasColumns()) {
-
-            throw new IllegalArgumentException();
-        }
-
-        if (!ddlObjectType.getSchemaObjectType().equals(columnsObject.getClass())) {
-
-            throw new IllegalArgumentException();
-        }
-
-        final IDroppedElementsAllocator droppedElementsAllocator = ;
-        final IIntSetAllocator intSetAllocator;
-
-        Objects.requireNonNull(column);
-
-        droppedSchemaObjects.addDroppedColumn(ddlObjectType, columnsObject, column);
-    }
-*/
     @Override
     public synchronized int allocateSchemaObjectId(DDLObjectType ddlObjectType) {
 
@@ -195,7 +161,7 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
 
         Objects.requireNonNull(allocators);
 
-        final HeapCompleteSchemaMaps schemaMaps = null; // EffectiveSchemaHelper.buildSchemaMaps(initialCompleteSchema, diffSchemas, droppedSchemaObjects, null);
+        final HeapAllCompleteSchemaMaps schemaMaps = null; // EffectiveSchemaHelper.buildSchemaMaps(initialCompleteSchema, diffSchemas, droppedSchemaObjects, null);
 
         final DatabaseSchemaVersion latestVersion = diffSchemas.isEmpty()
                 ? initialCompleteSchema.getVersion()
@@ -233,7 +199,7 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
         }
     }
 
-    private static int computeMaxObjectId(DDLObjectType objectType, int defaultValue, IIndexList<? extends BaseDatabaseSchema<?>> schemas) {
+    private static int computeMaxObjectId(DDLObjectType ddlObjectType, int defaultValue, IIndexList<? extends BaseDatabaseSchema<?>> schemas) {
 
         int maxOjectId = defaultValue;
 
@@ -243,7 +209,7 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
 
             final BaseDatabaseSchema<?> databaseSchema = schemas.get(i);
 
-            final int schemaMaxTableId = databaseSchema.computeMaxId(objectType, defaultValue);
+            final int schemaMaxTableId = databaseSchema.computeMaxId(ddlObjectType, defaultValue);
 
             if (schemaMaxTableId != defaultValue && schemaMaxTableId > maxOjectId) {
 

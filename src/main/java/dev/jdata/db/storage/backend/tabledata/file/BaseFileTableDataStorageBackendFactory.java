@@ -16,8 +16,8 @@ import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.TableDataStorageBackend;
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;
-import dev.jdata.db.utils.adt.lists.CachedIndexList;
 import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.file.access.AbsoluteDirectoryPath;
@@ -75,7 +75,7 @@ public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDa
 
         final CacheIndexListAllocator<RelativeFilePath> indexListAllocator = null;
 
-        final CachedIndexList.CachedIndexListBuilder<RelativeFilePath> tableFilePathsBuilder = IndexList.createBuilder(indexListAllocator);
+        final CachedIndexListBuilder<RelativeFilePath> tableFilePathsBuilder = IndexList.createBuilder(indexListAllocator);
 
         try {
             fileSystemAccess.listFilePaths(tableFilePath, tableFilePathsBuilder, (p, b) -> b.addTail(p));
@@ -103,7 +103,7 @@ public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDa
 
         final CacheIndexListAllocator<FileTableStorageFile> indexListAllocator = null;
 
-        final CachedIndexList.CachedIndexListBuilder<FileTableStorageFile> fileTableStorageFileListBuilder = IndexList.createBuilder(initialCapacity, indexListAllocator);
+        final CachedIndexListBuilder<FileTableStorageFile> fileTableStorageFileListBuilder = IndexList.createBuilder(initialCapacity, indexListAllocator);
 
         try {
             for (long i = 0L; i < numElements; ++ i) {

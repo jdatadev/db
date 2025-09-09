@@ -1,5 +1,6 @@
 package dev.jdata.db.utils.adt.lists;
 
+import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.allocators.BaseArrayAllocator;
@@ -34,6 +35,10 @@ abstract class BaseIndexList<T> extends BaseObjectArrayList<T> implements IIndex
 
     BaseIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
         super(allocationType, createElementsArray, toCopy);
+    }
+
+    <U> BaseIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<U> toCopy, Function<U, T> mapper) {
+        super(allocationType, createElementsArray, toCopy, mapper);
     }
 
     BaseIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, int initialCapacity) {

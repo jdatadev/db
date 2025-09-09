@@ -31,6 +31,10 @@ public abstract class DBNamedObject implements ToStringWithStringResolver {
         return hashName;
     }
 
+    public final long getStoredName() {
+        return hashName;
+    }
+
     public final long getFileSystemName() {
         return hashName;
     }

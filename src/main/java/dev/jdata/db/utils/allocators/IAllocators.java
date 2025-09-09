@@ -19,6 +19,7 @@ public interface IAllocators extends IAllocator {
 
         <T> void addObjectCache(String name, Class<T> objectType, ObjectCache<T> objectCache);
         <T extends ObjectCacheNode> void addNodeObjectCache(String name, Class<T> objectType, NodeObjectCache<T> nodeObjectCache);
+        <T extends ObjectCacheNode> void addNodeObjectCacheForGenericType(String name, Class<T> objectType, NodeObjectCache<? extends T> nodeObjectCache);
     }
 
     void gatherStatistics(IAllocatorsStatisticsGatherer statisticsGatherer);

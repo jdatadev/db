@@ -5,7 +5,7 @@ import java.util.Objects;
 import dev.jdata.db.engine.descriptorables.BaseDescriptorable;
 import dev.jdata.db.engine.sessions.PreparedStatement.PreparedStatementState;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.sql.parse.SQLString;
+import dev.jdata.db.sql.parse.ISQLString;
 import dev.jdata.db.utils.State;
 import dev.jdata.db.utils.adt.IClearable;
 
@@ -29,7 +29,7 @@ final class PreparedStatement extends BaseDescriptorable<PreparedStatementState>
     }
 
     private BaseSQLStatement sqlStatement;
-    private SQLString sqlString;
+    private ISQLString sqlString;
 
     PreparedStatement() {
         super(PreparedStatementState.CREATED, false);
@@ -41,7 +41,7 @@ final class PreparedStatement extends BaseDescriptorable<PreparedStatementState>
         this.sqlStatement = null;
     }
 
-    void initialize(BaseSQLStatement sqlStatement, SQLString sqlString) {
+    void initialize(BaseSQLStatement sqlStatement, ISQLString sqlString) {
 
         this.sqlStatement = Objects.requireNonNull(sqlStatement);
         this.sqlString = Objects.requireNonNull(sqlString);
@@ -56,7 +56,7 @@ final class PreparedStatement extends BaseDescriptorable<PreparedStatementState>
         return sqlStatement;
     }
 
-    SQLString getSQLString() {
+    ISQLString getSQLString() {
         return sqlString;
     }
 }

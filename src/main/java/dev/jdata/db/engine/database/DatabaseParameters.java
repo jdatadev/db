@@ -8,10 +8,11 @@ import dev.jdata.db.data.cache.DataCache;
 import dev.jdata.db.engine.sessions.DBSession.LargeObjectStorer;
 import dev.jdata.db.engine.transactions.Transactions.TransactionFactory;
 import dev.jdata.db.schema.DatabaseSchemaManager;
-import dev.jdata.db.utils.adt.IClearable;
+import dev.jdata.db.utils.Initializable;
+import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class DatabaseParameters implements IClearable {
+public final class DatabaseParameters implements IResettable {
 
     private IDatabasesAllocators allocators;
     private DatabaseStringManagement stringManagement;
@@ -24,28 +25,13 @@ public final class DatabaseParameters implements IClearable {
     private long initialTransactionId;
     private long[] initialRowIds;
 
-    @Override
-    public void clear() {
-
-        this.allocators = null;
-        this.stringManagement = null;
-        this.largeObjectStorer = null;
-        this.transactionFactory = null;
-
-        this.name = null;
-        this.databaseSchemas = null;
-        this.dataCache = null;
-        this.initialTransactionId = DBConstants.NO_TRANSACTION_ID;
-        this.initialRowIds = null;
-    }
-
     public void initializeStatic(IDatabasesAllocators allocators, DatabaseStringManagement stringManagement, LargeObjectStorer<IOException> largeObjectStorer,
             TransactionFactory transactionFactory) {
 
-        this.allocators = Objects.requireNonNull(allocators);
-        this.stringManagement = Objects.requireNonNull(stringManagement);
-        this.largeObjectStorer = Objects.requireNonNull(largeObjectStorer);
-        this.transactionFactory= Objects.requireNonNull(transactionFactory);
+        this.allocators = Initializable.checkNotYetInitialized(this.allocators, allocators);
+        this.stringManagement = Initializable.checkNotYetInitialized(this.stringManagement, stringManagement);
+        this.largeObjectStorer = Initializable.checkNotYetInitialized(this.largeObjectStorer, largeObjectStorer);
+        this.transactionFactory = Initializable.checkNotYetInitialized(this.transactionFactory, transactionFactory);
     }
 
     public void initializePerDatabase(DatabaseSchemaManager databaseSchemas, DataCache dataCache, long initialTransactionId, long[] initialRowIds) {
@@ -54,6 +40,21 @@ public final class DatabaseParameters implements IClearable {
         this.dataCache = dataCache;
         this.initialTransactionId = initialTransactionId != DBConstants.NO_TRANSACTION_ID ? Checks.isTransactionId(initialTransactionId) : DBConstants.NO_TRANSACTION_ID;
         this.initialRowIds = initialRowIds;
+    }
+
+    @Override
+    public void reset() {
+
+        this.allocators = Initializable.checkResettable(allocators);
+        this.stringManagement = Initializable.checkResettable(stringManagement);
+        this.largeObjectStorer = Initializable.checkResettable(largeObjectStorer);
+        this.transactionFactory = Initializable.checkResettable(transactionFactory);
+
+        this.name = null;
+        this.databaseSchemas = null;
+        this.dataCache = null;
+        this.initialTransactionId = DBConstants.NO_TRANSACTION_ID;
+        this.initialRowIds = null;
     }
 
     public IDatabasesAllocators getAllocators() {

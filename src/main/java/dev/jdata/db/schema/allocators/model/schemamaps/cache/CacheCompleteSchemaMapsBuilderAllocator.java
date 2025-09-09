@@ -2,30 +2,30 @@ package dev.jdata.db.schema.allocators.model.schemamaps.cache;
 
 import java.util.Objects;
 
-import dev.jdata.db.schema.allocators.model.schemamaps.ICompleteSchemaMapsBuilderAllocator;
-import dev.jdata.db.schema.model.schemamaps.CachedCompleteSchemaMaps;
-import dev.jdata.db.schema.model.schemamaps.CachedCompleteSchemaMaps.CachedCompleteSchemaBuilder;
+import dev.jdata.db.schema.allocators.model.schemamaps.IAllCompleteSchemaMapsBuilderAllocator;
+import dev.jdata.db.schema.model.schemamaps.cache.CachedAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.cache.CachedAllSimpleCompleteSchemaBuilder;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 
 public final class CacheCompleteSchemaMapsBuilderAllocator
 
-        implements ICompleteSchemaMapsBuilderAllocator<CachedCompleteSchemaMaps, CachedCompleteSchemaMaps.CachedCompleteSchemaBuilder> {
+        implements IAllCompleteSchemaMapsBuilderAllocator<CachedAllCompleteSchemaMaps, CachedAllSimpleCompleteSchemaBuilder> {
 
-    private final NodeObjectCache<CachedCompleteSchemaBuilder> completeSchemaMapsBuilderCache;
+    private final NodeObjectCache<CachedAllSimpleCompleteSchemaBuilder> completeSchemaMapsBuilderCache;
 
     CacheCompleteSchemaMapsBuilderAllocator() {
 
-        this.completeSchemaMapsBuilderCache = new NodeObjectCache<>(() -> new CachedCompleteSchemaMaps.CachedCompleteSchemaBuilder());
+        this.completeSchemaMapsBuilderCache = new NodeObjectCache<>(() -> new CachedAllSimpleCompleteSchemaBuilder());
     }
 
     @Override
-    public CachedCompleteSchemaMaps.CachedCompleteSchemaBuilder allocateCompleteSchemaMapsBuilder() {
+    public CachedAllSimpleCompleteSchemaBuilder allocateCompleteSchemaMapsBuilder() {
 
         return completeSchemaMapsBuilderCache.allocate();
     }
 
     @Override
-    public void freeCompleteSchemaMapsBuilder(CachedCompleteSchemaMaps.CachedCompleteSchemaBuilder builder) {
+    public void freeCompleteSchemaMapsBuilder(CachedAllSimpleCompleteSchemaBuilder builder) {
 
         Objects.requireNonNull(builder);
 
@@ -35,6 +35,6 @@ public final class CacheCompleteSchemaMapsBuilderAllocator
     @Override
     public void gatherStatistics(IAllocatorsStatisticsGatherer statisticsGatherer) {
 
-        statisticsGatherer.addNodeObjectCache("completeSchemaMapsBuilderCache", CachedCompleteSchemaBuilder.class, completeSchemaMapsBuilderCache);
+        statisticsGatherer.addNodeObjectCache("completeSchemaMapsBuilderCache", CachedAllSimpleCompleteSchemaBuilder.class, completeSchemaMapsBuilderCache);
     }
 }

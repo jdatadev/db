@@ -8,6 +8,7 @@ import dev.jdata.db.schema.model.SchemaMap.SchemaMapBuilder;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
 import dev.jdata.db.utils.allocators.IAllocators;
 import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 
@@ -15,9 +16,9 @@ public abstract class SchemaMapBuilderAllocator<
 
                 SCHEMA_OBJECT extends SchemaObject,
                 INDEX_LIST extends IndexList<SCHEMA_OBJECT>,
-                INDEX_LIST_BUILDER extends IndexList.IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
+                INDEX_LIST_BUILDER extends IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
                 INDEX_LIST_ALLOCATOR extends IndexListAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
-                SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP>,
+                SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, SCHEMA_MAP>,
                 SCHEMA_MAP_BUILDER extends SchemaMapBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER>>
 
         implements IAllocators {

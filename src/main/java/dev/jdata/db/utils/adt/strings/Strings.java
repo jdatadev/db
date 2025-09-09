@@ -12,6 +12,9 @@ public class Strings {
 
     public static String repeat(String string, int times) {
 
+        Checks.isNotEmpty(string);
+        Checks.isAboveZero(times);
+
         final int stringLength = string.length();
         final int resultLength = stringLength * times;
 
@@ -22,6 +25,34 @@ public class Strings {
         for (int i = 0; i < times; ++ i) {
 
             for (int j = 0; j < stringLength; ++ j) {
+
+                charArray[dstIndex ++] = string.charAt(j);
+            }
+        }
+
+        return new String(charArray);
+    }
+
+    public static String repeat(String string, int times, char separator) {
+
+        Checks.isNotEmpty(string);
+        Checks.isAboveZero(times);
+
+        final int stringLength = string.length();
+        final int resultLength = ((stringLength + 1) * times) - 1;
+
+        final char[] charArray = new char[resultLength];
+
+        int dstIndex = 0;
+
+        for (int i = 0; i < times; ++ i) {
+
+            for (int j = 0; j < stringLength; ++ j) {
+
+                if (j == 0 && dstIndex > 0) {
+
+                    charArray[dstIndex ++] = separator;
+                }
 
                 charArray[dstIndex ++] = string.charAt(j);
             }

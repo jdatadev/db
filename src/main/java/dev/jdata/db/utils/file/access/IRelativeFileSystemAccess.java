@@ -1,5 +1,6 @@
 package dev.jdata.db.utils.file.access;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public interface IRelativeFileSystemAccess extends IFileSystemAccess<RelativeFilePath, RelativeDirectoryPath> {
@@ -12,4 +13,6 @@ public interface IRelativeFileSystemAccess extends IFileSystemAccess<RelativeFil
                 ? new RelativeFileSystemAccess(rootPath, (BaseNIOFileSystemAccess)absoluteFileSystemAccess)
                 : new RelativeFileSystemAccess(rootPath, absoluteFileSystemAccess);
     }
+
+    void deleteAll() throws IOException;
 }

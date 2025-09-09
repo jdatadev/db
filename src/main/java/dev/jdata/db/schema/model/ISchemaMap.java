@@ -2,11 +2,11 @@ package dev.jdata.db.schema.model;
 
 import org.jutils.io.strings.StringResolver;
 
-import dev.jdata.db.DBNamedObject;
+import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.utils.adt.elements.IObjectIterableElements;
 import dev.jdata.db.utils.adt.lists.IndexList;
 
-public interface ISchemaMap<T extends DBNamedObject> extends IObjectIterableElements<T> {
+public interface ISchemaMap<T extends SchemaObject> extends IObjectIterableElements<T> {
 
     boolean containsSchemaObjectName(long schemaObjectName);
 

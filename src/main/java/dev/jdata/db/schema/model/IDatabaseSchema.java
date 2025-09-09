@@ -11,5 +11,7 @@ public interface IDatabaseSchema extends IDatabaseSchemaObjects {
 
     boolean containsSchemaObjectName(DDLObjectType ddlObjectType, long hashObjectName);
 
+    int computeMaxId(DDLObjectType ddlObjectType, int defaultValue);
+
     boolean isEqualTo(StringResolver thisStringResolver, IDatabaseSchema other, StringResolver otherStringResolver);
 }

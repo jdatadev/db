@@ -18,7 +18,7 @@ import dev.jdata.db.schema.model.HeapSchemaMap;
 import dev.jdata.db.schema.model.IDatabaseSchema;
 import dev.jdata.db.schema.model.databaseschema.CompleteDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.model.schemamaps.HeapCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.file.BaseFileTableStorageFileTest.TestData;
@@ -439,9 +439,9 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
 
         final HeapSchemaMap<Table> tablesSchemaMap = HeapSchemaMap.of(tableList, Table[]::new, testAllocators.longToObjectMapAllocator);
 
-        final HeapCompleteSchemaMaps schemaMaps = HeapCompleteSchemaMaps.empty();
+        final HeapAllCompleteSchemaMaps schemaMaps = HeapAllCompleteSchemaMaps.empty();
 
-        final DatabaseId databaseId = new DatabaseId(DBConstants.INITIAL_DESCRIPTORABLE, "testdb");
+        final DatabaseId databaseId = new DatabaseId(DBConstants.INITIAL_DESCRIPTORABLE, TEST_DATABASE_NAME);
 
         final CompleteDatabaseSchema databaseSchema = CompleteDatabaseSchema.of(databaseId, databaseSchemaVersion, schemaMaps);
 

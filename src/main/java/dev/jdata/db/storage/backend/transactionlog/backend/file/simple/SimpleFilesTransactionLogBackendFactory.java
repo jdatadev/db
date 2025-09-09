@@ -8,8 +8,8 @@ import dev.jdata.db.storage.backend.transactionlog.backend.file.BaseFileTransact
 import dev.jdata.db.storage.backend.transactionlog.backend.file.FileTransactionLogBackendConfiguration;
 import dev.jdata.db.storage.backend.transactionlog.backend.file.FileTransactionLogFile;
 import dev.jdata.db.storage.backend.transactionlog.backend.file.FileTransactionLogFiles;
-import dev.jdata.db.utils.adt.lists.CachedIndexList;
 import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.file.access.AbsoluteDirectoryPath;
@@ -36,7 +36,7 @@ public final class SimpleFilesTransactionLogBackendFactory
 
         final CacheIndexListAllocator<RelativeFilePath> indexListAllocator = null;
 
-        final CachedIndexList.CachedIndexListBuilder<RelativeFilePath> transactionFilePathsBuilder = IndexList.createBuilder(indexListAllocator);
+        final CachedIndexListBuilder<RelativeFilePath> transactionFilePathsBuilder = IndexList.createBuilder(indexListAllocator);
 
         try {
             fileSystemAccess.listFilePaths(relativeRootPath, transactionFilePathsBuilder, (p, b) -> b.addTail(p));
@@ -65,7 +65,7 @@ public final class SimpleFilesTransactionLogBackendFactory
 
         final CacheIndexListAllocator<FileTransactionLogFile> indexListAllocator = null;
 
-        final CachedIndexList.CachedIndexListBuilder<FileTransactionLogFile> fileTransactionLogFileList = IndexList.createBuilder(initialCapacity, indexListAllocator);
+        final CachedIndexListBuilder<FileTransactionLogFile> fileTransactionLogFileList = IndexList.createBuilder(initialCapacity, indexListAllocator);
 
         try {
             for (long i = 0L; i < numElements; ++ i) {

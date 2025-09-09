@@ -3,45 +3,50 @@ package dev.jdata.db.schema.effective;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.schema.allocators.effective.BaseAllEffectiveSchemaAllocators;
 import dev.jdata.db.schema.allocators.effective.EffectiveSchemaAllocators;
+import dev.jdata.db.schema.allocators.effective.SchemaMapEffectiveSchemaAllocators;
 import dev.jdata.db.schema.allocators.model.SchemaMapBuilderAllocator;
 import dev.jdata.db.schema.allocators.model.schemamaps.ICompleteSchemaMapsBuilderAllocator;
 import dev.jdata.db.schema.model.SchemaMap;
 import dev.jdata.db.schema.model.SchemaMap.SchemaMapBuilder;
 import dev.jdata.db.schema.model.databaseschema.CompleteDatabaseSchema;
 import dev.jdata.db.schema.model.diff.DiffDatabaseSchema;
-import dev.jdata.db.schema.model.diff.dropped.DroppedSchemaObjects;
+import dev.jdata.db.schema.model.diff.dropped.DroppedElementsSchemaObjects;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.ColumnsObject;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.schema.model.schemamaps.CompleteSchemaMaps;
-import dev.jdata.db.schema.model.schemamaps.CompleteSchemaMaps.CompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.schemamaps.SimpleCompleteSchemaMapsBuilder;
 import dev.jdata.db.utils.adt.CapacityExponents;
+import dev.jdata.db.utils.adt.lists.HeapIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexListGetters;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.adt.sets.MutableIntMaxDistanceNonBucketSet;
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
+import dev.jdata.db.utils.adt.sets.IMutableIntSet;
 import dev.jdata.db.utils.allocators.IMutableIntSetAllocator;
 import dev.jdata.db.utils.scalars.Integers;
 
 public class EffectiveSchemaHelper {
 
     public static <
+                    MUTABLE_INT_SET extends IMutableIntSet,
                     SCHEMA_OBJECT extends SchemaObject,
                     INDEX_LIST extends IndexList<SCHEMA_OBJECT>,
-                    INDEX_LIST_BUILDER extends IndexList.IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
+                    INDEX_LIST_BUILDER extends IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
                     INDEX_LIST_ALLOCATOR extends IndexListAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
-                    SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP>,
+                    SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, SCHEMA_MAP>,
                     SCHEMA_MAP_BUILDER extends SchemaMapBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER>,
                     COMPLETE_SCHEMA_MAPS extends CompleteSchemaMaps<SCHEMA_MAP>,
-                    COMPLETE_SCHEMA_MAPS_BUILDER extends CompleteSchemaMapsBuilder<SCHEMA_MAP, COMPLETE_SCHEMA_MAPS, COMPLETE_SCHEMA_MAPS_BUILDER>>
+                    COMPLETE_SCHEMA_MAPS_BUILDER extends SimpleCompleteSchemaMapsBuilder<SCHEMA_MAP, COMPLETE_SCHEMA_MAPS, COMPLETE_SCHEMA_MAPS_BUILDER>,
+                    COMPLETE_SCHEMA_MAPS_BUILDER_ALLOCATOR extends ICompleteSchemaMapsBuilderAllocator<COMPLETE_SCHEMA_MAPS, COMPLETE_SCHEMA_MAPS_BUILDER>>
 
             COMPLETE_SCHEMA_MAPS buildSchemaMaps(CompleteDatabaseSchema initialSchema, IIndexListGetters<DiffDatabaseSchema> schemaDiffs,
-                    DroppedSchemaObjects droppedSchemaObjects,
-                    BaseAllEffectiveSchemaAllocators<
+                    DroppedElementsSchemaObjects droppedSchemaObjects,
+                    SchemaMapEffectiveSchemaAllocators<
+                            MUTABLE_INT_SET,
                             SCHEMA_OBJECT,
                             INDEX_LIST,
                             INDEX_LIST_BUILDER,
@@ -49,7 +54,8 @@ public class EffectiveSchemaHelper {
                             SCHEMA_MAP,
                             SCHEMA_MAP_BUILDER,
                             COMPLETE_SCHEMA_MAPS,
-                            COMPLETE_SCHEMA_MAPS_BUILDER> allocators) {
+                            COMPLETE_SCHEMA_MAPS_BUILDER,
+                            COMPLETE_SCHEMA_MAPS_BUILDER_ALLOCATOR> allocators) {
 
         Objects.requireNonNull(initialSchema);
         Objects.requireNonNull(schemaDiffs);
@@ -57,18 +63,8 @@ public class EffectiveSchemaHelper {
 
         final COMPLETE_SCHEMA_MAPS result;
 
-        final EffectiveSchemaAllocators<
-                SCHEMA_OBJECT,
-                INDEX_LIST,
-                INDEX_LIST_BUILDER,
-                INDEX_LIST_ALLOCATOR,
-                SCHEMA_MAP,
-                SCHEMA_MAP_BUILDER,
-                COMPLETE_SCHEMA_MAPS,
-                COMPLETE_SCHEMA_MAPS_BUILDER> effectiveSchemaAllocators = allocators;
-
         final ICompleteSchemaMapsBuilderAllocator<COMPLETE_SCHEMA_MAPS, COMPLETE_SCHEMA_MAPS_BUILDER> completeSchemaMapsBuilderAllocator
-                = effectiveSchemaAllocators.getCompleteSchemaMapsBuilderAllocator();
+                = allocators.getCompleteSchemaMapsBuilderAllocator();
 
         final COMPLETE_SCHEMA_MAPS_BUILDER completeSchemaMapsBuilder = CompleteSchemaMaps.createBuilder(completeSchemaMapsBuilderAllocator);
 
@@ -94,18 +90,21 @@ public class EffectiveSchemaHelper {
     }
 
     private static <
+                    MUTABLE_INT_SET extends IMutableIntSet,
                     SCHEMA_OBJECT extends SchemaObject,
                     INDEX_LIST extends IndexList<SCHEMA_OBJECT>,
-                    INDEX_LIST_BUILDER extends IndexList.IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
+                    INDEX_LIST_BUILDER extends IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
                     INDEX_LIST_ALLOCATOR extends IndexListAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
-                    SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP>,
+                    SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, SCHEMA_MAP>,
                     SCHEMA_MAP_BUILDER extends SchemaMapBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER>,
                     COMPLETE_SCHEMA_MAPS extends CompleteSchemaMaps<SCHEMA_MAP>,
-                    COMPLETE_SCHEMA_MAPS_BUILDER extends CompleteSchemaMapsBuilder<SCHEMA_MAP, COMPLETE_SCHEMA_MAPS, COMPLETE_SCHEMA_MAPS_BUILDER>>
+                    COMPLETE_SCHEMA_MAPS_BUILDER extends SimpleCompleteSchemaMapsBuilder<SCHEMA_MAP, COMPLETE_SCHEMA_MAPS, COMPLETE_SCHEMA_MAPS_BUILDER>,
+                    COMPLETE_SCHEMA_MAPS_BUILDER_ALLOCATOR extends ICompleteSchemaMapsBuilderAllocator<COMPLETE_SCHEMA_MAPS, COMPLETE_SCHEMA_MAPS_BUILDER>>
 
     SCHEMA_MAP buildSchemaMap(DDLObjectType ddlObjectType, IntFunction<SCHEMA_OBJECT[]> createValuesArray, CompleteDatabaseSchema initialSchema,
-            IIndexListGetters<DiffDatabaseSchema> schemaDiffs, DroppedSchemaObjects droppedSchemaObjects, INDEX_LIST_ALLOCATOR indexListAllocator,
+            IIndexListGetters<DiffDatabaseSchema> schemaDiffs, DroppedElementsSchemaObjects droppedSchemaObjects, INDEX_LIST_ALLOCATOR indexListAllocator,
             EffectiveSchemaAllocators<
+                    MUTABLE_INT_SET,
                     SCHEMA_OBJECT,
                     INDEX_LIST,
                     INDEX_LIST_BUILDER,
@@ -113,7 +112,8 @@ public class EffectiveSchemaHelper {
                     SCHEMA_MAP,
                     SCHEMA_MAP_BUILDER,
                     COMPLETE_SCHEMA_MAPS,
-                    COMPLETE_SCHEMA_MAPS_BUILDER> allocators) {
+                    COMPLETE_SCHEMA_MAPS_BUILDER,
+                    COMPLETE_SCHEMA_MAPS_BUILDER_ALLOCATOR> allocators) {
 
         final SCHEMA_MAP result;
 
@@ -131,9 +131,9 @@ public class EffectiveSchemaHelper {
 
         final INDEX_LIST_BUILDER schemaObjectsBuilder = IndexList.createBuilder(indexListAllocator);
 
-        final IMutableIntSetAllocator<MutableIntMaxDistanceNonBucketSet> intSetAllocator = allocators.getIntSetAllocator();
+        final IMutableIntSetAllocator<MUTABLE_INT_SET> intSetAllocator = allocators.getIntSetAllocator();
 
-        final MutableIntMaxDistanceNonBucketSet addedSchemaObjects = intSetAllocator.allocateMutableIntSet(CapacityExponents.computeCapacityExponent(initialCapacity));
+        final MUTABLE_INT_SET addedSchemaObjects = intSetAllocator.allocateMutableIntSet(CapacityExponents.computeCapacityExponent(initialCapacity));
 
         try {
             final IIndexList<SCHEMA_OBJECT> schemaObjects = initialSchema.getSchemaObjects(ddlObjectType);
@@ -175,7 +175,7 @@ public class EffectiveSchemaHelper {
 
             schemaMapBuilder.add(effectiveSchemaObjects);
 
-            result = schemaMapBuilder.build();
+            result = schemaMapBuilder.buildOrEmpty();
         }
         finally {
 
@@ -189,11 +189,16 @@ public class EffectiveSchemaHelper {
         return result;
     }
 
-    private static <T extends SchemaObject, U extends IndexList<Column>, V extends IndexList.IndexListBuilder<Column, U, V>, W extends IndexListAllocator<Column, U, V, ?>>
-    void addEffectiveSchemaObject(IndexList.IndexListBuilder<T, ?, ?> schemaObjectsBuilder, DDLObjectType ddlObjectType, T schemaObject, DroppedSchemaObjects droppedSchemaObjects,
-            W columnIndexListAllocator, MutableIntMaxDistanceNonBucketSet addedSchemaObjects) {
+    private static <
+                    SCHEMA_OBJECT extends SchemaObject,
+                    COLUMN_INDEX_LIST extends IndexList<Column>,
+                    COLUMN_INDEX_LIST_BUILDER extends IndexListBuilder<Column, COLUMN_INDEX_LIST, COLUMN_INDEX_LIST_BUILDER>,
+                    COLUMN_INDEX_LIST_ALLOCATOR extends IndexListAllocator<Column, COLUMN_INDEX_LIST, COLUMN_INDEX_LIST_BUILDER, ?>,
+                    MUTABLE_INT_SET extends IMutableIntSet>
+    void addEffectiveSchemaObject(IndexListBuilder<SCHEMA_OBJECT, ?, ?> schemaObjectsBuilder, DDLObjectType ddlObjectType, SCHEMA_OBJECT schemaObject,
+            DroppedElementsSchemaObjects droppedSchemaObjects, COLUMN_INDEX_LIST_ALLOCATOR columnIndexListAllocator, MUTABLE_INT_SET addedSchemaObjects) {
 
-        final T effectiveSchemaObject = createEffectiveSchemaObject(ddlObjectType, schemaObject, droppedSchemaObjects, columnIndexListAllocator);
+        final SCHEMA_OBJECT effectiveSchemaObject = createEffectiveSchemaObject(ddlObjectType, schemaObject, droppedSchemaObjects, columnIndexListAllocator);
 
         if (effectiveSchemaObject != null) {
 
@@ -209,10 +214,15 @@ public class EffectiveSchemaHelper {
         }
     }
 
-    private static <T extends SchemaObject, U extends IndexList<Column>, V extends IndexList.IndexListBuilder<Column, U, V>, W extends IndexListAllocator<Column, U, V, ?>>
-    T createEffectiveSchemaObject(DDLObjectType ddlObjectType, T schemaObject, DroppedSchemaObjects droppedSchemaObjects, W columnIndexListAllocator) {
+    private static <
+                    SCHEMA_OBJECT extends SchemaObject,
+                    COLUMN_INDEX_LIST extends IndexList<Column>,
+                    COLUMN_INDEX_LIST_BUILDER extends IndexListBuilder<Column, COLUMN_INDEX_LIST, COLUMN_INDEX_LIST_BUILDER>,
+                    COLUMN_INDEX_LIST_ALLOCATOR extends IndexListAllocator<Column, COLUMN_INDEX_LIST, COLUMN_INDEX_LIST_BUILDER, ?>>
+    SCHEMA_OBJECT createEffectiveSchemaObject(DDLObjectType ddlObjectType, SCHEMA_OBJECT schemaObject, DroppedElementsSchemaObjects droppedSchemaObjects,
+            COLUMN_INDEX_LIST_ALLOCATOR columnIndexListAllocator) {
 
-        final T result;
+        final SCHEMA_OBJECT result;
 
         if (ddlObjectType.hasColumns()) {
 
@@ -220,7 +230,7 @@ public class EffectiveSchemaHelper {
 
             final int numColumns = columnsObject.getNumColumns();
 
-            final V columnsBuilder = IndexList.createBuilder(numColumns, columnIndexListAllocator);
+            final COLUMN_INDEX_LIST_BUILDER columnsBuilder = IndexList.createBuilder(numColumns, columnIndexListAllocator);
 
             try {
                 for (int columnIndex = 0; columnIndex < numColumns; ++ columnIndex) {
@@ -234,22 +244,21 @@ public class EffectiveSchemaHelper {
                 }
             }
             finally {
-                final U columns = columnsBuilder.build();
 
-                if (columns.isEmpty()) {
-
-                    columnIndexListAllocator.freeIndexList(columns);
+                if (columnsBuilder.isEmpty()) {
 
                     result = null;
                 }
                 else {
+                    final HeapIndexList<Column> columns = columnsBuilder.buildHeapAllocated();
+
                     if (columns.getNumElements() == numColumns) {
 
                         result = schemaObject;
                     }
                     else {
                         @SuppressWarnings("unchecked")
-                        final T schemaObjectCopy = (T)columnsObject.makeCopy(columns);
+                        final SCHEMA_OBJECT schemaObjectCopy = (SCHEMA_OBJECT)columnsObject.makeCopy(columns);
 
                         result = schemaObjectCopy;
                     }

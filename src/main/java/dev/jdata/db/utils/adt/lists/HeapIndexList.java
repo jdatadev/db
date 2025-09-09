@@ -85,7 +85,18 @@ public final class HeapIndexList<T> extends IndexList<T> implements IHeapIndexLi
         @Override
         public HeapIndexList<T> build() {
 
-            return fromMutableIndexList(AllocationType.HEAP_ALLOCATOR, getList());
+            return fromMutableIndexListHeap();
+        }
+
+        @Override
+        public HeapIndexList<T> buildHeapAllocated() {
+
+            return fromMutableIndexListHeap();
+        }
+
+        private HeapIndexList<T> fromMutableIndexListHeap() {
+
+            return fromMutableIndexListHeap(AllocationType.HEAP_ALLOCATOR);
         }
     }
 

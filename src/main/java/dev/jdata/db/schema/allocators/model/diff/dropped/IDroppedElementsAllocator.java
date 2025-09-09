@@ -1,17 +1,17 @@
 package dev.jdata.db.schema.allocators.model.diff.dropped;
 
-import dev.jdata.db.schema.model.diff.dropped.DroppedElements;
-import dev.jdata.db.utils.adt.sets.MutableIntMaxDistanceNonBucketSet;
-import dev.jdata.db.utils.allocators.IMutableIntSetAllocator;
+import dev.jdata.db.schema.model.diff.dropped.BaseDroppedElements;
+import dev.jdata.db.utils.adt.sets.IMutableIntSet;
 import dev.jdata.db.utils.allocators.IIntToObjectMapAllocator;
+import dev.jdata.db.utils.allocators.IMutableIntSetAllocator;
 
-public interface IDroppedElementsAllocator {
+public interface IDroppedElementsAllocator<T extends IMutableIntSet, U extends BaseDroppedElements<T>> {
 
-    IMutableIntSetAllocator getIntSetAllocator();
+    IMutableIntSetAllocator<T> getIntSetAllocator();
 
-    IIntToObjectMapAllocator<MutableIntMaxDistanceNonBucketSet> getIntToObjectMapAllocator();
+    IIntToObjectMapAllocator<T> getIntToObjectMapAllocator();
 
-    DroppedElements allocateDroppedElements();
+    U allocateDroppedElements();
 
-    void freeDroppedElements(DroppedElements droppedElements);
+    void freeDroppedElements(U droppedElements);
 }

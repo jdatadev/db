@@ -14,6 +14,7 @@ import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.parse.expression.SQLScratchExpressionValues;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
 import dev.jdata.db.utils.allocators.IAddableListAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.scalars.Integers;
@@ -21,7 +22,7 @@ import dev.jdata.db.utils.scalars.Integers;
 public final class SQLParserHelper<
 
                 T extends IndexList<BaseSQLStatement>,
-                U extends IndexList.IndexListBuilder<BaseSQLStatement, T, U>,
+                U extends IndexListBuilder<BaseSQLStatement, T, U>,
                 V extends IndexListAllocator<BaseSQLStatement, T, U, ?>> {
 
     private final SQLParser sqlParser;
@@ -63,7 +64,7 @@ public final class SQLParserHelper<
                     E extends Exception,
                     BUFFER extends BaseStringBuffers<E>,
                     INDEX_LIST extends IndexList<BaseSQLStatement>,
-                    INDEX_LIST_BUILDER extends IndexList.IndexListBuilder<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER>,
+                    INDEX_LIST_BUILDER extends IndexListBuilder<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER>,
                     INDEX_LIST_ALLOCATOR extends IndexListAllocator<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER, ?>>
 
         INDEX_LIST parse(SQLParser sqlParser, BUFFER buffer, Function<String, E> createEOFException, SQLScratchExpressionValues sqlScratchExpressionValues,
@@ -71,17 +72,27 @@ public final class SQLParserHelper<
 
         final INDEX_LIST_BUILDER sqlStatementsBuilder = IndexList.createBuilder(indexListAllocator);
 
-        parse(sqlParser, buffer, createEOFException, sqlScratchExpressionValues, sqlAllocator, addableListAllocator, sqlStatementsBuilder, null);
+        final INDEX_LIST result;
 
-        return sqlStatementsBuilder.build();
+        try {
+            parse(sqlParser, buffer, createEOFException, sqlScratchExpressionValues, sqlAllocator, addableListAllocator, sqlStatementsBuilder, null);
+
+            result = sqlStatementsBuilder.build();
+        }
+        finally {
+
+            indexListAllocator.freeIndexListBuilder(sqlStatementsBuilder);
+        }
+
+        return result;
     }
 
     private static <E extends Exception, BUFFER extends BaseStringBuffers<E>> void parse(SQLParser sqlParser, BUFFER buffer, Function<String, E> createEOFException,
             SQLScratchExpressionValues sqlScratchExpressionValues, ISQLAllocator sqlAllocator, IAddableListAllocator addableListAllocator,
-            IndexList.IndexListBuilder<BaseSQLStatement, ?, ?> sqlStatementsDst,  IndexList.IndexListBuilder<SQLString, ?, ?> sqlStringsDst) throws ParserException, E {
+            IndexListBuilder<BaseSQLStatement, ?, ?> sqlStatementsDst, IndexListBuilder<ISQLString, ?, ?> sqlStringsDst) throws ParserException, E {
 
         final IAddableList<BaseSQLStatement> sqlStatementsAddableList = addableListAllocator.allocateList(1);
-        final IAddableList<SQLString> sqlStringsAddableList = addableListAllocator.allocateList(1);
+        final IAddableList<ISQLString> sqlStringsAddableList = addableListAllocator.allocateList(1);
 
         try {
             sqlParser.parse(buffer, createEOFException, sqlAllocator, sqlScratchExpressionValues, sqlStatementsAddableList, sqlStringsAddableList);
@@ -103,7 +114,7 @@ public final class SQLParserHelper<
     @FunctionalInterface
     public interface ParsedSQLStatementsFunction<P, E extends Exception> {
 
-        long apply(int databaseId, int sessionId, IIndexListGetters<BaseSQLStatement> sqlStatements, IIndexListGetters<SQLString> sqlStrings, P parameter) throws E;
+        long apply(int databaseId, int sessionId, IIndexListGetters<BaseSQLStatement> sqlStatements, IIndexListGetters<ISQLString> sqlStrings, P parameter) throws E;
     }
 
     public <P, E extends Exception, BUFFER extends BaseStringBuffers<E>, PARSEDE extends Exception> long parseSQLStatements(BUFFER buffer,
@@ -143,7 +154,7 @@ public final class SQLParserHelper<
         final int initialCapacity = 1;
 
         final IAddableList<BaseSQLStatement> sqlStatements = sqlAllocator.allocateList(initialCapacity);
-        final IAddableList<SQLString> sqlStrings = sqlAllocator.allocateList(initialCapacity);
+        final IAddableList<ISQLString> sqlStrings = sqlAllocator.allocateList(initialCapacity);
 
         try {
             sqlParser.parse(buffer, createEOException, sqlAllocator, scratchExpressionValues, sqlStatements, sqlStrings);
@@ -166,14 +177,14 @@ public final class SQLParserHelper<
         indexListAllocator.freeIndexList(sqlStatements);
     }
 
-    private static <T> void toIndexList(IAddableList<T> addableList, IndexList.IndexListBuilder<T, ?, ?> indexListBuilder) {
+    private static <T> void toIndexList(IAddableList<T> addableList, IndexListBuilder<T, ?, ?> indexListBuilder) {
 
         final int numElements = Integers.checkUnsignedLongToUnsignedInt(addableList.getNumElements());
 
         toIndexList(addableList, numElements, indexListBuilder);
     }
 
-    private static <T> void toIndexList(IAddableList<T> addableList, int numElements, IndexList.IndexListBuilder<T, ?, ?> indexListBuilder) {
+    private static <T> void toIndexList(IAddableList<T> addableList, int numElements, IndexListBuilder<T, ?, ?> indexListBuilder) {
 
         for (int i = 0; i < numElements; ++ i) {
 

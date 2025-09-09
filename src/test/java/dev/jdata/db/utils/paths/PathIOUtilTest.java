@@ -24,7 +24,7 @@ public final class PathIOUtilTest extends BaseTest {
 
         final String fileNamePrefix = "file";
 
-        checkListFilePaths(p -> PathIOUtil.listPaths(p), fileNamePrefix, p -> true);
+        checkListFilePaths(p -> PathIOUtil.closureOrConstantListPaths(p), fileNamePrefix, p -> true);
     }
 
     @Test
@@ -37,7 +37,7 @@ public final class PathIOUtilTest extends BaseTest {
 
         final Predicate<Path> predicate = p -> Integer.parseInt(PathUtil.getFileName(p).substring(fileNamePrefixLength)) < 50;
 
-        checkListFilePaths(p -> PathIOUtil.listPaths(p, predicate), fileNamePrefix, predicate);
+        checkListFilePaths(p -> PathIOUtil.closureOrConstantListPaths(p, predicate), fileNamePrefix, predicate);
     }
 
     private void checkListFilePaths(CheckedExceptionFunction<Path, List<Path>, IOException> listFilePaths, String fileNamePrefix, Predicate<Path> predicate) throws IOException {

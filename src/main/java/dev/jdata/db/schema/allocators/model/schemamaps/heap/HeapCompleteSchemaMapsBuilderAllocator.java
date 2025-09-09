@@ -2,20 +2,20 @@ package dev.jdata.db.schema.allocators.model.schemamaps.heap;
 
 import java.util.Objects;
 
-import dev.jdata.db.schema.model.schemamaps.HeapCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.HeapAllSimpleCompleteSchemaMapsBuilder;
 
 public final class HeapCompleteSchemaMapsBuilderAllocator implements IHeapCompleteSchemaMapsBuilderAllocator {
 
     public static final HeapCompleteSchemaMapsBuilderAllocator INSTANCE = new HeapCompleteSchemaMapsBuilderAllocator();
 
     @Override
-    public HeapCompleteSchemaMaps.HeapCompleteSchemaMapsBuilder allocateCompleteSchemaMapsBuilder() {
+    public HeapAllSimpleCompleteSchemaMapsBuilder allocateCompleteSchemaMapsBuilder() {
 
-        return HeapCompleteSchemaMaps.HeapCompleteSchemaMapsBuilder.INSTANCE;
+        return HeapAllSimpleCompleteSchemaMapsBuilder.INSTANCE;
     }
 
     @Override
-    public void freeCompleteSchemaMapsBuilder(HeapCompleteSchemaMaps.HeapCompleteSchemaMapsBuilder builder) {
+    public void freeCompleteSchemaMapsBuilder(HeapAllSimpleCompleteSchemaMapsBuilder builder) {
 
         Objects.requireNonNull(builder);
     }

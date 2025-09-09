@@ -32,6 +32,11 @@ public abstract class Allocatable {
         public boolean isHeap() {
             return isHeap;
         }
+
+        private boolean isConstructorInitializedByDefault() {
+
+            return isHeap();
+        }
     }
 
     private static enum AllocatableState {
@@ -46,10 +51,14 @@ public abstract class Allocatable {
     private AllocatableState state;
 
     protected Allocatable(AllocationType allocationType) {
+        this(allocationType, allocationType.isConstructorInitializedByDefault());
+    }
+
+    protected Allocatable(AllocationType allocationType, boolean isConstructorInitialized) {
 
         this.allocationType = Objects.requireNonNull(allocationType);
 
-        this.state = allocationType == AllocationType.HEAP || allocationType == AllocationType.HEAP_ALLOCATOR ? AllocatableState.ALLOCATED : AllocatableState.FREE;
+        this.state = isConstructorInitialized ? AllocatableState.ALLOCATED : AllocatableState.FREE;
     }
 
     final boolean isAllocated() {

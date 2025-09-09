@@ -9,8 +9,9 @@ import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
 
-public final class SchemaMapBuilderAllocators extends DDLObjectTypeAllocators<SchemaMapBuilderAllocator<?, ?, ?, ?, ?, ?>> {
+public class SchemaMapBuilderAllocators extends DDLObjectTypeAllocators<SchemaMapBuilderAllocator<?, ?, ?, ?, ?, ?>> {
 
     public SchemaMapBuilderAllocators(Function<DDLObjectType, SchemaMapBuilderAllocator<?, ?, ?, ?, ?, ?>> createSchemaMapBuilderAllocator) {
         super(SchemaMapBuilderAllocator<?, ?, ?, ?, ?, ?>[]::new, (t, g) -> createSchemaMapBuilderAllocator.apply(t));
@@ -18,18 +19,18 @@ public final class SchemaMapBuilderAllocators extends DDLObjectTypeAllocators<Sc
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Class<SchemaMapBuilderAllocator<?, ?, ?, ?, ?, ?>> getCachedObjectClass() {
+    protected final Class<SchemaMapBuilderAllocator<?, ?, ?, ?, ?, ?>> getCachedObjectClass() {
 
         return (Class<SchemaMapBuilderAllocator<?, ?, ?, ?, ?, ?>>)(Class<?>)SchemaMapBuilderAllocator.class;
     }
 
     @SuppressWarnings("unchecked")
-    public <
+    public final <
                     SCHEMA_OBJECT extends SchemaObject,
                     INDEX_LIST extends IndexList<SCHEMA_OBJECT>,
-                    INDEX_LIST_BUILDER extends IndexList.IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
+                    INDEX_LIST_BUILDER extends IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
                     INDEX_LIST_ALLOCATOR extends IndexListAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
-                    SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP>,
+                    SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, SCHEMA_MAP>,
                     SCHEMA_MAP_BUILDER extends SchemaMapBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER>>
 
     SchemaMapBuilderAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER>

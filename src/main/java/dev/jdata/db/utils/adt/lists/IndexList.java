@@ -8,7 +8,6 @@ import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.elements.IObjectIterableElements;
 import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
 import dev.jdata.db.utils.allocators.BaseAllocatableArrayAllocator;
-import dev.jdata.db.utils.allocators.BaseArrayAllocator;
 import dev.jdata.db.utils.allocators.BuilderInstanceAllocator;
 import dev.jdata.db.utils.allocators.IObjectAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
@@ -33,7 +32,6 @@ public abstract class IndexList<T> extends BaseIndexList<T> implements IIndexLis
         abstract void freeIndexMutableList(W list);
 
         abstract U copyToImmutable(MutableIndexList<T> mutableIndexList);
-//        abstract U copyToMutable(MutableIndexList<T> mutableIndexList);
 
         abstract U emptyList();
     }
@@ -55,7 +53,7 @@ public abstract class IndexList<T> extends BaseIndexList<T> implements IIndexLis
         }
     }
 
-    static final class IndexListArrayAllocator<T, U extends IndexList<T>> extends BaseArrayAllocator<U> {
+    static final class IndexListArrayAllocator<T, U extends IndexList<T>> extends BaseAllocatableArrayAllocator<U> {
 
         IndexListArrayAllocator(AllocationType allocationType, IntFunction<U> createList) {
             super(createList, l -> Integers.checkUnsignedLongToUnsignedInt(l.getNumElements()));
@@ -63,12 +61,12 @@ public abstract class IndexList<T> extends BaseIndexList<T> implements IIndexLis
 
         U allocateIndexList(int minimumCapacity) {
 
-            return allocateArrayInstance(minimumCapacity);
+            return allocateAllocatableArrayInstance(minimumCapacity);
         }
 
         void freeIndexList(U list) {
 
-            freeArrayInstance(list);
+            freeAllocatableArrayInstance(list);
         }
     }
 
@@ -137,15 +135,21 @@ public abstract class IndexList<T> extends BaseIndexList<T> implements IIndexLis
 
     public static <T> HeapIndexListBuilder<T> createBuilder(IntFunction<T[]> createElementsArray, int initialCapacity) {
 
+        Objects.requireNonNull(createElementsArray);
+        Checks.isCapacity(initialCapacity);
+
         return new HeapIndexListBuilder<>(AllocationType.HEAP, createElementsArray, initialCapacity);
     }
 
-    public static <T, U extends IndexListAllocator<T, ?, V, ?>, V extends IndexListBuilder<T, ?, V>> V createBuilder(U listAllcator) {
+    public static <T, U extends IndexListAllocator<T, ?, V, ?>, V extends IndexListBuilder<T, ?, V>> V createBuilder(U listAllocator) {
 
-        return createBuilder(DEFAULT_INITIAL_CAPACITY, listAllcator);
+        return createBuilder(DEFAULT_INITIAL_CAPACITY, listAllocator);
     }
 
     public static <T, U extends IndexListAllocator<T, ?, V, ?>, V extends IndexListBuilder<T, ?, V>> V createBuilder(int minimumCapacity, U listAllocator) {
+
+        Checks.isCapacity(minimumCapacity);
+        Objects.requireNonNull(listAllocator);
 
         return listAllocator.allocateIndexListBuilder(minimumCapacity);
     }
@@ -156,6 +160,8 @@ public abstract class IndexList<T> extends BaseIndexList<T> implements IIndexLis
             implements IIndexListBuildable<T, U, V>, IObjectBuilder<T, V> {
 
         private final MutableIndexList<T> list;
+
+        public abstract HeapIndexList<T> buildHeapAllocated();
 
         IndexListBuilder(AllocationType allocationType, int minimumCapacity, IndexListAllocator<T, ?, ?, ? extends MutableIndexList<T>> listAllocator) {
             super(allocationType);
@@ -199,6 +205,11 @@ public abstract class IndexList<T> extends BaseIndexList<T> implements IIndexLis
         final long getCapacity() {
 
             return list.getCapacity();
+        }
+
+        final HeapIndexList<T> fromMutableIndexListHeap(AllocationType allocationType) {
+
+            return IndexList.fromMutableIndexList(allocationType, list);
         }
 
         @SuppressWarnings("unchecked")

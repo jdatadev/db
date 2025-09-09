@@ -290,7 +290,7 @@ public interface IIndexListGetters<T> extends IObjectByIndexGetters<T>, IListGet
         Checks.checkIndex(otherStartIndex, other.getNumElements());
 
         return ByIndex.equals(this, thisStartIndex, thisParameter, other, otherStartIndex, otherParameter, numElements, equalityTester,
-                (l1, i1, p1, l2, i2, p2, d) -> d.equals(l1.get(i1), p1, l2.get(i2), p2));
+                (l1, i1, p1, l2, i2, p2, t) -> t.equals(l1.get(i1), p1, l2.get(i2), p2));
     }
 }
 

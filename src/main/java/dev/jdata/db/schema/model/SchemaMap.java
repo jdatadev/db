@@ -18,6 +18,7 @@ import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.lists.IUnorderedBuildable;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
 import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.builders.IObjectBuilder;
@@ -29,9 +30,7 @@ public abstract class SchemaMap<
 
                 SCHEMA_OBJECT extends SchemaObject,
                 INDEX_LIST extends IndexList<SCHEMA_OBJECT>,
-                INDEX_LIST_BUILDER extends IndexList.IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
-                INDEX_LIST_ALLOCATOR extends IndexListAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
-                SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP>>
+                SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, SCHEMA_MAP>>
 
         extends DBNamedObjectMap<SCHEMA_OBJECT, SCHEMA_MAP>
         implements ISchemaMap<SCHEMA_OBJECT> {
@@ -42,9 +41,9 @@ public abstract class SchemaMap<
 
                     SCHEMA_OBJECT extends SchemaObject,
                     INDEX_LIST extends IndexList<SCHEMA_OBJECT>,
-                    INDEX_LIST_BUILDER extends IndexList.IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
+                    INDEX_LIST_BUILDER extends IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
                     INDEX_LIST_ALLOCATOR extends IndexListAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
-                    SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP>,
+                    SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, SCHEMA_MAP>,
                     SCHEMA_MAP_BUILDER extends SchemaMapBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER>>
 
             extends ObjectCacheNode
@@ -123,9 +122,16 @@ public abstract class SchemaMap<
             return getThis();
         }
 
-        public final SCHEMA_MAP build() {
+        public final SCHEMA_MAP buildOrEmpty() {
 
-            return schemaObjectsBuilder.isEmpty() ? empty() : create(schemaObjectsBuilder.build(), createValuesArray, longToObjectMapAllocator);
+            final SCHEMA_MAP schemaMap = buildOrNull();
+
+            return schemaMap != null ? schemaMap : empty();
+        }
+
+        public final SCHEMA_MAP buildOrNull() {
+
+            return schemaObjectsBuilder.isEmpty() ? null : create(schemaObjectsBuilder.build(), createValuesArray, longToObjectMapAllocator);
         }
 
         @SuppressWarnings("unchecked")
@@ -138,9 +144,9 @@ public abstract class SchemaMap<
     public static <
                     SCHEMA_OBJECT extends SchemaObject,
                     INDEX_LIST extends IndexList<SCHEMA_OBJECT>,
-                    INDEX_LIST_BUILDER extends IndexList.IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
+                    INDEX_LIST_BUILDER extends IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
                     INDEX_LIST_ALLOCATOR extends IndexListAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
-                    SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP>,
+                    SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, SCHEMA_MAP>,
                     SCHEMA_MAP_BUILDER extends SchemaMapBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER>>
 
     SCHEMA_MAP_BUILDER createBuilder(int initialCapacity,
@@ -170,7 +176,7 @@ public abstract class SchemaMap<
     private SchemaMap(AllocationType allocationType, SCHEMA_MAP toCopy, ILongToObjectMaxDistanceMapAllocator<SCHEMA_OBJECT> longToObjectMapAllocator) {
         super(allocationType, toCopy, longToObjectMapAllocator);
 
-        final SchemaMap<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP> toCopyMap = toCopy;
+        final SchemaMap<SCHEMA_OBJECT, INDEX_LIST, SCHEMA_MAP> toCopyMap = toCopy;
 
         this.schemaObjects = toCopyMap.schemaObjects;
     }
@@ -210,44 +216,47 @@ public abstract class SchemaMap<
     @Override
     public final <P> long count(P parameter, BiPredicate<SCHEMA_OBJECT, P> predicate) {
 
-        return schemaObjects.count(parameter, predicate);
+        return isEmpty() ? 0L : schemaObjects.count(parameter, predicate);
     }
 
     @Override
     public final int maxInt(int defaultValue, ToIntFunction<? super SCHEMA_OBJECT> mapper) {
 
-        return schemaObjects.maxInt(defaultValue, mapper);
+        return isEmpty() ? 0 : schemaObjects.maxInt(defaultValue, mapper);
     }
 
     @Override
     public final long maxLong(long defaultValue, ToLongFunction<? super SCHEMA_OBJECT> mapper) {
 
-        return schemaObjects.maxLong(defaultValue, mapper);
+        return isEmpty() ? 0L : schemaObjects.maxLong(defaultValue, mapper);
     }
 
     @Override
     public final <P, E extends Exception> void forEach(P parameter, IForEach<SCHEMA_OBJECT, P, E> forEach) throws E {
 
-        schemaObjects.forEach(parameter, forEach);
+        if (!isEmpty()) {
+
+            schemaObjects.forEach(parameter, forEach);
+        }
     }
 
     @Override
     public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<SCHEMA_OBJECT, P1, P2, R, E> forEach)
             throws E {
 
-        return schemaObjects.forEachWithResult(defaultResult, parameter1, parameter2, forEach);
+        return isEmpty() ? defaultResult : schemaObjects.forEachWithResult(defaultResult, parameter1, parameter2, forEach);
     }
 
     @Override
     public final <P> SCHEMA_OBJECT findAtMostOne(P parameter, BiPredicate<SCHEMA_OBJECT, P> predicate) {
 
-        return schemaObjects.findAtMostOne(parameter, predicate);
+        return isEmpty() ? null : schemaObjects.findAtMostOne(parameter, predicate);
     }
 
     @Override
     public final <P> SCHEMA_OBJECT findExactlyOne(P parameter, BiPredicate<SCHEMA_OBJECT, P> predicate) {
 
-        return schemaObjects.findExactlyOne(parameter, predicate);
+        return isEmpty() ? null : schemaObjects.findExactlyOne(parameter, predicate);
     }
 
     @Override
@@ -255,7 +264,7 @@ public abstract class SchemaMap<
 
         StringRef.checkIsString(schemaObjectName);
 
-        return containsNamedObject(schemaObjectName) ;
+        return containsNamedObject(schemaObjectName);
     }
 
     @Override
@@ -305,8 +314,7 @@ public abstract class SchemaMap<
         }
         else {
             @SuppressWarnings("unchecked")
-            final SchemaMap<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP> otherSchemaMap
-                    = (SchemaMap<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP>)other;
+            final SchemaMap<SCHEMA_OBJECT, INDEX_LIST, SCHEMA_MAP> otherSchemaMap = (SchemaMap<SCHEMA_OBJECT, INDEX_LIST, SCHEMA_MAP>)other;
 
             final boolean schemaObjectsNullOrEmpty = IContains.isNullOrEmpty(schemaObjects);
             final boolean otherNullOrEmpty = IContains.isNullOrEmpty(otherSchemaMap.schemaObjects);
@@ -357,7 +365,7 @@ public abstract class SchemaMap<
             result = false;
         }
         else {
-            final SchemaMap<?, ?, ?, ?, ?> other = (SchemaMap<?, ?, ?, ?, ?>)object;
+            final SchemaMap<?, ?, ?> other = (SchemaMap<?, ?, ?>)object;
 
             result = Objects.equals(schemaObjects, other.schemaObjects);
         }

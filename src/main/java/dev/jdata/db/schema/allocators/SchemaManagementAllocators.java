@@ -25,7 +25,7 @@ public final class SchemaManagementAllocators implements IAllocators {
     private final DatabaseSchemasAllocator databaseSchemasAllocator;
     private final HeapDatabasesSchemaManagerAllocator schemaManagerAllocator;
 
-    public SchemaManagementAllocators(IMutableIntSetAllocator<?> intSetAllocator) {
+    public SchemaManagementAllocators(IMutableIntSetAllocator<MutableIntMaxDistanceNonBucketSet> intSetAllocator) {
 
         Objects.requireNonNull(intSetAllocator);
 

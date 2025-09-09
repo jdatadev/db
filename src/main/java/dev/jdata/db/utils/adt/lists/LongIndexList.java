@@ -111,7 +111,7 @@ public abstract class LongIndexList extends BaseLongIndexList implements ILongIn
         @Override
         public final T build() {
 
-            return list.makeFromElements(this, (e, n, i) -> i.listAllocator.allocateLongIndexListFrom(e, n));
+            return list.makeFromElements(this, (c, e, n, i) -> i.listAllocator.allocateLongIndexListFrom(e, n));
         }
 
         final long getCapacity() {

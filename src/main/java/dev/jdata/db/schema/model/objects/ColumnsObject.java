@@ -9,17 +9,17 @@ import org.jutils.io.strings.StringResolver.RefStringResolver;
 import org.jutils.io.strings.StringResolver.ToStringWithStringResolver;
 
 import dev.jdata.db.DBConstants;
-import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.HeapIndexList;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
 public abstract class ColumnsObject extends SchemaObject implements ToStringWithStringResolver {
 
-    private final IIndexList<Column> columns;
+    private final HeapIndexList<Column> columns;
 
-    public abstract ColumnsObject makeCopy(IIndexList<Column> columns);
+    public abstract ColumnsObject makeCopy(HeapIndexList<Column> columns);
 
-    ColumnsObject(long parsedName, long hashName, int id, IIndexList<Column> columns) {
+    ColumnsObject(long parsedName, long hashName, int id, HeapIndexList<Column> columns) {
         super(parsedName, hashName, id);
 
         Checks.isNotEmpty(columns);
@@ -28,10 +28,16 @@ public abstract class ColumnsObject extends SchemaObject implements ToStringWith
         this.columns = columns;
     }
 
-    public ColumnsObject(SchemaObject toCopy, IIndexList<Column> columns) {
+    ColumnsObject(ColumnsObject toCopy, HeapIndexList<Column> columns) {
         super(toCopy);
 
         this.columns = columns;
+    }
+
+    ColumnsObject(ColumnsObject toCopy, int newSchemaObjectId) {
+        super(toCopy, newSchemaObjectId);
+
+        this.columns = toCopy.columns;
     }
 
     public final int getNumColumns() {

@@ -17,7 +17,7 @@ public abstract class TextSQLOutputter<P, E extends Exception> extends Exception
     private P parameter;
     private CharOutputter<P, E> charOutputter;
 
-    final void initialize(ICharactersBufferAllocator charactersBufferAllocator, P parameter, CharOutputter<P, E> charOutputter) {
+    protected final void initialize(ICharactersBufferAllocator charactersBufferAllocator, P parameter, CharOutputter<P, E> charOutputter) {
 
         if (this.charOutputter != null) {
 

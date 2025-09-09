@@ -195,6 +195,6 @@ public class Lists extends BaseCollections {
             IListEqualityTester<T, P1, P2> equalityTester) {
 
         return ByIndex.equals(list1, startIndex1, parameter1, list2, startIndex2, parameter2, numElements, equalityTester,
-                (l1, i1, p1, l2, i2, p2, predicate) -> predicate.equals(l1.get((int)i1), p1, l2.get((int)i2), p2));
+                (l1, i1, p1, l2, i2, p2, t) -> t.equals(l1.get((int)i1), p1, l2.get((int)i2), p2));
     }
 }

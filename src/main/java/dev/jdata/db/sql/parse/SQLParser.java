@@ -114,7 +114,7 @@ public abstract class SQLParser extends BaseSQLParser {
     }
 
     private <E extends Exception> void parse(LoadStream<E> loadStream, Function<String, E> createEOFException, ISQLAllocator allocator,
-            SQLScratchExpressionValues scratchExpressionValues, IAddable<BaseSQLStatement> sqlStatementDst, IAddable<SQLString> sqlStringsDst) throws ParserException, E {
+            SQLScratchExpressionValues scratchExpressionValues, IAddable<BaseSQLStatement> sqlStatementDst, IAddable<ISQLString> sqlStringsDst) throws ParserException, E {
 
         final LoadStreamStringBuffers<E> buffer = new LoadStreamStringBuffers<>(loadStream);
 
@@ -122,7 +122,7 @@ public abstract class SQLParser extends BaseSQLParser {
     }
 
     public <E extends Exception, BUFFER extends BaseStringBuffers<E>> void parse(BUFFER buffer, Function<String, E> createEOFException, ISQLAllocator allocator,
-            SQLScratchExpressionValues scratchExpressionValues, IAddable<BaseSQLStatement> sqlStatementDst, IAddable<SQLString> sqlStringsDst) throws ParserException, E {
+            SQLScratchExpressionValues scratchExpressionValues, IAddable<BaseSQLStatement> sqlStatementDst, IAddable<ISQLString> sqlStringsDst) throws ParserException, E {
 
         Objects.requireNonNull(buffer);
         Objects.requireNonNull(createEOFException);

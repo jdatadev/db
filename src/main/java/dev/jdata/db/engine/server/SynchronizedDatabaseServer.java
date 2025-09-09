@@ -12,7 +12,7 @@ import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
 import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.sql.parse.SQLString;
+import dev.jdata.db.sql.parse.ISQLString;
 
 @Deprecated // does this make sense?
 final class SynchronizedDatabaseServer implements IDatabaseServer {
@@ -40,7 +40,7 @@ final class SynchronizedDatabaseServer implements IDatabaseServer {
     }
 
     @Override
-    public synchronized int prepareStatement(int databaseId, int sessionId, BaseSQLStatement sqlStatement, SQLString sqlString) {
+    public synchronized int prepareStatement(int databaseId, int sessionId, BaseSQLStatement sqlStatement, ISQLString sqlString) {
         return delegate.prepareStatement(databaseId, sessionId, sqlStatement, sqlString);
     }
 

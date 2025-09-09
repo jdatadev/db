@@ -14,11 +14,13 @@ import dev.jdata.db.schema.model.objects.View;
 
 public final class HeapDiffSchemaMaps extends DiffSchemaMaps<HeapSchemaMap<?>> {
 
-    private static final class HeapDiffSchemaMapsBuilderAllocator extends DiffSchemaMapsBuilderAllocator<HeapSchemaMap<?>, HeapDiffSchemaMapsBuilder, HeapDiffSchemaMaps> {
+    public static final class HeapSimpleDiffSchemaMapsBuilderAllocator
 
-        private static final HeapDiffSchemaMapsBuilderAllocator INSTANCE = new HeapDiffSchemaMapsBuilderAllocator();
+            extends SimpleDiffSchemaMapsBuilderAllocator<HeapSchemaMap<?>, HeapDiffSchemaMapsBuilder, HeapDiffSchemaMaps> {
 
-        private HeapDiffSchemaMapsBuilderAllocator() {
+        public static final HeapSimpleDiffSchemaMapsBuilderAllocator INSTANCE = new HeapSimpleDiffSchemaMapsBuilderAllocator();
+
+        private HeapSimpleDiffSchemaMapsBuilderAllocator() {
 
         }
 
@@ -35,7 +37,7 @@ public final class HeapDiffSchemaMaps extends DiffSchemaMaps<HeapSchemaMap<?>> {
         }
     }
 
-    public static final class HeapDiffSchemaMapsBuilder extends DiffSchemaMapsBuilder<HeapSchemaMap<?>, HeapDiffSchemaMaps, HeapDiffSchemaMapsBuilder> {
+    public static final class HeapDiffSchemaMapsBuilder extends SimpleDiffSchemaMapsBuilder<HeapSchemaMap<?>, HeapDiffSchemaMaps, HeapDiffSchemaMapsBuilder> {
 
         public HeapDiffSchemaMapsBuilder() {
             super(HeapSchemaMap[]::new);
@@ -50,7 +52,7 @@ public final class HeapDiffSchemaMaps extends DiffSchemaMaps<HeapSchemaMap<?>> {
         }
 
         @Override
-        protected SchemaMap<?, ?, ?, ?, ?> makeEmptySchema() {
+        protected SchemaMap<?, ?, ?> makeEmptySchema() {
 
             return HeapSchemaMap.empty();
         }

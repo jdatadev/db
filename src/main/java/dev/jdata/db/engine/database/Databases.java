@@ -12,7 +12,7 @@ import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
 import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.sql.parse.SQLString;
+import dev.jdata.db.sql.parse.ISQLString;
 import dev.jdata.db.utils.adt.maps.MutableObjectWithRemoveNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -22,7 +22,7 @@ public final class Databases extends BaseSingleTypeDescriptorables<DatabaseState
 
     private final MutableObjectWithRemoveNonBucketMap<String, Database> databaseByName;
 
-    private final MutableObjectWithRemoveNonBucketMap<SQLString, BaseSQLStatement> statementCache;
+    private final MutableObjectWithRemoveNonBucketMap<ISQLString, BaseSQLStatement> statementCache;
 
     public Databases(IStringCache stringCache, boolean cacheStatements) {
         super(Database[]::new);
@@ -30,7 +30,7 @@ public final class Databases extends BaseSingleTypeDescriptorables<DatabaseState
         this.stringCache = Objects.requireNonNull(stringCache);
 
         this.databaseByName = new MutableObjectWithRemoveNonBucketMap<>(0, String[]::new, Database[]::new);
-        this.statementCache = cacheStatements ? new MutableObjectWithRemoveNonBucketMap<>(0, SQLString[]::new, BaseSQLStatement[]::new) : null;
+        this.statementCache = cacheStatements ? new MutableObjectWithRemoveNonBucketMap<>(0, ISQLString[]::new, BaseSQLStatement[]::new) : null;
     }
 
     @Override
@@ -148,7 +148,7 @@ public final class Databases extends BaseSingleTypeDescriptorables<DatabaseState
     }
 
     @Override
-    public int prepareStatement(int databaseId, int sessionId, BaseSQLStatement sqlStatement, SQLString sqlString) {
+    public int prepareStatement(int databaseId, int sessionId, BaseSQLStatement sqlStatement, ISQLString sqlString) {
 
         Checks.isDatabaseId(databaseId);
         Checks.isSessionDescriptor(sessionId);

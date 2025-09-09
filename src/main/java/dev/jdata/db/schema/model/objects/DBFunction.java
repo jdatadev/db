@@ -9,4 +9,26 @@ public final class DBFunction extends ExecutableObject {
 
         Checks.isDBFunctionId(id);
     }
+
+    private DBFunction(DBFunction toCopy, int newSchemaObjectId) {
+        super(toCopy, newSchemaObjectId);
+    }
+
+    @Override
+    public SchemaObject recreateWithNewShemaObjectId(int newSchemaObjectId) {
+
+        return new DBFunction(this, newSchemaObjectId);
+    }
+
+    @Override
+    public DDLObjectType getDDLObjectType() {
+
+        return DDLObjectType.FUNCTION;
+    }
+
+    @Override
+    public <P, R> R visit(SchemaObjectVisitor<P, R> visitor, P parameter) {
+
+        return visitor.onFunction(this, parameter);
+    }
 }

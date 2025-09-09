@@ -14,6 +14,9 @@ import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
+import dev.jdata.db.utils.Initializable;
+import dev.jdata.db.utils.allocators.NodeObjectCache;
+import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.paths.PathIOUtil;
 import dev.jdata.db.utils.paths.PathUtil;
@@ -25,8 +28,10 @@ public abstract class BaseNIOFileSystemAccess implements IAbsoluteFileSystemAcce
     private final IPathAllocator<RelativeFilePath, RelativeDirectoryPath> relativePathAllocator;
     private final IPathObjectsAllocator pathObjectsAllocator;
 
+    private NodeObjectCache<ListPathParameters> listPathParametersCache;
+
     protected BaseNIOFileSystemAccess(FileSystem fileSystem) {
-        this(fileSystem, HeapAbsolutePathAllocator.INSTANCE, HeapRelativePathAllocator.INSTANCE, IPathObjectsAllocator.HEAP_ALLOCATION);
+        this(fileSystem, HeapAbsolutePathAllocator.INSTANCE, HeapRelativePathAllocator.INSTANCE, HeapPathObjectsAllocator.INSTANCE);
     }
 
     protected BaseNIOFileSystemAccess(FileSystem fileSystem, IPathAllocator<AbsoluteFilePath, AbsoluteDirectoryPath> absolutePathAllocator,
@@ -218,6 +223,26 @@ public abstract class BaseNIOFileSystemAccess implements IAbsoluteFileSystemAcce
         Files.createDirectories(nioPath);
     }
 
+    private static final class ListPathParameters extends ObjectCacheNode {
+
+        private Object parameter;
+        private BiConsumer<AbsoluteFilePath, ?> consumer;
+
+        <P> void initialize(P parameter, BiConsumer<AbsoluteFilePath, P> consumer) {
+
+            Objects.requireNonNull(consumer);
+
+            this.parameter = parameter;
+            this.consumer = Initializable.checkNotYetInitialized(this.consumer, consumer);
+        }
+
+        void reset() {
+
+            this.parameter = null;
+            this.consumer = Initializable.checkResettable(consumer);
+        }
+    }
+
     @Override
     public final <P, R> void listFilePaths(AbsoluteDirectoryPath directoryPath, P parameter, BiConsumer<AbsoluteFilePath, P> consumer) throws IOException {
 
@@ -226,12 +251,54 @@ public abstract class BaseNIOFileSystemAccess implements IAbsoluteFileSystemAcce
 
         final Path nioPath = checkFileSystemNIO(directoryPath);
 
-        PathIOUtil.listPaths(nioPath, parameter, Files::isRegularFile, (f, p) -> {
+        ListPathParameters listPathParameters = null;
+        NodeObjectCache<ListPathParameters> cache = null;
 
-            final AbsoluteFilePath filePath = resolveFile(directoryPath, PathUtil.getFileName(f));
+        try {
+            synchronized (this) {
 
-            consumer.accept(filePath, parameter);
-        });
+                cache = listPathParametersCache;
+
+                if (cache == null) {
+
+                    cache = this.listPathParametersCache = new NodeObjectCache<>(ListPathParameters::new);
+                }
+
+                listPathParameters = cache.allocate();
+            }
+
+            listPathParameters.initialize(parameter, consumer);
+
+            PathIOUtil.listPaths(nioPath, listPathParameters, (path, passedListPathParameters) -> Files.isRegularFile(path), (f, p) -> {
+
+                final AbsoluteFilePath filePath = resolveFile(directoryPath, PathUtil.getFileName(f));
+
+                @SuppressWarnings("unchecked")
+                final P consumerParameter = (P)p.parameter;
+
+                @SuppressWarnings("unchecked")
+                final BiConsumer<AbsoluteFilePath, P> pathConsumer = (BiConsumer<AbsoluteFilePath, P>)p.consumer;
+
+                pathConsumer.accept(filePath, consumerParameter);
+
+                return null;
+            });
+        }
+        finally {
+
+            if (listPathParameters != null) {
+
+                listPathParameters.reset();
+
+                if (cache != null) {
+
+                    synchronized (this) {
+
+                        cache.free(listPathParameters);
+                    }
+                }
+            }
+        }
     }
 
     final IPathAllocator<AbsoluteFilePath, AbsoluteDirectoryPath> getAbsolutePathAllocator() {

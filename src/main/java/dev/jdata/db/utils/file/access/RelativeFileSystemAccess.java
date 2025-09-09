@@ -13,6 +13,7 @@ import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.paths.PathIOUtil;
 
 final class RelativeFileSystemAccess implements IRelativeFileSystemAccess {
 
@@ -59,7 +60,7 @@ final class RelativeFileSystemAccess implements IRelativeFileSystemAccess {
     private final NodeObjectCache<ListPathsParameters<?>> listPathsParametersCache;
 
     RelativeFileSystemAccess(AbsoluteDirectoryPath rootPath, IAbsoluteFileSystemAccess delegate) {
-        this(rootPath, delegate, HeapAbsolutePathAllocator.INSTANCE, HeapRelativePathAllocator.INSTANCE, IPathObjectsAllocator.HEAP_ALLOCATION);
+        this(rootPath, delegate, HeapAbsolutePathAllocator.INSTANCE, HeapRelativePathAllocator.INSTANCE, HeapPathObjectsAllocator.INSTANCE);
     }
 
     RelativeFileSystemAccess(AbsoluteDirectoryPath rootPath, BaseNIOFileSystemAccess delegate) {
@@ -455,6 +456,12 @@ final class RelativeFileSystemAccess implements IRelativeFileSystemAccess {
         }
 
         return result;
+    }
+
+    @Override
+    public void deleteAll() throws IOException {
+
+        PathIOUtil.deleteRecursively(rootPath.getPath());
     }
 
     private AbsoluteDirectoryPath toAbsoluteDirectoryPath(RelativeDirectoryPath relativeDirectoryPath) {

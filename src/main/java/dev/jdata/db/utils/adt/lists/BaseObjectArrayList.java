@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.arrays.Array;
@@ -57,14 +58,14 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         super(allocationType, instances, instances.length);
     }
 
-    protected BaseObjectArrayList(AllocationType allocationType, BaseObjectArrayList<T> toCopy) {
+    protected <U> BaseObjectArrayList(AllocationType allocationType, BaseObjectArrayList<T> toCopy) {
         super(allocationType, toCopy.createElementsArray);
 
         copy(createElementsArray, toCopy);
     }
 
     BaseObjectArrayList(IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
-        super(AllocationType.HEAP, createElementsArray);
+        this(AllocationType.HEAP, createElementsArray);
     }
 
     BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
@@ -85,6 +86,30 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
             for (int i = 0; i < numElements; ++ i) {
 
                 elementsArray[i] = toCopy.get(i);
+            }
+
+            this.numElements = numElements;
+        }
+    }
+
+    <U> BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<U> toCopy, Function<U, T> mapper) {
+        super(allocationType, createElementsArray);
+
+        if (toCopy instanceof BaseObjectArrayList<?>) {
+
+            @SuppressWarnings("unchecked")
+            final BaseObjectArrayList<U> indexList = (BaseObjectArrayList<U>)toCopy;
+
+            copy(createElementsArray, indexList, mapper);
+        }
+        else {
+            final int numElements = Integers.checkUnsignedLongToUnsignedInt(toCopy.getNumElements());
+
+            this.elementsArray = createElementsArray.apply(numElements);
+
+            for (int i = 0; i < numElements; ++ i) {
+
+                elementsArray[i] = mapper.apply(toCopy.get(i));
             }
 
             this.numElements = numElements;
@@ -591,6 +616,20 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         this.elementsArray = createElementsArray.apply(toCopyNumElements);
 
         System.arraycopy(toCopy.elementsArray, 0, elementsArray, 0, toCopyNumElements);
+    }
+
+    private <U> void copy(IntFunction<T[]> createElementsArray, BaseObjectArrayList<U> toCopy, Function<U, T> mapper) {
+
+        final int toCopyNumElements = numElements = toCopy.numElements;
+
+        final T[] array = this.elementsArray = createElementsArray.apply(toCopyNumElements);
+
+        final U[] toCopyArray = toCopy.elementsArray;
+
+        for (int i = 0; i < toCopyNumElements; ++ i) {
+
+            array[i] = mapper.apply(toCopyArray[i]);
+        }
     }
 
     private static int increaseCapacity(int capacity) {

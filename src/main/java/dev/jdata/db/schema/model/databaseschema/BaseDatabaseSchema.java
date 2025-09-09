@@ -63,14 +63,17 @@ public abstract class BaseDatabaseSchema<T extends BaseSchemaMaps<?>> extends Da
     @Override
     public final <R extends SchemaObject> IIndexList<R> getSchemaObjects(DDLObjectType ddlObjectType) {
 
+        Objects.requireNonNull(ddlObjectType);
+
         return (IIndexList<R>)getSchemaMap(ddlObjectType).getSchemaObjects();
     }
 
-    public final int computeMaxId(DDLObjectType objectType, int defaultValue) {
+    @Override
+    public final int computeMaxId(DDLObjectType ddlObjectType, int defaultValue) {
 
-        Objects.requireNonNull(objectType);
+        Objects.requireNonNull(ddlObjectType);
 
-        return schemaMaps.computeMaxId(objectType, defaultValue);
+        return schemaMaps.computeMaxId(ddlObjectType, defaultValue);
     }
 
     final T getSchemaMaps() {

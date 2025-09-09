@@ -8,7 +8,8 @@ import dev.jdata.db.utils.allocators.IMutableIntSetAllocator;
 
 public final class HeapDroppedSchemaObjectsAllocator extends DroppedSchemaObjectsAllocator {
 
-    public HeapDroppedSchemaObjectsAllocator(IMutableIntSetAllocator<?> intSetAllocator, IIntToObjectMapAllocator<MutableIntMaxDistanceNonBucketSet> intToObjectMapAllocator) {
+    public HeapDroppedSchemaObjectsAllocator(IMutableIntSetAllocator<MutableIntMaxDistanceNonBucketSet> intSetAllocator,
+            IIntToObjectMapAllocator<MutableIntMaxDistanceNonBucketSet> intToObjectMapAllocator) {
         super(intSetAllocator, intToObjectMapAllocator);
     }
 

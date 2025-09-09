@@ -5,10 +5,13 @@ import dev.jdata.db.schema.allocators.model.diff.dropped.heap.HeapDroppedSchemaO
 import dev.jdata.db.schema.allocators.model.schemamaps.heap.HeapCompleteSchemaMapsBuilderAllocator;
 import dev.jdata.db.schema.allocators.schemas.IDatabaseSchemasAllocator;
 import dev.jdata.db.schema.model.HeapSchemaMap;
-import dev.jdata.db.schema.model.schemamaps.HeapCompleteSchemaMaps;
-import dev.jdata.db.schema.model.schemamaps.HeapCompleteSchemaMaps.HeapCompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.objects.SchemaObject;
+import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.HeapAllSimpleCompleteSchemaMapsBuilder;
 
-public final class HeapDatabasesSchemaManagerAllocator extends DatabasesSchemaManagerAllocator<HeapSchemaMap<?>, HeapCompleteSchemaMaps, HeapCompleteSchemaMapsBuilder> {
+public final class HeapDatabasesSchemaManagerAllocator
+
+        extends DatabasesSchemaManagerAllocator<HeapSchemaMap<SchemaObject>, HeapAllCompleteSchemaMaps, HeapAllSimpleCompleteSchemaMapsBuilder> {
 
     public HeapDatabasesSchemaManagerAllocator(HeapDroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator, IDatabaseSchemasAllocator databaseSchemasAllocator) {
         super(droppedSchemaObjectsAllocator, databaseSchemasAllocator, HeapCompleteSchemaMapsBuilderAllocator.INSTANCE);

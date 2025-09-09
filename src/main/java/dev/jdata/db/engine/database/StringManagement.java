@@ -50,30 +50,28 @@ public final class StringManagement extends ObjectCacheNode implements IResettab
         return databaseStringManagement.getStringResolver().equals(storedStringRef, parserStringResolver, parsedStringRef);
     }
 
-    public long resolveParsedStringRef(long stringRef) {
+    public long storeParsedStringRef(long stringRef) {
 
         StringRef.checkIsString(stringRef);
 
-        return databaseStringManagement.resolveParsedStringRef(parserStringResolver, stringRef);
+        return databaseStringManagement.storeParsedStringRef(parserStringResolver, stringRef);
     }
 
-    public long getHashStringRef(long parsedStringRef) {
+    public long getHashStringRef(long stringRef) {
 
-        StringRef.checkIsString(parsedStringRef);
+        StringRef.checkIsString(stringRef);
 
-        return databaseStringManagement.getHashStringRef(parsedStringRef);
+        return databaseStringManagement.getHashStringRef(stringRef);
     }
 
     public String getLowerCaseString(long stringRef) {
+
+        StringRef.checkIsString(stringRef);
 
         return databaseStringManagement.getLowerCaseString(stringRef);
     }
 
     public IStringCache getStringCache() {
         return stringCache;
-    }
-
-    public void setStringCache(IStringCache stringCache) {
-        this.stringCache = stringCache;
     }
 }

@@ -2,6 +2,7 @@ package dev.jdata.db.utils.adt.lists;
 
 import java.util.Objects;
 
+import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
 import dev.jdata.db.utils.allocators.BaseAllocatableArrayAllocator;
 import dev.jdata.db.utils.allocators.BaseArrayAllocator;
 import dev.jdata.db.utils.allocators.IAllocators;
@@ -82,7 +83,7 @@ public final class CachedLongIndexList extends LongIndexList implements ICacheab
 
             Objects.requireNonNull(statisticsGatherer);
 
-            statisticsGatherer.addInstanceAllocator("listBuilderArrayAllocator", RefType.INSTANTIATED, IndexList.IndexListBuilder.class, listBuilderArrayAllocator);
+            statisticsGatherer.addInstanceAllocator("listBuilderArrayAllocator", RefType.INSTANTIATED, IndexListBuilder.class, listBuilderArrayAllocator);
             statisticsGatherer.addInstanceAllocator("listArrayAllocator", RefType.INSTANTIATED, IndexList.class, listArrayAllocator);
             statisticsGatherer.addInstanceAllocator("mutableListArrayAllocator", RefType.INSTANTIATED, MutableIndexList.class, mutableListArrayAllocator);
         }

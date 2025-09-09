@@ -96,13 +96,13 @@ public abstract class DBNamedObjectMap<T extends DBNamedObject, M extends DBName
     @Override
     public boolean isEmpty() {
 
-        return map.isEmpty();
+        return map == null || map.isEmpty();
     }
 
     @Override
     public long getNumElements() {
 
-        return map.getNumElements();
+        return isEmpty() ? 0L : map.getNumElements();
     }
 
     @Override
@@ -130,14 +130,14 @@ public abstract class DBNamedObjectMap<T extends DBNamedObject, M extends DBName
 
         StringRef.checkIsString(name);
 
-        return map.containsKey(name);
+        return isEmpty() ? false : map.containsKey(name);
     }
 
     protected final T getNamedObject(long name) {
 
         StringRef.checkIsString(name);
 
-        return map.get(name);
+        return isEmpty() ? null : map.get(name);
     }
 
     private StringResolver scratchThisStringResolver;

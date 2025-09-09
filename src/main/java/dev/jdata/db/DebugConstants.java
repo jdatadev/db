@@ -30,6 +30,7 @@ public class DebugConstants {
 
     private static final boolean DEBUG_DDL = Boolean.FALSE;
 
+    public static final boolean DEBUG_DDL_CREATE_TABLE_SCHEMAS_HELPER = DEBUG_DDL;
     public static final boolean DEBUG_DDL_ALTER_TABLE_SCHEMAS_HELPER = DEBUG_DDL;
 
     private static final boolean DEBUG_ARRAYS = Boolean.FALSE;

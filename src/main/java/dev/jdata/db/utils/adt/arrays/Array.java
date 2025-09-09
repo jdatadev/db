@@ -490,7 +490,7 @@ public class Array {
             IArrayEqualityTester<T, P1, P2> equalityTester) {
 
         return ByIndex.equals(array1, startIndex1, parameter1, array2, startIndex2, parameter2, numElements, equalityTester,
-                (a1, i1, p1, a2, i2, p2, predicate) -> predicate.equals(a1[(int)i1], p1, a2[(int)i2], p2));
+                (a1, i1, p1, a2, i2, p2, t) -> t.equals(a1[(int)i1], p1, a2[(int)i2], p2));
     }
 
     public static String toString(byte[] array, int startIndex, int numElements) {

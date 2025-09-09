@@ -13,7 +13,7 @@ import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
 import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.sql.parse.SQLString;
+import dev.jdata.db.sql.parse.ISQLString;
 
 public final class DatabaseServer implements IDatabaseServer {
 
@@ -49,7 +49,7 @@ public final class DatabaseServer implements IDatabaseServer {
     }
 
     @Override
-    public int prepareStatement(int databaseId, int sessionId, BaseSQLStatement sqlStatement, SQLString sqlString) {
+    public int prepareStatement(int databaseId, int sessionId, BaseSQLStatement sqlStatement, ISQLString sqlString) {
 
         return databases.prepareStatement(databaseId, sessionId, sqlStatement, sqlString);
     }

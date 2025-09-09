@@ -5,11 +5,16 @@ import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Objects;
 
+import dev.jdata.db.utils.Initializable;
+import dev.jdata.db.utils.adt.strings.Strings;
 import dev.jdata.db.utils.checks.Checks;
 
 abstract class AbsolutePath extends BasePath {
 
+    private static final Boolean UTILIZE_PATH_IMPL = false;
+
     private PathImpl pathImpl;
+    private Path nioPath;
 
     final void initialize(CharSequence pathName, FileSystem fileSystem, IPathObjectsAllocator pathObjectsAllocator) {
 
@@ -19,7 +24,7 @@ abstract class AbsolutePath extends BasePath {
 
         super.initialize(pathName, pathObjectsAllocator);
 
-        initializePathImpl(fileSystem, pathObjectsAllocator);
+        initializePathImpl(pathName, fileSystem, pathObjectsAllocator);
     }
 
     final void initialize(CharSequence[] pathNames, FileSystem fileSystem, IPathObjectsAllocator pathObjectsAllocator) {
@@ -54,7 +59,7 @@ abstract class AbsolutePath extends BasePath {
 
         super.initialize(path, additionalPath, pathObjectsAllocator);
 
-        initializePathImpl(path.pathImpl.getFileSystem(), pathObjectsAllocator);
+        initializePathImpl(getFileSystem(path), pathObjectsAllocator);
     }
 
     final void initialize(AbsolutePath path, CharSequence additionalPathName, IPathObjectsAllocator pathObjectsAllocator) {
@@ -65,7 +70,7 @@ abstract class AbsolutePath extends BasePath {
 
         super.initialize(path, additionalPathName, pathObjectsAllocator);
 
-        initializePathImpl(path.pathImpl.getFileSystem(), pathObjectsAllocator);
+        initializePathImpl(getFileSystem(path), pathObjectsAllocator);
     }
 
     final void initialize(Path path, IPathObjectsAllocator pathObjectsAllocator) {
@@ -82,9 +87,9 @@ abstract class AbsolutePath extends BasePath {
 
         super.relativize(path, subPath, pathArrayAllocator);
 
-        final FileSystem fileSystem = path.pathImpl.getFileSystem();
+        final FileSystem fileSystem = getFileSystem(path);
 
-        if (!fileSystem.equals(subPath.pathImpl.getFileSystem())) {
+        if (!fileSystem.equals(getFileSystem(subPath))) {
 
             throw new IllegalArgumentException();
         }
@@ -96,28 +101,29 @@ abstract class AbsolutePath extends BasePath {
 
         Objects.requireNonNull(pathImplAllocator);
 
-        final PathImpl path = pathImpl;
+        if (UTILIZE_PATH_IMPL) {
 
-        if (path == null) {
+            final PathImpl path = Initializable.checkResettable(pathImpl);
 
-            throw new IllegalStateException();
+            pathImplAllocator.freePathImpl(path);
+
+            this.pathImpl = null;
         }
-
-        pathImplAllocator.freePathImpl(path);
-
-        this.pathImpl = null;
     }
 
     final Path getPath() {
 
-        final Path result = pathImpl;
+        final Path result;
 
-        if (result == null) {
+        if (UTILIZE_PATH_IMPL) {
 
-            throw new IllegalStateException();
+            result = Initializable.checkIsInitialized(pathImpl);
+        }
+        else {
+            result = nioPath;
         }
 
-        return pathImpl;
+        return result;
     }
 
     @Deprecated // utilize MutableFile for avoiding allocation
@@ -126,16 +132,33 @@ abstract class AbsolutePath extends BasePath {
         return new File(asString(true));
     }
 
-
     private void initializePathImpl(FileSystem fileSystem, IPathImplAllocator pathImplAllocator) {
 
-        if (this.pathImpl != null) {
+        initializePathImpl(UTILIZE_PATH_IMPL ? null : asString(true), fileSystem, pathImplAllocator);
+    }
 
-            throw new IllegalStateException();
+    private void initializePathImpl(CharSequence pathName, FileSystem fileSystem, IPathImplAllocator pathImplAllocator) {
+
+        if (UTILIZE_PATH_IMPL) {
+
+            if (this.pathImpl != null) {
+
+                throw new IllegalStateException();
+            }
+
+            final PathImpl path = this.pathImpl = Initializable.checkNotYetInitialized(pathImpl, pathImplAllocator.allocatePathImpl());
+
+            path.initialize(this, fileSystem);
         }
+        else {
+            this.nioPath = fileSystem.getPath(Strings.of(pathName));
+        }
+    }
 
-        final PathImpl path = this.pathImpl = pathImplAllocator.allocatePathImpl();
+    private static FileSystem getFileSystem(AbsolutePath absolutePath) {
 
-        path.initialize(this, fileSystem);
+        return UTILIZE_PATH_IMPL
+                ? Initializable.checkIsInitialized(absolutePath.pathImpl).getFileSystem()
+                : Initializable.checkIsInitialized(absolutePath.nioPath).getFileSystem();
     }
 }

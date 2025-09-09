@@ -2,7 +2,7 @@ package dev.jdata.db.ddl.scratchobjects;
 
 import org.jutils.io.strings.StringRef;
 
-import dev.jdata.db.ddl.allocators.DDLSchemaCachedObjects;
+import dev.jdata.db.ddl.allocators.DDLSchemaScratchObjects;
 import dev.jdata.db.engine.database.StringManagement;
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.model.objects.Column;
@@ -13,18 +13,18 @@ public final class ProcessAlterTableScratchObject extends ProcessTableColumnsScr
 
     private DatabaseId databaseId;
     private Table table;
-    private DDLSchemaCachedObjects<?> ddlSchemaCachedObjects;
+    private DDLSchemaScratchObjects ddlSchemaScratchObjects;
 
     private Column existingColumn;
     private long parsedName;
 
-    public void initialize(DatabaseId databaseId, StringManagement stringManagement, Table table, DDLSchemaCachedObjects<?> ddlSchemaCachedObjects) {
+    public void initialize(DatabaseId databaseId, StringManagement stringManagement, Table table, DDLSchemaScratchObjects ddlSchemaScratchObjects) {
 
         initialize(stringManagement, table.getMaxColumnId() + 1);
 
         this.databaseId = Initializable.checkNotYetInitialized(this.databaseId, databaseId);
         this.table = Initializable.checkNotYetInitialized(this.table, table);
-        this.ddlSchemaCachedObjects = Initializable.checkNotYetInitialized(this.ddlSchemaCachedObjects, ddlSchemaCachedObjects);
+        this.ddlSchemaScratchObjects = Initializable.checkNotYetInitialized(this.ddlSchemaScratchObjects, ddlSchemaScratchObjects);
     }
 
     @Override
@@ -34,7 +34,7 @@ public final class ProcessAlterTableScratchObject extends ProcessTableColumnsScr
 
         this.databaseId = Initializable.checkResettable(databaseId);
         this.table = Initializable.checkResettable(table);
-        this.ddlSchemaCachedObjects = Initializable.checkResettable(ddlSchemaCachedObjects);
+        this.ddlSchemaScratchObjects = Initializable.checkResettable(ddlSchemaScratchObjects);
 
         this.existingColumn = null;
         this.parsedName = StringRef.STRING_NONE;
@@ -48,8 +48,8 @@ public final class ProcessAlterTableScratchObject extends ProcessTableColumnsScr
         return table;
     }
 
-    public DDLSchemaCachedObjects<?> getDDLSchemaCachedObjects() {
-        return ddlSchemaCachedObjects;
+    public DDLSchemaScratchObjects getDDLSchemaScratchObjects() {
+        return ddlSchemaScratchObjects;
     }
 
     Column getExistingColumn() {

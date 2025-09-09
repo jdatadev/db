@@ -21,6 +21,7 @@ import dev.jdata.db.engine.database.DatabaseStringManagement;
 import dev.jdata.db.engine.database.Databases;
 import dev.jdata.db.engine.database.DatabasesAllocators;
 import dev.jdata.db.engine.database.ExecuteException;
+import dev.jdata.db.engine.database.StringStorer;
 import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.ISelectResultWriter;
 import dev.jdata.db.engine.server.DatabaseServer;
 import dev.jdata.db.engine.server.SQLDatabaseServer;
@@ -29,20 +30,14 @@ import dev.jdata.db.engine.sessions.DBSession.LargeObjectStorer;
 import dev.jdata.db.engine.transactions.Transaction;
 import dev.jdata.db.engine.transactions.Transactions.TransactionFactory;
 import dev.jdata.db.engine.transactions.mvcc.MVCCTransaction;
-import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaManager;
-import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.schema.allocators.SchemaManagementAllocators;
-import dev.jdata.db.schema.model.databaseschema.CompleteDatabaseSchema;
 import dev.jdata.db.schema.types.SchemaCustomType;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.sql.parse.SQLParserFactory;
-import dev.jdata.db.test.unit.BaseTest;
-import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
-import dev.jdata.db.utils.allocators.MutableIntMaxDistanceNonBucketSetAllocator;
+import dev.jdata.db.test.unit.BaseDBTest;
 import dev.jdata.db.utils.checks.Checks;
 
-public class SQLDatabaseServerTest extends BaseTest {
+public class SQLDatabaseServerTest extends BaseDBTest {
 
     @Test
     @Category(UnitTest.class)
@@ -120,28 +115,19 @@ public class SQLDatabaseServerTest extends BaseTest {
         final INumStorageBitsGetter numStorageBitsGetter = makeNumStorageBitsGetter();
         final DatabasesAllocators databasesAllocators = new DatabasesAllocators(numStorageBitsGetter);
 
-        final CharacterBuffersAllocator characterBuffersAllocator = new CharacterBuffersAllocator();
-        final DatabaseStringManagement stringManagement = new DatabaseStringManagement(characterBuffersAllocator);
+        final StringStorer stringStorer = createStringStorer();
+
+        final DatabaseStringManagement databaseStringManagement = createDatabaseStringManagement(stringStorer);
+
         final LargeObjectStorer<IOException> largeObjectStorer = makeLargeObjectStorer();
 
         final TransactionFactory transactionFactory = makeTransactionFactory();
 
-        parameters.initializeStatic(databasesAllocators, stringManagement, largeObjectStorer, transactionFactory);
+        parameters.initializeStatic(databasesAllocators, databaseStringManagement, largeObjectStorer, transactionFactory);
 
-        final DatabaseSchemaVersion schemaVersion = DatabaseSchemaVersion.of(DatabaseSchemaVersion.INITIAL_VERSION);
+        final DatabaseSchemaManager databaseSchemaManager = createDatabaseSchemaManager(getTestDatabaseId());
 
-        final String databaseName = "testdb";
-
-        final DatabaseId databaseId = new DatabaseId(DBConstants.INITIAL_DESCRIPTORABLE, databaseName);
-
-        final MutableIntMaxDistanceNonBucketSetAllocator intSetAllocator = new MutableIntMaxDistanceNonBucketSetAllocator();
-
-        final SchemaManagementAllocators schemaManagementAllocators = new SchemaManagementAllocators(intSetAllocator);
-
-        final CompleteDatabaseSchema databaseSchema = CompleteDatabaseSchema.empty(databaseId, schemaVersion);
-        final DatabaseSchemaManager databaseSchemas = DatabaseSchemaManager.of(databaseId, databaseSchema, schemaManagementAllocators.getSchemaManagerAllocator());
-
-        parameters.initializePerDatabase(databaseSchemas, null, DBConstants.NO_TRANSACTION_ID, null);
+        parameters.initializePerDatabase(databaseSchemaManager, null, DBConstants.NO_TRANSACTION_ID, null);
 
         return parameters;
     }

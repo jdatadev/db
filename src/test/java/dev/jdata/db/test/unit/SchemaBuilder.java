@@ -1,5 +1,6 @@
 package dev.jdata.db.test.unit;
 
+import java.util.Objects;
 import java.util.function.ToIntFunction;
 
 import dev.jdata.db.DBConstants;
@@ -11,8 +12,7 @@ import dev.jdata.db.schema.model.databaseschema.CompleteDatabaseSchema;
 import dev.jdata.db.schema.model.effective.EffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
-import dev.jdata.db.schema.model.schemamaps.HeapCompleteSchemaMaps;
-import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
 
 public final class SchemaBuilder extends BaseSchemaBuilder<SchemaBuilder> {
 
@@ -21,40 +21,36 @@ public final class SchemaBuilder extends BaseSchemaBuilder<SchemaBuilder> {
         return new SchemaBuilder(databaseName, stringStorer, schemaObjectIdAllocator);
     }
 
-    public static SchemaBuilder create(String databaseName, int databaseId, StringStorer stringStorer, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
+    public static SchemaBuilder create(DatabaseId databaseId, StringStorer stringStorer, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
 
-        return new SchemaBuilder(databaseName, databaseId, stringStorer, schemaObjectIdAllocator);
+        return new SchemaBuilder(databaseId, stringStorer, schemaObjectIdAllocator);
     }
 
-    private final String databaseName;
-    private final int databaseId;
+    private final DatabaseId databaseId;
 
     private SchemaBuilder(String databaseName, StringStorer stringStorer, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
-        this(databaseName, DBConstants.INITIAL_DESCRIPTORABLE, stringStorer, schemaObjectIdAllocator);
+        this(new DatabaseId(DBConstants.INITIAL_DESCRIPTORABLE, databaseName), stringStorer, schemaObjectIdAllocator);
     }
 
-    private SchemaBuilder(String databaseName, int databaseId, StringStorer stringStorer, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
+    private SchemaBuilder(DatabaseId databaseId, StringStorer stringStorer, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
         super(stringStorer, schemaObjectIdAllocator);
 
-        this.databaseName = Checks.isDatabaseName(databaseName);
-        this.databaseId = Checks.isDatabaseId(databaseId);
+        this.databaseId = Objects.requireNonNull(databaseId);
     }
 
     @FunctionalInterface
     private interface SchemaFactory<T extends IDatabaseSchema> {
 
-        T create(DatabaseId databaseId, DatabaseSchemaVersion version, HeapCompleteSchemaMaps schemaMaps);
+        T create(DatabaseId databaseId, DatabaseSchemaVersion version, HeapAllCompleteSchemaMaps schemaMaps);
     }
 
     private <T extends IDatabaseSchema> T build(SchemaFactory<T> schemaFactory) {
 
-        final HeapCompleteSchemaMaps schemaMaps = buildCompleteSchemaMaps();
+        final HeapAllCompleteSchemaMaps schemaMaps = buildCompleteSchemaMaps();
 
         final DatabaseSchemaVersion schemaVersion = DatabaseSchemaVersion.of(DatabaseSchemaVersion.INITIAL_VERSION);
 
-        final DatabaseId databaseIdObject = new DatabaseId(databaseId, databaseName);
-
-        return schemaFactory.create(databaseIdObject, schemaVersion, schemaMaps);
+        return schemaFactory.create(databaseId, schemaVersion, schemaMaps);
     }
 
     public IDatabaseSchema buildCompleteSchema() {

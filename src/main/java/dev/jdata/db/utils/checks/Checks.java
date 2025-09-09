@@ -2,6 +2,7 @@ package dev.jdata.db.utils.checks;
 
 import java.math.BigDecimal;
 import java.nio.Buffer;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -575,6 +576,16 @@ public class Checks {
         return value;
     }
 
+    public static Path isAbsolutePath(Path path) {
+
+        if (!path.isAbsolute()) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return path;
+    }
+
     public static <T extends CharSequence> T isFileName(T fileName) {
 
         if (!checkIsFileName(fileName)) {
@@ -622,7 +633,7 @@ public class Checks {
 
     public static <T extends CharSequence> T isPathName(T pathName) {
 
-        if (checkIsPathName(pathName)) {
+        if (!checkIsPathName(pathName)) {
 
             throw new IllegalArgumentException();
         }

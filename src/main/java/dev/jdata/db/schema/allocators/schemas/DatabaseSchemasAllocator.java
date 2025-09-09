@@ -23,7 +23,7 @@ public abstract class DatabaseSchemasAllocator implements IDatabaseSchemasAlloca
     }
 
     @Override
-    public DroppedSchemaObjectsAllocator getDroppedSchemaObjectsAllocator() {
+    public final DroppedSchemaObjectsAllocator getDroppedSchemaObjectsAllocator() {
 
         return droppedSchemaObjectsAllocator;
     }

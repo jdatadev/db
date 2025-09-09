@@ -82,7 +82,7 @@ public final class CachedIndexList<T> extends IndexList<T> implements ICachedInd
         @Override
         CachedIndexList<T> copyToImmutable(MutableIndexList<T> mutableIndexList) {
 
-            return mutableIndexList.makeFromElements(this, (e, n, i) -> i.allocateIndexListFrom(e, n));
+            return mutableIndexList.makeFromElementsAndRecreate(this, (c, e, n, i) -> i.allocateIndexListFrom(e, n));
         }
 
         @SuppressWarnings("unchecked")
@@ -107,6 +107,12 @@ public final class CachedIndexList<T> extends IndexList<T> implements ICachedInd
         public final CachedIndexList<T> build() {
 
             return listAllocator.copyToImmutable(getList());
+        }
+
+        @Override
+        public HeapIndexList<T> buildHeapAllocated() {
+
+            return getList().makeFromElementsAndRecreate(this, (c, e, n, i) -> new HeapIndexList<>(AllocationType.HEAP, c, e, n));
         }
     }
 
