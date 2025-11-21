@@ -1,11 +1,13 @@
 package dev.jdata.db.utils.adt.maps;
 
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
+
 public final class MutableIntToLongWithRemoveNonBucketMapTest extends BaseMutableIntToLongNonContainsKeyNonBucketMapTest<MutableIntToLongWithRemoveNonBucketMap> {
 
     @Override
-    MutableIntToLongWithRemoveNonBucketMap createMap(int initialCapacityExponent) {
+    MutableIntToLongWithRemoveNonBucketMap createMap(int initialCapacity) {
 
-        return new MutableIntToLongWithRemoveNonBucketMap(initialCapacityExponent);
+        return HeapMutableIntToLongWithRemoveNonBucketMap.create(AllocationType.HEAP, initialCapacity);
     }
 
     @Override

@@ -11,11 +11,11 @@ import java.util.function.ToLongFunction;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import dev.jdata.db.utils.adt.lists.BaseMutableObjectArrayListTest;
 import dev.jdata.db.utils.adt.lists.BaseObjectArrayList;
+import dev.jdata.db.utils.adt.lists.BaseRandomAccessMutableObjectArrayListTest;
 import dev.jdata.db.utils.jdk.adt.collections.Coll;
 
-public final class ArrayListImplTest extends BaseMutableObjectArrayListTest<ArrayListImpl<Integer>, ArrayListImpl<String>> {
+public final class ArrayListImplTest extends BaseRandomAccessMutableObjectArrayListTest<ArrayListImpl<Integer>, ArrayListImpl<String>> {
 
     @Test
     @Category(UnitTest.class)
@@ -88,6 +88,12 @@ public final class ArrayListImplTest extends BaseMutableObjectArrayListTest<Arra
         assertThat(count).isEqualTo(expectedElements.length);
 
         assertThatThrownBy(() -> iterator.next()).isInstanceOf(IndexOutOfBoundsException.class);
+    }
+
+    @Override
+    protected void clear(ArrayListImpl<String> list) {
+
+        list.clear();
     }
 
     @Override

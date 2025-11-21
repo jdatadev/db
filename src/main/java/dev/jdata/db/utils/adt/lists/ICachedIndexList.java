@@ -1,8 +1,7 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.allocators.ICacheable;
+import dev.jdata.db.utils.allocators.ICacheableMarker;
 
-@Deprecated // necessary?
-public interface ICachedIndexList<T> extends IIndexList<T>, ICacheable {
+public interface ICachedIndexList<T> extends IIndexList<T>, ICacheableMarker {
 
 }

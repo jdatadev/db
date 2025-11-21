@@ -1,17 +1,18 @@
 package dev.jdata.db.utils.adt.sets;
 
-import dev.jdata.db.utils.adt.elements.IIntIterableElements.IForEach;
+import dev.jdata.db.utils.adt.elements.IIntForEach;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 
 public final class IntBucketSetTest extends BaseImmutableIntegerSetTest<IntBucketSet> {
 
     @Override
     IntBucketSet createSet(int[] values) {
 
-        return IntBucketSet.of(values);
+        return HeapIntBucketSet.of(AllocationType.HEAP, values);
     }
 
     @Override
-    <P> void forEach(IntBucketSet set, P parameter, IForEach<P, RuntimeException> forEach) {
+    <P> void forEach(IntBucketSet set, P parameter, IIntForEach<P, RuntimeException> forEach) {
 
         set.forEach(parameter, forEach);
     }

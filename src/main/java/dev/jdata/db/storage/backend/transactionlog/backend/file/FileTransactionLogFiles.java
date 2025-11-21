@@ -1,15 +1,14 @@
 package dev.jdata.db.storage.backend.transactionlog.backend.file;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Objects;
 
 import dev.jdata.db.storage.backend.file.BaseStorageFiles;
-import dev.jdata.db.utils.adt.hashed.HashedConstants;
+import dev.jdata.db.utils.adt.elements.ILongAnyOrderAddable;
+import dev.jdata.db.utils.adt.lists.ICachedMutableIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IMutableIndexList;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.adt.maps.MutableLongToObjectWithRemoveNonBucketMap;
+import dev.jdata.db.utils.adt.maps.IHeapMutableLongToObjectWithRemoveStaticMap;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
@@ -25,13 +24,13 @@ public final class FileTransactionLogFiles extends BaseStorageFiles<SequentialFi
         return parseSequenceNo(fileName, FILE_NAME_PREFIX);
     }
 
-    private final MutableLongToObjectWithRemoveNonBucketMap<FileTransactionLogFile> fileByLongToObjectMap;
+    private final IHeapMutableLongToObjectWithRemoveStaticMap<FileTransactionLogFile> fileByLongToObjectMap;
 
     public FileTransactionLogFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath directoryPath, IIndexList<FileTransactionLogFile> files,
-            IndexListAllocator<FileTransactionLogFile, ? extends IndexList<FileTransactionLogFile>, ?, ? extends IMutableIndexList<FileTransactionLogFile>> indexListAllocator) {
-        super(fileSystemAccess, directoryPath, files, indexListAllocator);
+            ICachedMutableIndexListAllocator<FileTransactionLogFile> mutableIndexListAllocator) {
+        super(fileSystemAccess, directoryPath, files, mutableIndexListAllocator);
 
-        this.fileByLongToObjectMap = new MutableLongToObjectWithRemoveNonBucketMap<>(10, 1, HashedConstants.DEFAULT_LOAD_FACTOR, FileTransactionLogFile[]::new);
+        this.fileByLongToObjectMap = IHeapMutableLongToObjectWithRemoveStaticMap.create(10, FileTransactionLogFile[]::new);
     }
 
     @Override
@@ -53,7 +52,7 @@ public final class FileTransactionLogFiles extends BaseStorageFiles<SequentialFi
 
         final RelativeFilePath filePath = constructPath(transactionId);
 
-        final FileTransactionLogFile result = new FileTransactionLogFile(transactionId, getFileSystemAccess(), filePath);
+        final FileTransactionLogFile result = new FileTransactionLogFile(AllocationType.HEAP, transactionId, getFileSystemAccess(), filePath);
 
         addFile(result);
 
@@ -62,12 +61,10 @@ public final class FileTransactionLogFiles extends BaseStorageFiles<SequentialFi
         return result;
     }
 
-    long[] getTransactionIdsSorted() {
+    private void getTransactionIds(ILongAnyOrderAddable addable) {
 
-        final long[] transactionIds = fileByLongToObjectMap.keys();
+        Objects.requireNonNull(addable);
 
-        Arrays.sort(transactionIds);
-
-        return transactionIds;
+        fileByLongToObjectMap.keys(addable);
     }
 }

@@ -1,48 +1,45 @@
 package dev.jdata.db.utils.adt.sets;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.CapacityExponents;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.elements.ILongIterableElements;
+import dev.jdata.db.utils.adt.elements.ILongForEach;
+import dev.jdata.db.utils.adt.elements.ILongForEachWithResult;
+import dev.jdata.db.utils.adt.elements.ILongUnorderedAddable;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.helpers.LongBuckets;
+import dev.jdata.db.utils.adt.lists.IHeapMutableLongLargeSinglyLinkedMultiHeadNodeList;
 import dev.jdata.db.utils.adt.lists.ILongNodeSetter;
-import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadSinglyLinkedList;
+import dev.jdata.db.utils.adt.lists.IMutableLongLargeSinglyLinkedMultiHeadNodeList;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements ILongSetGetters, ILongIterableElements {
+abstract class BaseLongBucketSet
+
+        extends BaseBucketSet<long[], IMutableLongLargeSinglyLinkedMultiHeadNodeList<BaseLongBucketSet>, BaseLongBucketSet>
+        implements IBaseLongSetCommon, ILongUnorderedAddable {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_BUCKET_SET;
 
     private static final ILongNodeSetter<BaseLongBucketSet> headSetter = (i, h) -> i.scratchHashArray[i.scratchHashArrayIndex] = h;
     private static final ILongNodeSetter<BaseLongBucketSet> tailSetter = (i, t) -> { };
 
-    private final int bucketsInnerCapacity;
-
-    private LargeLongMultiHeadSinglyLinkedList<BaseLongBucketSet> buckets;
-
     private int scratchHashArrayIndex;
     private long[] scratchHashArray;
 
-    BaseLongBucketSet(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, long[]::new, BaseLongBucketSet::clearHashArray);
+    BaseLongBucketSet(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, bucketsInnerCapacityExponent, long[]::new, BaseLongBucketSet::clearHashArray,
+                IHeapMutableLongLargeSinglyLinkedMultiHeadNodeList::create);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("bucketsInnerCapacityExponent", bucketsInnerCapacityExponent));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("bucketsInnerCapacityExponent", bucketsInnerCapacityExponent));
         }
 
         Checks.isIntCapacityExponent(bucketsInnerCapacityExponent);
-
-        final int bucketsInnerCapacity = CapacityExponents.computeIntCapacityFromExponent(bucketsInnerCapacityExponent);
-
-        this.bucketsInnerCapacity = bucketsInnerCapacity;
-
-        this.buckets = new LargeLongMultiHeadSinglyLinkedList<>(DEFAULT_BUCKETS_OUTER_INITIAL_CAPACITY, bucketsInnerCapacity);
 
         if (DEBUG) {
 
@@ -50,12 +47,12 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
         }
     }
 
-    BaseLongBucketSet(long[] values) {
-        this(computeRehashCapacityExponent(values.length, DEFAULT_LOAD_FACTOR), DEFAULT_LOAD_FACTOR);
+    BaseLongBucketSet(AllocationType allocationType, long[] values) {
+        this(allocationType, computeRehashCapacityExponent(values.length, DEFAULT_LOAD_FACTOR), DEFAULT_LOAD_FACTOR);
 
         if (DEBUG) {
 
-            enter(b -> b.add("values", values));
+            enter(b -> b.add("allocationType", allocationType).add("values", values));
         }
 
         for (long value : values) {
@@ -69,12 +66,12 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
         }
     }
 
-    private BaseLongBucketSet(int initialCapacityExponent, float loadFactor) {
-        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, loadFactor, DEFAULT_BUCKETS_INNER_CAPACITY_EXPONENT);
+    private BaseLongBucketSet(AllocationType allocationType, int initialCapacityExponent, float loadFactor) {
+        this(allocationType, initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, loadFactor, DEFAULT_BUCKETS_INNER_CAPACITY_EXPONENT);
     }
 
     @Override
-    public final <P, E extends Exception> void forEach(P parameter, IForEach<P, E> forEach) throws E {
+    public final <P, E extends Exception> void forEach(P parameter, ILongForEach<P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -82,21 +79,21 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
 
         final int bucketHeadNodesHashArrayLength = bucketHeadNodesHashArray.length;
 
-        final LargeLongMultiHeadSinglyLinkedList<BaseLongBucketSet> b = buckets;
+        final IMutableLongLargeSinglyLinkedMultiHeadNodeList<BaseLongBucketSet> buckets = getBuckets();
 
         final long noNode = NO_LONG_NODE;
 
         for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
 
-            for (long node = bucketHeadNodesHashArray[i]; node != noNode; node = b.getNextNode(node)) {
+            for (long node = bucketHeadNodesHashArray[i]; node != noNode; node = buckets.getNextNode(node)) {
 
-                forEach.each(b.getValue(node), parameter);
+                forEach.each(buckets.getValue(node), parameter);
             }
         }
     }
 
     @Override
-    public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<P1, P2, R, E> forEach) throws E {
+    public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, ILongForEachWithResult<P1, P2, R, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -106,16 +103,16 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
 
         final int bucketHeadNodesHashArrayLength = bucketHeadNodesHashArray.length;
 
-        final LargeLongMultiHeadSinglyLinkedList<BaseLongBucketSet> b = buckets;
+        final IMutableLongLargeSinglyLinkedMultiHeadNodeList<BaseLongBucketSet> buckets = getBuckets();
 
         final long noNode = NO_LONG_NODE;
 
         outer:
             for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
 
-                for (long node = bucketHeadNodesHashArray[i]; node != noNode; node = b.getNextNode(node)) {
+                for (long node = bucketHeadNodesHashArray[i]; node != noNode; node = buckets.getNextNode(node)) {
 
-                    final R forEachResult = forEach.each(b.getValue(node), parameter1, parameter2);
+                    final R forEachResult = forEach.each(buckets.getValue(node), parameter1, parameter2);
 
                     if (forEachResult != null) {
 
@@ -143,7 +140,7 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
 
         final long bucketHeadNode = bucketHeadNodesHashArray[hashArrayIndex];
 
-        final boolean found = bucketHeadNode != NO_LONG_NODE && buckets.contains(value, bucketHeadNode);
+        final boolean found = bucketHeadNode != NO_LONG_NODE && getBuckets().contains(value, bucketHeadNode);
 
         if (DEBUG) {
 
@@ -154,24 +151,81 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
     }
 
     @Override
-    protected final long[] rehash(long[] hashArray, int newCapacity, int newCapacityExponent, int keyMask) {
+    public final void addUnordered(long value) {
+
+        addValue(value);
+    }
+
+    @Override
+    public final void addUnordered(long[] values, int startIndex, int numElements) {
+
+        Checks.isNotEmpty(values);
+        Checks.checkIntAddFromArray(values, startIndex, numElements);
+
+        final int endIndex = startIndex + numElements;
+
+        for (int i = startIndex; i < endIndex; ++ i) {
+
+            addValue(values[i]);
+        }
+    }
+
+    @Override
+    protected final <P, R> R makeFromElements(AllocationType allocationType, P parameter, IMakeFromElementsFunction<long[], BaseLongBucketSet, P, R> makeFromElements) {
+
+        checkMakeFromElementsParameters(allocationType, parameter, makeFromElements);
+
+        return makeFromElements.apply(allocationType, long[]::new, this, getMakeFromElementsNumElements(), parameter);
+    }
+
+    @Override
+    protected final void recreateElements() {
+
+        replaceAndClearHashed(new long[getHashedCapacity()]);
+    }
+
+    @Override
+    protected final void resetToNull() {
+
+        super.resetToNull();
+
+        this.scratchHashArray = null;
+    }
+
+    @Override
+    protected final long[] copyValues(long[] values, long startIndex, long numElements) {
+
+        checkIntCopyValuesParameters(values, values.length, startIndex, numElements);
+
+        return Arrays.copyOfRange(values, intIndex(startIndex), intIndex(startIndex + numElements));
+    }
+
+    @Override
+    protected final void initializeWithValues(long[] values, long numElements) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).hex("keyMask", keyMask));
+            enter(b -> b.add("values", values).add("numElements", numElements));
         }
 
-        final long[] newBucketHeadNodesHashArray = new long[newCapacity];
+        checkIntIntitializeWithValuesParameters(values, 0L, numElements);
 
-        clearHashArray(newBucketHeadNodesHashArray);
+        addUnordered(values, 0, intNumElements(numElements));
 
-        final LargeLongMultiHeadSinglyLinkedList<BaseLongBucketSet> oldBuckets = buckets;
+        if (DEBUG) {
 
-        final int newBucketsOuterCapacity = oldBuckets.getNumOuterAllocatedEntries();
+            exit();
+        }
+    }
 
-        final LargeLongMultiHeadSinglyLinkedList<BaseLongBucketSet> newBuckets = new LargeLongMultiHeadSinglyLinkedList<>(newBucketsOuterCapacity, bucketsInnerCapacity);
+    @Override
+    final void rehashBuckets(long[] hashArray, long[] newHashArray, int newKeyMask, IMutableLongLargeSinglyLinkedMultiHeadNodeList<BaseLongBucketSet> buckets,
+            IMutableLongLargeSinglyLinkedMultiHeadNodeList<BaseLongBucketSet> newBuckets) {
 
-        this.buckets = newBuckets;
+        if (DEBUG) {
+
+            enter(b -> b.add("hashArray", hashArray).add("newHashArray", newHashArray).hex("newKeyMask", newKeyMask).add("buckets", buckets).add("newBuckets", newBuckets));
+        }
 
         final int hashArrayLength = hashArray.length;
 
@@ -181,19 +235,16 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
 
             final long bucketHeadNode = hashArray[i];
 
-            for (long node = bucketHeadNode; node != noNode; node = oldBuckets.getNextNode(node)) {
+            for (long node = bucketHeadNode; node != noNode; node = buckets.getNextNode(node)) {
 
-                add(newBucketHeadNodesHashArray, oldBuckets.getValue(node), keyMask);
+                add(newHashArray, buckets.getValue(node), newKeyMask);
             }
         }
 
         if (DEBUG) {
 
-            exit(newBucketHeadNodesHashArray, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent)
-                    .hex("keyMask", keyMask));
+            exit(b -> b.add("hashArray", hashArray).add("newHashArray", newHashArray).hex("newKeyMask", newKeyMask).add("buckets", buckets).add("newBuckets", newBuckets));
         }
-
-        return newBucketHeadNodesHashArray;
     }
 
     final boolean addValue(long value) {
@@ -203,7 +254,7 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
             enter(b -> b.add("value", value));
         }
 
-        checkCapacity(1);
+        checkCapacityForOneMoreElement();
 
         final boolean newAdded = add(getHashed(), value, getKeyMask());
 
@@ -248,7 +299,7 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
         else {
             this.scratchHashArrayIndex = hashArrayIndex;
 
-            removed = buckets.removeAtMostOneNodeByValue(this, element, bucketHeadNode, noNode, headSetter, tailSetter) != noNode;
+            removed = getBuckets().removeAtMostOneNodeByValue(this, element, bucketHeadNode, noNode, headSetter, tailSetter) != noNode;
 
             if (removed) {
 
@@ -262,13 +313,6 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
         }
 
         return removed;
-    }
-
-    final void clearBaseLongBucketSet() {
-
-        clearHashed();
-
-        buckets.clear();
     }
 
     private boolean add(long[] bucketHeadNodesHashArray, long value, int keyMask) {
@@ -286,6 +330,8 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
 
             debugFormatln("lookup hashArrayIndex=%d value=%d keyMask=0x%08x bucketHeadNode=0x%016x", hashArrayIndex, value, keyMask, bucketHeadNode);
         }
+
+        final IMutableLongLargeSinglyLinkedMultiHeadNodeList<BaseLongBucketSet> buckets = getBuckets();
 
         final long noNode = NO_LONG_NODE;
 
@@ -315,7 +361,7 @@ abstract class BaseLongBucketSet extends BaseIntegerBucketSet<long[]> implements
     @Override
     public final String toString() {
 
-        final StringBuilder sb = new StringBuilder(Integers.checkUnsignedLongToUnsignedInt(getNumElements() * 10));
+        final StringBuilder sb = new StringBuilder(IOnlyElementsView.intNumElements(this) * 10);
 
         sb.append(getClass().getSimpleName()).append(" [elements=");
 

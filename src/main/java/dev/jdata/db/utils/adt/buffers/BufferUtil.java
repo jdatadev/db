@@ -4,8 +4,8 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-import dev.jdata.db.utils.adt.elements.ByIndex;
-import dev.jdata.db.utils.adt.elements.ByIndex.ByIndexStringAdder;
+import dev.jdata.db.utils.adt.byindex.ByIndex;
+import dev.jdata.db.utils.adt.byindex.ByIndex.ByIndexStringAdder;
 import dev.jdata.db.utils.checks.Checks;
 
 public class BufferUtil {
@@ -20,8 +20,8 @@ public class BufferUtil {
     public static String toString(ByteBuffer byteBuffer, int offset, int length) {
 
         Objects.requireNonNull(byteBuffer);
-        Checks.isOffset(offset);
-        Checks.isLengthAboveOrAtZero(length);
+        Checks.isIntOffset(offset);
+        Checks.isIntLengthAboveOrAtZero(length);
 
         return toString(byteBuffer, offset, length, 3, (b, i, s) -> s.append(b.get((int)i)));
     }
@@ -29,8 +29,8 @@ public class BufferUtil {
     public static void toString(ByteBuffer byteBuffer, int offset, int length, StringBuilder sb) {
 
         Objects.requireNonNull(byteBuffer);
-        Checks.isOffset(offset);
-        Checks.isLengthAboveOrAtZero(length);
+        Checks.isIntOffset(offset);
+        Checks.isIntLengthAboveOrAtZero(length);
 
         toString(byteBuffer, offset, length, 3, sb, (b, i, s) -> s.append(b.get((int)i)));
     }

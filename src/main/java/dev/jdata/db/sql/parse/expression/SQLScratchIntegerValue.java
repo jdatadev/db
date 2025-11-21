@@ -2,12 +2,13 @@ package dev.jdata.db.sql.parse.expression;
 
 import java.util.Objects;
 
-import dev.jdata.db.utils.adt.integers.MutableLargeInteger;
+import dev.jdata.db.utils.adt.numbers.integers.IHeapMutableLargeInteger;
+import dev.jdata.db.utils.adt.numbers.integers.ILargeIntegerView;
 
 public final class SQLScratchIntegerValue {
 
     private long longInteger;
-    private final MutableLargeInteger largeInteger;
+    private final IHeapMutableLargeInteger largeInteger;
     private final StringBuilder largeIntegerStringBuilder;
 
     private boolean isLongIntegerSet;
@@ -15,7 +16,7 @@ public final class SQLScratchIntegerValue {
 
     SQLScratchIntegerValue() {
 
-        this.largeInteger = MutableLargeInteger.newInstance();
+        this.largeInteger = IHeapMutableLargeInteger.create();
 
         this.largeIntegerStringBuilder = new StringBuilder(100);
     }
@@ -45,7 +46,7 @@ public final class SQLScratchIntegerValue {
         return isLongIntegerSet;
     }
 
-    MutableLargeInteger getLargeInteger() {
+    ILargeIntegerView getLargeInteger() {
         return largeInteger;
     }
 

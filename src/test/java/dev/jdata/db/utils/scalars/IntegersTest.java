@@ -11,6 +11,65 @@ public final class IntegersTest extends BaseTest {
 
     @Test
     @Category(UnitTest.class)
+    public void testIntToHexUnsigned() {
+
+        assertThatThrownBy(() -> Integers.toHexUnsigned(0, null)).isInstanceOf(NullPointerException.class);
+
+        checkIntToHexUnsigned(Integer.MIN_VALUE, "80000000");
+        checkIntToHexUnsigned(-1, "FFFFFFFF");
+        checkIntToHexUnsigned(0, "0");
+        checkIntToHexUnsigned(9, "9");
+        checkIntToHexUnsigned(10, "A");
+        checkIntToHexUnsigned(16, "10");
+        checkIntToHexUnsigned(Integer.MAX_VALUE, "7FFFFFFF");
+
+        for (int i = -1000 * 1000; i < 1000 * 1000; ++ i) {
+
+            checkIntToHexUnsigned(i, Long.toHexString(Integer.toUnsignedLong(i)).toUpperCase());
+        }
+    }
+
+    private static void checkIntToHexUnsigned(int i, String expectedString) {
+
+        final StringBuilder sb = new StringBuilder(expectedString.length());
+
+        Integers.toHexUnsigned(i, sb);
+
+        assertThatCharSeq(sb).isEqualToCharSequence(expectedString);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testLongToHexUnsigned() {
+
+        assertThatThrownBy(() -> Integers.toHexUnsigned(0L, null)).isInstanceOf(NullPointerException.class);
+
+        checkLongToHexUnsigned(Long.MIN_VALUE + 1, "8000000000000001");
+        checkLongToHexUnsigned(Long.MIN_VALUE, "8000000000000000");
+        checkLongToHexUnsigned(-1, "FFFFFFFFFFFFFFFF");
+        checkLongToHexUnsigned(0, "0");
+        checkLongToHexUnsigned(9, "9");
+        checkLongToHexUnsigned(10, "A");
+        checkLongToHexUnsigned(16, "10");
+        checkLongToHexUnsigned(Long.MAX_VALUE, "7FFFFFFFFFFFFFFF");
+
+        for (long l = -1000L * 1000L; l < 1000L * 1000L; ++ l) {
+
+            checkLongToHexUnsigned(l, Long.toHexString(l).toUpperCase());
+        }
+    }
+
+    private static void checkLongToHexUnsigned(long l, String expectedString) {
+
+        final StringBuilder sb = new StringBuilder(expectedString.length());
+
+        Integers.toHexUnsigned(l, sb);
+
+        assertThatCharSeq(sb).isEqualToCharSequence(expectedString);
+    }
+
+    @Test
+    @Category(UnitTest.class)
     public void testParseUnsignedInt() {
 
         checkParseUnsignedInt(Integers::parseUnsignedInt);
@@ -219,6 +278,25 @@ public final class IntegersTest extends BaseTest {
 
             assertThatThrownBy(() -> Integers.checkLongToInt(1L << closureI)).isInstanceOf(IllegalArgumentException.class);
             assertThatThrownBy(() -> Integers.checkLongToInt(- (1L << closureI))).isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testCheckUnsignedLongToUnsignedByteAsByte() {
+
+        assertThat(Integers.checkUnsignedLongToUnsignedByteAsByte(0L)).isEqualTo((byte)0);
+
+        for (int i = 0; i < 8; ++ i) {
+
+            assertThat(Integers.checkUnsignedLongToUnsignedByteAsByte(1L << i)).isEqualTo((byte)(1 << i));
+        }
+
+        for (int i = 8; i < 64; ++ i) {
+
+            final int closureI = i;
+
+            assertThatThrownBy(() -> Integers.checkUnsignedLongToUnsignedByteAsByte(1L << closureI)).isInstanceOf(IllegalArgumentException.class);
         }
     }
 

@@ -9,14 +9,14 @@ import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
 
 public final class DatabaseStringManagement {
 
-    private final StringStorer stringStorer;
+    private final IStringStorer stringStorer;
     private final CharacterBuffersAllocator characterBuffersAllocator;
 
     public DatabaseStringManagement(CharacterBuffersAllocator characterBuffersAllocator) {
-        this(characterBuffersAllocator, new StringStorer(1, 10));
+        this(characterBuffersAllocator, IStringStorer.create(1, 10));
     }
 
-    public DatabaseStringManagement(CharacterBuffersAllocator characterBuffersAllocator, StringStorer stringStorer) {
+    public DatabaseStringManagement(CharacterBuffersAllocator characterBuffersAllocator, IStringStorer stringStorer) {
 
         this.characterBuffersAllocator = Objects.requireNonNull(characterBuffersAllocator);
         this.stringStorer = Objects.requireNonNull(stringStorer);

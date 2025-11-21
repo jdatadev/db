@@ -4,7 +4,11 @@ import java.nio.ByteBuffer;
 
 abstract class BatchParameterPreparedStatementMessage extends ParameterPreparedStatementMessage {
 
-    final void decodeParameters(ByteBuffer byteBuffer, int offset, int length, ProtocolAllocator protocolAllocator) {
+    BatchParameterPreparedStatementMessage(AllocationType allocationType) {
+        super(allocationType);
+    }
+
+    final void decodeParameters(ByteBuffer byteBuffer, int offset, int length, IProtocolAllocator protocolAllocator) {
 
         decodeParameters(byteBuffer, offset, length, protocolAllocator, (byte)Integer.BYTES);
     }

@@ -1,6 +1,7 @@
 package dev.jdata.db.utils.adt.maps;
 
-import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.lists.IMutableList;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.scalars.Integers;
 
 public final class MutableObjectWithRemoveNonBucketMapTest
@@ -14,9 +15,9 @@ public final class MutableObjectWithRemoveNonBucketMapTest
     }
 
     @Override
-    MutableObjectWithRemoveNonBucketMap<String, StringBuilder> createMap(int initialCapacityExponent) {
+    MutableObjectWithRemoveNonBucketMap<String, StringBuilder> createMap(int initialCapacity) {
 
-        return new MutableObjectWithRemoveNonBucketMap<>(initialCapacityExponent, String[]::new, StringBuilder[]::new);
+        return HeapMutableObjectToObjectWithRemoveNonBucketMap.create(AllocationType.HEAP, initialCapacity, String[]::new, StringBuilder[]::new);
     }
 
     @Override
@@ -32,15 +33,27 @@ public final class MutableObjectWithRemoveNonBucketMapTest
     }
 
     @Override
-    int getKey(String[] keys, int index) {
+    IMutableList<String> createKeysOrderedAddable(int initialCapacity) {
 
-        return intKey(keys[index]);
+        return createObjectOrderedAddable(initialCapacity, String[]::new);
     }
 
     @Override
-    int[] getKeys(MutableObjectWithRemoveNonBucketMap<String, StringBuilder> map) {
+    IMutableList<StringBuilder> createValuesOrderedAddable(int initialCapacity) {
 
-        return Array.closureOrConstantMapToInt(map.keys(), k -> intKey(k));
+        return createObjectOrderedAddable(initialCapacity, StringBuilder[]::new);
+    }
+
+    @Override
+    String[] keysToArray(IMutableList<String> keysAddable) {
+
+        return toArray(keysAddable, String[]::new);
+    }
+
+    @Override
+    StringBuilder[] valuesToArray(IMutableList<StringBuilder> valuesAddable) {
+
+        return toArray(valuesAddable, StringBuilder[]::new);
     }
 
     @Override
@@ -52,13 +65,13 @@ public final class MutableObjectWithRemoveNonBucketMapTest
     }
 
     @Override
-    int objectKeyToInt(String object) {
+    int keyToInteger(String object) {
 
         return intKey(object);
     }
 
     @Override
-    String intKeyToObject(int integer) {
+    String integerToKey(int integer) {
 
         return stringKey(integer);
     }

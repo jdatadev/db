@@ -2,7 +2,7 @@ package dev.jdata.db.engine.transactions;
 
 import java.util.Objects;
 
-import dev.jdata.db.utils.adt.decimals.MutableDecimal;
+import dev.jdata.db.utils.adt.numbers.decimals.IDecimalView;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class RowValue {
@@ -11,7 +11,7 @@ public final class RowValue {
 
     private long integer;
     private double floatingPoint;
-    private MutableDecimal decimal;
+    private IDecimalView decimal;
     private long string;
     private CharSequence caseInsensitiveString;
 
@@ -97,13 +97,13 @@ public final class RowValue {
     }
 
     @Deprecated
-    public MutableDecimal getDecimal() {
+    public IDecimalView getDecimal() {
 
         return decimal;
     }
 
     @Deprecated
-    public void setDecimal(MutableDecimal decimal) {
+    public void setDecimal(IDecimalView decimal) {
 
         setType(RowValueType.DECIMAL);
 

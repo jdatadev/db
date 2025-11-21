@@ -5,9 +5,9 @@ import java.util.function.BiPredicate;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import dev.jdata.db.utils.scalars.Integers;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 
-public abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArrayList<String>> extends BaseObjectArrayListTest<T> {
+abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArrayList<String>> extends BaseObjectArrayListTest<T> {
 
     protected abstract U createStringList();
     protected abstract U createStringList(int initialCapacity);
@@ -15,29 +15,10 @@ public abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArra
     protected abstract int getCapacity(U list);
 
     protected abstract void add(U list, String string);
-    protected abstract void addHead(U list, String string);
     protected abstract void addTail(U list, String string);
     protected abstract void addTail(U list, String ... strings);
 
-    @Test
-    @Category(UnitTest.class)
-    public final void testAddHead() {
-
-        final U list = createStringList();
-
-        final String abc = "abc";
-        final String bcd = "bcd";
-        final String cde = "cde";
-
-        addHead(list, abc);
-        checkElementsSameAs(list, abc);
-
-        addHead(list, bcd);
-        checkElementsSameAs(list, bcd, abc);
-
-        addHead(list, cde);
-        checkElementsSameAs(list, cde, bcd, abc);
-    }
+    protected abstract void clear(U list);
 
     @Test
     @Category(UnitTest.class)
@@ -125,35 +106,6 @@ public abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArra
 
     @Test
     @Category(UnitTest.class)
-    public final void testAddHeadMany() {
-
-        final U list = createStringList();
-
-        final int numToAdd = 10 * 1000;
-
-        final String[] array = new String[numToAdd];
-
-        for (int i = 0; i < numToAdd; ++ i) {
-
-            final String instance = String.valueOf(i);
-
-            addHead(list, instance);
-
-            array[i] = instance;
-
-            checkNumElements(list, i + 1);
-
-            assertThat(list.get(0)).isSameAs(instance);
-
-            for (int j = 0; j <= i; ++ j) {
-
-                assertThat(list.get(j)).isSameAs(array[i - j]);
-            }
-        }
-    }
-
-    @Test
-    @Category(UnitTest.class)
     public final void testAddTailMany() {
 
         checkAddTailMany((l, s) -> {
@@ -173,7 +125,7 @@ public abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArra
 
     final void checkAddTailMany(U list, BiPredicate<U, String> listTailAdder) {
 
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(list.getNumElements());
+        final int numElements = IOnlyElementsView.intNumElements(list);
 
         final int numToAdd = 10 * 1000;
 
@@ -384,14 +336,14 @@ public abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArra
         add(list, abc);
         checkElementsSameAs(list, abc);
 
-        list.clear();
+        clear(list);
         checkNumElements(list, 0);
 
         add(list, abc);
         add(list, bcd);
         checkElementsSameAs(list, abc, bcd);
 
-        list.clear();
+        clear(list);
         checkNumElements(list, 0);
 
         add(list, abc);
@@ -399,7 +351,7 @@ public abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArra
         add(list, cde);
         checkElementsSameAs(list, abc, bcd, cde);
 
-        list.clear();
+        clear(list);
         checkNumElements(list, 0);
     }
 }

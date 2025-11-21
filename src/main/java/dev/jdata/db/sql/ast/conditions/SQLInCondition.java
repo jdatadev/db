@@ -1,12 +1,12 @@
 package dev.jdata.db.sql.ast.conditions;
 
 import org.jutils.ast.objects.expression.Expression;
-import org.jutils.ast.objects.list.IIndexListGetters;
+import org.jutils.ast.objects.list.IIndexListView;
 import org.jutils.parse.context.Context;
 
 public final class SQLInCondition extends BaseSQLInCondition {
 
-    public SQLInCondition(Context context, long inKeyword, IIndexListGetters<Expression> expressions) {
+    public SQLInCondition(Context context, long inKeyword, IIndexListView<Expression> expressions) {
         super(context, inKeyword, expressions);
     }
 

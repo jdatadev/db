@@ -7,29 +7,30 @@ import java.util.function.Supplier;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.elements.BaseNumElements;
-import dev.jdata.db.utils.adt.elements.IElements;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.debug.PrintDebug;
 
-abstract class BaseHashed<T> extends BaseNumElements implements IElements, PrintDebug {
+abstract class BaseHashed<HASHED, CREATE_ELEMENTS, MAKE_ELEMENTS_FROM, INIT_FROM_VALUES> extends BaseNumElements<CREATE_ELEMENTS, MAKE_ELEMENTS_FROM, INIT_FROM_VALUES> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_HASHED;
 
-    private final Consumer<T> clearHashed;
+    private final Consumer<HASHED> clearHashed;
+    private final Supplier<HASHED> recreateHashed;
 
-    private T hashed;
+    private HASHED hashed;
 
-    BaseHashed(Supplier<T> createHashed, Consumer<T> clearHashed) {
+    BaseHashed(AllocationType allocationType, Supplier<HASHED> createHashed, Consumer<HASHED> clearHashed, Supplier<HASHED> recreateHashed) {
+        super(allocationType);
 
         if (DEBUG) {
 
-            enter(b -> b.add("createHashed", createHashed).add("clearHashed", clearHashed));
+            enter(b -> b.add("allocationType", allocationType).add("createHashed", createHashed).add("clearHashed", clearHashed).add("recreateHashed", recreateHashed));
         }
 
         Objects.requireNonNull(createHashed);
         Objects.requireNonNull(clearHashed);
 
         this.clearHashed = clearHashed;
+        this.recreateHashed = recreateHashed;
 
         this.hashed = createHashed.get();
 
@@ -41,14 +42,33 @@ abstract class BaseHashed<T> extends BaseNumElements implements IElements, Print
         }
     }
 
-    BaseHashed(BaseHashed<T> toCopy, Function<T, T> copyHashed) {
-        super(toCopy);
+    BaseHashed(AllocationType allocationType, BaseHashed<HASHED, ?, ?, ?> toInitializeFrom) {
+        super(allocationType, toInitializeFrom);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("allocationType", allocationType).add("toInitializeFrom", toInitializeFrom));
+        }
+
+        this.hashed = Objects.requireNonNull(hashed);
+
+        this.clearHashed = null;
+        this.recreateHashed = null;
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    BaseHashed(AllocationType allocationType, BaseHashed<HASHED, ?, ?, ?> toCopy, Function<HASHED, HASHED> copyHashed) {
+        super(allocationType, toCopy);
 
         Objects.requireNonNull(copyHashed);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy).add("copyHashed", copyHashed));
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy).add("copyHashed", copyHashed));
         }
 
         if (copyHashed == toCopy.hashed) {
@@ -57,6 +77,7 @@ abstract class BaseHashed<T> extends BaseNumElements implements IElements, Print
         }
 
         this.clearHashed = toCopy.clearHashed;
+        this.recreateHashed = toCopy.recreateHashed;
 
         this.hashed = copyHashed.apply(toCopy.hashed);
 
@@ -66,6 +87,18 @@ abstract class BaseHashed<T> extends BaseNumElements implements IElements, Print
         }
     }
 
+    @Override
+    protected void recreateElements() {
+
+        this.hashed = recreateHashed.get();
+    }
+
+    @Override
+    protected void resetToNull() {
+
+        this.hashed = null;
+    }
+
     protected final void clearHashed() {
 
         if (DEBUG) {
@@ -73,7 +106,7 @@ abstract class BaseHashed<T> extends BaseNumElements implements IElements, Print
             enter();
         }
 
-        super.clearNumElements();
+        clearNumElements();
 
         clearHashed(hashed);
 
@@ -83,7 +116,9 @@ abstract class BaseHashed<T> extends BaseNumElements implements IElements, Print
         }
     }
 
-    protected final void clearHashed(T hashed) {
+    private void clearHashed(HASHED hashed) {
+
+        Objects.requireNonNull(hashed);
 
         if (DEBUG) {
 
@@ -98,21 +133,45 @@ abstract class BaseHashed<T> extends BaseNumElements implements IElements, Print
         }
     }
 
-    protected final T getHashed() {
+    protected final void replaceAndClearHashed(HASHED hashed) {
+
+        Objects.requireNonNull(hashed);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("hashed", hashed));
+        }
+
+        this.hashed = hashed;
+
+        clearHashed();
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    protected final HASHED getHashed() {
         return hashed;
     }
 
     @FunctionalInterface
     interface Rehasher<T, P> {
 
-        T rehash(T hashed, long newCapacity, P parameter);
+        void rehash(T hashed, T newHashed, long newCapacity, P parameter);
     }
 
-    final <P> void rehash(long newCapacity, P parameter, Rehasher<T, P> rehasher) {
+    final <P> void rehash(HASHED newHashed, long newCapacity, P parameter, Rehasher<HASHED, P> rehasher) {
 
-        Checks.isCapacity(newCapacity);
+        Objects.requireNonNull(newHashed);
+        Checks.isIntOrLongCapacityAboveZero(newCapacity);
         Objects.requireNonNull(rehasher);
 
-        this.hashed = rehasher.rehash(hashed, newCapacity, parameter);
+        clearHashed(newHashed);
+
+        rehasher.rehash(hashed, newHashed, newCapacity, parameter);
+
+        this.hashed = newHashed;
     }
 }

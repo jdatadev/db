@@ -5,15 +5,15 @@ import java.util.Objects;
 import dev.jdata.db.engine.database.SQLExpressionEvaluator;
 import dev.jdata.db.engine.database.SQLExpressionEvaluatorParameter;
 import dev.jdata.db.engine.transactions.Transaction;
-import dev.jdata.db.utils.allocators.IArrayAllocator;
+import dev.jdata.db.utils.adt.arrays.IArrayAllocator;
 
 abstract class BaseDMLEvaluatorParameter extends SQLExpressionEvaluatorParameter {
 
     private TableAndColumnNames tableAndColumnNames;
     private Transaction transaction;
 
-    BaseDMLEvaluatorParameter(IArrayAllocator<SQLExpressionEvaluator> arrayAllocator) {
-        super(arrayAllocator);
+    BaseDMLEvaluatorParameter(AllocationType allocationType, IArrayAllocator<SQLExpressionEvaluator> arrayAllocator) {
+        super(allocationType, arrayAllocator);
     }
 
     final void initialize(TableAndColumnNames tableAndColumnNames) {

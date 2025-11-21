@@ -9,17 +9,17 @@ import org.jutils.io.strings.StringResolver.RefStringResolver;
 import org.jutils.io.strings.StringResolver.ToStringWithStringResolver;
 
 import dev.jdata.db.DBConstants;
-import dev.jdata.db.utils.adt.lists.HeapIndexList;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
+import dev.jdata.db.utils.adt.lists.IHeapIndexList;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
 public abstract class ColumnsObject extends SchemaObject implements ToStringWithStringResolver {
 
-    private final HeapIndexList<Column> columns;
+    private final IHeapIndexList<Column> columns;
 
-    public abstract ColumnsObject makeCopy(HeapIndexList<Column> columns);
+    public abstract ColumnsObject makeCopy(IHeapIndexList<Column> columns);
 
-    ColumnsObject(long parsedName, long hashName, int id, HeapIndexList<Column> columns) {
+    ColumnsObject(long parsedName, long hashName, int id, IHeapIndexList<Column> columns) {
         super(parsedName, hashName, id);
 
         Checks.isNotEmpty(columns);
@@ -28,7 +28,7 @@ public abstract class ColumnsObject extends SchemaObject implements ToStringWith
         this.columns = columns;
     }
 
-    ColumnsObject(ColumnsObject toCopy, HeapIndexList<Column> columns) {
+    ColumnsObject(ColumnsObject toCopy, IHeapIndexList<Column> columns) {
         super(toCopy);
 
         this.columns = columns;
@@ -42,7 +42,7 @@ public abstract class ColumnsObject extends SchemaObject implements ToStringWith
 
     public final int getNumColumns() {
 
-        return Integers.checkUnsignedLongToUnsignedInt(columns.getNumElements());
+        return IOnlyElementsView.intNumElements(columns);
     }
 
     public final Column getColumn(int index) {

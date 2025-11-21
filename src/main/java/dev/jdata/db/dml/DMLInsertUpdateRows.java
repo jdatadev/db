@@ -19,7 +19,7 @@ public abstract class DMLInsertUpdateRows<T extends DMLInsertUpdateRows.InsertUp
         public final void initialize(ByteBuffer rowBuffer, long rowBufferBitOffset) {
 
             this.rowBuffer = Objects.requireNonNull(rowBuffer);
-            this.rowBufferBitOffset = Checks.isOffset(rowBufferBitOffset);
+            this.rowBufferBitOffset = Checks.isBufferBitsOffset(rowBufferBitOffset);
         }
 
         final ByteBuffer getRowBuffer() {

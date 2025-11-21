@@ -4,14 +4,14 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.arrays.LargeExponentArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLargeArrayMarker;
+import dev.jdata.db.utils.adt.capacity.CapacityExponents;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.BiIntToObjectFunction;
 
-public abstract class BaseLongCapacityExponentArrayHashed<T extends LargeExponentArray<?, ?>> extends BaseLongCapacityArrayHashed<T> {
+public abstract class BaseLongCapacityExponentArrayHashed<T extends IMutableLargeArrayMarker> extends BaseLongCapacityArrayHashed<T> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_CAPACITY_EXPONENT_ARRAY_HASHED;
 
@@ -22,7 +22,7 @@ public abstract class BaseLongCapacityExponentArrayHashed<T extends LargeExponen
 
     protected static int computeOuterCapacity(long newCapacity, int newCapacityExponent, int innerCapacityExponent) {
 
-        Checks.isCapacity(newCapacity);
+        Checks.isLongCapacityAboveZero(newCapacity);
         Checks.isLongCapacityExponent(newCapacityExponent);
         Checks.isIntCapacityExponent(innerCapacityExponent);
         Checks.areEqual(newCapacity, 1L << newCapacityExponent);
@@ -40,16 +40,21 @@ public abstract class BaseLongCapacityExponentArrayHashed<T extends LargeExponen
         return newCapacityExponent - innerCapacityExponent;
     }
 
+    private static int getRecreateOuterCapacity() {
+
+        return CapacityExponents.computeIntCapacityFromExponent(DEFAULT_NON_BUCKET_OUTER_INITIAL_CAPACITY);
+    }
+
     private final int capacityExponentIncrease;
 
     private int capacityExponent;
     private long keyMask;
 
-    protected abstract T rehash(T hashed, long newCapacity, int newCapacityExponent, long newKeyMask);
+    protected abstract void rehashWithKeyMask(T hashed, T newHashed, long newCapacity, int capacityExponentIncrease, int newCapacityExponent, long newKeyMask);
 
-    protected BaseLongCapacityExponentArrayHashed(int initialOuterCapacityExponent, int capacityExponentIncrease, int innerCapacityExponent, float loadFactor,
-            BiIntToObjectFunction<T> createHashed, Consumer<T> clearHashed) {
-        super(CapacityExponents.computeIntCapacityFromExponent(initialOuterCapacityExponent), innerCapacityExponent, loadFactor,
+    protected BaseLongCapacityExponentArrayHashed(AllocationType allocationType, int initialOuterCapacityExponent, int capacityExponentIncrease, int innerCapacityExponent,
+            float loadFactor, BiIntToObjectFunction<T> createHashed, Consumer<T> clearHashed) {
+        super(allocationType, CapacityExponents.computeIntCapacityFromExponent(initialOuterCapacityExponent), innerCapacityExponent, loadFactor, getRecreateOuterCapacity(),
                 (o, i) -> {
 
                     Checks.areEqual(o, CapacityExponents.computeIntCapacityFromExponent(initialOuterCapacityExponent));
@@ -58,7 +63,7 @@ public abstract class BaseLongCapacityExponentArrayHashed<T extends LargeExponen
 
                 }, clearHashed);
 
-        Checks.isInitialIntCapacityExponent(initialOuterCapacityExponent);
+        Checks.isIntInitialOuterCapacityExponent(initialOuterCapacityExponent);
         Checks.isIntCapacityExponentIncrease(capacityExponentIncrease);
         Checks.isIntCapacityExponent(initialOuterCapacityExponent + capacityExponentIncrease);
 
@@ -79,21 +84,31 @@ public abstract class BaseLongCapacityExponentArrayHashed<T extends LargeExponen
         }
     }
 
-    protected BaseLongCapacityExponentArrayHashed(BaseLongCapacityExponentArrayHashed<T> toCopy, Function<T, T> copyHashed) {
-        super(toCopy, copyHashed);
+    protected BaseLongCapacityExponentArrayHashed(AllocationType allocationType, BaseLongCapacityExponentArrayHashed<T> toCopy, Function<T, T> copyHashed) {
+        super(allocationType, toCopy, copyHashed);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy).add("copyHashed", copyHashed));
+        }
 
         this.capacityExponentIncrease = toCopy.capacityExponentIncrease;
 
         this.capacityExponent = toCopy.capacityExponent;
         this.keyMask = toCopy.keyMask;
-    }
-
-    @Override
-    protected final T rehash(T hashed, long newCapacity) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashed", hashed).add("newCapacity", newCapacity));
+            exit();
+        }
+    }
+
+    @Override
+    protected void rehashWithCapacity(T hashed, T newHashed, long newCapacity) {
+
+        if (DEBUG) {
+
+            enter(b -> b.add("hashed", hashed).add("newHashed", newHashed).add("newCapacity", newCapacity));
         }
 
         final int newCapacityExponentFromNewCapacity = makeCapacityExponent(newCapacity);
@@ -113,18 +128,17 @@ public abstract class BaseLongCapacityExponentArrayHashed<T extends LargeExponen
             Assertions.isGreaterThanOrEqualTo(newCapacityExponent, capacityExponent + capacityExponentIncrease);
         }
 
+        final long newKeyMask = makeKeyMaskFromCapacityExponent(newCapacityExponent);
+
+        rehashWithKeyMask(hashed, newHashed, newCapacity, capacityExponentIncrease, newCapacityExponent, newKeyMask);
+
         this.capacityExponent = newCapacityExponent;
-
-        final long newKeyMask = this.keyMask = makeKeyMaskFromCapacityExponent(newCapacityExponent);
-
-        final T result = rehash(hashed, newCapacity, newCapacityExponent, newKeyMask);
+        this.keyMask = newKeyMask;
 
         if (DEBUG) {
 
-            exit(result);
+            exit();
         }
-
-        return result;
     }
 
     @Override
@@ -138,7 +152,7 @@ public abstract class BaseLongCapacityExponentArrayHashed<T extends LargeExponen
     @Override
     long adjustNewCapacity(long requiredCapacity) {
 
-        final int capacityExponent = CapacityExponents.computeCapacityExponent(requiredCapacity);
+        final int capacityExponent = CapacityExponents.computeLongCapacityExponentForAboveZero(requiredCapacity);
 
         return CapacityExponents.computeLongCapacityFromExponent(capacityExponent);
     }
@@ -151,16 +165,33 @@ public abstract class BaseLongCapacityExponentArrayHashed<T extends LargeExponen
         return keyMask;
     }
 
+    protected final long checkCapacityForOneMoreElement() {
+
+        if (DEBUG) {
+
+            enter();
+        }
+
+        final long result = checkCapacity(1L);
+
+        if (DEBUG) {
+
+            exitWithHex(result);
+        }
+
+        return result;
+    }
+
     protected final long checkCapacity(long numAdditionalElements) {
 
-        Checks.isLengthAboveZero(numAdditionalElements);
+        Checks.isLongLengthAboveZero(numAdditionalElements);
 
         if (DEBUG) {
 
             enter(b -> b.add("numAdditionalElements", numAdditionalElements));
         }
 
-        checkCapacity(numAdditionalElements, this,  (h, c, i) -> i.rehash(h, c));
+        checkCapacity(numAdditionalElements, this, (h, n, c, i) -> i.rehashWithCapacity(h, n, c));
 
         final long result = keyMask;
 
@@ -174,7 +205,7 @@ public abstract class BaseLongCapacityExponentArrayHashed<T extends LargeExponen
 
     private static int makeCapacityExponent(long capacity) {
 
-        return CapacityExponents.computeCapacityExponentExact(capacity);
+        return CapacityExponents.computeLongCapacityExponentForAboveZero(capacity);
     }
 
     private static long makeKeyMaskFromCapacityExponent(int capacityExponent) {

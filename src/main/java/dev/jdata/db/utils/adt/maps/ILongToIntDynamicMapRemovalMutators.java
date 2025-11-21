@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.adt.maps;
 
-interface ILongToIntDynamicMapRemovalMutators extends IKeyValueDynamicMapRemovalMutators {
+interface ILongToIntDynamicMapRemovalMutators extends IKeyValueDynamicMapRemovalMutatorsMarker {
 
     int removeAndReturnPrevious(long key, int defaultValue);
 }

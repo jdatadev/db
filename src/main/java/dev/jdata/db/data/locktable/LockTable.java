@@ -7,13 +7,14 @@ import dev.jdata.db.DBException;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.LockType;
 import dev.jdata.db.data.BaseRows;
-import dev.jdata.db.utils.adt.arrays.ILongArrayCommon;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
-import dev.jdata.db.utils.adt.elements.IElements;
-import dev.jdata.db.utils.adt.lists.ILongMultiList;
-import dev.jdata.db.utils.adt.lists.ILongMutableMultiList;
-import dev.jdata.db.utils.adt.lists.LargeLists;
-import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadDoublyLinkedList;
+import dev.jdata.db.engine.transactions.ITransactionSharedStateMarker;
+import dev.jdata.db.utils.adt.arrays.IHeapMutableLongLargeArray;
+import dev.jdata.db.utils.adt.byindex.IByIndexView;
+import dev.jdata.db.utils.adt.elements.ILongByIndexOrderedElementsView;
+import dev.jdata.db.utils.adt.lists.ILongMultiHeadNodeListView;
+import dev.jdata.db.utils.adt.lists.IMutableLongLargeDoublyLinkedMultiHeadNodeList;
+import dev.jdata.db.utils.adt.lists.LargeNodeLists;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
@@ -21,7 +22,7 @@ import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class LockTable extends BaseRows implements PrintDebug {
+public final class LockTable extends BaseRows implements PrintDebug, ITransactionSharedStateMarker {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_LOCK_TABLE;
 
@@ -59,7 +60,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
         void decrement(LockTable lockTable, int tableId, int transactionDescriptor, int statementId, LockType lockType);
     }
 
-    private static final long NO_NODE = LargeLists.NO_LONG_NODE;
+    private static final long NO_NODE = LargeNodeLists.NO_LONG_NODE;
 
     private static final int READ_NUM_BITS = 32;
     static final int READ_SHIFT = 32;
@@ -95,20 +96,20 @@ public final class LockTable extends BaseRows implements PrintDebug {
 
     private final ILockTableRowsMap rowsMap;
 
-    private final LargeLongMultiHeadDoublyLinkedList<LockTable> lockInfoLists;
+    private final IMutableLongLargeDoublyLinkedMultiHeadNodeList<LockTable> lockInfoLists;
 
     private final LockSetter tableLockSetter;
 
     private final LockSetter rowLockSetter;
 
-    private final LargeLongArray scratchLockIndices;
+    private final IHeapMutableLongLargeArray scratchLockIndices;
 
     private long scratchHeadNode;
     private long scratchTailNode;
 
     public LockTable(int numTables) {
 
-        Checks.isNumElements(numTables);
+        Checks.isIntNumElements(numTables);
 
         this.tableNumReadLocks = new int[numTables];
         this.tableNumWriteLocks = new int[numTables];
@@ -141,18 +142,18 @@ public final class LockTable extends BaseRows implements PrintDebug {
 
         final int initialCapacityExponent = 0;
 
-        this.rowsMap = new LockTableRowsMap(initialCapacityExponent);
+        this.rowsMap = new LockTableRowsMap(AllocationType.HEAP, initialCapacityExponent);
 
         final int initialOuterCapacity = 1;
         final int innerCapacity = 10000;
 
-        this.lockInfoLists = new LargeLongMultiHeadDoublyLinkedList<>(initialOuterCapacity, innerCapacity);
+        this.lockInfoLists = IMutableLongLargeDoublyLinkedMultiHeadNodeList.create(initialOuterCapacity, innerCapacity);
 
         this.tableLockSetter = new TableLockSetter();
 
         this.rowLockSetter = new RowLockSetter();
 
-        this.scratchLockIndices = new LargeLongArray(initialOuterCapacity, innerCapacity);
+        this.scratchLockIndices = IHeapMutableLongLargeArray.create();
     }
 
     public boolean tryReadLockTable(int tableId, int transactionDescriptor, int statementId) {
@@ -307,20 +308,20 @@ public final class LockTable extends BaseRows implements PrintDebug {
         unlockRow(tableId, rowId, transactionDescriptor, statementId, LockType.WRITE);
     }
 
-    public synchronized boolean tryLockRows(int tableId, ILongArrayCommon rowIds, int transactionDescriptor, int statementId, LockType lockType) {
+    public synchronized boolean tryLockRows(int tableId, ILongByIndexOrderedElementsView rowIds, int transactionDescriptor, int statementId, LockType lockType) {
 
         checkParameters(tableId, transactionDescriptor, statementId, lockType);
         Objects.requireNonNull(rowIds);
 
         if (DEBUG) {
 
-            enter(b -> b.add("tableId", tableId).add("rowIds.getLimit()", rowIds.getLimit()).add("transactionDescriptor", transactionDescriptor)
+            enter(b -> b.add("tableId", tableId).add("rowIds.getIndexLimit()", rowIds.getIndexLimit()).add("transactionDescriptor", transactionDescriptor)
                     .add("statementId", statementId).add("lockType", lockType));
         }
 
         boolean allLocksAquired = true;
 
-        final long numRows = rowIds.getLimit();
+        final long numRows = rowIds.getIndexLimit();
 
         if (ASSERT) {
 
@@ -445,7 +446,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
         return result;
     }
 
-    private static boolean canLock(ILongMultiList lockInfoLists, int transactionDescriptor, LockType lockType, long numReadLocks, long numWriteLocks,
+    private static boolean canLock(ILongMultiHeadNodeListView lockInfoLists, int transactionDescriptor, LockType lockType, long numReadLocks, long numWriteLocks,
             long lockInfoListsHeadNode) {
 
         if (DEBUG) {
@@ -671,7 +672,7 @@ public final class LockTable extends BaseRows implements PrintDebug {
             PrintDebug.debug(debugClass, "find lockInfo node", b -> b.binary("lockInfoValue", lockInfoValue).add("lockInfoListsHeadNode", lockInfoListsHeadNode));
         }
 
-        final long lockInfoNode = lockTable.lockInfoLists.findNode(lockInfoValue, lockInfoListsHeadNode);
+        final long lockInfoNode = lockTable.lockInfoLists.findAtMostOneNode(lockInfoValue, lockInfoListsHeadNode);
 
         if (lockInfoNode == NO_NODE) {
 
@@ -876,13 +877,13 @@ public final class LockTable extends BaseRows implements PrintDebug {
         @Override
         public long getNumReadLocks(LockTable lockTable, long lockIndex) {
 
-            return lockTable.tableNumReadLocks[IElements.intIndex(lockIndex)];
+            return lockTable.tableNumReadLocks[IByIndexView.intIndex(lockIndex)];
         }
 
         @Override
         public long getNumWriteLocks(LockTable lockTable, long lockIndex) {
 
-            return lockTable.tableNumWriteLocks[IElements.intIndex(lockIndex)];
+            return lockTable.tableNumWriteLocks[IByIndexView.intIndex(lockIndex)];
         }
     }
 
@@ -891,13 +892,13 @@ public final class LockTable extends BaseRows implements PrintDebug {
         @Override
         public long getLockInfoListsHeadNode(LockTable lockTable, long lockIndex) {
 
-            return lockTable.tableLockInfoListsHeadNodes[IElements.intIndex(lockIndex)];
+            return lockTable.tableLockInfoListsHeadNodes[IByIndexView.intIndex(lockIndex)];
         }
 
         @Override
         public long getLockInfoListsTailNode(LockTable lockTable, long lockIndex) {
 
-            return lockTable.tableLockInfoListsTailNodes[IElements.intIndex(lockIndex)];
+            return lockTable.tableLockInfoListsTailNodes[IByIndexView.intIndex(lockIndex)];
         }
 
         @Override
@@ -1028,13 +1029,13 @@ public final class LockTable extends BaseRows implements PrintDebug {
 
             -- lockArray[tableId];
 
-            final ILongMutableMultiList<LockTable> lockInfoLists = lockTable.lockInfoLists;
+            final IMutableLongLargeDoublyLinkedMultiHeadNodeList<LockTable> lockInfoLists = lockTable.lockInfoLists;
 
             final long lockInfoValue = lockInfoValue(transactionDescriptor, statementId, lockType);
 
             final long headNode = lockTable.tableRowLocksLockInfoListsHeadNodes[tableId];
 
-            final long node = lockInfoLists.findNode(lockInfoValue, headNode);
+            final long node = lockInfoLists.findAtMostOneNode(lockInfoValue, headNode);
 
             if (ASSERT) {
 

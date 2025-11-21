@@ -5,32 +5,18 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
 
-public final class MutableObjectMaxDistanceNonBucketMap<K, V> extends BaseObjectMaxDistanceNonBucketMap<K, V> implements IMutableObjectDynamicMap<K, V> {
+abstract class MutableObjectMaxDistanceNonBucketMap<K, V> extends BaseObjectToObjectMaxDistanceNonBucketMap<K, V> implements IMutableDynamicMap<K, V> {
 
-    private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP;
+    private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_OBJECT_TO_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP;
 
-    public MutableObjectMaxDistanceNonBucketMap(int initialCapacityExponent, IntFunction<K[]> createKeysArray, IntFunction<V[]> createValuesArray) {
-        super(initialCapacityExponent, createKeysArray, createValuesArray);
-
-        if (DEBUG) {
-
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createKeysArray", createKeysArray).add("createValuesArray", createValuesArray));
-        }
+    MutableObjectMaxDistanceNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor,
+            IntFunction<K[]> createKeysArray, IntFunction<V[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createKeysArray, createValuesArray);
 
         if (DEBUG) {
 
-            exit();
-        }
-    }
-
-    public MutableObjectMaxDistanceNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<K[]> createKeysArray,
-            IntFunction<V[]> createValuesArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createKeysArray, createValuesArray);
-
-        if (DEBUG) {
-
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createKeysArray", createKeysArray).add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("createKeysArray", createKeysArray).add("createValuesArray", createValuesArray));
         }
 
         if (DEBUG) {
@@ -40,7 +26,29 @@ public final class MutableObjectMaxDistanceNonBucketMap<K, V> extends BaseObject
     }
 
     @Override
-    public V put(K key, V value, V defaultPreviousValue) {
+    public final long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
+    public final void clear() {
+
+        if (DEBUG) {
+
+            enter();
+        }
+
+        clearBaseNonBucketMap();
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public final V put(K key, V value, V defaultPreviousValue) {
 
         Objects.requireNonNull(key);
 
@@ -60,7 +68,7 @@ public final class MutableObjectMaxDistanceNonBucketMap<K, V> extends BaseObject
     }
 
     @Override
-    public V removeAndReturnPrevious(K key, V defaultValue) {
+    public final V removeAndReturnPrevious(K key, V defaultValue) {
 
         Objects.requireNonNull(key);
 
@@ -94,7 +102,7 @@ public final class MutableObjectMaxDistanceNonBucketMap<K, V> extends BaseObject
     }
 
     @Override
-    public boolean remove(K key) {
+    public final boolean remove(K key) {
 
         Objects.requireNonNull(key);
 
@@ -123,21 +131,5 @@ public final class MutableObjectMaxDistanceNonBucketMap<K, V> extends BaseObject
         }
 
         return result;
-    }
-
-    @Override
-    public void clear() {
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        clearBaseObjectToObjectNonBucketMap();
-
-        if (DEBUG) {
-
-            exit();
-        }
     }
 }

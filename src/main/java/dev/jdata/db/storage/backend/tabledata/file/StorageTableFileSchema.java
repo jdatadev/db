@@ -8,7 +8,7 @@ import java.util.Objects;
 
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
-import dev.jdata.db.schema.model.IDatabaseSchema;
+import dev.jdata.db.schema.model.databaseschema.IDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
@@ -28,7 +28,7 @@ public final class StorageTableFileSchema {
 
         StorageTableFileColumn(int bitOffset, int numBits, int nullValueBitmapIndex) {
 
-            Checks.isOffset(bitOffset);
+            Checks.isIntOffset(bitOffset);
             Checks.isNumBits(numBits);
 
             if (numBits > MAX_COLUMN_ROW_NUM_BITS) {
@@ -36,7 +36,7 @@ public final class StorageTableFileSchema {
                 throw new IllegalArgumentException();
             }
 
-            Checks.isIndex(nullValueBitmapIndex);
+            Checks.isIntIndex(nullValueBitmapIndex);
 
             this.bitOffset = bitOffset;
             this.numBits = numBits;

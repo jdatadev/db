@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.IAddableList;
-import org.jutils.ast.objects.list.IIndexListGetters;
+import org.jutils.ast.objects.list.IIndexListView;
 import org.jutils.ast.operator.Arithmetic;
 import org.jutils.ast.operator.Operator;
 import org.jutils.io.strings.CharInput;
@@ -26,7 +26,7 @@ import dev.jdata.db.sql.ast.expressions.SQLSubSelectStatement;
 import dev.jdata.db.sql.parse.SQLExpressionLexer;
 import dev.jdata.db.sql.parse.SQLLexer;
 import dev.jdata.db.sql.parse.SQLToken;
-import dev.jdata.db.utils.adt.decimals.MutableDecimal;
+import dev.jdata.db.utils.adt.numbers.decimals.ICachedMutableDecimal;
 
 public final class SQLExpressionParser extends BaseSQLExpressionParser {
 
@@ -135,7 +135,7 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
     @FunctionalInterface
     private interface FunctionFactory<T extends BaseSQLFunctionCallExpression> {
 
-        T createFunction(Context context, long functionName, IIndexListGetters<Expression> parameters);
+        T createFunction(Context context, long functionName, IIndexListView<Expression> parameters);
     }
 
     private <T extends BaseSQLFunctionCallExpression, E extends Exception, I extends CharInput<E>> T parseFunction(SQLExpressionLexer<E, I> lexer, long functionName,
@@ -230,7 +230,7 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
 
             final boolean isLargeFraction = scratchFractionValue.isLargeIntegerSet();
 
-            final MutableDecimal decimal;
+            final ICachedMutableDecimal decimal;
 
             if (isLargeInteger && isLargeFraction) {
 
@@ -252,7 +252,7 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
         }
         else {
             result = isLargeInteger
-                    ? new SQLLargeIntegerLiteral(makeContext(), scratchIntegerValue.getLargeInteger())
+                    ? new SQLLargeIntegerLiteral(makeContext(), allocator.allocateMutableLargeInteger(scratchIntegerValue.getLargeInteger()))
                     : new SQLIntegerLiteral(makeContext(), scratchIntegerValue.getLongInteger());
         }
 

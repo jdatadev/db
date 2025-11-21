@@ -1,6 +1,6 @@
 package dev.jdata.db.sql.parse.dml.select;
 
-import org.jutils.ast.objects.list.IIndexListGetters;
+import org.jutils.ast.objects.list.IIndexListView;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.statements.dml.SQLSelectStatement;
@@ -17,7 +17,7 @@ public class SQLSelectParser extends BaseSQLSelectParser<SQLSelectStatement> {
     }
 
     @Override
-    protected SQLSelectStatement createSelectStatement(Context context, IIndexListGetters<SQLSelectStatementPart> parts, IIndexListGetters<SQLUnion> unions) {
+    protected SQLSelectStatement createSelectStatement(Context context, IIndexListView<SQLSelectStatementPart> parts, IIndexListView<SQLUnion> unions) {
 
         return new SQLSelectStatement(context, parts, unions);
     }

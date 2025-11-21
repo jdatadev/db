@@ -1,5 +1,5 @@
 package dev.jdata.db.utils.adt.sets;
 
-public interface ILongSetGetters {
+interface ILongSetGetters extends ISetGettersMarker {
 
 }

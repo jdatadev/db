@@ -3,11 +3,14 @@ package dev.jdata.db.test.unit.assertj;
 import java.util.HashSet;
 import java.util.Set;
 
-import dev.jdata.db.utils.adt.maps.ILongContainsKeyMap;
+import dev.jdata.db.utils.adt.maps.ILongContainsKeyMapView;
+import dev.jdata.db.utils.adt.sets.IHeapMutableLongSet;
+import dev.jdata.db.utils.adt.sets.ILongSetView;
+import dev.jdata.db.utils.adt.sets.IMutableLongSet;
 
-public final class LongKeyMapAssert extends BaseElementsAssert<LongKeyMapAssert, ILongContainsKeyMap> {
+public final class LongKeyMapAssert extends BaseElementsAssert<LongKeyMapAssert, ILongContainsKeyMapView> {
 
-    LongKeyMapAssert(ILongContainsKeyMap actual) {
+    LongKeyMapAssert(ILongContainsKeyMapView actual) {
         super(actual, LongKeyMapAssert.class);
     }
 
@@ -39,7 +42,9 @@ public final class LongKeyMapAssert extends BaseElementsAssert<LongKeyMapAssert,
 
         isNotNull();
 
-        final long[] actualKeys = actual.keys();
+        final IMutableLongSet actualKeys = IHeapMutableLongSet.create();
+
+        actual.keys(actualKeys);
 
         if (!toSet(actualKeys).equals(toSet(expectedKeys))) {
 
@@ -47,6 +52,11 @@ public final class LongKeyMapAssert extends BaseElementsAssert<LongKeyMapAssert,
         }
 
         return this;
+    }
+
+    private static Set<Long> toSet(ILongSetView set) {
+
+        return toSet(set.toArray());
     }
 
     private static Set<Long> toSet(long ... values) {

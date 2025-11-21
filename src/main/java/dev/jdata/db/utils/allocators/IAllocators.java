@@ -12,12 +12,14 @@ public interface IAllocators extends IAllocator {
             INSTANTIATED
         }
 
-        <T> void addInstanceAllocator(String name, RefType refType, Class<?> objectType, IInstanceAllocator<T> instanceAllocator);
+        <T> void addInstanceAllocator(String name, RefType refType, Class<?> objectType, ITypedInstanceAllocator<T> instanceAllocator);
 
         void addAllocators(String name, RefType refType, IAllocators cache);
         void addAllocators(String name, RefType refType, Class<?> objectTye, IAllocators cache);
 
         <T> void addObjectCache(String name, Class<T> objectType, ObjectCache<T> objectCache);
+        <T> void addObjectCacheForGenericType(String name, Class<T> objectType, ObjectCache<? extends T> objectCache);
+
         <T extends ObjectCacheNode> void addNodeObjectCache(String name, Class<T> objectType, NodeObjectCache<T> nodeObjectCache);
         <T extends ObjectCacheNode> void addNodeObjectCacheForGenericType(String name, Class<T> objectType, NodeObjectCache<? extends T> nodeObjectCache);
     }

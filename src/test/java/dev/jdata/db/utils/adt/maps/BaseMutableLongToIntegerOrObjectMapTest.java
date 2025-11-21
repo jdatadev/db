@@ -1,15 +1,31 @@
 package dev.jdata.db.utils.adt.maps;
 
-import dev.jdata.db.utils.adt.IClearable;
-import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.elements.INonDistinct;
+import dev.jdata.db.utils.adt.elements.IOrderedAddable;
+import dev.jdata.db.utils.adt.lists.IHeapMutableLongIndexList;
+import dev.jdata.db.utils.adt.lists.IMutableLongList;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseMutableLongToIntegerOrObjectMapTest<V, M extends ILongKeyMap & IClearable & IMapMutators> extends BaseMutableIntegerToIntegerOrObjectMapTest<long[], V, M> {
+abstract class BaseMutableLongToIntegerOrObjectMapTest<VALUES_ARRAY, VALUES_ADDABLE extends IOrderedAddable<?> & INonDistinct, MAP extends IMutableLongKeyMap>
+
+        extends BaseMutableIntegerToIntegerOrObjectMapTest<long[], VALUES_ARRAY, IMutableLongList, VALUES_ADDABLE, MAP> {
 
     @Override
     final long[] createKeysArray(int length) {
 
         return new long[length];
+    }
+
+    @Override
+    final IMutableLongList createKeysOrderedAddable(int initialCapacity) {
+
+        return IHeapMutableLongIndexList.create(initialCapacity);
+    }
+
+    @Override
+    final long[] keysToArray(IMutableLongList keysAddable) {
+
+        return toArray(keysAddable);
     }
 
     @Override
@@ -19,8 +35,8 @@ abstract class BaseMutableLongToIntegerOrObjectMapTest<V, M extends ILongKeyMap 
     }
 
     @Override
-    int[] getKeys(M map) {
+    final void getKeys(MAP map, IMutableLongList keysAddable) {
 
-        return Array.checkToIntArray(map.keys());
+        map.keys(keysAddable);
     }
 }

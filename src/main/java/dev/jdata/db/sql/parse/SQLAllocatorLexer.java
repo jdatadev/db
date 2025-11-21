@@ -11,6 +11,10 @@ public class SQLAllocatorLexer<E extends Exception, INPUT extends CharInput<E>> 
 
     private ISQLAllocator allocator;
 
+    public SQLAllocatorLexer(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     final void initialize(INPUT input, Function<String, E> createEOFException, ISQLAllocator allocator) {
 
         if (this.allocator != null) {

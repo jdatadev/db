@@ -6,20 +6,33 @@ import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.parse.context.Context;
 
-import dev.jdata.db.utils.adt.decimals.MutableDecimal;
+import dev.jdata.db.sql.ast.ISQLAllocator;
+import dev.jdata.db.sql.ast.ISQLFreeable;
+import dev.jdata.db.utils.adt.numbers.decimals.ICachedMutableDecimal;
+import dev.jdata.db.utils.adt.numbers.decimals.IDecimalView;
 
-public final class SQLDecimalLiteral extends SQLLiteral {
+public final class SQLDecimalLiteral extends SQLLiteral implements ISQLFreeable {
 
-    private final MutableDecimal decimal;
+    private ICachedMutableDecimal decimal;
 
-    public SQLDecimalLiteral(Context context, MutableDecimal decimal) {
+    public SQLDecimalLiteral(Context context, ICachedMutableDecimal decimal) {
         super(context);
 
         this.decimal = Objects.requireNonNull(decimal);
     }
 
-    public MutableDecimal getDecimal() {
+    public IDecimalView getDecimal() {
         return decimal;
+    }
+
+    @Override
+    public void free(ISQLAllocator allocator) {
+
+        Objects.requireNonNull(allocator);
+
+        allocator.freeDecimal(decimal);
+
+        this.decimal = null;
     }
 
     @Override

@@ -13,6 +13,10 @@ public final class ExecutePreparedStatementRowLargeObjectMessage extends Prepare
     private int largeObjectOffset;
     private int largeObjectLength;
 
+    ExecutePreparedStatementRowLargeObjectMessage(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     @Override
     public ProtocolMessageType getMessageType() {
 
@@ -20,11 +24,11 @@ public final class ExecutePreparedStatementRowLargeObjectMessage extends Prepare
     }
 
     @Override
-    void decode(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, ProtocolAllocator allocator) throws ProtocolDecodeException {
+    void decode(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, IProtocolAllocator allocator) throws ProtocolDecodeException {
 
         Objects.requireNonNull(byteBuffer);
-        Checks.isOffset(offset);
-        Checks.isLengthAboveZero(length);
+        Checks.isIntOffset(offset);
+        Checks.isIntLengthAboveZero(length);
 
         int currentOffset = offset;
         int currentLength = length;
@@ -36,7 +40,7 @@ public final class ExecutePreparedStatementRowLargeObjectMessage extends Prepare
 
         this.largeObjectByteBuffer = byteBuffer;
         this.largeObjectOffset = currentOffset;
-        this.largeObjectLength = Checks.isLengthAboveZero(length - (currentOffset - offset));
+        this.largeObjectLength = Checks.isIntLengthAboveZero(length - (currentOffset - offset));
     }
 
     public ByteBuffer getLargeObjectByteBuffer() {

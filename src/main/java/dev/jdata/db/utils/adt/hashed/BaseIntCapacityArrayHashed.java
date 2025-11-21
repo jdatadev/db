@@ -1,27 +1,26 @@
 package dev.jdata.db.utils.adt.hashed;
 
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
 
-abstract class BaseIntCapacityArrayHashed<T> extends BaseIntCapacityHashed<T> {
+abstract class BaseIntCapacityArrayHashed<HASHED, CREATE_ELEMENTS, MAKE_ELEMENTS_FROM, INIT_FROM_VALUES>
+
+        extends BaseIntCapacityHashed<HASHED, CREATE_ELEMENTS, MAKE_ELEMENTS_FROM, INIT_FROM_VALUES> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_CAPACITY_ARRAY_HASHED;
 
-    private final IntFunction<T> createHashed;
-
-    BaseIntCapacityArrayHashed(int initialCapacity, float loadFactor, IntFunction<T> createHashed, Consumer<T> clearHashed) {
-        super(initialCapacity, loadFactor, () -> createHashed.apply(initialCapacity), clearHashed);
+    BaseIntCapacityArrayHashed(AllocationType allocationType, int initialCapacity, float loadFactor, int recreateCapacity, IntFunction<HASHED> createHashed,
+            Consumer<HASHED> clearHashed, IntFunction<HASHED> recreateHashed) {
+        super(allocationType, initialCapacity, loadFactor, createHashed, clearHashed, () -> recreateHashed.apply(recreateCapacity));
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacity", initialCapacity).add("loadFactor", loadFactor).add("createHashed", createHashed).add("clearHashed", clearHashed));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacity", initialCapacity).add("loadFactor", loadFactor).add("recreateCapacity", recreateCapacity)
+                    .add("createHashed", createHashed).add("clearHashed", clearHashed));
         }
-
-        this.createHashed = Objects.requireNonNull(createHashed);
 
         if (DEBUG) {
 
@@ -29,15 +28,27 @@ abstract class BaseIntCapacityArrayHashed<T> extends BaseIntCapacityHashed<T> {
         }
     }
 
-    BaseIntCapacityArrayHashed(BaseIntCapacityArrayHashed<T> toCopy, Function<T, T> copyHashed) {
-        super(toCopy, copyHashed);
+    BaseIntCapacityArrayHashed(AllocationType allocationType, BaseIntCapacityArrayHashed<HASHED, ?, ?, ?> toInitializeFrom) {
+        super(allocationType, toInitializeFrom);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy).add("copyHashed", copyHashed));
+            enter(b -> b.add("allocationType", allocationType).add("toInitializeFrom", toInitializeFrom));
         }
 
-        this.createHashed = toCopy.createHashed;
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    BaseIntCapacityArrayHashed(AllocationType allocationType, BaseIntCapacityArrayHashed<HASHED, ?, ?, ?> toCopy, Function<HASHED, HASHED> copyHashed) {
+        super(allocationType, toCopy, copyHashed);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy).add("copyHashed", copyHashed));
+        }
 
         if (DEBUG) {
 

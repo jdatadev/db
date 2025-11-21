@@ -13,7 +13,7 @@ import dev.jdata.db.sql.ast.clauses.SQLWhereClause;
 import dev.jdata.db.sql.ast.statements.dml.SQLDeleteStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLInsertStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateStatement;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
+import dev.jdata.db.utils.adt.arrays.ICachedMutableLongLargeArray;
 
 class DMLUpdatingPreparedStatementEvaluator extends BaseDMLUpdatingEvaluator {
 
@@ -84,11 +84,11 @@ class DMLUpdatingPreparedStatementEvaluator extends BaseDMLUpdatingEvaluator {
 
         final SQLWhereClause whereClause = updateStatement.getWhereClause();
 
-        final LargeLongArray rowIds = whereClause != null
-                ? evaluatorParameter.allocateLargeLongArray()
-                : null;
-
         final int numUpdates = preparedStatementParameters.getParametersNumRows();
+
+        final ICachedMutableLongLargeArray rowIds = whereClause != null
+                ? evaluatorParameter.allocateMutableLongLargeArray(numUpdates)
+                : null;
 
         try {
             for (int i = 0; i < numUpdates; ++ i) {
@@ -100,7 +100,7 @@ class DMLUpdatingPreparedStatementEvaluator extends BaseDMLUpdatingEvaluator {
 
             if (rowIds != null) {
 
-                evaluatorParameter.freeLargeLongArray(rowIds);
+                evaluatorParameter.freeMutableLongLargeArray(rowIds);
             }
         }
     }

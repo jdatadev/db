@@ -10,6 +10,7 @@ import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.adt.arrays.TwoDimensionalArray;
 import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class StorageTableSchemas {
@@ -29,7 +30,8 @@ public final class StorageTableSchemas {
         Objects.requireNonNull(versionedDatabaseSchemas);
         Objects.requireNonNull(numStorageBitsGetter);
 
-        this.storageTableSchemasByTableId = new TwoDimensionalArray<>(versionedDatabaseSchemas.getNumKnownTables(), StorageTableSchema[][]::new, 10, StorageTableSchema[]::new);
+        this.storageTableSchemasByTableId = new TwoDimensionalArray<>(AllocationType.HEAP, versionedDatabaseSchemas.getNumKnownTables(), StorageTableSchema[][]::new, 10,
+                StorageTableSchema[]::new);
 
         versionedDatabaseSchemas.forEachVersionedTable((i, t) -> {
 

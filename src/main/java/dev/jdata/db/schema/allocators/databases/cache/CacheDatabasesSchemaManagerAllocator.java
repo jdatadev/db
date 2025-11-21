@@ -3,27 +3,27 @@ package dev.jdata.db.schema.allocators.databases.cache;
 import java.util.Objects;
 
 import dev.jdata.db.schema.allocators.databases.DatabasesSchemaManagerAllocator;
-import dev.jdata.db.schema.allocators.model.diff.dropped.DroppedSchemaObjectsAllocator;
-import dev.jdata.db.schema.allocators.model.schemamaps.cache.CacheCompleteSchemaMapsBuilderAllocator;
-import dev.jdata.db.schema.allocators.schemas.IDatabaseSchemasAllocator;
-import dev.jdata.db.schema.model.cache.CachedSchemaMap;
-import dev.jdata.db.schema.model.objects.SchemaObject;
-import dev.jdata.db.schema.model.schemamaps.cache.CachedAllCompleteSchemaMaps;
-import dev.jdata.db.schema.model.schemamaps.cache.CachedAllSimpleCompleteSchemaBuilder;
+import dev.jdata.db.schema.model.diff.dropped.SchemaDroppedElementsAllocators;
+import dev.jdata.db.schema.model.schemamaps.ICachedAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.ICachedAllCompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.schemamaps.ICachedAllCompleteSchemaMapsBuilderAllocator;
+import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemas.IDatabaseSchemasAllocator;
+import dev.jdata.db.utils.adt.maps.IMutableIntToObjectWithRemoveStaticMap;
+import dev.jdata.db.utils.adt.sets.IMutableIntSet;
 import dev.jdata.db.utils.allocators.IAllocators;
-import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer.RefType;
 
 @Deprecated // currently not in use
-final class CacheDatabasesSchemaManagerAllocator
+final class CacheDatabasesSchemaManagerAllocator<T extends IMutableIntSet, U extends IMutableIntToObjectWithRemoveStaticMap<T>>
 
-        extends DatabasesSchemaManagerAllocator<CachedSchemaMap<SchemaObject>, CachedAllCompleteSchemaMaps, CachedAllSimpleCompleteSchemaBuilder>
+        extends DatabasesSchemaManagerAllocator<T, U, ICachedAllCompleteSchemaMaps, IHeapAllCompleteSchemaMaps, ICachedAllCompleteSchemaMapsBuilder>
         implements IAllocators {
 
     private final SchemaMapBuildersCache schemaMapBuildersCache;
 
-    CacheDatabasesSchemaManagerAllocator(DroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator, IDatabaseSchemasAllocator databaseSchemasAllocator,
-            CacheCompleteSchemaMapsBuilderAllocator completeSchemaMapsBuilderAllocator) {
-        super(droppedSchemaObjectsAllocator, databaseSchemasAllocator, completeSchemaMapsBuilderAllocator);
+    CacheDatabasesSchemaManagerAllocator(SchemaDroppedElementsAllocators droppedSchemaObjectsAllocator, IDatabaseSchemasAllocator<T, U> databaseSchemasAllocator,
+            ICachedAllCompleteSchemaMapsBuilderAllocator allCompleteSchemaMapsBuilderAllocator) {
+        super(droppedSchemaObjectsAllocator, databaseSchemasAllocator, allCompleteSchemaMapsBuilderAllocator);
 
         this.schemaMapBuildersCache = null; // new SchemaMapBuildersCache(completeSchemaMapsBuilderAllocator);
     }
@@ -33,6 +33,10 @@ final class CacheDatabasesSchemaManagerAllocator
 
         Objects.requireNonNull(statisticsGatherer);
 
-        statisticsGatherer.addAllocators("schemaMapBuildersCache", RefType.INSTANTIATED, schemaMapBuildersCache);
+        super.gatherStatistics(statisticsGatherer);
+
+        // fix
+        // statisticsGatherer.addAllocators("schemaMapBuildersCache", RefType.INSTANTIATED, schemaMapBuildersCache);
+        throw new UnsupportedOperationException();
     }
 }

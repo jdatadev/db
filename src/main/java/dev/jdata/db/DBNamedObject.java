@@ -110,4 +110,10 @@ public abstract class DBNamedObject implements ToStringWithStringResolver {
 
         sb.append(']');
     }
+
+    @Override
+    public String toString() {
+
+        return DBNamedObject.class.getSimpleName() + " [parsedName=" + parsedName + ", hashName=" + hashName + "]";
+    }
 }

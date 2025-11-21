@@ -1,9 +1,14 @@
 package dev.jdata.db.utils.adt.lists;
 
-public interface IHeadListMutators<T> {
+interface IHeadListMutators extends IListMutatorsMarker {
 
-    void addHead(T instance);
+    void removeHead();
 
-    T removeHead();
-    void removeHead(long numElements);
+    default void removeHead(long numElements) {
+
+        for (long i = 0L; i < numElements; ++ i) {
+
+            removeHead();
+        }
+    }
 }

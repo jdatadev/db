@@ -7,6 +7,10 @@ abstract class DDLTransactionDiffObject<T extends SchemaObjectDiff> extends DDLT
 
     private T schemaObjectDiff;
 
+    DDLTransactionDiffObject(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     final void initialize(T schemaObjectDiff) {
 
         this.schemaObjectDiff = Initializable.checkNotYetInitialized(this.schemaObjectDiff, schemaObjectDiff);

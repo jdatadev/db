@@ -1,9 +1,17 @@
 package dev.jdata.db.utils.adt.hashed;
 
-import dev.jdata.db.utils.adt.CapacityExponents;
+import dev.jdata.db.utils.adt.capacity.CapacityExponents;
 import dev.jdata.db.utils.checks.Checks;
 
 public class HashUtil {
+
+    public static int computeHashCapacityExponent(long numElements, float loadFactor) {
+
+        Checks.isNotNegative(numElements);
+        Checks.isLoadFactor(loadFactor);
+
+        return computeRehashCapacityExponent(numElements, loadFactor);
+    }
 
     public static int computeRehashCapacityExponent(long numElements, float loadFactor) {
 
@@ -22,17 +30,22 @@ public class HashUtil {
     static boolean shouldRehash(long numElements, long capacity, float loadFactor) {
 
         Checks.isNotNegative(numElements);
-        Checks.isCapacity(capacity);
+        Checks.isIntOrLongCapacityAboveZero(capacity);
         Checks.isLessThanOrEqualTo(capacity, Double.MAX_VALUE);
         Checks.isLoadFactor(loadFactor);
 
         return shouldRehashElements(numElements, capacity, loadFactor);
     }
 
+    private static int computeRequiredIntCapacity(int numElements, int capacity, float loadFactor, int capacityExponentIncrease) {
+
+        return computeRequiredIntCapacity(numElements, capacity, loadFactor, capacityExponentIncrease);
+    }
+
     static long computeRequiredCapacity(long numElements, long capacity, float loadFactor, int capacityExponentIncrease, boolean longCapacity) {
 
         Checks.isNotNegative(numElements);
-        Checks.isCapacity(capacity);
+        Checks.isCapacityAtOrAboveZero(capacity, longCapacity);
         Checks.isLessThanOrEqualTo(capacity, Double.MAX_VALUE);
         Checks.isLoadFactor(loadFactor);
         Checks.isCapacityExponentIncrease(capacityExponentIncrease, longCapacity);

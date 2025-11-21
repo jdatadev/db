@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.adt.maps;
 
-interface IIntToLongStaticMapRemovalMutators extends IKeyValueStaticMapRemovalMutators {
+interface IIntToLongStaticMapRemovalMutators extends IKeyValueStaticMapRemovalMutatorsMarker {
 
     long removeAndReturnPrevious(int key);
 }

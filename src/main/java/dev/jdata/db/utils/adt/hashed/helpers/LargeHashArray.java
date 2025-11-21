@@ -3,8 +3,8 @@ package dev.jdata.db.utils.adt.hashed.helpers;
 import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.arrays.LargeIntArray;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
+import dev.jdata.db.utils.adt.arrays.IMutableIntLargeArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
@@ -21,12 +21,12 @@ public class LargeHashArray {
 
     public static final long NO_INDEX = -1L;
 
-    public static long getIndexScanHashArrayToMaxHashArrayIndex(LargeIntArray hashArray, int element, long hashArrayIndex, int max) {
+    public static long getIndexScanHashArrayToMaxHashArrayIndex(IMutableIntLargeArray hashArray, int element, long hashArrayIndex, int max) {
 
         Objects.requireNonNull(hashArray);
         IntNonBucket.checkIsHashArrayElement(element);
-        Checks.isIndex(hashArrayIndex);
-        Checks.isLengthAboveOrAtZero(max);
+        Checks.isLongIndex(hashArrayIndex);
+        Checks.isIntLengthAboveOrAtZero(max);
 
         if (DEBUG) {
 
@@ -70,12 +70,12 @@ public class LargeHashArray {
         return found;
     }
 
-    public static long getIndexScanHashArrayToMaxHashArrayIndex(LargeLongArray hashArray, long element, long hashArrayIndex, int max) {
+    public static long getIndexScanHashArrayToMaxHashArrayIndex(IMutableLongLargeArray hashArray, long element, long hashArrayIndex, int max) {
 
         Objects.requireNonNull(hashArray);
         LongNonBucket.checkIsHashArrayElement(element);
-        Checks.isIndex(hashArrayIndex);
-        Checks.isLengthAboveOrAtZero(max);
+        Checks.isLongIndex(hashArrayIndex);
+        Checks.isIntLengthAboveOrAtZero(max);
 
         if (DEBUG) {
 
@@ -119,7 +119,7 @@ public class LargeHashArray {
         return found;
     }
 
-    public static long getIndexScanEntireHashArray(LargeIntArray hashArray, int key, int keyMask) {
+    public static long getIndexScanEntireHashArray(IMutableIntLargeArray hashArray, int key, int keyMask) {
 
         Checks.isNotEmpty(hashArray);
         IntNonBucket.checkIsHashArrayElement(key);
@@ -171,7 +171,7 @@ public class LargeHashArray {
         return found;
     }
 
-    public static long getIndexScanEntireHashArray(LargeLongArray hashArray, long key, long keyMask) {
+    public static long getIndexScanEntireHashArray(IMutableLongLargeArray hashArray, long key, long keyMask) {
 
         Checks.isNotEmpty(hashArray);
         LongNonBucket.checkIsHashArrayElement(key);
@@ -223,10 +223,10 @@ public class LargeHashArray {
         return found;
     }
 
-    public static long add(LargeIntArray hashArray, int value, long hashArrayIndex) {
+    public static long add(IMutableIntLargeArray hashArray, int value, long hashArrayIndex) {
 
         Checks.isNotEmpty(hashArray);
-        Checks.isIndex(hashArrayIndex);
+        Checks.isLongIndex(hashArrayIndex);
 
         if (DEBUG) {
 
@@ -311,7 +311,7 @@ public class LargeHashArray {
             Assertions.areNotEqual(found, noIndex);
         }
 
-        final long result = LongPutResult.makePutResult(newAdded, found);
+        final long result = LongCapacityPutResult.makePutResult(newAdded, found);
 
         if (DEBUG) {
 
@@ -321,10 +321,10 @@ public class LargeHashArray {
         return result;
     }
 
-    public static long add(LargeLongArray hashArray, long value, long hashArrayIndex) {
+    public static long add(IMutableLongLargeArray hashArray, long value, long hashArrayIndex) {
 
         Checks.isNotEmpty(hashArray);
-        Checks.isIndex(hashArrayIndex);
+        Checks.isLongIndex(hashArrayIndex);
 
         if (DEBUG) {
 
@@ -409,7 +409,7 @@ public class LargeHashArray {
             Assertions.areNotEqual(found, noIndex);
         }
 
-        final long result = LongPutResult.makePutResult(newAdded, found);
+        final long result = LongCapacityPutResult.makePutResult(newAdded, found);
 
         if (DEBUG) {
 

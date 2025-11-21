@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.IntFunction;
@@ -12,32 +11,35 @@ import java.util.function.Predicate;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.IForEachSequenceElement;
-import dev.jdata.db.utils.adt.elements.IMutableElements;
+import dev.jdata.db.utils.adt.byindex.ByIndex;
+import dev.jdata.db.utils.adt.byindex.IByIndexView;
+import dev.jdata.db.utils.adt.elements.ElementsExceptions;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.debug.PrintDebug;
 
-public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> implements IMutableElements, PrintDebug {
+public final class TwoDimensionalArray<T> extends BaseAnyDimensionalLargeArray<T[][], T[]> implements IMutableAnyDimensionalArray, IOnlyElementsView {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_TWO_DIMENSIONAL_ARRAY;
 
-    private final int innerInitialCapacity;
+    private final int innerCapacity;
     private final IntFunction<T[]> createInnerArray;
 
     private int numElements;
 
-    public TwoDimensionalArray(int outerInitialCapacity, IntFunction<T[][]> createOuterArray, int innerInitialCapacity, IntFunction<T[]> createInnerArray) {
-        super(outerInitialCapacity, false, createOuterArray, true);
+    public TwoDimensionalArray(AllocationType allocationType, int outerInitialCapacity, IntFunction<T[][]> createOuterArray, int innerCapacity,
+            IntFunction<T[]> createInnerArray) {
+        super(allocationType, outerInitialCapacity, false, createOuterArray, true);
 
-        Checks.isInitialCapacity(innerInitialCapacity);
+        Checks.isInnerCapacityAboveZero(innerCapacity);
         Objects.requireNonNull(createInnerArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("outerInitialCapacity", outerInitialCapacity).add("createOuterArray", createOuterArray).add("innerInitialCapacity", innerInitialCapacity)
+            enter(b -> b.add("outerInitialCapacity", outerInitialCapacity).add("createOuterArray", createOuterArray).add("innerCapacity", innerCapacity)
                     .add("createInnerArray", createInnerArray));
         }
 
-        this.innerInitialCapacity = innerInitialCapacity;
+        this.innerCapacity = innerCapacity;
         this.createInnerArray = createInnerArray;
 
         this.numElements = 0;
@@ -69,6 +71,22 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
 
             exit();
         }
+    }
+
+    @Override
+    public void toString(long index, StringBuilder sb) {
+
+        final int outerIndex = IByIndexView.intIndex(index);
+
+        final T[] innerArray = getInnerArray(outerIndex);
+
+        ByIndex.toString(innerArray, 0L, getNumInnerElements(outerIndex), sb, null, (a, i, b, p) -> b.append(Objects.toString(a[IByIndexView.intIndex(index)])));
+    }
+
+    @Override
+    public void toHexString(long index, StringBuilder sb) {
+
+        toString(index, sb);
     }
 
     public int getNumOuterElements() {
@@ -120,7 +138,7 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
 
                 if (result != null) {
 
-                    throw new IllegalStateException();
+                    throw ElementsExceptions.moreThanOneFoundException();
                 }
 
                 result = element;
@@ -129,7 +147,7 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
 
         if (result == null) {
 
-            throw new NoSuchElementException();
+            throw ElementsExceptions.lessThanOneFoundException();
         }
 
         if (DEBUG) {
@@ -193,7 +211,7 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
 
     public void addWithOuterExpand(int index, T value) {
 
-        Checks.isIndex(index);
+        Checks.isIntIndex(index);
         Objects.requireNonNull(value);
 
         if (DEBUG) {
@@ -213,7 +231,7 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
 
             for (int i = 0; i < numOuter; ++ i) {
 
-                outerArray[i] = createInnerArray.apply(innerInitialCapacity);
+                outerArray[i] = createInnerArray.apply(innerCapacity);
 
                 clearNumInnerElementsIfRequired(i);
             }
@@ -240,7 +258,7 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
                 debug("creating new inner array index=" + index);
             }
 
-            innerArray = createInnerArray.apply(innerInitialCapacity);
+            innerArray = createInnerArray.apply(innerCapacity);
 
             innerArray[0] = value;
 
@@ -373,6 +391,12 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
     protected T[] getInnerArray(T[][] outerArray, int index) {
 
         return outerArray[index];
+    }
+
+    @Override
+    long getToStringLimit() {
+
+        return getNumOuterUtilizedEntries();
     }
 
     private void checkOuterIndex(int index) {

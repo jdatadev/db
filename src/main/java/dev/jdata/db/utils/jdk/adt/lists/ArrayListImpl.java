@@ -19,6 +19,12 @@ public final class ArrayListImpl<T> extends BaseObjectArrayList<T> implements Li
     }
 
     @Override
+    public void clear() {
+
+        clearElements();
+    }
+
+    @Override
     public final boolean contains(Object o) {
 
         throw new UnsupportedOperationException();

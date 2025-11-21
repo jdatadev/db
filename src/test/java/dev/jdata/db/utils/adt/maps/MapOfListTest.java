@@ -3,6 +3,8 @@ package dev.jdata.db.utils.adt.maps;
 import java.util.List;
 import java.util.Map;
 
+import dev.jdata.db.utils.jdk.adt.maps.MapOfList;
+
 public final class MapOfListTest extends BaseMapOfCollectionTest<List<String>, Map<Integer, List<String>>, MapOfList<Integer, String>> {
 
     @Override

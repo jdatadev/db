@@ -8,8 +8,8 @@ import java.util.Objects;
 import dev.jdata.db.storage.backend.file.BaseStorageFile;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.file.access.IFileSystemAccess.OpenMode;
-import dev.jdata.db.utils.file.access.RelativeFilePath;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
+import dev.jdata.db.utils.file.access.RelativeFilePath;
 import dev.jdata.db.utils.file.access.SequentialFileAccess;
 
 public final class FileTransactionLogFile extends BaseStorageFile<SequentialFileAccess> {
@@ -33,14 +33,14 @@ public final class FileTransactionLogFile extends BaseStorageFile<SequentialFile
                 throw new IllegalStateException();
             }
 
-            result = new FileTransactionLogFile(dataInputStream.readLong(), fileSystemAccess, filePath);
+            result = new FileTransactionLogFile(AllocationType.HEAP, dataInputStream.readLong(), fileSystemAccess, filePath);
         }
 
         return result;
     }
 
-    FileTransactionLogFile(long transactionId, IRelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath) throws IOException {
-        super(createSequentialFileAccess(fileSystemAccess, filePath));
+    FileTransactionLogFile(AllocationType allocationType, long transactionId, IRelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath) throws IOException {
+        super(allocationType, createSequentialFileAccess(fileSystemAccess, filePath));
 
         this.transactionId = Checks.isTransactionId(transactionId);
 

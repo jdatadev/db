@@ -2,40 +2,18 @@ package dev.jdata.db.utils.adt.sets;
 
 import dev.jdata.db.DebugConstants;
 
-public final class MutableLongBucketSet extends BaseLongBucketSet implements IMutableLongSet {
+abstract class MutableLongBucketSet extends BaseLongBucketSet implements IMutableLongSet {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_LONG_BUCKET_SET;
 
-    public static MutableLongBucketSet of(long ... values) {
-
-        return new MutableLongBucketSet(values);
-    }
-
-    public MutableLongBucketSet() {
-        this(DEFAULT_INITIAL_CAPACITY_EXPONENT);
-    }
-
-    public MutableLongBucketSet(int initialCapacityExponent) {
-        this(initialCapacityExponent, DEFAULT_LOAD_FACTOR);
-    }
-
-    public MutableLongBucketSet(int initialCapacityExponent, float loadFactor) {
-        super(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, loadFactor, DEFAULT_BUCKETS_INNER_CAPACITY_EXPONENT);
-    }
-
-    private MutableLongBucketSet(long[] values) {
-        super(values);
-    }
-
-    @Override
-    public void clear() {
+    MutableLongBucketSet(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, bucketsInnerCapacityExponent);
 
         if (DEBUG) {
 
-            enter();
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("bucketsInnerCapacityExponent", bucketsInnerCapacityExponent));
         }
-
-        clearBaseLongBucketSet();
 
         if (DEBUG) {
 
@@ -43,19 +21,29 @@ public final class MutableLongBucketSet extends BaseLongBucketSet implements IMu
         }
     }
 
+    private MutableLongBucketSet(AllocationType allocationType, long[] values) {
+        super(allocationType, values);
+    }
+
     @Override
-    public void add(long value) {
+    public long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
+    public final void clear() {
 
         if (DEBUG) {
 
-            enter(b -> b.add("value", value));
+            enter();
         }
 
-        addValue(value);
+        clearBaseBucketSet();
 
         if (DEBUG) {
 
-            exit(b -> b.add("value", value));
+            exit();
         }
     }
 

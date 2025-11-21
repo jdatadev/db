@@ -3,7 +3,6 @@ package dev.jdata.db.utils.adt.maps;
 import java.util.Objects;
 
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
 public class Maps {
 
@@ -31,9 +30,9 @@ public class Maps {
         void allForEach(StringBuilder sb, P parameter, IObjectForEachAppend<K, V, P> forEachAppend);
     }
 
-    public static <T, P> String intToObjectMapToString(String prefix, long numElements, P parameter, IIntToObjectMapForEachCaller<T, P> forEachCaller) {
+    public static <T, P> String intToObjectMapToString(String prefix, int numElements, P parameter, IIntToObjectMapForEachCaller<T, P> forEachCaller) {
 
-        Checks.isNumElements(numElements);
+        Checks.isIntNumElements(numElements);
         Objects.requireNonNull(forEachCaller);
 
         final StringBuilder sb = createStringBuilder(numElements);
@@ -54,9 +53,9 @@ public class Maps {
         longToObjectMapToString(prefix, sb, parameter, longToObjectMapForEachCaller);
     }
 
-    public static <T, P> String longToObjectMapToString(String prefix, long numElements, P parameter, ILongToObjectMapForEachCaller<T, P> forEachCaller) {
+    public static <T, P> String longToObjectMapToString(String prefix, int numElements, P parameter, ILongToObjectMapForEachCaller<T, P> forEachCaller) {
 
-        Checks.isNumElements(numElements);
+        Checks.isIntNumElements(numElements);
         Objects.requireNonNull(forEachCaller);
 
         final StringBuilder sb = createStringBuilder(numElements);
@@ -102,9 +101,9 @@ public class Maps {
         longAppendToString(prefix, sb, parameter, forEachAppendCaller, appendEach);
     }
 
-    public static <K, V, P> String objectToObjectMapToString(String prefix, long numElements, P parameter, IObjectToObjectMapForEachCaller<K, V, P> forEachCaller) {
+    public static <K, V, P> String objectToObjectMapToString(String prefix, int numElements, P parameter, IObjectToObjectMapForEachCaller<K, V, P> forEachCaller) {
 
-        Checks.isNumElements(numElements);
+        Checks.isIntNumElements(numElements);
         Objects.requireNonNull(forEachCaller);
 
         final StringBuilder sb = createStringBuilder(numElements);
@@ -150,10 +149,10 @@ public class Maps {
         void append(long key, T value, StringBuilder sb, P parameter);
     }
 
-    public static <T, P> String longAppendToString(String prefix, long numElements, P parameter, ILongForEachAppendCaller<T, P> forEachAppendCaller,
+    public static <T, P> String longAppendToString(String prefix, int numElements, P parameter, ILongForEachAppendCaller<T, P> forEachAppendCaller,
             ILongAppendEachValue<T, P> appendEachValue) {
 
-        Checks.isNumElements(numElements);
+        Checks.isIntNumElements(numElements);
         Objects.requireNonNull(forEachAppendCaller);
         Objects.requireNonNull(appendEachValue);
 
@@ -215,10 +214,10 @@ public class Maps {
         void append(K key, V value, StringBuilder sb, P parameter);
     }
 
-    public static <K, V, P> String objectAppendToString(String prefix, long numElements, P parameter, IObjectForEachAppendCaller<K, V, P> forEachAppendCaller,
+    public static <K, V, P> String objectAppendToString(String prefix, int numElements, P parameter, IObjectForEachAppendCaller<K, V, P> forEachAppendCaller,
             IObjectAppendEachValue<K, V, P> appendEachValue) {
 
-        Checks.isNumElements(numElements);
+        Checks.isIntNumElements(numElements);
         Objects.requireNonNull(forEachAppendCaller);
         Objects.requireNonNull(appendEachValue);
 
@@ -262,8 +261,8 @@ public class Maps {
         sb.append('}');
     }
 
-    private static StringBuilder createStringBuilder(long numElements) {
+    private static StringBuilder createStringBuilder(int numElements) {
 
-        return new StringBuilder(Integers.checkUnsignedLongToUnsignedInt(numElements * 100));
+        return new StringBuilder(numElements * 100);
     }
 }

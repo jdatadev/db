@@ -4,6 +4,10 @@ import dev.jdata.db.ddl.model.diff.ColumnsObjectDiff;
 
 final class DDLTransactionColumnsDiffObject extends DDLTransactionDiffObject<ColumnsObjectDiff> {
 
+    DDLTransactionColumnsDiffObject(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     @Override
     <P, R> R visit(DDLTransactionObjectVisitor<P, R> visitor, P parameter) {
 

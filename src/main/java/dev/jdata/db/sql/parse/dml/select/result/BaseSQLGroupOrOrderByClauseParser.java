@@ -3,7 +3,7 @@ package dev.jdata.db.sql.parse.dml.select.result;
 import java.util.Objects;
 
 import org.jutils.ast.objects.list.IAddableList;
-import org.jutils.ast.objects.list.IIndexListGetters;
+import org.jutils.ast.objects.list.IIndexListView;
 import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
@@ -22,7 +22,7 @@ public abstract class BaseSQLGroupOrOrderByClauseParser<T extends BaseSQLElement
     private final SQLProjectionItemParser projectionItemParser;
 
     protected abstract <E extends Exception, I extends CharInput<E>> T parseElement(SQLExpressionLexer<E, I> lexer, Context context, SQLProjectionItem projectionItem) throws E;
-    protected abstract U createGroupOrOrderByClause(Context context, IIndexListGetters<T> elements);
+    protected abstract U createGroupOrOrderByClause(Context context, IIndexListView<T> elements);
 
     protected BaseSQLGroupOrOrderByClauseParser(SQLProjectionItemParser projectionItemParser) {
 

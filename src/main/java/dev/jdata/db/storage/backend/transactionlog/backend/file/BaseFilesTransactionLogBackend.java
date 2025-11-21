@@ -13,7 +13,7 @@ import dev.jdata.db.storage.backend.StorageUpdateRows;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema.StorageSchemaColumn;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
-import dev.jdata.db.utils.allocators.IByteArrayAllocator;
+import dev.jdata.db.utils.adt.arrays.IByteArrayAllocator;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.checks.Checks;
 

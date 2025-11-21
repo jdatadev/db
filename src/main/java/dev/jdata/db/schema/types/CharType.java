@@ -8,14 +8,14 @@ public final class CharType extends StringType {
 
     public static CharType of(int length) {
 
-        Checks.isLengthAboveZero(length);
+        Checks.isIntLengthAboveZero(length);
 
         return new CharType(length);
     }
 
     private CharType(int length) {
 
-        this.length = Checks.isLengthAboveZero(length);
+        this.length = Checks.isIntLengthAboveZero(length);
     }
 
     public int getLength() {

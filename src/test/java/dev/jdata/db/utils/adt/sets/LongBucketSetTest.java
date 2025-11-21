@@ -1,7 +1,8 @@
 package dev.jdata.db.utils.adt.sets;
 
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.elements.IIntIterableElements.IForEach;
+import dev.jdata.db.utils.adt.elements.IIntForEach;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.scalars.Integers;
 
 public final class LongBucketSetTest extends BaseImmutableIntegerSetTest<LongBucketSet> {
@@ -9,11 +10,11 @@ public final class LongBucketSetTest extends BaseImmutableIntegerSetTest<LongBuc
     @Override
     LongBucketSet createSet(int[] values) {
 
-        return LongBucketSet.of(Array.toLongArray(values));
+        return HeapLongBucketSet.of(AllocationType.HEAP, Array.toLongArray(values));
     }
 
     @Override
-    <P> void forEach(LongBucketSet set, P parameter, IForEach<P, RuntimeException> forEach) {
+    <P> void forEach(LongBucketSet set, P parameter, IIntForEach<P, RuntimeException> forEach) {
 
         set.forEach(parameter, (e, p) -> forEach.each(Integers.checkLongToInt(e), p));
     }

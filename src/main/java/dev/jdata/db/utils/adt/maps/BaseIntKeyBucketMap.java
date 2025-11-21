@@ -1,22 +1,27 @@
 package dev.jdata.db.utils.adt.maps;
 
+import java.util.Objects;
+
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.elements.IIntAnyOrderAddable;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.helpers.IntBuckets;
-import dev.jdata.db.utils.adt.lists.BaseIntValues;
-import dev.jdata.db.utils.adt.lists.BaseLargeIntMultiHeadSinglyLinkedList;
+import dev.jdata.db.utils.adt.lists.IIntNodeListValuesMarker;
 import dev.jdata.db.utils.adt.lists.ILongNodeSetter;
+import dev.jdata.db.utils.adt.lists.IMutableIntSinglyLinkedMultiHeadNodeList;
+import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.BiIntToObjectFunction;
-import dev.jdata.db.utils.scalars.Integers;
 
 abstract class BaseIntKeyBucketMap<
-                LIST extends BaseLargeIntMultiHeadSinglyLinkedList<MAP, LIST, VALUES>,
-                VALUES extends BaseIntValues<LIST, VALUES>,
+
+                LIST extends IMutableIntSinglyLinkedMultiHeadNodeList<MAP>,
+                VALUES extends IIntNodeListValuesMarker,
                 MAP extends BaseIntKeyBucketMap<LIST, VALUES, MAP>>
 
-        extends BaseIntegerKeyBucketMap<int[], int[], LIST, VALUES, MAP>
-        implements IIntKeyMap, IIntContainsKeyMap {
+        extends BaseBucketMap<int[], int[], LIST, VALUES, MAP>
+        implements IIntKeyMapCommon, IIntContainsKeyMapGetters {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_BUCKET_MAP;
 
@@ -43,15 +48,15 @@ abstract class BaseIntKeyBucketMap<
     private int scratchHashArrayIndex;
     private int[] scratchHashArray;
 
-    abstract void rehashPut(LIST oldBuckets, long oldNode, LIST newBuckets, long newNode);
-
-    BaseIntKeyBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent,
+    BaseIntKeyBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent,
             BiIntToObjectFunction<LIST> createBuckets) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, bucketsInnerCapacityExponent, int[]::new, BaseIntKeyBucketMap::clearHashArray, createBuckets);
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, bucketsInnerCapacityExponent, int[]::new, BaseIntKeyBucketMap::clearHashArray,
+                createBuckets);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor));
         }
 
         if (DEBUG) {
@@ -85,18 +90,16 @@ abstract class BaseIntKeyBucketMap<
     }
 
     @Override
-    public final int[] keys() {
+    public final long keys(IIntAnyOrderAddable addable) {
+
+        Objects.requireNonNull(addable);
 
         if (DEBUG) {
 
-            enter();
+            enter(b -> b.add("addable", addable));
         }
 
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(getNumElements());
-
-        final int[] result = new int[numElements];
-
-        keys(result);
+        final long result = keysAndValues(addable, null, (srcNode, srcBuckets, dstIndex, keysDst, valuesDst) -> keysDst.addInAnyOrder(srcBuckets.getValue(srcNode)));
 
         if (DEBUG) {
 
@@ -107,101 +110,86 @@ abstract class BaseIntKeyBucketMap<
     }
 
     @Override
-    protected final int[] rehash(int[] hashArray, int newCapacity, int newCapacityExponent, int keyMask) {
+    protected final void resetToNull() {
+
+        super.resetToNull();
+
+        this.scratchHashArray = null;
+    }
+
+    @Override
+    final void rehashBuckets(int[] hashArray, int[] newHashArray, int newKeyMask, LIST buckets, LIST newBuckets) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).hex("keyMask", keyMask));
+            enter(b -> b.add("hashArray", hashArray).add("newHashArray", newHashArray).hex("newKeyMask", newKeyMask).add("buckets", buckets).add("newBuckets", newBuckets));
         }
-
-        final int[] newBucketHeadNodesHashArray = new int[newCapacity];
-
-        clearHashArray(newBucketHeadNodesHashArray);
-
-        final LIST oldBuckets = getBuckets();
-
-        final int newBucketsOuterCapacity = oldBuckets.getNumOuterAllocatedEntries();
-
-        final LIST newBuckets = createBuckets(newBucketsOuterCapacity, getBucketsInnerCapacity());
-
-        setBuckets(newBuckets);
 
         final int hashArrayLength = hashArray.length;
 
-        final int noIntNode = IntBuckets.NO_INT_NODE;
         final long noNode = NO_LONG_NODE;
 
         for (int i = 0; i < hashArrayLength; ++ i) {
 
-            final int bucketHeadIntNode = hashArray[i];
+            final long bucketHeadNode = hashArray[i];
 
-            if (bucketHeadIntNode != noIntNode) {
+            if (bucketHeadNode != noNode) {
 
-                final long bucketHeadNode = IntBuckets.intToNode(bucketHeadIntNode);
+                for (long node = bucketHeadNode; node != noNode; node = buckets.getNextNode(node)) {
 
-                for (long node = bucketHeadNode; node != noNode; node = oldBuckets.getNextNode(node)) {
+                    final int key = buckets.getValue(node);
 
-                    final int key = oldBuckets.getValue(node);
-
-                    final long putResult = put(newBucketHeadNodesHashArray, newBuckets, key);
+                    final long putResult = put(newHashArray, newBuckets, key);
                     final long newNode = getPutResultNode(putResult);
 
-                    rehashPut(oldBuckets, node, newBuckets, newNode);
+                    rehashPut(buckets, node, newBuckets, newNode);
                 }
             }
         }
 
         if (DEBUG) {
 
-            exit(newBucketHeadNodesHashArray, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).hex("keyMask", keyMask));
+            exit(b -> b.add("hashArray", hashArray).add("newHashArray", newHashArray).hex("newKeyMask", newKeyMask).add("buckets", buckets).add("newBuckets", newBuckets));
         }
-
-        return newBucketHeadNodesHashArray;
     }
 
-    private void keys(int[] dst) {
+    @Override
+    final <KEYS_DST, VALUES_DST> int keysAndValues(KEYS_DST keysDst, VALUES_DST valuesDst, IIntCapacityBucketMapKeyValueAdder<LIST, KEYS_DST, VALUES_DST> keyValueAdder) {
 
-        keysAndValues(dst, null, null, null);
-    }
-
-    private <S, D> void keysAndValues(int[] keysDst, S src, D dst, IIntMapIndexValueSetter<S, D> valueSetter) {
+        Checks.areAnyNotNull(keysDst, valuesDst);
+        Objects.requireNonNull(keyValueAdder);
 
         if (DEBUG) {
 
-            enter(b -> b.add("keysDst.length", keysDst.length));
+            enter(b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst).add("keyValueAdder", keyValueAdder));
         }
 
         final int[] bucketHeadNodesHashArray = getHashed();
-
         final int bucketHeadNodesHashArrayLength = bucketHeadNodesHashArray.length;
-
-        int dstIndex = 0;
+        final LIST buckets = getBuckets();
 
         final long noNode = NO_LONG_NODE;
 
-        final LIST b = getBuckets();
+        int numAdded = 0;
 
         for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
 
             final long bucketHeadNode = bucketHeadNodesHashArray[i];
 
-            for (long node = bucketHeadNode; node != noNode; node = b.getNextNode(node)) {
+            for (long node = bucketHeadNode; node != noNode; node = buckets.getNextNode(node)) {
 
-                keysDst[dstIndex] = b.getValue(node);
+                keyValueAdder.addValue(node, buckets, numAdded, keysDst, valuesDst);
 
-                if (dst != null) {
-
-                    valueSetter.setValue(src, i, dst, dstIndex);
-                }
-
-                ++ dstIndex;
+                ++ numAdded;
             }
         }
 
         if (DEBUG) {
 
-            exit();
+            exit(numAdded);
         }
+
+        return numAdded;
     }
 
     final long getValueNode(int key) {
@@ -219,7 +207,7 @@ abstract class BaseIntKeyBucketMap<
 
         final long noNode = NO_LONG_NODE;
 
-        final long result = bucketHeadNode != noNode ? getBuckets().findNodeWithValue(IntBuckets.nodeToInt(key), bucketHeadNode) : noNode;
+        final long result = bucketHeadNode != noNode ? getBuckets().findAtMostOneNode(key, bucketHeadNode) : noNode;
 
         if (DEBUG) {
 
@@ -236,7 +224,7 @@ abstract class BaseIntKeyBucketMap<
             enter(b -> b.add("key", key));
         }
 
-        checkCapacity(1);
+        checkCapacityForOneMoreElement();
 
         final long result = put(getHashed(), getBuckets(), key);
 
@@ -295,7 +283,7 @@ abstract class BaseIntKeyBucketMap<
 
             final long bucketHeadNode = IntBuckets.intToNode(bucketHeadIntNode);
 
-            removedNode = getBuckets().removeNodeByValue(mapThis, key, bucketHeadNode, noNode, hSetter, tSetter);
+            removedNode = getBuckets().removeAtMostOneNodeByValue(mapThis, key, bucketHeadNode, noNode, hSetter, tSetter);
         }
 
         if (removedNode != noNode) {
@@ -330,7 +318,7 @@ abstract class BaseIntKeyBucketMap<
 
         final long result;
 
-        final long previousNode = buckets.findNodeWithValue(key, bucketHeadNode);
+        final long previousNode = buckets.findAtMostOneNode(key, bucketHeadNode);
 
         final long noNode = NO_LONG_NODE;
 
@@ -372,7 +360,7 @@ abstract class BaseIntKeyBucketMap<
     @Override
     public String toString() {
 
-        final StringBuilder sb = new StringBuilder(Integers.checkUnsignedLongToUnsignedInt(getNumElements() * 10));
+        final StringBuilder sb = new StringBuilder(IOnlyElementsView.intNumElements(this) * 10);
 
         sb.append(getClass().getSimpleName()).append(" [elements=");
 

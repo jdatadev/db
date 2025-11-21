@@ -22,7 +22,7 @@ public abstract class StorageInsertUpdateRows<T extends StorageInsertUpdateRows.
             initializeDMLRow(databaseSchemaVersion, rowId, transactionId);
 
             this.rowBuffer = Objects.requireNonNull(rowBuffer);
-            this.rowBufferBitOffset = Checks.isOffset(rowBufferBitOffset);
+            this.rowBufferBitOffset = Checks.isBufferBitsOffset(rowBufferBitOffset);
             this.rowDataNumBits = Objects.requireNonNull(rowDataNumBits);
         }
 

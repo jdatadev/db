@@ -7,7 +7,8 @@ public final class SQLScratchExpressionValues extends ObjectCacheNode {
     private final SQLScratchIntegerValue integerValue;
     private final SQLScratchIntegerValue fractionValue;
 
-    public SQLScratchExpressionValues() {
+    public SQLScratchExpressionValues(AllocationType allocationType) {
+        super(allocationType);
 
         this.integerValue = new SQLScratchIntegerValue();
         this.fractionValue = new SQLScratchIntegerValue();

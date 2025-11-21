@@ -2,16 +2,19 @@ package dev.jdata.db.utils.adt.maps;
 
 import java.util.List;
 
+import dev.jdata.db.utils.adt.lists.IMutableList;
+import dev.jdata.db.utils.adt.lists.IMutableLongList;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.scalars.Integers;
 
 public final class MutableLongToObjectMaxDistanceNonBucketMapTest
 
-        extends BaseMutableLongToIntegerOrObjectMaxDistanceMapTest<Integer[], MutableLongToObjectMaxDistanceNonBucketMap<Integer>> {
+        extends BaseMutableLongToIntegerOrObjectMaxDistanceMapTest<Integer[], IMutableList<Integer>, HeapMutableLongToObjectMaxDistanceNonBucketMap<Integer>> {
 
     @Override
-    MutableLongToObjectMaxDistanceNonBucketMap<Integer> createMap(int initialCapacityExponent) {
+    HeapMutableLongToObjectMaxDistanceNonBucketMap<Integer> createMap(int initialCapacity) {
 
-        return new MutableLongToObjectMaxDistanceNonBucketMap<>(initialCapacityExponent, Integer[]::new);
+        return HeapMutableLongToObjectMaxDistanceNonBucketMap.create(AllocationType.HEAP, initialCapacity, Integer[]::new);
     }
 
     @Override
@@ -21,31 +24,43 @@ public final class MutableLongToObjectMaxDistanceNonBucketMapTest
     }
 
     @Override
+    IMutableList<Integer> createValuesOrderedAddable(int initialCapacity) {
+
+        return createObjectOrderedAddable(initialCapacity, Integer[]::new);
+    }
+
+    @Override
+    Integer[] valuesToArray(IMutableList<Integer> valuesAddable) {
+
+        return toArray(valuesAddable, Integer[]::new);
+    }
+
+    @Override
     int getValue(Integer[] values, int index) {
 
         return values[index];
     }
 
     @Override
-    int get(MutableLongToObjectMaxDistanceNonBucketMap<Integer> map, int key) {
+    int get(HeapMutableLongToObjectMaxDistanceNonBucketMap<Integer> map, int key) {
 
         throw new UnsupportedOperationException();
     }
 
     @Override
-    int getWithDefaultValue(MutableLongToObjectMaxDistanceNonBucketMap<Integer> map, int key, int defaultValue) {
+    int getWithDefaultValue(HeapMutableLongToObjectMaxDistanceNonBucketMap<Integer> map, int key, int defaultValue) {
 
         return map.get(key, defaultValue);
     }
 
     @Override
-    <P> void forEachKeyAndValueWithNullFunction(MutableLongToObjectMaxDistanceNonBucketMap<Integer> map, P parameter) {
+    <P> void forEachKeyAndValueWithNullFunction(HeapMutableLongToObjectMaxDistanceNonBucketMap<Integer> map, P parameter) {
 
         map.forEachKeyAndValue(parameter, null);
     }
 
     @Override
-    <P> void forEachKeyAndValue(MutableLongToObjectMaxDistanceNonBucketMap<Integer> map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
+    <P> void forEachKeyAndValue(HeapMutableLongToObjectMaxDistanceNonBucketMap<Integer> map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
 
         map.forEachKeyAndValue(parameter, (k, v, p) -> {
 
@@ -56,19 +71,19 @@ public final class MutableLongToObjectMaxDistanceNonBucketMapTest
     }
 
     @Override
-    void keysAndValues(MutableLongToObjectMaxDistanceNonBucketMap<Integer> map, long[] keysDst, Integer[] valuesDst) {
+    void keysAndValues(HeapMutableLongToObjectMaxDistanceNonBucketMap<Integer> map, IMutableLongList keysAddable, IMutableList<Integer> valuesAddable) {
 
-        map.keysAndValues(keysDst, valuesDst);
+        map.keysAndValues(keysAddable, valuesAddable);
     }
 
     @Override
-    int put(MutableLongToObjectMaxDistanceNonBucketMap<Integer> map, int key, int value, int defaultPreviousValue) {
+    int put(HeapMutableLongToObjectMaxDistanceNonBucketMap<Integer> map, int key, int value, int defaultPreviousValue) {
 
         return map.put(key, value, defaultPreviousValue);
     }
 
     @Override
-    int removeWithDefaultValue(MutableLongToObjectMaxDistanceNonBucketMap<Integer> map, int key, int defaultValue) {
+    int removeWithDefaultValue(HeapMutableLongToObjectMaxDistanceNonBucketMap<Integer> map, int key, int defaultValue) {
 
         return map.removeAndReturnPrevious(key, defaultValue);
     }

@@ -1,8 +1,11 @@
 package dev.jdata.db.utils.adt.maps;
 
+import dev.jdata.db.utils.adt.lists.IMutableList;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
+
 public final class MutableIntToObjectWithRemoveNonBucketMapTest
 
-        extends BaseMutableIntToObjectNonContainsKeyNonBucketMapTest<Integer, MutableIntToObjectWithRemoveNonBucketMap<Integer>> {
+        extends BaseMutableIntToObjectNonContainsKeyNonBucketMapTest<Integer, MutableIntToObjectWithRemoveNonBucketMap<Integer, ?>> {
 
     @Override
     int objectToInt(Integer object) {
@@ -17,9 +20,9 @@ public final class MutableIntToObjectWithRemoveNonBucketMapTest
     }
 
     @Override
-    MutableIntToObjectWithRemoveNonBucketMap<Integer> createMap(int initialCapacityExponent) {
+    MutableIntToObjectWithRemoveNonBucketMap<Integer, ?> createMap(int initialCapacity) {
 
-        return new MutableIntToObjectWithRemoveNonBucketMap<>(initialCapacityExponent, Integer[]::new);
+        return HeapMutableIntToObjectWithRemoveNonBucketMap.create(AllocationType.HEAP, initialCapacity, Integer[]::new);
     }
 
     @Override
@@ -29,7 +32,19 @@ public final class MutableIntToObjectWithRemoveNonBucketMapTest
     }
 
     @Override
-    boolean remove(MutableIntToObjectWithRemoveNonBucketMap<Integer> map, int key) {
+    IMutableList<Integer> createValuesOrderedAddable(int initialCapacity) {
+
+        return createObjectOrderedAddable(initialCapacity, Integer[]::new);
+    }
+
+    @Override
+    Integer[] valuesToArray(IMutableList<Integer> valuesAddable) {
+
+        return toArray(valuesAddable, Integer[]::new);
+    }
+
+    @Override
+    boolean remove(MutableIntToObjectWithRemoveNonBucketMap<Integer, ?> map, int key) {
 
         map.remove(key);
 

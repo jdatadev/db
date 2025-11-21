@@ -5,6 +5,10 @@ import java.nio.charset.CharsetDecoder;
 
 public final class ExecutePreparedStatementRowCompletionMessage extends PreparedStatementMessage {
 
+    ExecutePreparedStatementRowCompletionMessage(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     @Override
     public ProtocolMessageType getMessageType() {
 
@@ -12,7 +16,7 @@ public final class ExecutePreparedStatementRowCompletionMessage extends Prepared
     }
 
     @Override
-    void decode(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, ProtocolAllocator allocator) throws ProtocolDecodeException {
+    void decode(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, IProtocolAllocator allocator) throws ProtocolDecodeException {
 
         decodeStatementId(byteBuffer, offset, length);
     }

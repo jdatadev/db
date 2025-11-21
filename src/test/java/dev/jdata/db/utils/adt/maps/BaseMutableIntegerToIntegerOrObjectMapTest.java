@@ -3,69 +3,81 @@ package dev.jdata.db.utils.adt.maps;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.IClearable;
-import dev.jdata.db.utils.adt.sets.MutableIntBucketSet;
+import dev.jdata.db.utils.adt.elements.INonDistinct;
+import dev.jdata.db.utils.adt.elements.IOrderedAddable;
+import dev.jdata.db.utils.adt.sets.IHeapIntSet;
+import dev.jdata.db.utils.adt.sets.IIntSet;
 import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & IClearable> extends BaseIntegerToIntegerOrObjectMapTest<K, V, M> {
+abstract class BaseMutableIntegerToIntegerOrObjectMapTest<
 
-    abstract M createMap(int initialCapacityExponent);
+                KEYS_ARRAY,
+                VALUES_ARRAY,
+                KEYS_ORDERED_ADDABLE extends IOrderedAddable<?> & INonDistinct,
+                VALUES_ORDERED_ADDABLE extends IOrderedAddable<?> & INonDistinct,
+                MAP extends IMutableBaseMap<?>>
+
+        extends BaseIntegerToIntegerOrObjectMapTest<KEYS_ARRAY, VALUES_ARRAY, KEYS_ORDERED_ADDABLE, VALUES_ORDERED_ADDABLE, MAP> {
+
+    abstract MAP createMap(int initialCapacity);
 
     abstract boolean supportsRemoveNonAdded();
 
-    abstract int put(M map, int key, int value, int defaultPreviousValue);
+    abstract int put(MAP map, int key, int value, int defaultPreviousValue);
 
-    abstract boolean remove(M map, int key);
-    abstract int removeWithDefaultValue(M map, int key, int defaultValue);
+    abstract boolean remove(MAP map, int key);
+    abstract int removeWithDefaultValue(MAP map, int key, int defaultValue);
 
     @Test
     @Category(UnitTest.class)
     public final void testPutAndGetWithOverwrite() {
 
-        final M map = createMap(0);
-
-        assertThat(map).isEmpty();
-        assertThat(map).hasNumElements(0L);
-
         final boolean supportsGetWithDefaultValue = supportsGetWithDefaultValue();
 
-        for (int numElements = 1; numElements <= MAX_ELEMENTS; numElements *= 10) {
+        checkInitialCapacities(c -> {
 
-            for (int i = 0; i < numElements; ++ i) {
+            final MAP map = createMap(c);
 
-                put(map, i);
+            assertThat(map).isEmpty();
+            assertThat(map).hasNumElements(0L);
 
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(i + 1);
-            }
+            checkNumElements(n -> {
 
-            for (int i = 0; i < numElements; ++ i) {
+                for (int i = 0; i < n; ++ i) {
 
-                put(map, i, true);
+                    put(map, i);
 
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(numElements);
-            }
+                    assertThat(map).isNotEmpty();
+                    assertThat(map).hasNumElements(i + 1);
+                }
 
-            assertThat(map).hasNumElements(numElements);
+                for (int i = 0; i < n; ++ i) {
 
-            for (int i = 0; i < numElements; ++ i) {
+                    put(map, i, true);
 
-                final int getResult = supportsGetWithDefaultValue ? getWithDefaultValue(map, i, -1) : get(map, i);
+                    assertThat(map).isNotEmpty();
+                    assertThat(map).hasNumElements(n);
+                }
 
-                assertThat(getResult).isEqualTo(value(i));
+                assertThat(map).hasNumElements(n);
 
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(numElements);
-            }
+                for (int i = 0; i < n; ++ i) {
 
-            assertThat(map).hasNumElements(numElements);
+                    final int getResult = supportsGetWithDefaultValue ? getWithDefaultValue(map, i, -1) : get(map, i);
 
-            checkGetKeys(map, numElements);
+                    assertThat(getResult).isEqualTo(value(i));
 
-            map.clear();
-        }
+                    assertThat(map).isNotEmpty();
+                    assertThat(map).hasNumElements(n);
+                }
+
+                assertThat(map).hasNumElements(n);
+
+                checkGetKeys(map, n);
+
+                map.clear();
+            });
+        });
     }
 
     @Test
@@ -75,132 +87,144 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
         final boolean supportsGetWithDefaultValue = supportsGetWithDefaultValue();
         final boolean supportsRemoveNonAdded = supportsRemoveNonAdded();
 
-        for (int numElements = 1; numElements <= MAX_ELEMENTS; numElements *= 10) {
+        checkInitialCapacities(c -> {
 
-            final M map = createMap(0);
+            checkNumElements(n -> {
 
-            assertThat(map).isEmpty();
-            assertThat(map).hasNumElements(0);
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                put(map, i);
-
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(i + 1);
-            }
-
-            assertThat(map).hasNumElements(numElements);
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                final int getResult = supportsGetWithDefaultValue ? getWithDefaultValue(map, i, -1) : get(map, i);
-
-                assertThat(getResult).isEqualTo(value(i));
-
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(numElements);
-            }
-
-            checkGetKeys(map, numElements);
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                assertThat(remove(map, i)).isTrue();
-
-                assertThat(map.isEmpty()).isEqualTo(i == numElements - 1);
-                assertThat(map).hasNumElements(numElements - i - 1);
-            }
-
-            checkGetKeys(map, 0);
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                if (supportsRemoveNonAdded) {
-
-                    assertThat(remove(map, i)).isFalse();
-                }
-                else {
-                    final int closureI = i;
-
-                    assertThatThrownBy(() -> remove(map, closureI)).isInstanceOf(IllegalStateException.class);
-                }
+                final MAP map = createMap(c);
 
                 assertThat(map).isEmpty();
-                assertThat(map).hasNumElements(0L);
-            }
+                assertThat(map).hasNumElements(0);
 
-            checkGetKeys(map, 0);
-        }
+                for (int i = 0; i < n; ++ i) {
+
+                    put(map, i);
+
+                    assertThat(map).isNotEmpty();
+                    assertThat(map).hasNumElements(i + 1);
+                }
+
+                assertThat(map).hasNumElements(n);
+
+                for (int i = 0; i < n; ++ i) {
+
+                    final int getResult = supportsGetWithDefaultValue ? getWithDefaultValue(map, i, -1) : get(map, i);
+
+                    assertThat(getResult).isEqualTo(value(i));
+
+                    assertThat(map).isNotEmpty();
+                    assertThat(map).hasNumElements(n);
+                }
+
+                checkGetKeys(map, n);
+
+                for (int i = 0; i < n; ++ i) {
+
+                    assertThat(remove(map, i)).isTrue();
+
+                    assertThat(map.isEmpty()).isEqualTo(i == n - 1);
+                    assertThat(map).hasNumElements(n - i - 1);
+                }
+
+                checkGetKeys(map, 0);
+
+                for (int i = 0; i < n; ++ i) {
+
+                    if (supportsRemoveNonAdded) {
+
+                        assertThat(remove(map, i)).isFalse();
+                    }
+                    else {
+                        final int closureI = i;
+
+                        assertThatThrownBy(() -> remove(map, closureI)).isInstanceOf(IllegalStateException.class);
+                    }
+
+                    assertThat(map).isEmpty();
+                    assertThat(map).hasNumElements(0L);
+                }
+
+                checkGetKeys(map, 0);
+            });
+        });
     }
 
     @Test
     @Category(UnitTest.class)
     public final void testPutAndGetWithClear() {
 
-        final M map = createMap(0);
-
-        assertThat(map).isEmpty();
-        assertThat(map).hasNumElements(0L);
-
         final boolean supportsGetWithDefaultValue = supportsGetWithDefaultValue();
 
-        for (int numElements = 1; numElements < MAX_ELEMENTS; numElements *= 10) {
+        checkInitialCapacities(c -> {
 
-            for (int i = 0; i < numElements; ++ i) {
-
-                put(map, i);
-
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(i + 1);
-            }
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                final int getResult = supportsGetWithDefaultValue ? getWithDefaultValue(map, i, -1) : get(map, i);
-
-                assertThat(getResult).isEqualTo(value(i));
-
-                assertThat(map).isNotEmpty();
-                assertThat(map).hasNumElements(numElements);
-            }
-
-            checkGetKeys(map, numElements);
-
-            map.clear();
+            final MAP map = createMap(c);
 
             assertThat(map).isEmpty();
             assertThat(map).hasNumElements(0L);
-        }
+
+            checkNumElements(n -> {
+
+                for (int i = 0; i < n; ++ i) {
+
+                    put(map, i);
+
+                    assertThat(map).isNotEmpty();
+                    assertThat(map).hasNumElements(i + 1);
+                }
+
+                for (int i = 0; i < n; ++ i) {
+
+                    final int getResult = supportsGetWithDefaultValue ? getWithDefaultValue(map, i, -1) : get(map, i);
+
+                    assertThat(getResult).isEqualTo(value(i));
+
+                    assertThat(map).isNotEmpty();
+                    assertThat(map).hasNumElements(n);
+                }
+
+                checkGetKeys(map, n);
+
+                map.clear();
+
+                assertThat(map).isEmpty();
+                assertThat(map).hasNumElements(0L);
+            });
+        });
     }
 
     @Test
     @Category(UnitTest.class)
     public final void testMutableGetNumElements() {
 
-        final M map = createMap(0);
+        checkInitialCapacities(c -> {
 
-        assertThat(map).hasNumElements(0L);
+            final MAP map = createMap(c);
 
-        for (int i = 0; i < MAX_ELEMENTS; ++ i) {
+            assertThat(map).hasNumElements(0L);
 
-            put(map, i);
+            for (int i = 0; i < MAX_ELEMENTS; ++ i) {
 
-            assertThat(map).hasNumElements(i + 1);
-        }
+                put(map, i);
+
+                assertThat(map).hasNumElements(i + 1);
+            }
+        });
     }
 
     @Test
     @Category(UnitTest.class)
     public final void testPutPutRemovePut() {
 
-        checkPutPutRemovePut(0, 1, 0);
-        checkPutPutRemovePut(0, 1, 1);
+        checkInitialCapacities(c -> {
+
+            checkPutPutRemovePut(c, 0, 1, 0);
+            checkPutPutRemovePut(c, 0, 1, 1);
+        });
     }
 
-    private void checkPutPutRemovePut(int key1, int key2, int removeKey) {
+    private void checkPutPutRemovePut(int initialCapacity, int key1, int key2, int removeKey) {
 
-        final M map = createMap(0);
+        final MAP map = createMap(initialCapacity);
 
         assertThat(map).isEmpty();
 
@@ -244,21 +268,24 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
 
         if (supportsRemoveNonAdded()) {
 
-            final M map = createMap(0);
+            checkInitialCapacities(c -> {
 
-            assertThat(map).isEmpty();
+                final MAP map = createMap(c);
 
-            assertThat(removeWithDefaultValue(map, 123, 345)).isEqualTo(345);
+                assertThat(map).isEmpty();
 
-            put(map, 123, 234, -1);
+                assertThat(removeWithDefaultValue(map, 123, 345)).isEqualTo(345);
 
-            assertThat(map).isNotEmpty();
-            assertThat(map).hasNumElements(1L);
+                put(map, 123, 234, -1);
 
-            assertThat(removeWithDefaultValue(map, 123, 345)).isEqualTo(234);
+                assertThat(map).isNotEmpty();
+                assertThat(map).hasNumElements(1L);
 
-            assertThat(map).isEmpty();
-            assertThat(map).hasNumElements(0L);
+                assertThat(removeWithDefaultValue(map, 123, 345)).isEqualTo(234);
+
+                assertThat(map).isEmpty();
+                assertThat(map).hasNumElements(0L);
+            });
         }
     }
 
@@ -266,30 +293,33 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
     @Category(UnitTest.class)
     public final void testClear() {
 
-        final M map = createMap(0);
+        checkInitialCapacities(c -> {
 
-        assertThat(map).isEmpty();
+            final MAP map = createMap(c);
 
-        for (int i = 0; i < MAX_ELEMENTS; ++ i) {
+            assertThat(map).isEmpty();
 
-            put(map, i);
-        }
+            for (int i = 0; i < MAX_ELEMENTS; ++ i) {
 
-        assertThat(map).isNotEmpty();
+                put(map, i);
+            }
 
-        map.clear();
+            assertThat(map).isNotEmpty();
 
-        assertThat(map).isEmpty();
+            map.clear();
+
+            assertThat(map).isEmpty();
+        });
     }
 
     @Override
-    final M createMap(int[] keys, int[] values) {
+    final MAP createMap(int[] keys, int[] values) {
 
         Checks.areSameLength(keys, values);
 
         final int keysLength = keys.length;
 
-        final M map = createMap(CapacityExponents.computeCapacityExponent(keysLength));
+        final MAP map = createMap(keysLength);
 
         final int defaultValue = -1;
         final boolean supportsContainsKey = supportsContainsKey();
@@ -307,12 +337,12 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
         return map;
     }
 
-    private void put(M map, int integer) {
+    private void put(MAP map, int integer) {
 
         put(map, integer, false);
     }
 
-    private void put(M map, int integer, boolean alreadyContainsValue) {
+    private void put(MAP map, int integer, boolean alreadyContainsValue) {
 
         final int defaultValue = -1;
 
@@ -325,15 +355,15 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
         assertThat(previousValue).isEqualTo(alreadyContainsValue ? value : defaultValue);
     }
 
-    private void checkGetKeys(M map, int numElements) {
+    private void checkGetKeys(MAP map, int expectedNumElements) {
 
         final int[] keys = getKeys(map);
 
-        assertThat(keys.length).isEqualTo(numElements);
+        assertThat(keys.length).isEqualTo(expectedNumElements);
 
-        final MutableIntBucketSet values = MutableIntBucketSet.of(keys);
+        final IIntSet values = IHeapIntSet.of(keys);
 
-        for (int i = 0; i < numElements; ++ i) {
+        for (int i = 0; i < expectedNumElements; ++ i) {
 
             assertThat(values).contains(i);
         }

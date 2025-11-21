@@ -3,8 +3,10 @@ package dev.jdata.db.utils.adt.lists;
 import java.util.Arrays;
 import java.util.Objects;
 
+import dev.jdata.db.utils.adt.byindex.ILongByIndexView;
+import dev.jdata.db.utils.adt.elements.ILongForEach;
+import dev.jdata.db.utils.adt.elements.ILongForEachWithResult;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
 abstract class BaseLongIndexList extends BaseIntegerIndexList<long[]> implements ILongIndexListCommon {
 
@@ -13,48 +15,38 @@ abstract class BaseLongIndexList extends BaseIntegerIndexList<long[]> implements
     }
 
     BaseLongIndexList(AllocationType allocationType, int initialCapacity) {
-        super(allocationType);
-
-        Checks.isInitialCapacity(initialCapacity);
-
-        this.elementsArray = new long[initialCapacity];
-        this.numElements = 0;
+        super(allocationType, long[]::new, new long[initialCapacity], 0);
     }
 
     BaseLongIndexList(AllocationType allocationType, long value) {
-        super(allocationType, new long[] { value }, 1);
+        super(allocationType, long[]::new, new long[] { value }, 1);
     }
 
     BaseLongIndexList(AllocationType allocationType, long[] values) {
-        super(allocationType, values, values.length);
+        super(allocationType, long[]::new, values, values.length);
     }
 
     BaseLongIndexList(AllocationType allocationType, long[] values, int numElements) {
-        super(allocationType, values, numElements);
+        super(allocationType, long[]::new, values, numElements);
 
         Checks.checkNumElements(values, numElements);
     }
 
-    BaseLongIndexList(BaseLongIndexList toCopy) {
-        super(AllocationType.HEAP);
-
-        final int toCopyNumElements = toCopy.numElements;
-
-        this.elementsArray = Arrays.copyOf(toCopy.elementsArray, toCopyNumElements);
-        this.numElements = toCopyNumElements;
+    BaseLongIndexList(AllocationType allocationType, ILongByIndexView toCopy, int numElements) {
+        super(allocationType, long[]::new, toCopy.toArray(numElements, null, (p, c) -> new long[c]), numElements);
     }
 
-    final void initialize(long[] values, int numElements) {
-
-        initialize(values, numElements, values.length);
+    BaseLongIndexList(AllocationType allocationType, BaseLongIndexList toCopy) {
+        super(allocationType, Arrays.copyOf(toCopy.getElementsArray(), toCopy.getIntNumElements()), toCopy.getIntNumElements());
     }
 
     @Override
-    public final <P, E extends Exception> void forEach(P parameter, IForEach<P, E> forEach) throws E {
+    public final <P, E extends Exception> void forEach(P parameter, ILongForEach<P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
-        final int num = numElements;
+        final int num = getIntNumElements();
+        final long[] elementsArray = getElementsArray();
 
         for (int i = 0; i < num; ++ i) {
 
@@ -63,13 +55,14 @@ abstract class BaseLongIndexList extends BaseIntegerIndexList<long[]> implements
     }
 
     @Override
-    public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<P1, P2, R, E> forEach) throws E {
+    public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, ILongForEachWithResult<P1, P2, R, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
         R result = defaultResult;
 
-        final int num = numElements;
+        final int num = getIntNumElements();
+        final long[] elementsArray = getElementsArray();
 
         for (int i = 0; i < num; ++ i) {
 
@@ -88,17 +81,30 @@ abstract class BaseLongIndexList extends BaseIntegerIndexList<long[]> implements
     @Override
     public final long get(long index) {
 
-        return elementsArray[Integers.checkUnsignedLongToUnsignedInt(index)];
+        Checks.isIntIndex(index);
+
+        return getElementsArray()[intIndex(index)];
     }
 
     @Override
-    public final void toString(long index, StringBuilder sb) {
+    protected final long[] copyValues(long[] elements, long startIndex, long numElements) {
 
-        sb.append(get(index));
+        checkIntCopyValuesParameters(elements, elements.length, startIndex, numElements);
+
+        return Arrays.copyOfRange(elements, intIndex(startIndex), intNumElements(numElements));
     }
 
-    final int getElementCapacity() {
+    @Override
+    protected final void initializeWithValues(long[] values, long numElements) {
 
-        return elementsArray.length;
+        checkIntIntitializeWithValuesParameters(values, values.length, numElements);
+
+        initializeArrayList(values, intNumElements(numElements));
+    }
+
+    @Override
+    final int getElementsCapacity() {
+
+        return getElementsArray().length;
     }
 }

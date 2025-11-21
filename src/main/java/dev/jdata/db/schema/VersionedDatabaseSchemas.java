@@ -5,13 +5,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 
-import dev.jdata.db.schema.model.IDatabaseSchema;
+import dev.jdata.db.schema.model.databaseschema.IDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.adt.IForEachSequenceElement;
 import dev.jdata.db.utils.adt.arrays.TwoDimensionalArray;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.elements.IObjectIterableOnlyElementsView;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
+import dev.jdata.db.utils.adt.lists.IHeapIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.scalars.Integers;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 
 public final class VersionedDatabaseSchemas {
 
@@ -35,7 +37,8 @@ public final class VersionedDatabaseSchemas {
         }
     }
 
-    public static VersionedDatabaseSchemas of(DatabaseId databaseId, IIndexList<IDatabaseSchema> schemas, HeapIndexListAllocator<IDatabaseSchema> indexListAllocator) {
+    public static VersionedDatabaseSchemas of(DatabaseId databaseId, IObjectIterableOnlyElementsView<IDatabaseSchema> schemas,
+            IHeapIndexListAllocator<IDatabaseSchema> indexListAllocator) {
 
         Objects.requireNonNull(databaseId);
         Objects.requireNonNull(schemas);
@@ -48,7 +51,7 @@ public final class VersionedDatabaseSchemas {
     private final LinkedHashMap<DatabaseSchemaVersion, IDatabaseSchema> schemasByVersion;
     private final TwoDimensionalArray<VersionedTable> tableSchemasOrderedByVersion;
 
-    VersionedDatabaseSchemas(DatabaseId databaseId, IIndexList<IDatabaseSchema> schemas, HeapIndexListAllocator<IDatabaseSchema> indexListAllocator) {
+    VersionedDatabaseSchemas(DatabaseId databaseId, IObjectIterableOnlyElementsView<IDatabaseSchema> schemas, IHeapIndexListAllocator<IDatabaseSchema> indexListAllocator) {
 
         Objects.requireNonNull(databaseId);
         Objects.requireNonNull(schemas);
@@ -56,12 +59,12 @@ public final class VersionedDatabaseSchemas {
 
         this.databaseId = databaseId;
 
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(schemas.getNumElements());
+        final int numElements = IOnlyElementsView.intNumElements(schemas);
 
         this.schemasByVersion = new LinkedHashMap<>(numElements);
-        this.tableSchemasOrderedByVersion = new TwoDimensionalArray<>(100, VersionedTable[][]::new, 10, VersionedTable[]::new);
+        this.tableSchemasOrderedByVersion = new TwoDimensionalArray<>(AllocationType.HEAP, 100, VersionedTable[][]::new, 10, VersionedTable[]::new);
 
-        final IIndexList<IDatabaseSchema> sorted = schemas.sorted((s1, s2) -> s1.getVersion().compareTo(s2.getVersion()), indexListAllocator);
+        final IIndexList<IDatabaseSchema> sorted = indexListAllocator.sortedOf(schemas, (s1, s2) -> s1.getVersion().compareTo(s2.getVersion()));
 
         for (long i = 0L; i < numElements; ++ i) {
 

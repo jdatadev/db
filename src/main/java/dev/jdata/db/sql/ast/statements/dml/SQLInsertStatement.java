@@ -5,7 +5,7 @@ import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.ASTList;
 import org.jutils.ast.objects.list.ASTSingle;
-import org.jutils.ast.objects.list.IIndexListGetters;
+import org.jutils.ast.objects.list.IIndexListView;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.statements.SQLStatementVisitor;
@@ -22,7 +22,7 @@ public final class SQLInsertStatement extends SQLDMLUpdatingStatement implements
     private final ASTList<Expression> values;
 
     public SQLInsertStatement(Context context, long insertKeyword, long intoKeyword, long tableName, SQLColumnNames columnNames, long valuesKeyword,
-            IIndexListGetters<Expression> values) {
+            IIndexListView<Expression> values) {
         super(context);
 
         this.insertKeyword = checkIsKeyword(insertKeyword);

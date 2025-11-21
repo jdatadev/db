@@ -41,7 +41,7 @@ public final class CharacterBuffersAllocatorTest extends BaseArrayMinimumCapacit
 
         assertThat(allocator.reallocateCharacterBuffers(characterBuffers, newCapacity).length).isEqualTo(newCapacity);
 
-        assertThat(allocator.allocateArrayInstance(capacity)).isSameAs(characterBuffers);
+        assertThat(allocator.allocateFromFreeListOrCreateCapacityInstance(capacity)).isSameAs(characterBuffers);
     }
 
     @Test

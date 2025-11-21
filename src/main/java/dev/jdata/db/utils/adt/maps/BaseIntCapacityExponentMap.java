@@ -8,37 +8,22 @@ import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.BaseIntCapacityExponentArrayHashed;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 
-abstract class BaseIntCapacityExponentMap<T> extends BaseIntCapacityExponentArrayHashed<T> {
+abstract class BaseIntCapacityExponentMap<KEYS, MAP extends BaseIntCapacityExponentMap<KEYS, MAP>>
 
-    private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_CAPACITY_EXPONENT_ARRAY_HASHED;
+        extends BaseIntCapacityExponentArrayHashed<KEYS, Void, MAP, Void> {
+
+    private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_CAPACITY_EXPONENT_MAP;
 
     protected static final int NO_INDEX = HashArray.NO_INDEX;
 
-    @FunctionalInterface
-    protected interface IntMapIndexValuesEqualityTester<T, P1, P2, DELEGATE> {
-
-        boolean areValuesEqual(T values1, int index1, P1 parameter1, T values2, int index2, P2 parameter2, DELEGATE delegate);
-    }
-
-    @FunctionalInterface
-    interface ForEachKeyAndValueWithKeysAndValues<K, V, P1, P2> {
-
-        void each(K keys, int keyIndex, V values, int valueIndex, P1 parameter1, P2 parameter2);
-    }
-
-    @FunctionalInterface
-    interface ForEachKeyAndValueWithKeysAndValuesWithResult<K, V, P1, P2, DELEGATE, R> {
-
-        R each(K keys, int keyIndex, V values, int valueIndex, P1 parameter1, P2 parameter2, DELEGATE delegate);
-    }
-
-    BaseIntCapacityExponentMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T> createHashed, Consumer<T> clearHashed) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createHashed, clearHashed);
+    BaseIntCapacityExponentMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<KEYS> createKeysArray,
+            Consumer<KEYS> clearKeysArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createKeysArray, clearKeysArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createHashed", createHashed).add("clearHashed", clearHashed));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("createKeysArray", createKeysArray).add("clearKeysArray", clearKeysArray));
         }
 
         if (DEBUG) {
@@ -47,17 +32,47 @@ abstract class BaseIntCapacityExponentMap<T> extends BaseIntCapacityExponentArra
         }
     }
 
-    BaseIntCapacityExponentMap(BaseIntCapacityExponentMap<T> toCopy, Function<T, T> copyHashed) {
-        super(toCopy, copyHashed);
+    BaseIntCapacityExponentMap(AllocationType allocationType, BaseIntCapacityExponentMap<KEYS, ?> toInitializeFrom) {
+        super(allocationType, toInitializeFrom);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy).add("copyHashed", copyHashed));
+            enter(b -> b.add("allocationType", allocationType).add("toInitializeFrom", toInitializeFrom));
         }
 
         if (DEBUG) {
 
             exit();
         }
+    }
+
+    BaseIntCapacityExponentMap(AllocationType allocationType, BaseIntCapacityExponentMap<KEYS, ?> toCopy, Function<KEYS, KEYS> copyKeys) {
+        super(allocationType, toCopy, copyKeys);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy).add("copyKeys", copyKeys));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    protected final Void copyValues(Void values, long startIndex, long numElements) {
+
+        checkIntCopyValuesParameters(values, 0L, startIndex, numElements);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected final void initializeWithValues(Void values, long numElements) {
+
+        checkIntIntitializeWithValuesParameters(values, 0L, numElements);
+
+        throw new UnsupportedOperationException();
     }
 }

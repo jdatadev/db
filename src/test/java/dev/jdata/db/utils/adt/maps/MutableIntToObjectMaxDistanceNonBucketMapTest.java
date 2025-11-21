@@ -2,20 +2,36 @@ package dev.jdata.db.utils.adt.maps;
 
 import java.util.List;
 
+import dev.jdata.db.utils.adt.lists.IMutableIntList;
+import dev.jdata.db.utils.adt.lists.IMutableList;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
+
 public final class MutableIntToObjectMaxDistanceNonBucketMapTest
 
-        extends BaseMutableIntToIntegerOrObjectMaxDistanceMapTest<Integer[], MutableIntToObjectMaxDistanceNonBucketMap<Integer>> {
+        extends BaseMutableIntToIntegerOrObjectMaxDistanceMapTest<Integer[], IMutableList<Integer>, MutableIntToObjectMaxDistanceNonBucketMap<Integer>> {
 
     @Override
-    MutableIntToObjectMaxDistanceNonBucketMap<Integer> createMap(int initialCapacityExponent) {
+    MutableIntToObjectMaxDistanceNonBucketMap<Integer> createMap(int initialCapacity) {
 
-        return new MutableIntToObjectMaxDistanceNonBucketMap<>(initialCapacityExponent, Integer[]::new);
+        return HeapMutableIntToObjectMaxDistanceNonBucketMap.create(AllocationType.HEAP, initialCapacity, Integer[]::new);
     }
 
     @Override
     Integer[] createValuesArray(int length) {
 
         return new Integer[length];
+    }
+
+    @Override
+    IMutableList<Integer> createValuesOrderedAddable(int initialCapacity) {
+
+        return createObjectOrderedAddable(initialCapacity, Integer[]::new);
+    }
+
+    @Override
+    Integer[] valuesToArray(IMutableList<Integer> valuesAddable) {
+
+        return toArray(valuesAddable, Integer[]::new);
     }
 
     @Override
@@ -54,9 +70,9 @@ public final class MutableIntToObjectMaxDistanceNonBucketMapTest
     }
 
     @Override
-    void keysAndValues(MutableIntToObjectMaxDistanceNonBucketMap<Integer> map, int[] keysDst, Integer[] valuesDst) {
+    void keysAndValues(MutableIntToObjectMaxDistanceNonBucketMap<Integer> map, IMutableIntList keysAddable, IMutableList<Integer> valuesAddable) {
 
-        map.keysAndValues(keysDst, valuesDst);
+        map.keysAndValues(keysAddable, valuesAddable);
     }
 
     @Override

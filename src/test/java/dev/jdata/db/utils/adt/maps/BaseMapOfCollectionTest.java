@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.test.unit.BaseTest;
+import dev.jdata.db.utils.jdk.adt.maps.MapOfCollection;
 
 abstract class BaseMapOfCollectionTest<C extends Collection<String>, M extends Map<Integer, C>, MOC extends MapOfCollection<Integer, String, C, M>> extends BaseTest {
 

@@ -1,19 +1,19 @@
 package dev.jdata.db.schema.allocators.databases.heap;
 
 import dev.jdata.db.schema.allocators.databases.DatabasesSchemaManagerAllocator;
-import dev.jdata.db.schema.allocators.model.diff.dropped.heap.HeapDroppedSchemaObjectsAllocator;
-import dev.jdata.db.schema.allocators.model.schemamaps.heap.HeapCompleteSchemaMapsBuilderAllocator;
-import dev.jdata.db.schema.allocators.schemas.IDatabaseSchemasAllocator;
-import dev.jdata.db.schema.model.HeapSchemaMap;
-import dev.jdata.db.schema.model.objects.SchemaObject;
-import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
-import dev.jdata.db.schema.model.schemamaps.HeapAllSimpleCompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.diff.dropped.SchemaDroppedElementsAllocators;
+import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMapsBuilderAllocator;
+import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.schemas.IDatabaseSchemasAllocator;
+import dev.jdata.db.utils.adt.maps.IMutableIntToObjectWithRemoveStaticMap;
+import dev.jdata.db.utils.adt.sets.IMutableIntSet;
 
-public final class HeapDatabasesSchemaManagerAllocator
+public final class HeapDatabasesSchemaManagerAllocator<T extends IMutableIntSet, U extends IMutableIntToObjectWithRemoveStaticMap<T>>
 
-        extends DatabasesSchemaManagerAllocator<HeapSchemaMap<SchemaObject>, HeapAllCompleteSchemaMaps, HeapAllSimpleCompleteSchemaMapsBuilder> {
+        extends DatabasesSchemaManagerAllocator<T, U, IHeapAllCompleteSchemaMaps, IHeapAllCompleteSchemaMaps, IHeapAllCompleteSchemaMapsBuilder> {
 
-    public HeapDatabasesSchemaManagerAllocator(HeapDroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator, IDatabaseSchemasAllocator databaseSchemasAllocator) {
-        super(droppedSchemaObjectsAllocator, databaseSchemasAllocator, HeapCompleteSchemaMapsBuilderAllocator.INSTANCE);
+    public HeapDatabasesSchemaManagerAllocator(SchemaDroppedElementsAllocators<T, U> schemaDroppedElementsAllocators, IDatabaseSchemasAllocator<T, U> databaseSchemasAllocator) {
+        super(schemaDroppedElementsAllocators, databaseSchemasAllocator, HeapAllCompleteSchemaMapsBuilderAllocator.INSTANCE);
     }
 }

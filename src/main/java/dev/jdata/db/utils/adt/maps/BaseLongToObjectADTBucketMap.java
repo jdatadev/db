@@ -3,56 +3,53 @@ package dev.jdata.db.utils.adt.maps;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.maps.BaseLongToObjectADTBucketMap.LongToObjectBucketMapMultiHeadSinglyLinkedList;
+import dev.jdata.db.utils.adt.lists.INodeListView;
+import dev.jdata.db.utils.adt.maps.BaseLongToObjectADTBucketMap.LongToObjectBucketMapMultiHeadSinglyLinkedNodeList;
 import dev.jdata.db.utils.adt.maps.BaseLongToObjectADTBucketMap.LongToObjectValues;
 
-abstract class BaseLongToObjectADTBucketMap<T, MAP extends BaseLongToObjectADTBucketMap<T, MAP>>
+abstract class BaseLongToObjectADTBucketMap<V, MAP extends BaseLongToObjectADTBucketMap<V, MAP>>
 
-        extends BaseLongToObjectBucketMap<T, LongToObjectBucketMapMultiHeadSinglyLinkedList<MAP, T>, LongToObjectValues<MAP, T>, MAP> {
+        extends BaseLongToObjectBucketMap<V, LongToObjectBucketMapMultiHeadSinglyLinkedNodeList<MAP, V>, LongToObjectValues<MAP, V>, MAP> {
 
-    static final class LongToObjectBucketMapMultiHeadSinglyLinkedList<INSTANCE, T>
+    static final class LongToObjectBucketMapMultiHeadSinglyLinkedNodeList<INSTANCE, T>
 
-            extends BaseLongToObjectBucketMapMultiHeadSinglyLinkedList<
+            extends BaseLongToObjectBucketMapMultiHeadSinglyLinkedNodeList<
 
                             INSTANCE,
                             T,
-                            LongToObjectBucketMapMultiHeadSinglyLinkedList<INSTANCE, T>,
+                            LongToObjectBucketMapMultiHeadSinglyLinkedNodeList<INSTANCE, T>,
                             LongToObjectValues<INSTANCE, T>> {
 
-        LongToObjectBucketMapMultiHeadSinglyLinkedList(int initialOuterCapacity, int innerCapacity, IntFunction<T[][]> createOuterArray, IntFunction<T[]> createArray) {
-            super(initialOuterCapacity, innerCapacity, c -> new LongToObjectValues<>(c, createOuterArray, createArray));
+        private final IntFunction<T[][]> createOuterArray;
+        private final IntFunction<T[]> createArray;
+
+        LongToObjectBucketMapMultiHeadSinglyLinkedNodeList(AllocationType allocationType, int initialOuterCapacity, int innerCapacity, IntFunction<T[][]> createOuterArray,
+                IntFunction<T[]> createArray) {
+            super(allocationType, initialOuterCapacity, innerCapacity, c -> new LongToObjectValues<>(c, createOuterArray, createArray));
+
+            this.createOuterArray = Objects.requireNonNull(createOuterArray);
+            this.createArray = Objects.requireNonNull(createArray);
+        }
+
+        @Override
+        protected INodeListView createEmpty(AllocationType allocationType, int initialOuterCapacity, int innerCapacity) {
+
+            checkCreateEmpty(allocationType, initialOuterCapacity, innerCapacity);
+
+            return new LongToObjectBucketMapMultiHeadSinglyLinkedNodeList<>(allocationType, initialOuterCapacity, innerCapacity, createOuterArray, createArray);
         }
     }
 
-    static final class LongToObjectValues<INSTANCE, T>
-
-            extends BaseLongToObjectValues<INSTANCE, T, LongToObjectBucketMapMultiHeadSinglyLinkedList<INSTANCE, T>, LongToObjectValues<INSTANCE, T>> {
+    static final class LongToObjectValues<INSTANCE, T> extends BaseLongToObjectValues<T> {
 
         LongToObjectValues(int initialOuterCapacity, IntFunction<T[][]> createOuterArray, IntFunction<T[]> createArray) {
             super(initialOuterCapacity, createOuterArray, createArray);
         }
     }
 
-    private final IntFunction<T[][]> createOuterArray;
-    private final IntFunction<T[]> createArray;
-
-    BaseLongToObjectADTBucketMap(int initialCapacityExponent, IntFunction<T[][]> createOuterArray, IntFunction<T[]> createArray) {
-        super(initialCapacityExponent, (o, i) -> new LongToObjectBucketMapMultiHeadSinglyLinkedList<>(o, i, createOuterArray, createArray));
-
-        this.createOuterArray = Objects.requireNonNull(createOuterArray);
-        this.createArray = Objects.requireNonNull(createArray);
-    }
-
-    BaseLongToObjectADTBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[][]> createOuterArray, IntFunction<T[]> createArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, (o, i) -> new LongToObjectBucketMapMultiHeadSinglyLinkedList<>(o, i, createOuterArray, createArray));
-
-        this.createOuterArray = Objects.requireNonNull(createOuterArray);
-        this.createArray = Objects.requireNonNull(createArray);
-    }
-
-    @Override
-    final LongToObjectBucketMapMultiHeadSinglyLinkedList<MAP, T> createBuckets(int outerInitialCapacity, int bucketsInnerCapacity) {
-
-        return new LongToObjectBucketMapMultiHeadSinglyLinkedList<>(outerInitialCapacity, bucketsInnerCapacity, createOuterArray, createArray);
+    BaseLongToObjectADTBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent,
+            IntFunction<V[][]> createOuterArray, IntFunction<V[]> createArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, bucketsInnerCapacityExponent,
+                (o, i) -> new LongToObjectBucketMapMultiHeadSinglyLinkedNodeList<>(AllocationType.HEAP, o, i, createOuterArray, createArray));
     }
 }

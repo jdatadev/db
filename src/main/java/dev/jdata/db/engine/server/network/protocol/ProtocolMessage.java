@@ -3,30 +3,30 @@ package dev.jdata.db.engine.server.network.protocol;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharsetDecoder;
 
-import dev.jdata.db.data.RowDataNumBits.RowDataNumBitsAllocator;
-import dev.jdata.db.engine.server.network.protocol.ParameterPreparedStatementMessage.JDBCTypeArrayAllocator;
+import dev.jdata.db.data.RowDataNumBits.IRowDataNumBitsAllocator;
+import dev.jdata.db.engine.server.network.protocol.ParameterPreparedStatementMessage.IJDBCTypeArrayAllocator;
 import dev.jdata.db.engine.server.network.protocol.strings.MutableString;
-import dev.jdata.db.engine.server.network.protocol.strings.MutableString.CharArrayAllocator;
-import dev.jdata.db.utils.allocators.ICharBufferAllocator;
-import dev.jdata.db.utils.allocators.ICopyByteBufferAllocator;
+import dev.jdata.db.engine.server.network.protocol.strings.MutableString.ICharArrayAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
+import dev.jdata.db.utils.jdk.niobuffers.ICharBufferAllocator;
+import dev.jdata.db.utils.jdk.niobuffers.ICopyByteBufferAllocator;
 
 public abstract class ProtocolMessage extends ObjectCacheNode {
 
-    public interface ProtocolAllocator extends ICopyByteBufferAllocator, ICharBufferAllocator, CharArrayAllocator, JDBCTypeArrayAllocator, RowDataNumBitsAllocator {
+    public interface IProtocolAllocator extends ICopyByteBufferAllocator, ICharBufferAllocator, ICharArrayAllocator, IJDBCTypeArrayAllocator, IRowDataNumBitsAllocator {
 
     }
 
-    public interface ProtocolMessageFreeable {
+    public interface IProtocolMessageFreeable {
 
-        void free(ProtocolAllocator allocator);
+        void free(IProtocolAllocator allocator);
     }
 
-    abstract void decode(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, ProtocolAllocator allocator) throws ProtocolDecodeException;
+    abstract void decode(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, IProtocolAllocator allocator) throws ProtocolDecodeException;
 
     public abstract ProtocolMessageType getMessageType();
 
-    static int decodeZeroTerminatedASCIIString(ByteBuffer byteBuffer, int offset, int maxLength, MutableString mutableString, CharArrayAllocator allocator)
+    static int decodeZeroTerminatedASCIIString(ByteBuffer byteBuffer, int offset, int maxLength, MutableString mutableString, ICharArrayAllocator allocator)
             throws ProtocolDecodeException {
 
         mutableString.clear();
@@ -34,7 +34,7 @@ public abstract class ProtocolMessage extends ObjectCacheNode {
         return appendZeroTerminatedString(byteBuffer, offset, maxLength, mutableString, allocator) + 1;
     }
 
-    static int appendZeroTerminatedString(ByteBuffer byteBuffer, int offset, int maxLength, MutableString appendable, CharArrayAllocator allocator)
+    static int appendZeroTerminatedString(ByteBuffer byteBuffer, int offset, int maxLength, MutableString appendable, ICharArrayAllocator allocator)
             throws ProtocolDecodeException {
 
         int currentOffset = offset;
@@ -70,5 +70,9 @@ public abstract class ProtocolMessage extends ObjectCacheNode {
         }
 
         return characterCount;
+    }
+
+    ProtocolMessage(AllocationType allocationType) {
+        super(allocationType);
     }
 }

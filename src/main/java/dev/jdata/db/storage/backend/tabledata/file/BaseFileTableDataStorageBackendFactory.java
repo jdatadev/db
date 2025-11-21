@@ -10,26 +10,36 @@ import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.configuration.CommonConfiguration;
 import dev.jdata.db.data.tables.TableByIdMap;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
-import dev.jdata.db.schema.model.ISchemaMap;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Table;
+import dev.jdata.db.schema.model.schemamap.ISchemaMap;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.TableDataStorageBackend;
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
+import dev.jdata.db.utils.adt.lists.ICachedIndexList;
+import dev.jdata.db.utils.adt.lists.ICachedIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.ICachedIndexListBuilder;
 import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.file.access.AbsoluteDirectoryPath;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.scalars.Integers;
 
 public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDataStorageBackendFactory<FileTableStorageBackendConfiguration> {
 
     protected abstract TableDataStorageBackend createTableStorageBackend(VersionedDatabaseSchemas versionedDatabaseSchemas, INumStorageBitsGetter numStorageBitsGetter,
             TableByIdMap<FileTableStorageFiles> fileTableStorageByTableId);
+
+    private final ICachedIndexListAllocator<FileTableStorageFile> storageFileIndexListAllocator;
+    private final ICachedIndexListAllocator<RelativeFilePath> relativeFilePathIndexListAllocator;
+
+    protected BaseFileTableDataStorageBackendFactory(ICachedIndexListAllocator<FileTableStorageFile> storageFileIndexListAllocator,
+            ICachedIndexListAllocator<RelativeFilePath> relativeFilePathIndexListAllocator) {
+
+        this.storageFileIndexListAllocator = Objects.requireNonNull(storageFileIndexListAllocator);
+        this.relativeFilePathIndexListAllocator = Objects.requireNonNull(relativeFilePathIndexListAllocator);
+    }
 
     @Override
     protected TableDataStorageBackend initializeTables(FileTableStorageBackendConfiguration configuration, StorageTableSchemas storageTableSchemas,
@@ -38,12 +48,14 @@ public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDa
         Objects.requireNonNull(configuration);
         Objects.requireNonNull(storageTableSchemas);
 
-        final TableByIdMap<FileTableStorageFiles> fileTableStorageByTableId = initializeTableDirectories(configuration, storageTableSchemas);
+        final TableByIdMap<FileTableStorageFiles> fileTableStorageByTableId = initializeTableDirectories(configuration, storageTableSchemas, storageFileIndexListAllocator,
+                relativeFilePathIndexListAllocator);
 
         return createTableStorageBackend(configuration.getVersionedDatabaseSchemas(), numStorageBitsGetter, fileTableStorageByTableId);
     }
 
-    private static TableByIdMap<FileTableStorageFiles> initializeTableDirectories(FileTableStorageBackendConfiguration configuration, StorageTableSchemas storageTableSchemas)
+    private static TableByIdMap<FileTableStorageFiles> initializeTableDirectories(FileTableStorageBackendConfiguration configuration, StorageTableSchemas storageTableSchemas,
+            ICachedIndexListAllocator<FileTableStorageFile> storageFileIndexListAllocator, ICachedIndexListAllocator<RelativeFilePath> relativeFilePathIndexListAllocator)
             throws IOException {
 
         final IEffectiveDatabaseSchema databaseSchema = configuration.getDatabaseSchema();
@@ -63,47 +75,66 @@ public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDa
         final StorageTableFileSchemaGetters storageTableFileSchemaGetters = new StorageTableFileSchemaGetters(versionedDatabaseSchemas, storageTableSchemas);
 
         return new TableByIdMap<>(databaseSchema, FileTableStorageFiles[]::new,
-                t -> createFileTableStorageFiles(fileSystemAccess, relativeRootPath, t, configuration, storageTableFileSchemaGetters));
+                t -> createFileTableStorageFiles(fileSystemAccess, relativeRootPath, t, configuration, storageTableFileSchemaGetters, storageFileIndexListAllocator,
+                        relativeFilePathIndexListAllocator));
     }
 
     private static FileTableStorageFiles createFileTableStorageFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath rootPath, Table table,
-            CommonConfiguration configuration, StorageTableFileSchemaGetters storageTableFileSchemaGetters) throws IOException {
+            CommonConfiguration configuration, StorageTableFileSchemaGetters storageTableFileSchemaGetters,
+            ICachedIndexListAllocator<FileTableStorageFile> storageFileIndexListAllocator, ICachedIndexListAllocator<RelativeFilePath> relativeFilePathIndexListAllocator)
+                    throws IOException {
+
+        final FileTableStorageFiles result;
 
         final RelativeDirectoryPath tableFilePath = getTablePath(fileSystemAccess, rootPath, table, configuration);
 
-        final IIndexList<RelativeFilePath> tableFilePaths;
+        ICachedIndexList<RelativeFilePath> tableFilePaths = null;
 
-        final CacheIndexListAllocator<RelativeFilePath> indexListAllocator = null;
-
-        final CachedIndexListBuilder<RelativeFilePath> tableFilePathsBuilder = IndexList.createBuilder(indexListAllocator);
+        final ICachedIndexListBuilder<RelativeFilePath> tableFilePathsBuilder = relativeFilePathIndexListAllocator.createBuilder();
 
         try {
             fileSystemAccess.listFilePaths(tableFilePath, tableFilePathsBuilder, (p, b) -> b.addTail(p));
 
-            tableFilePaths = tableFilePathsBuilder.build();
+            tableFilePaths = tableFilePathsBuilder.buildOrEmpty();
+
+            ICachedIndexList<FileTableStorageFile> fileTableStorageFileList = null;
+
+            try {
+                fileTableStorageFileList = readTableFiles(fileSystemAccess, tableFilePaths, storageTableFileSchemaGetters, storageFileIndexListAllocator);
+
+                result = new FileTableStorageFiles(fileSystemAccess, tableFilePath, fileTableStorageFileList, null);
+            }
+            finally {
+
+                if (fileTableStorageFileList != null) {
+
+                    storageFileIndexListAllocator.freeImmutable(fileTableStorageFileList);
+                }
+            }
         }
         finally {
 
-            indexListAllocator.freeIndexListBuilder(tableFilePathsBuilder);
+            if (tableFilePaths != null) {
+
+                relativeFilePathIndexListAllocator.freeImmutable(tableFilePaths);
+            }
+
+            relativeFilePathIndexListAllocator.freeBuilder(tableFilePathsBuilder);
         }
 
-        final IIndexList<FileTableStorageFile> fileTableStorageFileList = readTableFiles(fileSystemAccess, tableFilePaths, storageTableFileSchemaGetters);
-
-        return new FileTableStorageFiles(fileSystemAccess, tableFilePath, fileTableStorageFileList, null);
+        return result;
     }
 
-    private static IIndexList<FileTableStorageFile> readTableFiles(IRelativeFileSystemAccess fileSystemAccess, IIndexList<RelativeFilePath> tableFilePaths,
-            StorageTableFileSchemaGetters storageTableFileSchemaGetters) throws IOException {
+    private static ICachedIndexList<FileTableStorageFile> readTableFiles(IRelativeFileSystemAccess fileSystemAccess, IIndexList<RelativeFilePath> tableFilePaths,
+            StorageTableFileSchemaGetters storageTableFileSchemaGetters, ICachedIndexListAllocator<FileTableStorageFile> storageFileIndexListAllocator) throws IOException {
 
-        final IIndexList<FileTableStorageFile> result;
+        final ICachedIndexList<FileTableStorageFile> result;
 
         final long numElements = tableFilePaths.getNumElements();
 
-        final int initialCapacity = Integers.checkUnsignedLongToUnsignedInt(numElements);
+        final int initialCapacity = IOnlyElementsView.intNumElements(tableFilePaths);
 
-        final CacheIndexListAllocator<FileTableStorageFile> indexListAllocator = null;
-
-        final CachedIndexListBuilder<FileTableStorageFile> fileTableStorageFileListBuilder = IndexList.createBuilder(initialCapacity, indexListAllocator);
+        final ICachedIndexListBuilder<FileTableStorageFile> storageFileListBuilder = storageFileIndexListAllocator.createBuilder(initialCapacity);
 
         try {
             for (long i = 0L; i < numElements; ++ i) {
@@ -112,14 +143,14 @@ public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDa
 
                 final FileTableStorageFile fileTableStorageFile = FileTableStorageFile.openExistingFile(fileSystemAccess, tableFilePath, storageTableFileSchemaGetters);
 
-                fileTableStorageFileListBuilder.addTail(fileTableStorageFile);
+                storageFileListBuilder.addTail(fileTableStorageFile);
             }
 
-            result = fileTableStorageFileListBuilder.build();
+            result = storageFileListBuilder.buildOrEmpty();
         }
         finally {
 
-            indexListAllocator.freeIndexListBuilder(fileTableStorageFileListBuilder);
+            storageFileIndexListAllocator.freeBuilder(storageFileListBuilder);
         }
 
         return result;

@@ -31,8 +31,8 @@ final class PreparedStatement extends BaseDescriptorable<PreparedStatementState>
     private BaseSQLStatement sqlStatement;
     private ISQLString sqlString;
 
-    PreparedStatement() {
-        super(PreparedStatementState.CREATED, false);
+    PreparedStatement(AllocationType allocationType) {
+        super(allocationType, PreparedStatementState.CREATED, false);
     }
 
     @Override

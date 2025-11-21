@@ -3,9 +3,10 @@ package dev.jdata.db.utils.allocators;
 import org.jutils.io.strings.StringResolver.CharacterBuffer;
 import org.jutils.io.strings.StringResolver.ICharactersBufferAllocator;
 
+import dev.jdata.db.utils.adt.arrays.InheritableArrayAllocator;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class CharacterBuffersAllocator extends BaseArrayAllocator<CharacterBuffer[]> implements ICharactersBufferAllocator {
+public final class CharacterBuffersAllocator extends InheritableArrayAllocator<CharacterBuffer[]> implements ICharactersBufferAllocator {
 
     public CharacterBuffersAllocator() {
         super(CharacterBuffer[]::new, a -> a.length);
@@ -14,7 +15,7 @@ public final class CharacterBuffersAllocator extends BaseArrayAllocator<Characte
     @Override
     public CharacterBuffer[] allocateCharacterBuffers(int minimumCapacity) {
 
-        final CharacterBuffer[] characterBuffers = allocateArrayInstance(minimumCapacity);
+        final CharacterBuffer[] characterBuffers = allocateFromFreeListOrCreateCapacityInstance(minimumCapacity);
 
         final int arrayLength = characterBuffers.length;
 

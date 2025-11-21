@@ -8,7 +8,7 @@ import java.util.Objects;
 import org.jutils.io.strings.StringResolver.ICharactersBufferAllocator;
 
 import dev.jdata.db.utils.adt.IResettable;
-import dev.jdata.db.utils.adt.strings.CharacterEncodingUtil;
+import dev.jdata.db.utils.jdk.adt.strings.CharacterEncodingUtil;
 
 public final class ByteSQLOutputter<P, E extends Exception> extends ExceptionAppendableSQLOutputter<ByteSQLOutputter<P, E>, E> implements IResettable {
 

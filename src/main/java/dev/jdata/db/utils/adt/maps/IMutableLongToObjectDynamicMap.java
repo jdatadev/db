@@ -1,8 +1,5 @@
 package dev.jdata.db.utils.adt.maps;
 
-import dev.jdata.db.utils.adt.IClearable;
+public interface IMutableLongToObjectDynamicMap<V> extends IBaseMutableLongToObjectDynamicMap<V> {
 
-interface IMutableLongToObjectDynamicMap<T>
-
-        extends ILongToObjectDynamicMapCommon<T>, IClearable, ILongKeyDynamicMapRemovalMutators, ILongToObjectDynamicMapRemovalMutators<T>, ILongToObjectCommonMapMutators<T> {
 }

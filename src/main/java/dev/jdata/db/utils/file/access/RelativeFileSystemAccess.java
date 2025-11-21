@@ -24,6 +24,10 @@ final class RelativeFileSystemAccess implements IRelativeFileSystemAccess {
         private AbsoluteDirectoryPath rootPath;
         private IAbsoluteFileSystemAccess absoluteFileSystemAccess;
 
+        ListPathsParameters(AllocationType allocationType) {
+            super(allocationType);
+        }
+
         void initialize(P parameter, BiConsumer<RelativeFilePath, P> consumer, AbsoluteDirectoryPath rootPath, IAbsoluteFileSystemAccess absoluteFileSystemAccess) {
 
             Objects.requireNonNull(consumer);

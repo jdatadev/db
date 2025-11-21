@@ -3,42 +3,30 @@ package dev.jdata.db.utils.adt.maps;
 import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.adt.elements.ILongAnyOrderAddable;
+import dev.jdata.db.utils.adt.elements.IObjectAnyOrderAddable;
 import dev.jdata.db.utils.function.BiIntToObjectFunction;
 
 abstract class BaseLongToObjectBucketMap<
 
-                T,
-                LIST extends BaseLongToObjectBucketMapMultiHeadSinglyLinkedList<MAP, T, LIST, VALUES>,
-                VALUES extends BaseLongToObjectValues<MAP, T, LIST, VALUES>,
-                MAP extends BaseLongToObjectBucketMap<T, LIST, VALUES, MAP>>
+                V,
+                LIST extends BaseLongToObjectBucketMapMultiHeadSinglyLinkedNodeList<MAP, V, LIST, VALUES>,
+                VALUES extends BaseLongToObjectValues<V>,
+                MAP extends BaseLongToObjectBucketMap<V, LIST, VALUES, MAP>>
 
         extends BaseLongKeyBucketMap<LIST, VALUES, MAP>
-        implements ILongToObjectCommonMapGetters<T>, ILongToObjectDynamicMapGetters<T> {
+        implements ILongToObjectDynamicMapCommon<V> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_TO_OBJECT_BUCKET_MAP;
 
-    BaseLongToObjectBucketMap(int initialCapacityExponent, BiIntToObjectFunction<LIST> createBuckets) {
-        super(initialCapacityExponent, createBuckets);
+    BaseLongToObjectBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent,
+            BiIntToObjectFunction<LIST> createBuckets) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, bucketsInnerCapacityExponent, createBuckets);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createBuckets", createBuckets));
-        }
-
-        if (DEBUG) {
-
-            exit();
-        }
-    }
-
-    BaseLongToObjectBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, BiIntToObjectFunction<LIST> createBuckets) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createBuckets);
-
-        if (DEBUG) {
-
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createBuckets", createBuckets));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("bucketsInnerCapacityExponent", bucketsInnerCapacityExponent).add("createBuckets", createBuckets));
         }
 
         if (DEBUG) {
@@ -48,7 +36,7 @@ abstract class BaseLongToObjectBucketMap<
     }
 
     @Override
-    public final <P> void forEachKeyAndValue(P parameter, IForEachKeyAndValue<T, P> forEach) {
+    public final <P, E extends Exception> void forEachKeyAndValue(P parameter, ILongToObjectForEachMapKeyAndValue<V, P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -80,13 +68,46 @@ abstract class BaseLongToObjectBucketMap<
     }
 
     @Override
-    public final <P, DELEGATE, R> R forEachKeyAndValueWithResult(R defaultResult, P parameter, DELEGATE delegate, IForEachKeyAndValueWithResult<T, P, DELEGATE, R> forEach) {
+    public final <P1, P2, E extends Exception> void forEachKeyAndValue(P1 parameter1, P2 parameter2, ILongToObjectForEachMapKeyAndValue2<V, P1, P2, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
         if (DEBUG) {
 
-            enter(b -> b.add("defaultResult", defaultResult).add("parameter", parameter).add("delegate", delegate).add("forEach", forEach));
+            enter(b -> b.add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
+        }
+
+        final long[] bucketHeadNodesHashArray = getHashed();
+        final int bucketHeadNodesHashArrayLength = bucketHeadNodesHashArray.length;
+
+        final long noNode = NO_LONG_NODE;
+        final LIST buckets = getBuckets();
+
+        for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
+
+            final long bucketHeadNode = bucketHeadNodesHashArray[i];
+
+            for (long node = bucketHeadNode; node != noNode; node = buckets.getNextNode(node)) {
+
+                forEach.each(buckets.getValue(node), buckets.getObjectValue(node), parameter1, parameter2);
+            }
+        }
+
+        if (DEBUG) {
+
+            exit(b -> b.add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
+        }
+    }
+
+    @Override
+    public final <P1, P2, R, E extends Exception> R forEachKeyAndValueWithResult(R defaultResult, P1 parameter1, P2 parameter2,
+            ILongToObjectForEachMapKeyAndValueWithResult<V, P1, P2, R, E> forEach) throws E {
+
+        Objects.requireNonNull(forEach);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("defaultResult", defaultResult).add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
         }
 
         R result = defaultResult;
@@ -104,7 +125,7 @@ abstract class BaseLongToObjectBucketMap<
 
                 for (long node = bucketHeadNode; node != noNode; node = buckets.getNextNode(node)) {
 
-                    final R forEachResult = forEach.each(buckets.getValue(node), buckets.getObjectValue(node), parameter, delegate);
+                    final R forEachResult = forEach.each(buckets.getValue(node), buckets.getObjectValue(node), parameter1, parameter2);
 
                     if (forEachResult != null) {
 
@@ -117,24 +138,21 @@ abstract class BaseLongToObjectBucketMap<
 
         if (DEBUG) {
 
-            exit(result, b -> b.add("defaultResult", defaultResult).add("parameter", parameter).add("delegate", delegate).add("forEach", forEach));
+            exit(result, b -> b.add("defaultResult", defaultResult).add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
         }
 
         return result;
     }
 
     @Override
-    public final void keysAndValues(long[] keysDst, T[] valuesDst) {
+    public final long keysAndValues(ILongAnyOrderAddable keysDst, IObjectAnyOrderAddable<V> valuesDst) {
 
-        final long numElements = getNumElements();
-
-        Checks.isGreaterThanOrEqualTo(keysDst.length, numElements);
-        Checks.isGreaterThanOrEqualTo(valuesDst.length, numElements);
-        Checks.areEqual(keysDst.length, valuesDst.length);
+        Objects.requireNonNull(keysDst);
+        Objects.requireNonNull(valuesDst);
 
         if (DEBUG) {
 
-            enter();
+            enter(b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst));
         }
 
         final long[] bucketHeadNodesHashArray = getHashed();
@@ -143,7 +161,7 @@ abstract class BaseLongToObjectBucketMap<
         final long noNode = NO_LONG_NODE;
         final LIST buckets = getBuckets();
 
-        int dstIndex = 0;
+        int numAdded = 0;
 
         for (int i = 0; i < bucketHeadNodesHashArrayLength; ++ i) {
 
@@ -151,21 +169,23 @@ abstract class BaseLongToObjectBucketMap<
 
             for (long node = bucketHeadNode; node != noNode; node = buckets.getNextNode(node)) {
 
-                keysDst[dstIndex] = buckets.getValue(node);
-                valuesDst[dstIndex] = buckets.getObjectValue(node);
+                keysDst.addInAnyOrder(buckets.getValue(node));
+                valuesDst.addInAnyOrder(buckets.getObjectValue(node));
 
-                ++ dstIndex;
+                ++ numAdded;
             }
         }
 
         if (DEBUG) {
 
-            exit(b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst));
+            exit(numAdded, b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst));
         }
+
+        return numAdded;
     }
 
     @Override
-    public final T get(long key, T defaultValue) {
+    public final V get(long key, V defaultValue) {
 
         final long node = getValueNode(key);
 
@@ -173,31 +193,16 @@ abstract class BaseLongToObjectBucketMap<
     }
 
     @Override
-    void rehashPut(LIST oldBuckets, long oldNode, LIST newBuckets, long newNode) {
+    final void rehashPut(LIST oldBuckets, long oldNode, LIST newBuckets, long newNode) {
 
         if (DEBUG) {
 
             enter(b -> b.add("oldBuckets", oldBuckets).hex("oldNode", oldNode).add("newBuckets", newBuckets).hex("newNode", newNode));
         }
 
-        final T value = oldBuckets.getObjectValue(oldNode);
+        final V value = oldBuckets.getObjectValue(oldNode);
 
         newBuckets.setObjectValue(newNode, value);
-
-        if (DEBUG) {
-
-            exit();
-        }
-    }
-
-    final void clearBaseLongToObjectBucketMap() {
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        clearHashed();
 
         if (DEBUG) {
 

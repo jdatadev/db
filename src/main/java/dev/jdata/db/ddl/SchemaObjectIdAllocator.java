@@ -31,7 +31,7 @@ public final class SchemaObjectIdAllocator<P> extends ObjectCacheNode implements
 
     void initialize(P parameter, BiObjToIntFunction<DDLObjectType, P> allocateSchemaObjectIdFunction) {
 
-        checkIsAllocated();
+        checkIsAllocatedRenamed();
 
         this.parameter = parameter;
         this.allocateSchemaObjectIdFunction = Initializable.checkNotYetInitialized(this.allocateSchemaObjectIdFunction, allocateSchemaObjectIdFunction);
@@ -40,7 +40,7 @@ public final class SchemaObjectIdAllocator<P> extends ObjectCacheNode implements
     @Override
     public void reset() {
 
-        checkIsAllocated();
+        checkIsAllocatedRenamed();
 
         this.parameter = null;
         this.allocateSchemaObjectIdFunction = Initializable.checkResettable(allocateSchemaObjectIdFunction);
@@ -54,7 +54,7 @@ public final class SchemaObjectIdAllocator<P> extends ObjectCacheNode implements
 
         Objects.requireNonNull(ddlObjectType);
 
-        checkIsAllocated();
+        checkIsAllocatedRenamed();
 
         return allocateSchemaObjectIdFunction.apply(ddlObjectType, parameter);
     }

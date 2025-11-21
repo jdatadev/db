@@ -1,23 +1,28 @@
 package dev.jdata.db.utils.checks;
 
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.nio.Buffer;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
+import java.util.function.LongConsumer;
 import java.util.function.Predicate;
 
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.utils.adt.IContains;
-import dev.jdata.db.utils.adt.arrays.IOneDimensionalArrayGetters;
-import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.contains.IContainsView;
+import dev.jdata.db.utils.adt.elements.IObjectIterableElementsView;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
+import dev.jdata.db.utils.adt.elements.IScatteredElementsView;
 import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.strings.CharSequences;
-import dev.jdata.db.utils.adt.strings.Characters;
-import dev.jdata.db.utils.adt.strings.Strings;
 import dev.jdata.db.utils.function.CharPredicate;
+import dev.jdata.db.utils.instances.Instances;
+import dev.jdata.db.utils.jdk.adt.strings.CharSequences;
+import dev.jdata.db.utils.jdk.adt.strings.Characters;
+import dev.jdata.db.utils.jdk.adt.strings.Strings;
 
 public class Checks {
 
@@ -53,6 +58,24 @@ public class Checks {
     public static boolean checkIsNotNull(Object object) {
 
         return object != null;
+    }
+
+    public static void areAnyNotNull(Object instance1, Object instance2) {
+
+        if (!Instances.areAnyNotNull(instance1, instance2)) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void areBothNotNullOrBothNull(Object instance1, Object instance2) {
+
+        Instances.areBothNotNullOrBothNullOrThrowException(instance1, instance2, IllegalArgumentException::new);
+    }
+
+    public static void areAllNotNullOrAllNull(Object instance1, Object instance2, Object instance3) {
+
+        Instances.areAllNotNullOrAllNullOrThrowException(instance1, instance2, instance3, IllegalArgumentException::new);
     }
 
     public static int isNotNegative(int value) {
@@ -145,6 +168,11 @@ public class Checks {
         return value;
     }
 
+    public static void checkArrayFromIndexSize(Object array, int fromIndex, int size) {
+
+        checkFromIndexSize(fromIndex, size, Array.getLength(array));
+    }
+
     public static void checkFromIndexSize(int fromIndex, int size, int length) {
 
         if (fromIndex < 0) {
@@ -205,25 +233,25 @@ public class Checks {
         }
     }
 
-    public static void checkFromIndexNum(int fromIndex, int num, int limit) {
+    public static void checkFromIndexNum(long fromIndex, long num, long limit) {
 
-        if (fromIndex < 0) {
+        if (fromIndex < 0L) {
 
             throw new IndexOutOfBoundsException();
         }
-        else if (num < 0) {
+        else if (num < 0L) {
 
             throw new IllegalArgumentException();
         }
-        else if (limit < 0) {
+        else if (limit < 0L) {
 
             throw new IllegalArgumentException();
         }
-        else if (num == 0) {
+        else if (num == 0L) {
 
-            if (limit == 0) {
+            if (limit == 0L) {
 
-                if (fromIndex != 0) {
+                if (fromIndex != 0L) {
 
                     throw new IndexOutOfBoundsException();
                 }
@@ -261,7 +289,7 @@ public class Checks {
         }
     }
 
-    public static void checkIndex(long index, long length) {
+    public static void checkLongIndex(long index, long length) {
 
         if (index < 0L) {
 
@@ -275,6 +303,27 @@ public class Checks {
 
             throw new IndexOutOfBoundsException();
         }
+    }
+
+    public static void checkIntIndexAndNumElements(int index, int numElements) {
+
+        Checks.isIntIndex(index);
+        Checks.isIntNumElements(numElements);
+        Checks.checkIndex(index, numElements);
+    }
+
+    public static void checkIntIndexAndNumElements(long index, long numElements) {
+
+        Checks.isIntIndex(index);
+        Checks.isIntNumElements(numElements);
+        Checks.checkLongIndex(index, numElements);
+    }
+
+    public static void checkLongIndexAndNumElements(long index, long numElements) {
+
+        Checks.isLongIndex(index);
+        Checks.isLongNumElements(numElements);
+        Checks.checkLongIndex(index, numElements);
     }
 
     public static <T> void checkArrayIndex(int[] array, int index) {
@@ -308,6 +357,30 @@ public class Checks {
             throw new IndexOutOfBoundsException();
         }
         else if (index >= array.length) {
+
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+    public static void checkArrayLength(int[] array, int length) {
+
+        if (length < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (length > array.length) {
+
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+    public static void checkArrayLength(long[] array, int length) {
+
+        if (length < 0) {
+
+            throw new IndexOutOfBoundsException();
+        }
+        else if (length > array.length) {
 
             throw new IndexOutOfBoundsException();
         }
@@ -361,6 +434,14 @@ public class Checks {
         return value;
     }
 
+    public static <T> void areSame(T object1, T object2) {
+
+        if (object1 != object2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
     public static <T> void areNotSame(T object1, T object2) {
 
         if (object1 == object2) {
@@ -409,6 +490,14 @@ public class Checks {
         }
     }
 
+    public static void areNotEqual(int value1, int value2) {
+
+        if (value1 == value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
     public static void isLessThan(long value1, long value2) {
 
         if (value1 >= value2) {
@@ -444,6 +533,14 @@ public class Checks {
     public static void areEqual(long value1, long value2) {
 
         if (value1 != value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void areNotEqual(long value1, long value2) {
+
+        if (value1 == value2) {
 
             throw new IllegalArgumentException();
         }
@@ -489,6 +586,14 @@ public class Checks {
         }
     }
 
+    public static void areNotEqual(float value1, float value2) {
+
+        if (value1 == value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
     public static void isLessThan(double value1, double value2) {
 
         if (value1 >= value2) {
@@ -529,6 +634,14 @@ public class Checks {
         }
     }
 
+    public static void areNotEqual(double value1, double value2) {
+
+        if (value1 == value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
     public static <T> void areEqual(T object1, T object2) {
 
         if (!object1.equals(object2)) {
@@ -545,14 +658,19 @@ public class Checks {
         }
     }
 
-    public static int isIntegerPrecision(int value) {
+    public static int isNumberPrecision(int value) {
 
         return isAboveZero(value);
     }
 
+    public static int isIntegerPrecision(int value) {
+
+        return isNumberPrecision(value);
+    }
+
     public static int isDecimalPrecision(int value) {
 
-        return isAboveZero(value);
+        return isNumberPrecision(value);
     }
 
     public static int isDecimalScale(int value) {
@@ -861,7 +979,7 @@ public class Checks {
         return array;
     }
 
-    public static <T extends IContains> T isEmpty(T contains) {
+    public static <T extends IContainsView> T isEmpty(T contains) {
 
         if (contains.isEmpty()) {
 
@@ -871,7 +989,7 @@ public class Checks {
         return contains;
     }
 
-    public static <T extends IContains> T isNotEmpty(T contains) {
+    public static <T extends IContainsView> T isNotEmpty(T contains) {
 
         if (contains.isEmpty()) {
 
@@ -881,13 +999,75 @@ public class Checks {
         return contains;
     }
 
-    public static <T> void checkNumElements(int numElements, int length) {
+    public static <T, U extends IObjectIterableElementsView<T>> U isNotEmpty(U elements) {
+
+        if (IObjectIterableElementsView.isEmpty(elements)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return elements;
+    }
+
+    public static void checkIntNumElements(int numElements, int length) {
 
         if (numElements < 0) {
 
             throw new IllegalArgumentException();
         }
         else if (numElements > length) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void checkIntNumElements(long numElements, long length) {
+
+        if (numElements < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (numElements > Integer.MAX_VALUE) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (numElements > length) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void checkLongNumElements(long numElements, long length) {
+
+        if (numElements < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (numElements > length) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void checkArrayNumElements(Object array, int numElements) {
+
+        if (numElements < 0) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (numElements > Array.getLength(array)) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void checkNumElements(int[] array, int numElements) {
+
+        if (numElements < 0) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (numElements > array.length) {
 
             throw new IllegalArgumentException();
         }
@@ -917,6 +1097,26 @@ public class Checks {
         }
     }
 
+    public static int[] checkElements(int[] array, IntConsumer check) {
+
+        for (int element : array) {
+
+            check.accept(element);
+        }
+
+        return array;
+    }
+
+    public static long[] checkElements(long[] array, LongConsumer check) {
+
+        for (long element : array) {
+
+            check.accept(element);
+        }
+
+        return array;
+    }
+
     public static <T> T[] checkElements(T[] array, Consumer<T> check) {
 
         for (T element : array) {
@@ -927,11 +1127,23 @@ public class Checks {
         return array;
     }
 
+    public static <T> T[] areNonNullElements(T[] array) {
+
+        return areElements(array, e -> e != null);
+    }
+
     public static <T> T[] areElements(T[] array, Predicate<T> predicate) {
 
-        for (T element : array) {
+        return areElements(array, 0, array.length, predicate);
+    }
 
-            if (!predicate.test(element)) {
+    public static <T> T[] areElements(T[] array, int startIndex, int numElements, Predicate<T> predicate) {
+
+        final int arrayLength = array.length;
+
+        for (int i = 0; i < arrayLength; ++ i) {
+
+            if (!predicate.test(array[i])) {
 
                 throw new IllegalArgumentException();
             }
@@ -955,7 +1167,7 @@ public class Checks {
         return list;
     }
 
-    public static int isIndex(int index) {
+    public static int isIntIndex(int index) {
 
         if (index < 0) {
 
@@ -965,7 +1177,22 @@ public class Checks {
         return index;
     }
 
-    public static long isIndex(long index) {
+    public static long isIntIndex(long index) {
+
+        if (index < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        if (index >= Integer.MAX_VALUE) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return index;
+    }
+
+    public static long isLongIndex(long index) {
 
         if (index < 0L) {
 
@@ -975,7 +1202,22 @@ public class Checks {
         return index;
     }
 
-    public static long isIndexNotOutOfBounds(long index) {
+    public static long isIntIndexNotOutOfBounds(long index) {
+
+        if (index < 0L) {
+
+            throw new IndexOutOfBoundsException();
+        }
+
+        if (index >= Integer.MAX_VALUE) {
+
+            throw new IndexOutOfBoundsException();
+        }
+
+        return index;
+    }
+
+    public static long isLongIndexNotOutOfBounds(long index) {
 
         if (index < 0L) {
 
@@ -985,7 +1227,7 @@ public class Checks {
         return index;
     }
 
-    public static int isNumElements(int numElements) {
+    public static int isIntNumElements(int numElements) {
 
         if (numElements < 0) {
 
@@ -995,7 +1237,17 @@ public class Checks {
         return numElements;
     }
 
-    public static long isNumElements(long numElements) {
+    public static long isIntNumElements(long numElements) {
+
+        if (numElements < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return numElements;
+    }
+
+    public static long isLongNumElements(long numElements) {
 
         if (numElements < 0L) {
 
@@ -1005,7 +1257,42 @@ public class Checks {
         return numElements;
     }
 
-    public static long isNumElementsAboveZero(long numElements) {
+    public static long isIntOrLongNumElements(long numElements) {
+
+        if (numElements < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return numElements;
+    }
+
+    public static long isIntNumElementsAboveZero(int numElements) {
+
+        if (numElements < 1) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return numElements;
+    }
+
+    public static long isIntNumElementsAboveZero(long numElements) {
+
+        if (numElements < 1L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        if (numElements > Integer.MAX_VALUE) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return numElements;
+    }
+
+    public static long isLongNumElementsAboveZero(long numElements) {
 
         if (numElements < 1L) {
 
@@ -1013,6 +1300,56 @@ public class Checks {
         }
 
         return numElements;
+    }
+
+    public static <T> void checkIntAddFromArray(int[] array, int startIndex, int numElements) {
+
+        checkIntAddFromArray(startIndex, numElements, array.length);
+    }
+
+    public static <T> void checkIntAddFromArray(long[] array, int startIndex, int numElements) {
+
+        checkIntAddFromArray(startIndex, numElements, array.length);
+    }
+
+    public static <T> void checkIntAddFromArray(T[] array, int startIndex, int numElements) {
+
+        Checks.areElements(array, startIndex, numElements, Checks::checkIsNotNull);
+
+        checkIntAddFromArray(startIndex, numElements, array.length);
+    }
+
+    public static <T> void checkIntAddFromArray(int[] array, long startIndex, long numElements) {
+
+        checkIntAddFromArray(startIndex, numElements, array.length);
+    }
+
+    public static <T> void checkIntAddFromArray(long[] array, long startIndex, long numElements) {
+
+        checkIntAddFromArray(startIndex, numElements, array.length);
+    }
+
+    public static <T> void checkIntAddFromArray(T[] array, long startIndex, long numElements) {
+
+        Checks.areElements(array, (int)isIntIndex(startIndex), (int)isIntNumElements(numElements), Checks::checkIsNotNull);
+
+        checkIntAddFromArray(startIndex, numElements, array.length);
+    }
+
+    private static <T> void checkIntAddFromArray(long startIndex, long numElements, long arrayLength) {
+
+        Checks.isIntNumElementsAboveZero(numElements);
+        Checks.checkFromIndexSize(startIndex, numElements, arrayLength);
+    }
+
+    public static <T> T isArray(T array) {
+
+        if (!array.getClass().isArray()) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return array;
     }
 
     public static int isArrayLimit(int limit) {
@@ -1045,7 +1382,17 @@ public class Checks {
         return capacity;
     }
 
-    public static void areSameNumElements(IElements elements1, IElements elements2) {
+    public static int isArrayLength(int length) {
+
+        if (length < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return length;
+    }
+
+    public static void areSameNumElements(IOnlyElementsView elements1, IOnlyElementsView elements2) {
 
         if (elements1.getNumElements() != elements2.getNumElements()) {
 
@@ -1061,15 +1408,55 @@ public class Checks {
         }
     }
 
-    public static void isSameLimit(IOneDimensionalArrayGetters array1, IOneDimensionalArrayGetters array2) {
+    public static void isSameLimit(IScatteredElementsView scatteredElementsView1, IScatteredElementsView scatteredElementsView2) {
 
-        if (array1.getLimit() != array2.getLimit()) {
+        if (scatteredElementsView1.getLimit() != scatteredElementsView2.getLimit()) {
 
             throw new IllegalArgumentException();
         }
     }
 
-    public static int isInitialCapacity(int initialCapacity) {
+    public static int isIntInitialCapacityAtOrAboveZero(int initialCapacity) {
+
+        if (initialCapacity < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return initialCapacity;
+    }
+
+    public static long isIntInitialCapacityAtOrAboveZero(long initialCapacity) {
+
+        if (initialCapacity < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return initialCapacity;
+    }
+
+    public static long isLongInitialCapacityAtOrAboveZero(long initialCapacity) {
+
+        if (initialCapacity < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return initialCapacity;
+    }
+
+    public static long isIntOrLongInitialCapacityAtOrAboveZero(long initialCapacity) {
+
+        if (initialCapacity < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return initialCapacity;
+    }
+
+    public static int isIntInitialCapacityAboveZero(int initialCapacity) {
 
         if (initialCapacity < 1) {
 
@@ -1079,7 +1466,22 @@ public class Checks {
         return initialCapacity;
     }
 
-    public static long isInitialCapacity(long initialCapacity) {
+    public static long isIntInitialCapacityAboveZero(long initialCapacity) {
+
+        if (initialCapacity < 1L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        if (initialCapacity > Integer.MAX_VALUE) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return initialCapacity;
+    }
+
+    public static long isLongInitialCapacityAboveZero(long initialCapacity) {
 
         if (initialCapacity < 1L) {
 
@@ -1089,7 +1491,57 @@ public class Checks {
         return initialCapacity;
     }
 
-    public static int isCapacity(int capacity) {
+    public static long isIntMinimumCapacityAtOrAboveZero(long minimumCapacity) {
+
+        return isIntInitialCapacityAtOrAboveZero(minimumCapacity);
+    }
+
+    public static int isIntMinimumCapacityAboveZero(int minimumCapacity) {
+
+        return isIntInitialCapacityAboveZero(minimumCapacity);
+    }
+
+    public static long isIntMinimumCapacityAboveZero(long minimumCapacity) {
+
+        return isIntInitialCapacityAboveZero(minimumCapacity);
+    }
+
+    public static long isLongMinimumCapacityAtOrAboveZero(long minimumCapacity) {
+
+        return isLongInitialCapacityAtOrAboveZero(minimumCapacity);
+    }
+
+    public static long isLongMinimumCapacityAboveZero(long minimumCapacity) {
+
+        return isLongInitialCapacityAboveZero(minimumCapacity);
+    }
+
+    public static long isIntOrLongMinimumCapacityAtOrAboveZero(long minimumCapacity) {
+
+        return isLongInitialCapacityAtOrAboveZero(minimumCapacity);
+    }
+
+    public static int isIntInitialOuterCapacityAtOrAboveZero(int initialOuterCapacity) {
+
+        if (initialOuterCapacity < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return initialOuterCapacity;
+    }
+
+    public static int isIntInitialOuterCapacityAboveZero(int initialOuterCapacity) {
+
+        if (initialOuterCapacity < 1) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return initialOuterCapacity;
+    }
+
+    public static int isIntCapacityAtOrAboveZero(int capacity) {
 
         if (capacity < 0) {
 
@@ -1099,7 +1551,22 @@ public class Checks {
         return capacity;
     }
 
-    public static long isCapacity(long capacity) {
+    public static long isIntCapacityAtOrAboveZero(long capacity) {
+
+        if (capacity < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        if (capacity > Integer.MAX_VALUE) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return capacity;
+    }
+
+    public static long isLongCapacityAtOrAboveZero(long capacity) {
 
         if (capacity < 0L) {
 
@@ -1109,7 +1576,22 @@ public class Checks {
         return capacity;
     }
 
-    public static int isCapacityAboveZero(int capacity) {
+    public static long isIntOrLongCapacityAtOrAboveZero(long capacity) {
+
+        if (capacity < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return capacity;
+    }
+
+    public static long isCapacityAtOrAboveZero(long capacity, boolean longCapacity) {
+
+        return longCapacity ? isLongCapacityAtOrAboveZero(capacity) : isIntCapacityAtOrAboveZero(capacity);
+    }
+
+    public static int isIntCapacityAboveZero(int capacity) {
 
         if (capacity < 1) {
 
@@ -1119,7 +1601,7 @@ public class Checks {
         return capacity;
     }
 
-    public static long isCapacityAboveZero(long capacity) {
+    public static long isLongCapacityAboveZero(long capacity) {
 
         if (capacity < 1L) {
 
@@ -1129,16 +1611,110 @@ public class Checks {
         return capacity;
     }
 
+    public static long isIntOrLongCapacityAboveZero(long capacity) {
+
+        if (capacity < 1L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return capacity;
+    }
+
+    public static int isOuterIndex(int outerIndex) {
+
+        if (outerIndex < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return outerIndex;
+    }
+
+    public static int isOuterCapacityAboveZero(int outerCapacity) {
+
+        if (outerCapacity < 1) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return outerCapacity;
+    }
+
+    public static int isInnerCapacityAboveZero(int innerCapacity) {
+
+        if (innerCapacity < 1) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return innerCapacity;
+    }
+
+    public static long isIntInnerElementCapacity(long innerElementCapacity) {
+
+        if (innerElementCapacity < 1L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return innerElementCapacity;
+    }
+
+    private static long isLongInnerElementCapacity(long innerElementCapacity) {
+
+        if (innerElementCapacity < 1L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return innerElementCapacity;
+    }
+
+    public static long isIntOrLongInnerElementCapacity(long innerElementCapacity) {
+
+        if (innerElementCapacity < 1L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return innerElementCapacity;
+    }
+
     public static final int MAX_INT_CAPACITY_EXPONENT = Integer.SIZE - 2;
 
     public static final int MAX_LONG_CAPACITY_EXPONENT = Long.SIZE - 2;
 
-    public static int isInitialIntCapacityExponent(int initialCapacityExponent) {
+    public static int isIntInitialCapacityExponent(int initialCapacityExponent) {
 
         return isIntCapacityExponent(initialCapacityExponent);
     }
 
+    public static int isIntInitialOuterCapacityExponent(int initialOuterCapacityExponent) {
+
+        return isIntCapacityExponent(initialOuterCapacityExponent);
+    }
+
+    public static int isIntInnerCapacityExponent(int innerCapacityExponent) {
+
+        return isIntCapacityExponent(innerCapacityExponent);
+    }
+
     public static int isIntCapacityExponent(int capacityExponent) {
+
+        if (capacityExponent < 0) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (capacityExponent > MAX_INT_CAPACITY_EXPONENT) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return capacityExponent;
+    }
+
+    public static long isIntCapacityExponent(long capacityExponent) {
 
         if (capacityExponent < 0) {
 
@@ -1164,6 +1740,11 @@ public class Checks {
         }
 
         return capacityExponent;
+    }
+
+    public static int isIntMinimumCapacityExponent(int capacityExponent) {
+
+        return Checks.isIntCapacityExponent(capacityExponent);
     }
 
     public static int isIntCapacityExponentIncrease(int capacityExponentIncrease) {
@@ -1194,12 +1775,26 @@ public class Checks {
         return capacityExponentIncrease;
     }
 
+    public static int isIntOrLongCapacityExponentIncrease(int capacityExponentIncrease) {
+
+        if (capacityExponentIncrease < 1) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (capacityExponentIncrease > MAX_LONG_CAPACITY_EXPONENT) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return capacityExponentIncrease;
+    }
+
     public static int isCapacityExponentIncrease(int capacityExponentIncrease, boolean longCapacity) {
 
         return longCapacity ? isLongCapacityExponentIncrease(capacityExponentIncrease) : isIntCapacityExponentIncrease(capacityExponentIncrease);
     }
 
-    public static int isOffset(int offset) {
+    public static int isIntOffset(int offset) {
 
         if (offset < 0) {
 
@@ -1209,7 +1804,7 @@ public class Checks {
         return offset;
     }
 
-    public static long isOffset(long offset) {
+    public static long isLongOffset(long offset) {
 
         if (offset < 0) {
 
@@ -1219,7 +1814,7 @@ public class Checks {
         return offset;
     }
 
-    public static int isLengthAboveOrAtZero(int length) {
+    public static int isIntLengthAboveOrAtZero(int length) {
 
         if (length < 0) {
 
@@ -1229,7 +1824,21 @@ public class Checks {
         return length;
     }
 
-    public static long isLengthAboveOrAtZero(long length) {
+    public static long isIntLengthAboveOrAtZero(long length) {
+
+        if (length < 0L) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (length > Integer.MAX_VALUE) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return length;
+    }
+
+    public static long isLongLengthAboveOrAtZero(long length) {
 
         if (length < 0L) {
 
@@ -1239,7 +1848,7 @@ public class Checks {
         return length;
     }
 
-    public static int isLengthAboveZero(int length) {
+    public static int isIntLengthAboveZero(int length) {
 
         if (length < 1) {
 
@@ -1249,7 +1858,31 @@ public class Checks {
         return length;
     }
 
-    public static long isLengthAboveZero(long length) {
+    public static long isIntLengthAboveZero(long length) {
+
+        if (length < 1L) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (length > Integer.MAX_VALUE) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return length;
+    }
+
+    public static long isLongLengthAboveZero(long length) {
+
+        if (length < 1L) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return length;
+    }
+
+    public static long isIntOrLongLengthAboveZero(long length) {
 
         if (length < 1L) {
 
@@ -1261,7 +1894,7 @@ public class Checks {
 
     public static <T> T[] atMost(T[] array, int numElements) {
 
-        isNumElements(numElements);
+        isIntNumElements(numElements);
 
         if (numElements > array.length) {
 
@@ -1313,7 +1946,7 @@ public class Checks {
 */
     public static long isBufferBitsOffset(long offset) {
 
-        if (offset < 0) {
+        if (offset < 0L) {
 
             throw new IllegalArgumentException();
         }
@@ -1436,8 +2069,8 @@ public class Checks {
 
     public static void verifyOffsetAndLength(byte[] buffer, int offset, int length) {
 
-        isOffset(offset);
-        isLengthAboveZero(length);
+        isIntOffset(offset);
+        isIntLengthAboveZero(length);
 
         if (offset + length > buffer.length) {
 

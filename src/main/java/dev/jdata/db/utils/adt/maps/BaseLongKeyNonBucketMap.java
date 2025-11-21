@@ -1,41 +1,36 @@
 package dev.jdata.db.utils.adt.maps;
 
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.elements.ILongAnyOrderAddable;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
-import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
-import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
+import dev.jdata.db.utils.adt.hashed.helpers.IntCapacityPutResult;
 import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
+import dev.jdata.db.utils.debug.PrintDebug;
 
-public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponentMap<long[]> implements ILongKeyMap {
+abstract class BaseLongKeyNonBucketMap<VALUES, MAP extends BaseLongKeyNonBucketMap<VALUES, MAP>> extends BaseNonBucketMap<long[], VALUES, MAP> implements ILongKeyMapCommon {
 
-    private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_NON_BUCKET_MAP;
+    private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_KEY_NON_BUCKET_MAP;
 
-    private static final long NO_KEY = -1L;
+    private static final Class<?> debugClass = BaseLongKeyNonBucketMap.class;
 
-    private final IntFunction<T> createValues;
-
-    private T values;
-
-    protected abstract void put(T values, int index, T newValues, int newIndex);
-    protected abstract void clearValues(T values);
+    private static final long NO_KEY = LongNonBucket.NO_ELEMENT;
 
     protected abstract int scanHashArrayForIndex(long key, int keyMask);
 
-    protected BaseLongKeyNonBucketMap(int initialCapacityExponent, IntFunction<T> createValuesArray) {
-        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, DEFAULT_LOAD_FACTOR, createValuesArray);
+    BaseLongKeyNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<VALUES> createValuesArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, long[]::new, BaseLongKeyNonBucketMap::clearHashArray, createValuesArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("createValuesArray", createValuesArray));
         }
 
         if (DEBUG) {
@@ -44,20 +39,13 @@ public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponent
         }
     }
 
-    BaseLongKeyNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T> createValuesArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, long[]::new, BaseLongKeyNonBucketMap::clearKeyMap);
+    BaseLongKeyNonBucketMap(AllocationType allocationType, BaseLongKeyNonBucketMap<VALUES, ?> toInitializeFrom) {
+        super(allocationType, toInitializeFrom);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("toInitializeFrom", toInitializeFrom));
         }
-
-        this.createValues = Objects.requireNonNull(createValuesArray);
-
-        this.values = createValuesArray.apply(getCapacity());
-
-        clearValues(values);
 
         if (DEBUG) {
 
@@ -65,19 +53,13 @@ public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponent
         }
     }
 
-    BaseLongKeyNonBucketMap(BaseLongKeyNonBucketMap<T> toCopy, BiConsumer<T, T> copyValuesContent) {
-        super(toCopy, Array::copyOf);
+    BaseLongKeyNonBucketMap(AllocationType allocationType, BaseLongKeyNonBucketMap<VALUES, ?> toCopy, BiConsumer<VALUES, VALUES> copyValuesContent) {
+        super(allocationType, toCopy, Array::copyOf, copyValuesContent);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy).add("copyValuesContent", copyValuesContent));
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy).add("copyValuesContent", copyValuesContent));
         }
-
-        final IntFunction<T> createValues = this.createValues = toCopy.createValues;
-
-        final T values = this.values = createValues.apply(getCapacity());
-
-        copyValuesContent.accept(toCopy.values, values);
 
         if (DEBUG) {
 
@@ -86,75 +68,57 @@ public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponent
     }
 
     @Override
-    public final long[] keys() {
+    public final long keys(ILongAnyOrderAddable addable) {
+
+        Objects.requireNonNull(addable);
 
         if (DEBUG) {
 
-            enter();
+            enter(b -> b.add("addable", addable));
         }
 
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(getNumElements());
-
-        final long[] result = new long[numElements];
-
-        keys(result);
+        final long result = keysAndValues(addable, null, (srcIndex, kSrc, vSrc, dstIndex, kDst, vDst) -> kDst.addInAnyOrder(kSrc[srcIndex]));
 
         if (DEBUG) {
 
-            exit(result);
+            exit(result, b -> b.add("addable", addable));
         }
 
         return result;
     }
 
     @Override
-    protected long[] rehash(long[] hashArray, int newCapacity, int newCapacityExponent, int keyMask) {
+    protected final void rehashKeysAndValues(long[] hashArray, long[] newHashArray, int newKeyMask, VALUES values, VALUES newValues) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).add("keyMask", keyMask));
+           exit(b -> b.add("hashArray", hashArray).add("newHashArray", newHashArray).hex("newKeyMask", newKeyMask).add("values", values).add("newValues", newValues));
         }
-
-        final long[] newHashArray = new long[newCapacity];
-
-        clearKeyMap(newHashArray);
-
-        final T newValuesArray = createValues.apply(newCapacity);
 
         final int hashArrayLength = hashArray.length;
 
-        final long noKey = IntNonBucket.NO_ELEMENT;
+        final long noKey = NO_KEY;
 
         for (int i = 0; i < hashArrayLength; ++ i) {
 
-            final long key = hashArray[i];
+             final long key = hashArray[i];
 
             if (key != noKey) {
 
-                final int newIndex = IntPutResult.getPutIndex(put(newHashArray, key));
+                final int newIndex = IntCapacityPutResult.getPutIndex(putKeyWithKeyMask(newHashArray, key, newKeyMask));
 
-                newHashArray[newIndex] = key;
-
-                put(values, i, newValuesArray, newIndex);
+                putValue(values, i, newValues, newIndex);
             }
         }
 
-        this.values = newValuesArray;
-
         if (DEBUG) {
 
-            exit(newHashArray, b -> b.add("hashArray", hashArray).add("newCapacity", newCapacity).add("newCapacityExponent", newCapacityExponent).add("keyMask", keyMask));
+           exit(b -> b.add("hashArray", hashArray).add("newHashArray", newHashArray).hex("newKeyMask", newKeyMask).add("values", values).add("newValues", newValues));
         }
-
-        return newHashArray;
     }
 
-    @Deprecated // not public?
-    public final IntFunction<T> getCreateValues() {
-        return createValues;
-    }
-
-    protected final <P1, P2> void forEachKeyAndValue(P1 parameter1, P2 parameter2, ForEachKeyAndValueWithKeysAndValues<long[], T, P1, P2> forEach) {
+    protected final <P1, P2, E extends Exception> void forEachKeyAndValue(P1 parameter1, P2 parameter2, ForEachKeyAndValueWithKeysAndValues<long[], VALUES, P1, P2, E> forEach)
+            throws E {
 
         if (DEBUG) {
 
@@ -162,12 +126,10 @@ public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponent
         }
 
         final long[] hashArray = getHashed();
-
         final int hashArrayLength = hashArray.length;
+        final VALUES values = getValues();
 
-        final T values = getValues();
-
-        final long noKey = IntNonBucket.NO_ELEMENT;
+        final long noKey = NO_KEY;
 
         for (int i = 0; i < hashArrayLength; ++ i) {
 
@@ -185,8 +147,8 @@ public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponent
         }
     }
 
-    protected final <P1, P2, DELEGATE, R> R forEachKeyAndValueWithResult(R defaultResult, P1 parameter1, P2 parameter2, DELEGATE delegate,
-            ForEachKeyAndValueWithKeysAndValuesWithResult<long[], T, P1, P2, DELEGATE, R> forEach) {
+    protected final <P1, P2, DELEGATE, R, E extends Exception> R forEachKeyAndValueWithResult(R defaultResult, P1 parameter1, P2 parameter2, DELEGATE delegate,
+            ForEachKeyAndValueWithKeysAndValuesWithResult<long[], VALUES, P1, P2, DELEGATE, R, E> forEach) throws E {
 
         if (DEBUG) {
 
@@ -196,12 +158,10 @@ public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponent
         R result = defaultResult;
 
         final long[] hashArray = getHashed();
-
         final int hashArrayLength = hashArray.length;
+        final VALUES values = getValues();
 
-        final T values = getValues();
-
-        final long noKey = IntNonBucket.NO_ELEMENT;
+        final long noKey = NO_KEY;
 
         for (int i = 0; i < hashArrayLength; ++ i) {
 
@@ -228,20 +188,25 @@ public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponent
         return result;
     }
 
-    protected final <S, D> void keysAndValues(long[] keysDst, S src, D dst, IIntMapIndexValueSetter<S, D> valueSetter) {
+    @Override
+    protected final <KEYS_DST, VALUES_DST> int keysAndValues(KEYS_DST keysDst, VALUES_DST valuesDst,
+            IIntCapacityMapIndexKeyValueAdder<long[], VALUES, KEYS_DST, VALUES_DST> keyValueAdder) {
+
+        Checks.areAnyNotNull(keysDst, valuesDst);
+        Objects.requireNonNull(keyValueAdder);
 
         if (DEBUG) {
 
-            enter(b -> b.add("keysDst.length", keysDst.length));
+            enter(b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst).add("keyValueAdder", keyValueAdder));
         }
 
         final long[] hashArray = getHashed();
-
         final int hashArrayLength = hashArray.length;
+        final VALUES values = getValues();
 
-        final int noKey = IntNonBucket.NO_ELEMENT;
+        final long noKey = NO_KEY;
 
-        int dstIndex = 0;
+        int numAdded = 0;
 
         for (int i = 0; i < hashArrayLength; ++ i) {
 
@@ -249,21 +214,18 @@ public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponent
 
             if (mapKey != noKey) {
 
-                keysDst[dstIndex] = mapKey;
+                keyValueAdder.addValue(i, hashArray, values, numAdded, keysDst, valuesDst);
 
-                if (dst != null) {
-
-                    valueSetter.setValue(src, i, dst, dstIndex);
-                }
-
-                ++ dstIndex;
+                ++ numAdded;
             }
         }
 
         if (DEBUG) {
 
-            exit();
+            exit(numAdded, b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst));
         }
+
+        return numAdded;
     }
 
     protected final int getIndex(long key) {
@@ -294,13 +256,13 @@ public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponent
             enter(b -> b.add("key", key));
         }
 
-        checkCapacity(1);
+        checkCapacityForOneMoreElement();
 
         final long[] hashArray = getHashed();
 
-        final long putResult = put(hashArray, key);
+        final long putResult = putKey(hashArray, key);
 
-        final boolean newAdded = IntPutResult.getPutNewAdded(putResult);
+        final boolean newAdded = IntCapacityPutResult.getPutNewAdded(putResult);
 
         if (newAdded) {
 
@@ -315,42 +277,36 @@ public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponent
         return putResult;
     }
 
-    private long put(long[] hashArray, long key) {
+    private long putKey(long[] hashArray, long key) {
+
+        return putKeyWithKeyMask(hashArray, key, getKeyMask());
+    }
+
+    private static long putKeyWithKeyMask(long[] hashArray, long key, int keyMask) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashArray", hashArray).add("key", key));
+            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
-        final int hashArrayIndex = HashFunctions.hashArrayIndex(key, getKeyMask());
+        final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
 
         if (DEBUG) {
 
-            debugFormatln("lookup hashArrayIndex=%d key=%d keyMask=0x%08x", hashArrayIndex, key, getKeyMask());
+            PrintDebug.debugFormatln(debugClass, "lookup hashArrayIndex=%d key=%d keyMask=0x%08x", hashArrayIndex, key, keyMask);
         }
 
-        final long result = put(hashArray, key, hashArrayIndex);
+        final long result = putKeyWithHashArrayIndex(hashArray, key, hashArrayIndex);
 
         if (DEBUG) {
 
-            exit(result, b -> b.add("hashArray", hashArray).add("key", key));
+            PrintDebug.exitWithHex(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
         return result;
     }
 
-    protected final T getValues() {
-        return values;
-    }
-
-    private void keys(long[] dst) {
-
-        Objects.requireNonNull(dst);
-
-        keysAndValues(dst, null, null, null);
-    }
-
-    final long put(long[] hashArray, long key, int hashArrayIndex) {
+    static long putKeyWithHashArrayIndex(long[] hashArray, long key, int hashArrayIndex) {
 
         Objects.requireNonNull(hashArray);
         LongNonBucket.checkIsHashArrayElement(key);
@@ -358,26 +314,21 @@ public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponent
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
+            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
         }
 
         final long result = HashArray.add(hashArray, key, hashArrayIndex);
 
         if (DEBUG) {
 
-            exitWithBinary(result, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
+            PrintDebug.exitWithHex(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
         }
 
         return result;
     }
 
-    private static void clearKeyMap(long[] hashArray) {
-
-        Arrays.fill(hashArray, IntNonBucket.NO_ELEMENT);
-    }
-
-    final <P1, P2, DELEGATE> boolean equalsLongKeyNonBucketMapWithIndex(P1 parameter1, BaseLongKeyNonBucketMap<T> other, P2 parameter2, DELEGATE delegate,
-            IntMapIndexValuesEqualityTester<T, P1, P2, DELEGATE> equalityTester) {
+    final <P1, P2, DELEGATE, E extends Exception> boolean equalsLongKeyNonBucketMapWithIndex(P1 parameter1, BaseLongKeyNonBucketMap<VALUES, ?> other, P2 parameter2,
+            DELEGATE delegate, IntMapIndexValuesEqualityTester<VALUES, P1, P2, DELEGATE, E> equalityTester) throws E {
 
         Objects.requireNonNull(other);
         Objects.requireNonNull(equalityTester);
@@ -391,8 +342,8 @@ public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponent
 
         final int hashArrayLength = hashArray.length;
 
-        final T values = getValues();
-        final T otherValues = other.getValues();
+        final VALUES values = getValues();
+        final VALUES otherValues = other.getValues();
 
         final int otherKeyMask = other.getKeyMask();
 
@@ -423,5 +374,10 @@ public abstract class BaseLongKeyNonBucketMap<T> extends BaseIntCapacityExponent
         }
 
         return equals;
+    }
+
+    private static void clearHashArray(long[] hashArray) {
+
+        LongNonBucket.clearHashArray(hashArray);
     }
 }

@@ -1,16 +1,10 @@
 package dev.jdata.db.schema.allocators.databases.cache;
 
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
-import dev.jdata.db.schema.model.cache.CachedSchemaMapBuilder;
-import dev.jdata.db.schema.model.objects.DDLObjectType;
-import dev.jdata.db.schema.model.objects.SchemaObject;
-import dev.jdata.db.utils.allocators.NodeObjectCache;
-
 @Deprecated // currently not in use
-final class SchemaMapBuildersCache extends NodeDDLObjectTypeCaches<CachedSchemaMapBuilder<? extends SchemaObject>> {
-
+final class SchemaMapBuildersCache
+    //extends NodeDDLObjectTypeCaches<ICachedSchemaMapBuilder<? extends SchemaObject>>
+{
+/*
     private SchemaMapBuildersCache(
             BiFunction<
                             DDLObjectType,
@@ -26,4 +20,5 @@ final class SchemaMapBuildersCache extends NodeDDLObjectTypeCaches<CachedSchemaM
 
         throw new UnsupportedOperationException();
     }
+*/
 }

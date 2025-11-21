@@ -10,7 +10,7 @@ import dev.jdata.db.utils.checks.Checks;
 
 abstract class ParameterPreparedStatementMessage extends PreparedStatementMessage implements PreparedStatementParameters {
 
-    public interface JDBCTypeArrayAllocator {
+    public interface IJDBCTypeArrayAllocator {
 
         JDBCType[] allocateJDBCTypeArray(int numColumns);
 
@@ -28,11 +28,15 @@ abstract class ParameterPreparedStatementMessage extends PreparedStatementMessag
     private int parametersOffset;
     private int parametersLength;
 
-    final void decodeParameters(ByteBuffer byteBuffer, int offset, int length, ProtocolAllocator protocolAllocator, byte referredToNumBytes) {
+    ParameterPreparedStatementMessage(AllocationType allocationType) {
+        super(allocationType);
+    }
+
+    final void decodeParameters(ByteBuffer byteBuffer, int offset, int length, IProtocolAllocator protocolAllocator, byte referredToNumBytes) {
 
         Objects.requireNonNull(byteBuffer);
-        Checks.isOffset(offset);
-        Checks.isLengthAboveZero(length);
+        Checks.isIntOffset(offset);
+        Checks.isLongLengthAboveZero(length);
         Objects.requireNonNull(protocolAllocator);
         Checks.isAboveZero(referredToNumBytes);
 
@@ -65,7 +69,7 @@ abstract class ParameterPreparedStatementMessage extends PreparedStatementMessag
 
         this.parametersByteBuffer = byteBuffer;
         this.parametersOffset = currentOffset;
-        this.parametersLength = Checks.isLengthAboveZero(length - (currentOffset - offset));
+        this.parametersLength = Checks.isIntLengthAboveZero(length - (currentOffset - offset));
     }
 
     @Override

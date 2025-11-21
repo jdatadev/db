@@ -25,7 +25,7 @@ import dev.jdata.db.engine.server.network.protocol.PrepareStatementMessage;
 import dev.jdata.db.engine.server.network.protocol.Protocol;
 import dev.jdata.db.engine.server.network.protocol.ProtocolDecodeException;
 import dev.jdata.db.engine.server.network.protocol.ProtocolMessage;
-import dev.jdata.db.engine.server.network.protocol.ProtocolMessage.ProtocolAllocator;
+import dev.jdata.db.engine.server.network.protocol.ProtocolMessage.IProtocolAllocator;
 import dev.jdata.db.engine.server.network.protocol.ProtocolMessageType;
 import dev.jdata.db.engine.server.network.protocol.SetupMessage;
 import dev.jdata.db.engine.server.network.protocol.SetupMessage.DatabaseCreateMode;
@@ -79,21 +79,21 @@ public final class DatabaseNetworkServer {
     }
 
     private final SQLDatabaseServer serverDelegate;
-    private final ProtocolAllocator protocolAllocator;
+    private final IProtocolAllocator protocolAllocator;
 
     private final Protocol protocol;
 
     private final NodeObjectCache<NetworkClient> networkClientCache;
     private final Map<Charset, CharsetDecoder> decoderByCharset;
 
-    public DatabaseNetworkServer(SQLDatabaseServer serverDelegate, ProtocolAllocator protocolAllocator) {
+    public DatabaseNetworkServer(SQLDatabaseServer serverDelegate, IProtocolAllocator protocolAllocator) {
 
         this.serverDelegate = Objects.requireNonNull(serverDelegate);
         this.protocolAllocator = Objects.requireNonNull(protocolAllocator);
 
         this.protocol = new Protocol();
 
-        this.networkClientCache = new NodeObjectCache<>(() -> new NetworkClient(this));
+        this.networkClientCache = new NodeObjectCache<>(a -> new NetworkClient(a, this));
         this.decoderByCharset = new HashMap<>(3);
     }
 

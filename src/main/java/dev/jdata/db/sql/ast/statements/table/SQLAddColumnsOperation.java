@@ -3,7 +3,7 @@ package dev.jdata.db.sql.ast.statements.table;
 import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.ast.objects.list.ASTList;
-import org.jutils.ast.objects.list.IIndexListGetters;
+import org.jutils.ast.objects.list.IIndexListView;
 import org.jutils.parse.context.Context;
 
 public final class SQLAddColumnsOperation extends SQLColumnOperation {
@@ -11,7 +11,7 @@ public final class SQLAddColumnsOperation extends SQLColumnOperation {
     private final long addKeyword;
     private final ASTList<SQLAddColumnDefinition> columnDefinitions;
 
-    public SQLAddColumnsOperation(Context context, long addKeyword, IIndexListGetters<SQLAddColumnDefinition> addColumnDefinitions) {
+    public SQLAddColumnsOperation(Context context, long addKeyword, IIndexListView<SQLAddColumnDefinition> addColumnDefinitions) {
         super(context);
 
         this.addKeyword = checkIsKeyword(addKeyword);

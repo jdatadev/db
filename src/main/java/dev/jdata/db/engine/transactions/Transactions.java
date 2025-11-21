@@ -5,7 +5,7 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.engine.descriptorables.BaseSingleTypeDescriptorables;
-import dev.jdata.db.utils.adt.maps.MutableLongToObjectMaxDistanceNonBucketMap;
+import dev.jdata.db.utils.adt.maps.IHeapMutableLongToObjectDynamicMap;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class Transactions extends BaseSingleTypeDescriptorables<Transaction.TransactionState, Transaction> {
@@ -22,15 +22,15 @@ public final class Transactions extends BaseSingleTypeDescriptorables<Transactio
 
     private long transactionIdAllocator;
 
-    private final MutableLongToObjectMaxDistanceNonBucketMap<Transaction> transactionByGlobalTransactionId;
+    private final IHeapMutableLongToObjectDynamicMap<Transaction> transactionByGlobalTransactionId;
 
     public Transactions(long initialTransactionId, TransactionFactory transactionFactory) {
-        super(createTransactionArray);
+        super(AllocationType.HEAP, createTransactionArray);
 
         this.transactionIdAllocator = initialTransactionId != DBConstants.NO_TRANSACTION_ID ? Checks.isTransactionId(initialTransactionId) : DBConstants.INITIAL_TRANSACTION_ID;
         this.transactionFactory = Objects.requireNonNull(transactionFactory);
 
-        this.transactionByGlobalTransactionId = new MutableLongToObjectMaxDistanceNonBucketMap<>(0, createTransactionArray);
+        this.transactionByGlobalTransactionId = IHeapMutableLongToObjectDynamicMap.create(0, createTransactionArray);
     }
 
     public synchronized Transaction getTransaction(int transactionDescriptor) {
@@ -42,7 +42,7 @@ public final class Transactions extends BaseSingleTypeDescriptorables<Transactio
 
     public synchronized int addTransaction() {
 
-        final Transaction transaction = addDescriptorable(this, t -> t.transactionFactory.createTransaction());
+        final Transaction transaction = addDescriptorable(this, (a, t) -> t.transactionFactory.createTransaction());
 
         Objects.requireNonNull(transaction);
 

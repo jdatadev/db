@@ -3,7 +3,7 @@ package dev.jdata.db.sql.parse.dml.select;
 import java.util.Objects;
 
 import org.jutils.ast.objects.list.IAddableList;
-import org.jutils.ast.objects.list.IIndexListGetters;
+import org.jutils.ast.objects.list.IIndexListView;
 import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
@@ -41,7 +41,7 @@ public abstract class BaseSQLSelectParser<T extends BaseSQLSelectStatement> exte
     private final SQLHavingClauseParser havingClauseParser;
     private final SQLOrderByClauseParser orderByClauseParser;
 
-    protected abstract T createSelectStatement(Context context, IIndexListGetters<SQLSelectStatementPart> parts, IIndexListGetters<SQLUnion> unions);
+    protected abstract T createSelectStatement(Context context, IIndexListView<SQLSelectStatementPart> parts, IIndexListView<SQLUnion> unions);
 
     protected BaseSQLSelectParser(SQLExpressionParser expressionParser, SQLConditionParser conditionParser, SQLWhereClauseParser whereClauseParser) {
 

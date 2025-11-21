@@ -1,36 +1,40 @@
 package dev.jdata.db.engine.server;
 
+import java.util.Objects;
+
 import org.jutils.ast.objects.list.IAddableList;
 
 import dev.jdata.db.sql.ast.ISQLAllocator;
-import dev.jdata.db.utils.adt.decimals.MutableDecimal;
-import dev.jdata.db.utils.adt.integers.ILargeInteger;
-import dev.jdata.db.utils.adt.integers.MutableLargeInteger;
-import dev.jdata.db.utils.adt.lists.CachedLongIndexList.CacheLongIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.CachedLongIndexList.CachedLongIndexListBuilder;
-import dev.jdata.db.utils.adt.lists.LongIndexList;
+import dev.jdata.db.utils.adt.lists.ICachedLongIndexList;
+import dev.jdata.db.utils.adt.lists.ICachedLongIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.ICachedLongIndexListBuilder;
+import dev.jdata.db.utils.adt.numbers.decimals.ICachedMutableDecimal;
+import dev.jdata.db.utils.adt.numbers.decimals.ICachedMutableDecimalAllocator;
+import dev.jdata.db.utils.adt.numbers.integers.ICachedMutableLargeInteger;
+import dev.jdata.db.utils.adt.numbers.integers.ICachedMutableLargeIntegerAllocator;
+import dev.jdata.db.utils.adt.numbers.integers.ILargeIntegerView;
 import dev.jdata.db.utils.allocators.AddableListAllocator;
-import dev.jdata.db.utils.allocators.ArrayOfLongsAllocator;
 import dev.jdata.db.utils.allocators.IAddableListAllocator;
-import dev.jdata.db.utils.allocators.MutableDecimalAllocator;
-import dev.jdata.db.utils.allocators.MutableLargeIntegerAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
+import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.jutils.ArrayOfLongsAllocator;
 
 public final class SQLAllocator extends ObjectCacheNode implements ISQLAllocator {
 
     private final IAddableListAllocator listAllocator;
-    private final CacheLongIndexListAllocator longIndexListAllocator;
+    private final ICachedLongIndexListAllocator longIndexListAllocator;
     private final ArrayOfLongsAllocator arrayOfLongsAllocator;
-    private final MutableDecimalAllocator mutableDecimalAllocator;
-    private final MutableLargeIntegerAllocator mutableLargeIntegerAllocator;
+    private final ICachedMutableDecimalAllocator mutableDecimalAllocator;
+    private final ICachedMutableLargeIntegerAllocator mutableLargeIntegerAllocator;
 
-    public SQLAllocator() {
+    public SQLAllocator(AllocationType allocationType) {
+        super(allocationType);
 
         this.listAllocator = new AddableListAllocator();
-        this.longIndexListAllocator = new CacheLongIndexListAllocator();
+        this.longIndexListAllocator = ICachedLongIndexListAllocator.create();
         this.arrayOfLongsAllocator = new ArrayOfLongsAllocator();
-        this.mutableDecimalAllocator = new MutableDecimalAllocator();
-        this.mutableLargeIntegerAllocator = new MutableLargeIntegerAllocator();
+        this.mutableDecimalAllocator = ICachedMutableDecimalAllocator.create();
+        this.mutableLargeIntegerAllocator = ICachedMutableLargeIntegerAllocator.create();
     }
 
     @Override
@@ -46,21 +50,31 @@ public final class SQLAllocator extends ObjectCacheNode implements ISQLAllocator
     }
 
     @Override
-    public CachedLongIndexListBuilder allocateLongIndexListBuilder(int minimumCapacity) {
+    public ICachedLongIndexListBuilder createLongIndexListBuilder(int minimumCapacity) {
 
-        return LongIndexList.createBuilder(longIndexListAllocator);
+        Checks.isIntMinimumCapacityAtOrAboveZero(minimumCapacity);
+
+        return longIndexListAllocator.createBuilder(minimumCapacity);
     }
 
     @Override
-    public void freeLongIndexListBuilder(CachedLongIndexListBuilder builder) {
+    public void freeLongIndexListBuilder(ICachedLongIndexListBuilder builder) {
 
-        longIndexListAllocator.freeLongIndexListBuilder(builder);
+        Objects.requireNonNull(builder);
+
+        longIndexListAllocator.freeBuilder(builder);
     }
 
     @Override
-    public void freeLongIndexList(LongIndexList list) {
+    public void freeLongIndexList(ICachedLongIndexList list) {
 
-        longIndexListAllocator.freeLongIndexList(list);
+        longIndexListAllocator.freeImmutable(list);
+    }
+
+    @Override
+    public ICachedLongIndexList listOfLongValue(long value) {
+
+        return longIndexListAllocator.of(value);
     }
 
     @Override
@@ -76,44 +90,50 @@ public final class SQLAllocator extends ObjectCacheNode implements ISQLAllocator
     }
 
     @Override
-    public MutableDecimal allocateDecimal(long beforeDecimalPoint, long afterDecimalPoint) {
+    public ICachedMutableDecimal allocateDecimal(long beforeDecimalPoint, long afterDecimalPoint) {
 
         return mutableDecimalAllocator.allocateDecimal(beforeDecimalPoint, afterDecimalPoint);
     }
 
     @Override
-    public MutableDecimal allocateDecimal(ILargeInteger beforeDecimalPoint, long afterDecimalPoint) {
+    public ICachedMutableDecimal allocateDecimal(ILargeIntegerView beforeDecimalPoint, long afterDecimalPoint) {
 
         return mutableDecimalAllocator.allocateDecimal(beforeDecimalPoint, afterDecimalPoint);
     }
 
     @Override
-    public MutableDecimal allocateDecimal(long beforeDecimalPoint, ILargeInteger afterDecimalPoint) {
+    public ICachedMutableDecimal allocateDecimal(long beforeDecimalPoint, ILargeIntegerView afterDecimalPoint) {
 
         return mutableDecimalAllocator.allocateDecimal(beforeDecimalPoint, afterDecimalPoint);
     }
 
     @Override
-    public MutableDecimal allocateDecimal(ILargeInteger beforeDecimalPoint, ILargeInteger afterDecimalPoint) {
+    public ICachedMutableDecimal allocateDecimal(ILargeIntegerView beforeDecimalPoint, ILargeIntegerView afterDecimalPoint) {
 
         return mutableDecimalAllocator.allocateDecimal(beforeDecimalPoint, afterDecimalPoint);
     }
 
     @Override
-    public void freeDecimal(MutableDecimal decimal) {
+    public void freeDecimal(ICachedMutableDecimal decimal) {
 
         mutableDecimalAllocator.freeDecimal(decimal);
     }
 
     @Override
-    public MutableLargeInteger allocateLargeInteger(int precision) {
+    public ICachedMutableLargeInteger allocateMutableLargeInteger(int precision) {
 
-        return mutableLargeIntegerAllocator.allocateLargeInteger(precision);
+        return mutableLargeIntegerAllocator.allocateMutableLargeInteger(precision);
     }
 
     @Override
-    public void freeLargeInteger(MutableLargeInteger largeInteger) {
+    public ICachedMutableLargeInteger allocateMutableLargeInteger(ILargeIntegerView largeInteger) {
 
-        mutableLargeIntegerAllocator.freeLargeInteger(largeInteger);
+        return mutableLargeIntegerAllocator.allocateMutableLargeInteger(largeInteger);
+    }
+
+    @Override
+    public void freeMutableLargeInteger(ICachedMutableLargeInteger largeInteger) {
+
+        mutableLargeIntegerAllocator.freeMutableLargeInteger(largeInteger);
     }
 }

@@ -28,15 +28,14 @@ import dev.jdata.db.sql.parse.SQLParserFactory;
 import dev.jdata.db.sql.parse.SQLParserHelper;
 import dev.jdata.db.sql.parse.SQLToken;
 import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
+import dev.jdata.db.utils.adt.lists.IIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
 
 public abstract class BaseDatabaseSchemaSerialization<
 
-                INDEX_LIST extends IndexList<BaseSQLStatement>,
-                INDEX_LIST_BUILDER extends IndexListBuilder<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER>,
-                INDEX_LIST_ALLOCATOR extends IndexListAllocator<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
+                INDEX_LIST extends IIndexList<BaseSQLStatement>,
+                INDEX_LIST_BUILDER extends IIndexListBuilder<BaseSQLStatement, INDEX_LIST, ?>,
+                INDEX_LIST_ALLOCATOR extends IIndexListAllocator<BaseSQLStatement, INDEX_LIST, ?, INDEX_LIST_BUILDER>,
                 COMPLETE_SCHEMA_MAPS extends IAllCompleteSchemaMaps>
 
         implements IDatabaseSchemaSerialization<COMPLETE_SCHEMA_MAPS> {
@@ -46,11 +45,11 @@ public abstract class BaseDatabaseSchemaSerialization<
     private final ISQLAllocator sqlAllocator;
 
     private final SQLParserHelper<INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR> sqlParserHelper;
-    private final IDDLSchemaSQLStatementsWorkerObjects<COMPLETE_SCHEMA_MAPS, ?> ddlSchemaSQLStatementsWorkerObjects;
+    private final IDDLSchemaSQLStatementsWorkerObjects<COMPLETE_SCHEMA_MAPS, ?, ?> ddlSchemaSQLStatementsWorkerObjects;
     private final DDLSchemaScratchObjects ddlSchemaScratchObjects;
 
     protected BaseDatabaseSchemaSerialization(SQLParserFactory sqlParserFactory, ISQLAllocator sqlAllocator,
-            IDDLSchemaSQLStatementsWorkerObjects<COMPLETE_SCHEMA_MAPS, ?> ddlSchemaSQLStatementsWorkerObjects, DDLSchemaScratchObjects ddlSchemaScratchObjects,
+            IDDLSchemaSQLStatementsWorkerObjects<COMPLETE_SCHEMA_MAPS, ?, ?> ddlSchemaSQLStatementsWorkerObjects, DDLSchemaScratchObjects ddlSchemaScratchObjects,
             Function<IntFunction<BaseSQLStatement[]>, INDEX_LIST_ALLOCATOR> createIndexListAllocator) {
 
         this.sqlAllocator = Objects.requireNonNull(sqlAllocator);

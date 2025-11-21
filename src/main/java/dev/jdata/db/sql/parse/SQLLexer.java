@@ -8,8 +8,8 @@ import org.jutils.parse.ParserException;
 
 public class SQLLexer<E extends Exception, INPUT extends CharInput<E>> extends BaseLexer<SQLToken, E, INPUT> {
 
-    SQLLexer() {
-
+    SQLLexer(AllocationType allocationType) {
+        super(allocationType);
     }
 
     final void initialize(INPUT input, Function<String, E> createEOFException) {

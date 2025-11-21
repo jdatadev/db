@@ -2,10 +2,14 @@ package dev.jdata.db;
 
 public class DBConstants {
 
+    public static final int NO_DESCRIPTOR = -1;
+
     public static final int INITIAL_DESCRIPTORABLE = 0;
 
     public static final int NO_SCHEMA_OBJECT_ID = -1;
     public static final int INITIAL_SCHEMA_OBJECT_ID = 0;
+
+    public static final int NO_TABLE_ID = NO_SCHEMA_OBJECT_ID;
 
     public static final int INITIAL_COLUMN_ID = INITIAL_SCHEMA_OBJECT_ID;
 
@@ -33,4 +37,6 @@ public class DBConstants {
 
     public static final int MAX_DB_NAME_LENGTH = 1 << 8;
     public static final int MAX_CHARSET_NAME_LENGTH = 1 << 8;
+
+    public static final int MAX_DECIMAL_PRECISION = 30;
 }

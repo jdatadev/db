@@ -1,11 +1,5 @@
 package dev.jdata.db.utils.adt.elements;
 
-public interface IIntUnorderedElementsMutators {
+public interface IIntUnorderedElementsMutators extends IElementsMutatorsMarker, IIntUnorderedAddable {
 
-    void add(int value);
-
-    default void addAll(IIntIterableElements intElements) {
-
-        intElements.forEach(this, (e, i) -> i.add(e));
-    }
 }

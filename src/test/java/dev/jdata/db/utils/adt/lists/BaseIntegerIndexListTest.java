@@ -7,19 +7,19 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.test.unit.BaseTest;
-import dev.jdata.db.utils.adt.elements.IIntIterableElements.IForEach;
-import dev.jdata.db.utils.adt.elements.IIntIterableElements.IForEachWithResult;
+import dev.jdata.db.utils.adt.elements.IIntForEach;
+import dev.jdata.db.utils.adt.elements.IIntForEachWithResult;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.jdk.adt.lists.Lists;
 
-abstract class BaseIntegerIndexListTest<T extends IMutableIntegerList> extends BaseTest {
+abstract class BaseIntegerIndexListTest<T extends IOnlyElementsView & IListTypeMutable> extends BaseTest {
 
     abstract T createArray(int initialCapacity);
 
-    abstract <P> void forEach(T list, P parameter, IForEach<P, RuntimeException> forEach);
-    abstract <P1, P2, R> R forEachWithResult(T list, R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<P1, P2, R, RuntimeException> forEach);
+    abstract <P> void forEach(T list, P parameter, IIntForEach<P, RuntimeException> forEach);
+    abstract <P1, P2, R> R forEachWithResult(T list, R defaultResult, P1 parameter1, P2 parameter2, IIntForEachWithResult<P1, P2, R, RuntimeException> forEach);
     abstract int get(T list, int index);
     abstract void addTail(T list, int value);
-    abstract boolean removeAtMostOne(T list, int value);
 
     abstract int[] toArray(T list);
 
@@ -142,44 +142,7 @@ abstract class BaseIntegerIndexListTest<T extends IMutableIntegerList> extends B
         assertThat(get(list, 2)).isEqualTo(345);
     }
 
-    @Test
-    @Category(UnitTest.class)
-    public final void testRemove() {
-
-        final int value = 123;
-
-        final T list = createArray(value, value);
-
-        assertThatThrownBy(() -> removeAtMostOne(list, value)).isInstanceOf(IllegalStateException.class);
-
-        assertThat(toArray(list)).isEqualTo(new int[] { value, value });
-
-        checkRemove(new int[0], 123, new int[0], false);
-        checkRemove(new int[] { 123 }, 123, new int[0], true);
-        checkRemove(new int[] { 123 }, 234, new int[] { 123 }, false);
-        checkRemove(new int[] { 123, 234 }, 345, new int[] { 123, 234 }, false);
-        checkRemove(new int[] { 123, 234 }, 123, new int[] { 234 }, true);
-        checkRemove(new int[] { 123, 234 }, 234, new int[] { 123 }, true);
-        checkRemove(new int[] { 123, 234, 345 }, 123, new int[] { 234, 345 }, true);
-        checkRemove(new int[] { 123, 234, 345 }, 234, new int[] { 123, 345 }, true);
-        checkRemove(new int[] { 123, 234, 345 }, 345, new int[] { 123, 234 }, true);
-    }
-
-    private void checkRemove(int[] elements, int toRemove, int[] expectedElements, boolean expecteRemoved) {
-
-        final T list = createArray();
-
-        for (int element : elements) {
-
-            addTail(list, element);
-        }
-
-        assertThat(removeAtMostOne(list, toRemove)).isEqualTo(expecteRemoved);
-
-        assertThat(toArray(list)).isEqualTo(expectedElements);
-    }
-
-    private T createArray(int ... elements) {
+    final T createArray(int ... elements) {
 
         final T list = createArray();
 

@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.file.access;
 
-import dev.jdata.db.utils.adt.strings.Strings;
+import dev.jdata.db.utils.jdk.adt.strings.Strings;
 
 final class HeapPathObjectsAllocator implements IPathObjectsAllocator {
 

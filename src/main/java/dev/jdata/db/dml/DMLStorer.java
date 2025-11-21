@@ -1,6 +1,6 @@
 package dev.jdata.db.dml;
 
-import dev.jdata.db.utils.allocators.IByteArrayAllocator;
+import dev.jdata.db.utils.adt.arrays.IByteArrayAllocator;
 
 @Deprecated // currently not in use
 public interface DMLStorer {

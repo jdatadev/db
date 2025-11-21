@@ -1,10 +1,15 @@
 package dev.jdata.db.utils.adt.maps;
 
-import dev.jdata.db.utils.adt.IClearable;
+import dev.jdata.db.utils.adt.elements.INonDistinct;
+import dev.jdata.db.utils.adt.elements.IOrderedAddable;
 
-abstract class BaseMutableLongToIntegerOrObjectDynamicMapTest<V, M extends ILongContainsKeyMap & IClearable & ILongKeyDynamicMapRemovalMutators>
+abstract class BaseMutableLongToIntegerOrObjectDynamicMapTest<
 
-        extends BaseMutableLongToIntegerOrObjectMapTest<V, M> {
+                VALUES_ARRAY,
+                VALUES_ADDABLE extends IOrderedAddable<?> & INonDistinct,
+                MAP extends IMutableLongKeyMap & ILongContainsKeyMapView & ILongKeyDynamicMapRemovalMutators>
+
+        extends BaseMutableLongToIntegerOrObjectMapTest<VALUES_ARRAY, VALUES_ADDABLE, MAP> {
 
     @Override
     final boolean supportsContainsKey() {
@@ -19,13 +24,13 @@ abstract class BaseMutableLongToIntegerOrObjectDynamicMapTest<V, M extends ILong
     }
 
     @Override
-    final boolean remove(M map, int key) {
+    final boolean remove(MAP map, int key) {
 
         return map.remove(key);
     }
 
     @Override
-    final boolean containsKey(M map, int key) {
+    final boolean containsKey(MAP map, int key) {
 
         return map.containsKey(key);
     }

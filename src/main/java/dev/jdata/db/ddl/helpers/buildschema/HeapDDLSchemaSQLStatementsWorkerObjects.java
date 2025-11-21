@@ -1,28 +1,30 @@
 package dev.jdata.db.ddl.helpers.buildschema;
 
-import dev.jdata.db.schema.model.HeapSchemaMap;
-import dev.jdata.db.schema.model.HeapSchemaMap.HeapSchemaMapBuilder;
 import dev.jdata.db.schema.model.objects.SchemaObject;
-import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
-import dev.jdata.db.schema.model.schemamaps.HeapCompleteSchemaMapsBuilder;
-import dev.jdata.db.utils.adt.lists.HeapIndexList;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
+import dev.jdata.db.schema.model.schemamap.IHeapSchemaMap;
+import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMapsBuilder;
+import dev.jdata.db.utils.adt.lists.IHeapIndexList;
+import dev.jdata.db.utils.adt.lists.IHeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IHeapIndexListBuilder;
 
 public final class HeapDDLSchemaSQLStatementsWorkerObjects extends DDLSchemaSQLStatementsWorkerObjects<
 
-                HeapIndexList<SchemaObject>,
-                HeapIndexListBuilder<SchemaObject>,
-                HeapIndexListAllocator<SchemaObject>,
-                HeapSchemaMap<SchemaObject>,
-                HeapSchemaMapBuilder<SchemaObject>,
-                HeapAllCompleteSchemaMaps,
-                HeapAllCompleteSchemaMaps,
-                HeapCompleteSchemaMapsBuilder> {
+                IHeapIndexList<SchemaObject>,
+                IHeapIndexListBuilder<SchemaObject>,
+                IHeapIndexListAllocator<SchemaObject>,
+                IHeapSchemaMap<SchemaObject>,
+                IHeapAllCompleteSchemaMaps,
+                IHeapAllCompleteSchemaMaps,
+                IHeapAllCompleteSchemaMapsBuilder> {
+
+    public HeapDDLSchemaSQLStatementsWorkerObjects() {
+        super(IHeapAllCompleteSchemaMapsBuilder[]::new);
+    }
 
     @Override
-    HeapCompleteSchemaMapsBuilder createCompleteSchemaMapsBuilder() {
+    IHeapAllCompleteSchemaMapsBuilder createCompleteSchemaMapsBuilder() {
 
-        return new HeapCompleteSchemaMapsBuilder();
+        return IHeapAllCompleteSchemaMapsBuilder.create();
     }
 }

@@ -3,17 +3,19 @@ package dev.jdata.db.utils.adt.maps;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
-abstract class BaseLongArrayKeysNonBucketMap<T> extends BaseLongKeyNonBucketMap<T> {
+@Deprecated // necessary?
+abstract class BaseLongArrayKeysNonBucketMap<VALUES, MAP extends BaseLongArrayKeysNonBucketMap<VALUES, MAP>> extends BaseLongKeyNonBucketMap<VALUES, MAP> {
 
-    BaseLongArrayKeysNonBucketMap(int initialCapacityExponent, IntFunction<T> createValuesArray) {
-        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, DEFAULT_LOAD_FACTOR, createValuesArray);
+    BaseLongArrayKeysNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor,
+            IntFunction<VALUES> createValuesArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
     }
 
-    BaseLongArrayKeysNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T> createValuesArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
+    BaseLongArrayKeysNonBucketMap(AllocationType allocationType, BaseLongArrayKeysNonBucketMap<VALUES, ?> toInitializeFrom) {
+        super(allocationType, toInitializeFrom);
     }
 
-    BaseLongArrayKeysNonBucketMap(BaseLongArrayKeysNonBucketMap<T> toCopy, BiConsumer<T, T> copyValuesContent) {
-        super(toCopy, copyValuesContent);
+    BaseLongArrayKeysNonBucketMap(AllocationType allocationType, BaseLongArrayKeysNonBucketMap<VALUES, ?> toCopy, BiConsumer<VALUES, VALUES> copyValuesContent) {
+        super(allocationType, toCopy, copyValuesContent);
     }
 }

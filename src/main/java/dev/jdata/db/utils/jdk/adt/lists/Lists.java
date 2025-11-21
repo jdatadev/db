@@ -10,8 +10,8 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
 
-import dev.jdata.db.utils.adt.elements.ByIndex;
-import dev.jdata.db.utils.adt.elements.ByIndex.IByIndexElementEqualityTester;
+import dev.jdata.db.utils.adt.byindex.ByIndex;
+import dev.jdata.db.utils.adt.elements.IElementEqualityTester;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.jdk.adt.collections.BaseCollections;
 import dev.jdata.db.utils.jdk.adt.collections.Coll;
@@ -166,12 +166,8 @@ public class Lists extends BaseCollections {
         return equals;
     }
 
-    @FunctionalInterface
-    public interface IListEqualityTester<T, P1, P2> extends IByIndexElementEqualityTester<T, P1, P2> {
-
-    }
-
-    public static <T, P1, P2> boolean equals(List<T> list1, P1 parameter1, List<T> list2, P2 parameter2, IListEqualityTester<T, P1, P2> equalityTester) {
+    public static <T, P1, P2, E extends Exception> boolean equals(List<T> list1, P1 parameter1, List<T> list2, P2 parameter2, IElementEqualityTester<T, P1, P2, E> equalityTester)
+            throws E {
 
         Objects.requireNonNull(list1);
         Objects.requireNonNull(equalityTester);
@@ -191,8 +187,8 @@ public class Lists extends BaseCollections {
         return result;
     }
 
-    public static <T, P1, P2> boolean equals(List<T> list1, int startIndex1, P1 parameter1, List<T> list2, int startIndex2, P2 parameter2, int numElements,
-            IListEqualityTester<T, P1, P2> equalityTester) {
+    public static <T, P1, P2, E extends Exception> boolean equals(List<T> list1, int startIndex1, P1 parameter1, List<T> list2, int startIndex2, P2 parameter2, int numElements,
+            IElementEqualityTester<T, P1, P2, E> equalityTester) throws E {
 
         return ByIndex.equals(list1, startIndex1, parameter1, list2, startIndex2, parameter2, numElements, equalityTester,
                 (l1, i1, p1, l2, i2, p2, t) -> t.equals(l1.get((int)i1), p1, l2.get((int)i2), p2));

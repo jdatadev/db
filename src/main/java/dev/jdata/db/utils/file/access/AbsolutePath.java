@@ -6,8 +6,8 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 import dev.jdata.db.utils.Initializable;
-import dev.jdata.db.utils.adt.strings.Strings;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.jdk.adt.strings.Strings;
 
 abstract class AbsolutePath extends BasePath {
 

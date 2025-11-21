@@ -130,10 +130,10 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
 
     private int currentTransaction;
 
-    DBSession() {
-        super(SessionState.CREATED, DEBUG);
+    DBSession(AllocationType allocationType) {
+        super(allocationType, SessionState.CREATED, DEBUG);
 
-        this.preparedStatements = new PreparedStatements();
+        this.preparedStatements = new PreparedStatements(AllocationType.HEAP);
     }
 
     @Override
@@ -232,7 +232,7 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
     public long createPreparedStatementLargeObjectPart(int preparedStatementId, long length) throws IOException {
 
         Checks.isPreparedStatementId(preparedStatementId);
-        Checks.isLengthAboveZero(length);
+        Checks.isLongLengthAboveZero(length);
 
         return largeObjectStorer.createLargeObject(length);
     }

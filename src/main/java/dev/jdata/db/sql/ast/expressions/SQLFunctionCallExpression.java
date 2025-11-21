@@ -1,12 +1,12 @@
 package dev.jdata.db.sql.ast.expressions;
 
 import org.jutils.ast.objects.expression.Expression;
-import org.jutils.ast.objects.list.IIndexListGetters;
+import org.jutils.ast.objects.list.IIndexListView;
 import org.jutils.parse.context.Context;
 
 public final class SQLFunctionCallExpression extends BaseSQLFunctionCallExpression {
 
-    public SQLFunctionCallExpression(Context context, long functionName, IIndexListGetters<Expression> parameters) {
+    public SQLFunctionCallExpression(Context context, long functionName, IIndexListView<Expression> parameters) {
         super(context, functionName, parameters);
     }
 

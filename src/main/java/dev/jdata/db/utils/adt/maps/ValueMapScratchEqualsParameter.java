@@ -3,27 +3,29 @@ package dev.jdata.db.utils.adt.maps;
 import java.util.Objects;
 
 import dev.jdata.db.utils.Initializable;
-import dev.jdata.db.utils.adt.IEqualityTester;
 import dev.jdata.db.utils.adt.IResettable;
+import dev.jdata.db.utils.adt.marker.IEqualityTesterMarker;
 
-abstract class ValueMapScratchEqualsParameter<M extends IKeyMap<?> & IToValueMapGetters, P1, P2, E extends IEqualityTester<P1, P2>> implements IResettable {
+abstract class ValueMapScratchEqualsParameter<M extends IBaseMapGetters<?> & IToValueEqualsGettersMarker, P1, P2, T extends IEqualityTesterMarker<P1, P2, E>, E extends Exception>
+
+        implements IResettable {
 
     private P1 thisParameter;
     private M other;
     private P2 otherParameter;
-    private E equalityTester;
+    private T equalityTester;
 
     ValueMapScratchEqualsParameter() {
 
     }
 
-    ValueMapScratchEqualsParameter(P1 thisParameter, M other, P2 otherParameter, E equalityTester) {
+    ValueMapScratchEqualsParameter(P1 thisParameter, M other, P2 otherParameter, T equalityTester) {
         this();
 
         initialize(thisParameter, other, otherParameter, equalityTester);
     }
 
-    final void initialize(P1 thisParameter, M other, P2 otherParameter, E equalityTester) {
+    final void initialize(P1 thisParameter, M other, P2 otherParameter, T equalityTester) {
 
         Objects.requireNonNull(other);
         Objects.requireNonNull(equalityTester);
@@ -55,7 +57,7 @@ abstract class ValueMapScratchEqualsParameter<M extends IKeyMap<?> & IToValueMap
         return otherParameter;
     }
 
-    final E getEqualityTester() {
+    final T getEqualityTester() {
         return equalityTester;
     }
 

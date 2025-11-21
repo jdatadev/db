@@ -12,7 +12,7 @@ import dev.jdata.db.sql.ast.statements.procedure.SQLCreateProcedureStatement;
 import dev.jdata.db.sql.ast.statements.table.SQLCreateTableStatement;
 import dev.jdata.db.sql.ast.statements.trigger.SQLCreateTriggerStatement;
 
-final class DDLSQLStatements<T extends ICompleteSchemaMapsBuilder<SchemaObject, ?, ?>>
+final class DDLSQLStatements<T extends ICompleteSchemaMapsBuilder<SchemaObject, ?, ?, ?>>
 
         extends SQLStatementAdapter<DDLSchemaSQLStatementsParameter, Void, RuntimeException> {
 

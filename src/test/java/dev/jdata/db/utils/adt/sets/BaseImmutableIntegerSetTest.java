@@ -3,7 +3,7 @@ package dev.jdata.db.utils.adt.sets;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-abstract class BaseImmutableIntegerSetTest<T extends ISet> extends BaseIntegerSetTest<T> {
+abstract class BaseImmutableIntegerSetTest<T extends ISetType> extends BaseIntegerSetTest<T> {
 
     abstract T createSet(int[] values);
 

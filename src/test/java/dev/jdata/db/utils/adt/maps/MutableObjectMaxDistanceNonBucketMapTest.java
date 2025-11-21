@@ -2,14 +2,17 @@ package dev.jdata.db.utils.adt.maps;
 
 import java.util.List;
 
+import dev.jdata.db.utils.adt.lists.IMutableList;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
+
 public final class MutableObjectMaxDistanceNonBucketMapTest
 
-        extends BaseMutableObjectToIntegerOrObjectMaxDistanceMapTest<Integer, String, MutableObjectMaxDistanceNonBucketMap<Integer, String>> {
+        extends BaseMutableObjectToIntegerOrObjectMaxDistanceMapTest<Integer, String[], IMutableList<String>, MutableObjectMaxDistanceNonBucketMap<Integer, String>> {
 
     @Override
-    MutableObjectMaxDistanceNonBucketMap<Integer, String> createMap(int initialCapacityExponent) {
+    MutableObjectMaxDistanceNonBucketMap<Integer, String> createMap(int initialCapacity) {
 
-        return new MutableObjectMaxDistanceNonBucketMap<>(initialCapacityExponent, Integer[]::new, String[]::new);
+        return HeapMutableObjectToObjectMaxDistanceNonBucketMap.create(AllocationType.HEAP, initialCapacity, Integer[]::new, String[]::new);
     }
 
     @Override
@@ -22,6 +25,30 @@ public final class MutableObjectMaxDistanceNonBucketMapTest
     String[] createValuesArray(int length) {
 
         return new String[length];
+    }
+
+    @Override
+    IMutableList<Integer> createKeysOrderedAddable(int initialCapacity) {
+
+        return createObjectOrderedAddable(initialCapacity, Integer[]::new);
+    }
+
+    @Override
+    IMutableList<String> createValuesOrderedAddable(int initialCapacity) {
+
+        return createObjectOrderedAddable(initialCapacity, String[]::new);
+    }
+
+    @Override
+    Integer[] keysToArray(IMutableList<Integer> keysAddable) {
+
+        return toArray(keysAddable, Integer[]::new);
+    }
+
+    @Override
+    String[] valuesToArray(IMutableList<String> valuesAddable) {
+
+        return toArray(valuesAddable, String[]::new);
     }
 
     @Override
@@ -62,9 +89,9 @@ public final class MutableObjectMaxDistanceNonBucketMapTest
     }
 
     @Override
-    void keysAndValues(MutableObjectMaxDistanceNonBucketMap<Integer, String> map, Integer[] keysDst, String[] valuesDst) {
+    void keysAndValues(MutableObjectMaxDistanceNonBucketMap<Integer, String> map, IMutableList<Integer> keysAddable, IMutableList<String> valuesAddable) {
 
-        map.keysAndValues(keysDst, valuesDst);
+        map.keysAndValues(keysAddable, valuesAddable);
     }
 
     @Override

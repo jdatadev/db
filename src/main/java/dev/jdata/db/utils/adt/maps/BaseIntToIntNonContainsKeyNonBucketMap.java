@@ -4,19 +4,20 @@ import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
+import dev.jdata.db.utils.adt.hashed.helpers.IntCapacityPutResult;
 import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
-import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
 
-abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBucketMap<IIntToIntStaticMapCommon> implements IIntToIntStaticMapCommon {
+abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBucketMap<BaseIntToIntNonContainsKeyNonBucketMap> implements IIntToIntBaseStaticMapCommon {
 
-    private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_TO_INT_NON_CONTAINS_NON_BUCKET_MAP;
+    private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_TO_INT_NON_CONTAINS_KEY_NON_BUCKET_MAP;
 
-    BaseIntToIntNonContainsKeyNonBucketMap(int initialCapacityExponent) {
-        super(initialCapacityExponent);
+    BaseIntToIntNonContainsKeyNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor));
         }
 
         if (DEBUG) {
@@ -25,26 +26,12 @@ abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBuc
         }
     }
 
-    BaseIntToIntNonContainsKeyNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
+    BaseIntToIntNonContainsKeyNonBucketMap(AllocationType allocationType, BaseIntToIntNonRemoveNonBucketMap toCopy) {
+        super(allocationType, toCopy);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
-        }
-
-        if (DEBUG) {
-
-            exit();
-        }
-    }
-
-    BaseIntToIntNonContainsKeyNonBucketMap(BaseIntToIntNonRemoveNonBucketMap toCopy) {
-        super(toCopy);
-
-        if (DEBUG) {
-
-            enter(b -> b.add("toCopy", toCopy));
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy));
         }
 
         if (DEBUG) {
@@ -72,7 +59,7 @@ abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBuc
             result = getValues()[index];
         }
         else {
-            throw new IllegalStateException();
+            throw MapExceptions.noSuchKeyException();
         }
 
         if (DEBUG) {
@@ -81,6 +68,15 @@ abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBuc
         }
 
         return result;
+    }
+
+    @Override
+    protected final <P, R> R makeFromElements(AllocationType allocationType, P parameter,
+            IMakeFromElementsFunction<Void, BaseIntToIntNonContainsKeyNonBucketMap, P, R> makeFromElements) {
+
+        checkMakeFromElementsParameters(allocationType, parameter, makeFromElements);
+
+        return makeFromElements.apply(allocationType, null, this, getMakeFromElementsNumElements(), parameter);
     }
 
     @Override
@@ -112,10 +108,10 @@ abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBuc
 
         final long putResult = put(key);
 
-        final int index = IntPutResult.getPutIndex(putResult);
+        final int index = IntCapacityPutResult.getPutIndex(putResult);
         final int[] values = getValues();
 
-        final int result = IntPutResult.getPutNewAdded(putResult) ? defaultPreviousValue : values[index];
+        final int result = IntCapacityPutResult.getPutNewAdded(putResult) ? defaultPreviousValue : values[index];
 
         values[index] = value;
 
@@ -128,7 +124,8 @@ abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBuc
     }
 
     @Override
-    public final <P1, P2> boolean equals(P1 thisParameter, IIntToIntStaticMapCommon other, P2 otherParameter, IIntValueMapEqualityTester<P1, P2> equalityTester) {
+    public final <P1, P2, E extends Exception> boolean equals(P1 thisParameter, IIntToIntBaseStaticMapView other, P2 otherParameter,
+            IIntValueMapEqualityTester<P1, P2, E> equalityTester) throws E {
 
         Objects.requireNonNull(other);
         Objects.requireNonNull(equalityTester);
@@ -142,13 +139,12 @@ abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBuc
 
         if (other instanceof BaseIntToIntNonBucketMap) {
 
-            @SuppressWarnings("unchecked")
-            final BaseIntToIntNonBucketMap<IIntToIntStaticMapCommon> otherMap = (BaseIntToIntNonBucketMap<IIntToIntStaticMapCommon>)other;
+            final BaseIntToIntNonBucketMap<?> otherMap = (BaseIntToIntNonBucketMap<?>)other;
 
             result = equalsIntToIntNonBucketMap(thisParameter, otherMap, otherParameter, equalityTester);
         }
         else {
-            result = IIntToIntStaticMapCommon.super.equals(thisParameter, other, otherParameter, equalityTester);
+            result = IIntToIntBaseStaticMapCommon.super.equals(thisParameter, other, otherParameter, equalityTester);
         }
 
         if (DEBUG) {
@@ -160,7 +156,7 @@ abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBuc
     }
 
     @Override
-    public final <P1, P2> boolean equalsParameters(IntValueMapScratchEqualsParameter<IIntToIntStaticMapCommon, P1, P2> scratchEqualsParameter) {
+    public final <P1, P2, E extends Exception> boolean equalsParameters(IntValueMapScratchEqualsParameter<IIntToIntBaseStaticMapView, P1, P2, E> scratchEqualsParameter) throws E {
 
         Objects.requireNonNull(scratchEqualsParameter);
 
@@ -171,18 +167,17 @@ abstract class BaseIntToIntNonContainsKeyNonBucketMap extends BaseIntToIntNonBuc
 
         final boolean result;
 
-        final IIntToIntStaticMapCommon other = scratchEqualsParameter.getOther();
+        final IIntToIntBaseStaticMapView other = scratchEqualsParameter.getOther();
 
         if (other instanceof BaseIntToIntNonBucketMap) {
 
-            @SuppressWarnings("unchecked")
-            final BaseIntToIntNonBucketMap<IIntToIntStaticMapCommon> otherMap = (BaseIntToIntNonBucketMap<IIntToIntStaticMapCommon>)other;
+            final BaseIntToIntNonBucketMap<?> otherMap = (BaseIntToIntNonBucketMap<?>)other;
 
             result = equalsIntToIntNonBucketMap(scratchEqualsParameter.getThisParameter(), otherMap, scratchEqualsParameter.getOtherParameter(),
                     scratchEqualsParameter.getEqualityTester());
         }
         else {
-            result = IIntToIntStaticMapCommon.super.equalsParameters(scratchEqualsParameter);
+            result = IIntToIntBaseStaticMapCommon.super.equalsParameters(scratchEqualsParameter);
         }
 
         if (DEBUG) {

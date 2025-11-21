@@ -18,10 +18,11 @@ import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.parse.ISQLString;
 import dev.jdata.db.sql.parse.SQLParser;
 import dev.jdata.db.sql.parse.SQLParserHelper;
-import dev.jdata.db.utils.adt.lists.HeapIndexList;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
-import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.lists.IHeapIndexList;
+import dev.jdata.db.utils.adt.lists.IHeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IHeapIndexListBuilder;
+import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
@@ -58,15 +59,15 @@ public abstract class BaseSQLTest extends BaseTest {
 
     protected static final class ParsedStatements extends BaseParsed {
 
-        private final IndexList<BaseSQLStatement> statements;
+        private final IIndexList<BaseSQLStatement> statements;
 
-        private ParsedStatements(IndexList<BaseSQLStatement> statements, StringResolver stringResolver) {
+        private ParsedStatements(IIndexList<BaseSQLStatement> statements, StringResolver stringResolver) {
             super(stringResolver);
 
             this.statements = Objects.requireNonNull(statements);
         }
 
-        public IndexList<BaseSQLStatement> getStatements() {
+        public IIndexList<BaseSQLStatement> getStatements() {
             return statements;
         }
     }
@@ -87,7 +88,7 @@ public abstract class BaseSQLTest extends BaseTest {
 
         final ParsedStatements parsedStatements = parseANSIStatements(string);
 
-        final IndexList<BaseSQLStatement> sqlStatements = parsedStatements.statements;
+        final IIndexList<BaseSQLStatement> sqlStatements = parsedStatements.statements;
 
         assertThat(sqlStatements.getNumElements()).isEqualTo(1L);
 
@@ -104,19 +105,19 @@ public abstract class BaseSQLTest extends BaseTest {
         final StringLoadStream loadStream = new StringLoadStream(string);
         final StringBuffers stringBuffers = new StringBuffers(loadStream);
 
-        final IndexList<BaseSQLStatement> parsedStatement = parseANSIStatements(stringBuffers);
+        final IIndexList<BaseSQLStatement> parsedStatement = parseANSIStatements(stringBuffers);
 
         return new ParsedStatements(parsedStatement, stringBuffers);
     }
 
-    private static <T extends BaseStringBuffers<RuntimeException>> IndexList<BaseSQLStatement> parseANSIStatements(T buffers) throws ParserException {
+    private static <T extends BaseStringBuffers<RuntimeException>> IIndexList<BaseSQLStatement> parseANSIStatements(T buffers) throws ParserException {
 
         Objects.requireNonNull(buffers);
 
         final SQLParser sqlParser = ANSISQLParserFactory.INSTANCE.createParser();
 
-        final SQLParserHelper<HeapIndexList<BaseSQLStatement>, HeapIndexListBuilder<BaseSQLStatement>, HeapIndexListAllocator<BaseSQLStatement>> sqlParserHelper
-                = new SQLParserHelper<>(sqlParser, HeapIndexListAllocator::new);
+        final SQLParserHelper<IHeapIndexList<BaseSQLStatement>, IHeapIndexListBuilder<BaseSQLStatement>, IHeapIndexListAllocator<BaseSQLStatement>> sqlParserHelper
+                = new SQLParserHelper<>(sqlParser, IHeapIndexListAllocator::create);
 
         return sqlParserHelper.parse(buffers, createSQLAllocator(), RuntimeException::new);
     }
@@ -142,7 +143,7 @@ public abstract class BaseSQLTest extends BaseTest {
             else {
                 final int length = string.length();
 
-                Checks.checkIndex(offset, length);
+                Checks.checkLongIndex(offset, length);
 
                 dst.append(string, Integers.checkUnsignedLongToUnsignedInt(offset), length);
 
@@ -175,7 +176,7 @@ public abstract class BaseSQLTest extends BaseTest {
 
     protected static ISQLAllocator createSQLAllocator() {
 
-        return new SQLAllocator();
+        return new SQLAllocator(AllocationType.HEAP);
     }
 
     protected static ISQLString createSQLString(String string) {

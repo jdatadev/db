@@ -6,32 +6,18 @@ import java.util.function.IntFunction;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 
-public final class MutableObjectWithRemoveNonBucketMap<K, V> extends BaseObjectWithRemoveNonBucketMap<K, V> implements IMutableObjectStaticMap<K, V> {
+abstract class MutableObjectWithRemoveNonBucketMap<K, V> extends BaseObjectWithRemoveNonBucketMap<K, V> implements IMutableWithRemoveStaticMap<K, V> {
 
-    private static final boolean DEBUG = DebugConstants.DEBUG_OBJECT_WITH_REMOVE_NON_BUCKET_MAP;
+    private static final boolean DEBUG = DebugConstants.DEBUG_OBJECT_TO_OBJECT_WITH_REMOVE_NON_BUCKET_MAP;
 
-    public MutableObjectWithRemoveNonBucketMap(int initialCapacityExponent, IntFunction<K[]> createKeysArray, IntFunction<V[]> createValuesArray) {
-        super(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, DEFAULT_LOAD_FACTOR, createKeysArray, createValuesArray);
-
-        if (DEBUG) {
-
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createKeysArray", createKeysArray).add("createValuesArray", createValuesArray));
-        }
+    MutableObjectWithRemoveNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor,
+            IntFunction<K[]> createKeysArray, IntFunction<V[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createKeysArray, createValuesArray);
 
         if (DEBUG) {
 
-            exit();
-        }
-    }
-
-    public MutableObjectWithRemoveNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<K[]> createKeysArray,
-            IntFunction<V[]> createValuesArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createKeysArray, createValuesArray);
-
-        if (DEBUG) {
-
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createKeysArray", createKeysArray).add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("createKeysArray", createKeysArray).add("createValuesArray", createValuesArray));
         }
 
         if (DEBUG) {
@@ -41,7 +27,29 @@ public final class MutableObjectWithRemoveNonBucketMap<K, V> extends BaseObjectW
     }
 
     @Override
-    public V put(K key, V value, V defaultPreviousValue) {
+    public final long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
+    public final void clear() {
+
+        if (DEBUG) {
+
+            enter();
+        }
+
+        clearBaseNonBucketMap();
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public final V put(K key, V value, V defaultPreviousValue) {
 
         Objects.requireNonNull(key);
         Objects.requireNonNull(value);
@@ -62,7 +70,7 @@ public final class MutableObjectWithRemoveNonBucketMap<K, V> extends BaseObjectW
     }
 
     @Override
-    public V removeAndReturnPrevious(K key) {
+    public final V removeAndReturnPrevious(K key) {
 
         Objects.requireNonNull(key);
 
@@ -86,7 +94,7 @@ public final class MutableObjectWithRemoveNonBucketMap<K, V> extends BaseObjectW
             decrementNumElements();
         }
         else {
-            throw new IllegalStateException();
+            throw MapExceptions.noSuchKeyException();
         }
 
         if (DEBUG) {
@@ -98,7 +106,7 @@ public final class MutableObjectWithRemoveNonBucketMap<K, V> extends BaseObjectW
     }
 
     @Override
-    public void remove(K key) {
+    public final void remove(K key) {
 
         if (DEBUG) {
 
@@ -114,28 +122,12 @@ public final class MutableObjectWithRemoveNonBucketMap<K, V> extends BaseObjectW
             decrementNumElements();
         }
         else {
-            throw new IllegalStateException();
+            throw MapExceptions.noSuchKeyException();
         }
 
         if (DEBUG) {
 
             exit(b -> b.add("key", key));
-        }
-    }
-
-    @Override
-    public void clear() {
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        clearBaseObjectNonBucketMap();
-
-        if (DEBUG) {
-
-            exit();
         }
     }
 }

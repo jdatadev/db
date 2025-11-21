@@ -6,8 +6,8 @@ import org.jutils.io.strings.StringRef;
 import org.jutils.io.strings.StringResolver.CharacterBuffer;
 
 import dev.jdata.db.test.unit.BaseTest;
-import dev.jdata.db.utils.adt.strings.Strings;
 import dev.jdata.db.utils.function.CharPredicate;
+import dev.jdata.db.utils.jdk.adt.strings.Strings;
 
 public abstract class BaseLargeCharArrayAndStringStorerTest<T> extends BaseTest {
 

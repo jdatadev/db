@@ -8,7 +8,7 @@ import java.util.Objects;
 import dev.jdata.db.data.RowDataNumBitsGetter;
 import dev.jdata.db.storage.backend.file.BaseStorageFile;
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;
-import dev.jdata.db.utils.allocators.IByteArrayAllocator;
+import dev.jdata.db.utils.adt.arrays.IByteArrayAllocator;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
@@ -42,7 +42,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
 
         randomFileAccess.writeLong(startRowId);
 
-        return new FileTableStorageFile(sequenceNo, storageTableFileSchema, randomFileAccess, startRowId, 0L);
+        return new FileTableStorageFile(AllocationType.HEAP, sequenceNo, storageTableFileSchema, randomFileAccess, startRowId, 0L);
     }
 
     static FileTableStorageFile openExistingFile(IRelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath,
@@ -74,7 +74,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
             throw new IllegalStateException();
         }
 
-        return new FileTableStorageFile(filePath, storageTableSchema, randomFileAccess, startRow, randomFileAccess.length());
+        return new FileTableStorageFile(AllocationType.HEAP, filePath, storageTableSchema, randomFileAccess, startRow, randomFileAccess.length());
     }
 
     static FileTableStorageFile openExistingFileFromStorageTableFileSchema(IRelativeFileSystemAccess fileSystemAccess, RelativeFilePath filePath, int sequenceNo,
@@ -94,7 +94,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
                 throw new IllegalArgumentException();
             }
 
-            result = new FileTableStorageFile(sequenceNo, storageTableFileSchema, randomFileAccess, startRowId, randomFileAccess.length());
+            result = new FileTableStorageFile(AllocationType.HEAP, sequenceNo, storageTableFileSchema, randomFileAccess, startRowId, randomFileAccess.length());
 
             ok = true;
         }
@@ -133,14 +133,14 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
 
     private byte lastByte;
 
-    private FileTableStorageFile(IFilePath filePath, StorageTableFileSchema storageTableFileSchema, RandomFileAccess randomFileAccess, long startRowId, long fileLength)
-            throws IOException {
-        this(parseSequenceNo(filePath.getFileName()), storageTableFileSchema, randomFileAccess, startRowId, fileLength);
+    private FileTableStorageFile(AllocationType allocationType, IFilePath filePath, StorageTableFileSchema storageTableFileSchema, RandomFileAccess randomFileAccess,
+            long startRowId, long fileLength) throws IOException {
+        this(allocationType, parseSequenceNo(filePath.getFileName()), storageTableFileSchema, randomFileAccess, startRowId, fileLength);
     }
 
-    private FileTableStorageFile(int sequenceNo, StorageTableFileSchema storageTableFileSchema, RandomFileAccess randomFileAccess, long startRowId, long fileLength)
-            throws IOException {
-        super(randomFileAccess);
+    private FileTableStorageFile(AllocationType allocationType, int sequenceNo, StorageTableFileSchema storageTableFileSchema, RandomFileAccess randomFileAccess, long startRowId,
+            long fileLength) throws IOException {
+        super(allocationType, randomFileAccess);
 
         Checks.isSequenceNo(sequenceNo);
         Objects.requireNonNull(storageTableFileSchema);
@@ -356,7 +356,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
 
     public byte readByteAtRowBitOffset(long rowBitOffset) throws IOException {
 
-        Checks.isOffset(rowBitOffset);
+        Checks.isLongOffset(rowBitOffset);
 
         if (DEBUG) {
 
@@ -390,7 +390,7 @@ public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess
 
     public void update(long fileByteOffset, byte[] rowByteBuffer, int numBytes) throws IOException {
 
-        Checks.isOffset(fileByteOffset);
+        Checks.isLongOffset(fileByteOffset);
         Objects.requireNonNull(rowByteBuffer);
         Checks.isNumBytes(numBytes);
 

@@ -2,35 +2,47 @@ package dev.jdata.db.test.unit.assertj;
 
 import java.util.Collection;
 
-import dev.jdata.db.utils.adt.KeyElements;
-import dev.jdata.db.utils.adt.KeySetElements;
-import dev.jdata.db.utils.adt.arrays.IOneDimensionalArrayCommon;
-import dev.jdata.db.utils.adt.elements.IElements;
-import dev.jdata.db.utils.adt.maps.ILongContainsKeyMap;
+import dev.jdata.db.utils.adt.arrays.IOneDimensionalArrayView;
+import dev.jdata.db.utils.adt.elements.IObjectIterableOnlyElementsView;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
+import dev.jdata.db.utils.adt.maps.IBaseMapView;
+import dev.jdata.db.utils.adt.maps.ILongContainsKeyMapView;
 import dev.jdata.db.utils.adt.maps.IMapOfCollection;
-import dev.jdata.db.utils.adt.sets.MutableIntBucketSet;
-import dev.jdata.db.utils.adt.sets.MutableLongBucketSet;
+import dev.jdata.db.utils.adt.maps.IObjectKeyMapView;
+import dev.jdata.db.utils.adt.marker.IAnyOrderAddable;
+import dev.jdata.db.utils.adt.sets.IIntSetView;
+import dev.jdata.db.utils.adt.sets.ILongSetView;
 
 public class CustomAssertJAssertions extends org.assertj.core.api.Assertions {
 
-    public static ElementsAssert assertThat(IElements actual) {
+    public static <T extends CharSequence> CharSequenceAssert<T> assertThatCharSeq(T actual) {
 
-        return new ElementsAssert(actual);
+        return new CharSequenceAssert<>(actual);
     }
 
-    public static OneDimensionalArrayAssert assertThat(IOneDimensionalArrayCommon actual) {
+    public static OnlyElementsAssert assertThat(IOnlyElementsView actual) {
+
+        return new OnlyElementsAssert(actual);
+    }
+
+    public static <T, U extends IObjectIterableOnlyElementsView<T>> ObjectIterableOnlyElementsAssert<T, U> assertThat(U actual) {
+
+        return new ObjectIterableOnlyElementsAssert<>(actual);
+    }
+
+    public static OneDimensionalArrayAssert assertThat(IOneDimensionalArrayView actual) {
 
         return new OneDimensionalArrayAssert(actual);
     }
 
-    public static KeyElementsAssert assertThat(KeyElements actual) {
+    public static <KEYS, KEYS_ADDABLE extends IAnyOrderAddable, ACTUAL extends IBaseMapView<KEYS_ADDABLE>> KeyMapAssert<KEYS, KEYS_ADDABLE, ACTUAL> assertThat(ACTUAL actual) {
 
-        return new KeyElementsAssert(actual);
+        return new KeyMapAssert<>(actual);
     }
 
-    public static <K> KeySetElementsAssert<K> assertThat(KeySetElements<K> actual) {
+    public static <K, A extends IObjectKeyMapView<K>> ObjectKeyMapAssert<K, A> assertThat(A actual) {
 
-        return new KeySetElementsAssert<>(actual);
+        return new ObjectKeyMapAssert<>(actual);
     }
 
     public static <K, V, C extends Collection<V>> MapOfCollectionAssert<K, V, C> assertThat(IMapOfCollection<K, V, C> actual) {
@@ -38,17 +50,17 @@ public class CustomAssertJAssertions extends org.assertj.core.api.Assertions {
         return new MapOfCollectionAssert<>(actual);
     }
 
-    public static IntBucketSetAssert assertThat(MutableIntBucketSet actual) {
+    public static IntSetViewAssert assertThat(IIntSetView actual) {
 
-        return new IntBucketSetAssert(actual);
+        return new IntSetViewAssert(actual);
     }
 
-    public static LongBucketSetAssert assertThat(MutableLongBucketSet actual) {
+    public static LongSetViewAssert assertThat(ILongSetView actual) {
 
-        return new LongBucketSetAssert(actual);
+        return new LongSetViewAssert(actual);
     }
 
-    public static LongKeyMapAssert assertThat(ILongContainsKeyMap actual) {
+    public static LongKeyMapAssert assertThat(ILongContainsKeyMapView actual) {
 
         return new LongKeyMapAssert(actual);
     }

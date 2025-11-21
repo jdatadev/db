@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 
 import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer;
 
-public final class ObjectCache<T> implements IObjectCache<T>, IInstanceAllocator<T> {
+public final class ObjectCache<T> implements IObjectCache<T>, ITypedInstanceAllocator<T> {
 
     private final ParameterObjectCache<T, Void> delegate;
 

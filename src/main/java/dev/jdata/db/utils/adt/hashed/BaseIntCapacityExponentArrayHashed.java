@@ -5,12 +5,14 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.CapacityExponents;
+import dev.jdata.db.utils.adt.capacity.CapacityExponents;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseIntCapacityExponentArrayHashed<T> extends BaseIntCapacityArrayHashed<T> {
+public abstract class BaseIntCapacityExponentArrayHashed<HASHED, CREATE_ELEMENTS, MAKE_ELEMENTS_FROM, INIT_FROM_VALUES>
+
+        extends BaseIntCapacityArrayHashed<HASHED, CREATE_ELEMENTS, MAKE_ELEMENTS_FROM, INIT_FROM_VALUES> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_CAPACITY_EXPONENT_ARRAY_HASHED;
 
@@ -24,20 +26,26 @@ public abstract class BaseIntCapacityExponentArrayHashed<T> extends BaseIntCapac
     private int capacityExponent;
     private int keyMask;
 
-    protected abstract T rehash(T hashed, int newCapacity, int newCapacityExponent, int newKeyMask);
+    private static int getRecreateCapacity() {
 
-    protected BaseIntCapacityExponentArrayHashed(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T> createHashed,
-            Consumer<T> clearHashed) {
-        super(CapacityExponents.computeIntCapacityFromExponent(initialCapacityExponent), loadFactor, createHashed, clearHashed);
+        return CapacityExponents.computeIntCapacityFromExponent(DEFAULT_INITIAL_CAPACITY_EXPONENT);
+    }
 
-        Checks.isInitialIntCapacityExponent(initialCapacityExponent);
+    protected abstract void rehashWithKeyMask(HASHED hashed, HASHED newHashed, int newCapacity, int capacityExponentIncrease, int newKeyMask);
+
+    protected BaseIntCapacityExponentArrayHashed(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor,
+            IntFunction<HASHED> createHashed, Consumer<HASHED> clearHashed) {
+        super(allocationType, CapacityExponents.computeIntCapacityFromExponent(initialCapacityExponent), loadFactor, getRecreateCapacity(), createHashed, clearHashed,
+                createHashed);
+
+        Checks.isIntInitialCapacityExponent(initialCapacityExponent);
         Checks.isIntCapacityExponentIncrease(capacityExponentIncrease);
         Checks.isIntCapacityExponent(initialCapacityExponent + capacityExponentIncrease);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createHashed", createHashed).add("clearHashed", clearHashed));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("createHashed", createHashed).add("clearHashed", clearHashed));
         }
 
         this.capacityExponentIncrease = capacityExponentIncrease;
@@ -51,12 +59,31 @@ public abstract class BaseIntCapacityExponentArrayHashed<T> extends BaseIntCapac
         }
     }
 
-    protected BaseIntCapacityExponentArrayHashed(BaseIntCapacityExponentArrayHashed<T> toCopy, Function<T, T> copyHashed) {
-        super(toCopy, copyHashed);
+    protected BaseIntCapacityExponentArrayHashed(AllocationType allocationType, BaseIntCapacityExponentArrayHashed<HASHED, ?, ?, ?> toInitializeFrom) {
+        super(allocationType, toInitializeFrom);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy).add("copyHashed", copyHashed));
+            enter(b -> b.add("allocationType", allocationType).add("toInitializeFrom", toInitializeFrom));
+        }
+
+        this.capacityExponentIncrease = toInitializeFrom.capacityExponentIncrease;
+
+        this.capacityExponent = toInitializeFrom.capacityExponent;
+        this.keyMask = toInitializeFrom.keyMask;
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    protected BaseIntCapacityExponentArrayHashed(AllocationType allocationType, BaseIntCapacityExponentArrayHashed<HASHED, ?, ?, ?> toCopy, Function<HASHED, HASHED> copyHashed) {
+        super(allocationType, toCopy, copyHashed);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy).add("copyHashed", copyHashed));
         }
 
         this.capacityExponentIncrease = toCopy.capacityExponentIncrease;
@@ -71,33 +98,33 @@ public abstract class BaseIntCapacityExponentArrayHashed<T> extends BaseIntCapac
     }
 
     @Override
-    protected final T rehash(T hashed, int newCapacity) {
+    protected void rehashWithCapacity(HASHED hashed, HASHED newHashed, int newCapacity) {
 
         if (DEBUG) {
 
-            enter(b -> b.add("hashed", hashed).add("newCapacity", newCapacity));
+            enter(b -> b.add("hashed", hashed).add("newHashed", newHashed).add("newCapacity", newCapacity));
         }
 
         final int newCapacityExponent = makeCapacityExponent(newCapacity);
 
+        final int exponentIncrease = capacityExponentIncrease;
+
         if (ASSERT) {
 
             Assertions.areEqual(newCapacity, CapacityExponents.computeIntCapacityFromExponent(newCapacityExponent));
-            Assertions.isGreaterThanOrEqualTo(capacityExponent + capacityExponentIncrease, newCapacityExponent);
+            Assertions.isGreaterThanOrEqualTo(capacityExponent + exponentIncrease, newCapacityExponent);
         }
 
         this.capacityExponent = newCapacityExponent;
 
         final int newKeyMask = this.keyMask = makeKeyMaskFromCapacityExponent(newCapacityExponent);
 
-        final T result = rehash(hashed, newCapacity, newCapacityExponent, newKeyMask);
+        rehashWithKeyMask(hashed, newHashed, newCapacity, exponentIncrease, newKeyMask);
 
         if (DEBUG) {
 
-            exit(result);
+            exit();
         }
-
-        return result;
     }
 
     @Override
@@ -128,7 +155,7 @@ public abstract class BaseIntCapacityExponentArrayHashed<T> extends BaseIntCapac
             enter(b -> b.add("requiredCapacity", requiredCapacity));
         }
 
-        final int capacityExponent = CapacityExponents.computeCapacityExponent(requiredCapacity);
+        final int capacityExponent = makeCapacityExponent(requiredCapacity);
 
         final long result = CapacityExponents.computeIntCapacityFromExponent(capacityExponent);
 
@@ -144,8 +171,8 @@ public abstract class BaseIntCapacityExponentArrayHashed<T> extends BaseIntCapac
         return keyMask;
     }
 
-    public final int getCapacityExponent() {
-        return capacityExponent;
+    private int getCapacityExponentIncrease() {
+        return capacityExponentIncrease;
     }
 
     private static int makeKeyMask(int capacityExponent) {
@@ -153,9 +180,9 @@ public abstract class BaseIntCapacityExponentArrayHashed<T> extends BaseIntCapac
         return CapacityExponents.makeIntKeyMask(capacityExponent);
     }
 
-    private static int makeCapacityExponent(int capacity) {
+    private static int makeCapacityExponent(long capacity) {
 
-        return CapacityExponents.computeCapacityExponentExact(capacity);
+        return CapacityExponents.computeIntCapacityExponentExactForAboveZero(capacity);
     }
 
     private static int makeKeyMaskFromCapacityExponent(int capacityExponent) {

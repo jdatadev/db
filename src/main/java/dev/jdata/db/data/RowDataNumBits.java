@@ -3,12 +3,12 @@ package dev.jdata.db.data;
 import java.util.Arrays;
 
 import dev.jdata.db.utils.adt.IClearable;
-import dev.jdata.db.utils.adt.IContains;
+import dev.jdata.db.utils.adt.contains.IContainsView;
 import dev.jdata.db.utils.checks.Checks;
 
-public class RowDataNumBits implements RowDataNumBitsGetter, IContains, IClearable {
+public class RowDataNumBits implements RowDataNumBitsGetter, IContainsView, IClearable {
 
-    public interface RowDataNumBitsAllocator {
+    public interface IRowDataNumBitsAllocator {
 
         RowDataNumBits allocateRowDataNumBits();
 

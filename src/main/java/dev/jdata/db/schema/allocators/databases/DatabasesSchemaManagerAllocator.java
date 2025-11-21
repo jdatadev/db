@@ -2,32 +2,39 @@ package dev.jdata.db.schema.allocators.databases;
 
 import java.util.Objects;
 
-import dev.jdata.db.schema.allocators.model.diff.dropped.DroppedSchemaObjectsAllocator;
-import dev.jdata.db.schema.allocators.model.schemamaps.IAllCompleteSchemaMapsBuilderAllocator;
-import dev.jdata.db.schema.allocators.schemas.IDatabaseSchemasAllocator;
-import dev.jdata.db.schema.model.SchemaMap;
-import dev.jdata.db.schema.model.diff.dropped.DroppedElementsSchemaObjects;
-import dev.jdata.db.schema.model.objects.SchemaObject;
-import dev.jdata.db.schema.model.schemamaps.CompleteSchemaMaps;
-import dev.jdata.db.schema.model.schemamaps.SimpleCompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.diff.dropped.SchemaDroppedElements;
+import dev.jdata.db.schema.model.diff.dropped.SchemaDroppedElementsAllocators;
+import dev.jdata.db.schema.model.schemamaps.AllCompleteSchemaMapsBuilderAllocator;
+import dev.jdata.db.schema.model.schemamaps.IAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.IAllCompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.schemamaps.IAllCompleteSchemaMapsBuilderAllocator;
+import dev.jdata.db.schema.model.schemamaps.IHeapSchemaMapsMarker;
+import dev.jdata.db.schema.model.schemas.IDatabaseSchemasAllocator;
+import dev.jdata.db.utils.adt.maps.IMutableIntToObjectWithRemoveStaticMap;
+import dev.jdata.db.utils.adt.sets.IMutableIntSet;
 import dev.jdata.db.utils.allocators.IAllocators;
 import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer.RefType;
 
 public abstract class DatabasesSchemaManagerAllocator<
 
-                T extends SchemaMap<SchemaObject, ?, ?>,
-                U extends CompleteSchemaMaps<T>,
-                V extends SimpleCompleteSchemaMapsBuilder<T, U, V>>
+                MUTABLE_INT_SET extends IMutableIntSet,
+                MUTABLE_INT_TO_MUTABLE_INT_SET_MAP extends IMutableIntToObjectWithRemoveStaticMap<MUTABLE_INT_SET>,
+                ALL_COMPLETE_SCHEMA_MAPS extends IAllCompleteSchemaMaps,
+                HEAP_ALL_COMPLETE_SCHEMA_MAPS extends IAllCompleteSchemaMaps & IHeapSchemaMapsMarker,
+                ALL_COMPLETE_SCHEMA_MAPS_BUILDER extends IAllCompleteSchemaMapsBuilder<ALL_COMPLETE_SCHEMA_MAPS, HEAP_ALL_COMPLETE_SCHEMA_MAPS, ALL_COMPLETE_SCHEMA_MAPS_BUILDER>>
 
-        implements IAllCompleteSchemaMapsBuilderAllocator<U, V>, IAllocators {
+        extends AllCompleteSchemaMapsBuilderAllocator<ALL_COMPLETE_SCHEMA_MAPS, HEAP_ALL_COMPLETE_SCHEMA_MAPS, ALL_COMPLETE_SCHEMA_MAPS_BUILDER>
+        implements IAllCompleteSchemaMapsBuilderAllocator<ALL_COMPLETE_SCHEMA_MAPS, HEAP_ALL_COMPLETE_SCHEMA_MAPS, ALL_COMPLETE_SCHEMA_MAPS_BUILDER>, IAllocators {
 
-    private final DroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator;
-    private final IDatabaseSchemasAllocator databaseSchemasAllocator;
+    private final SchemaDroppedElementsAllocators<MUTABLE_INT_SET, MUTABLE_INT_TO_MUTABLE_INT_SET_MAP> droppedSchemaObjectsAllocator;
+    private final IDatabaseSchemasAllocator<MUTABLE_INT_SET, MUTABLE_INT_TO_MUTABLE_INT_SET_MAP> databaseSchemasAllocator;
 
-    private final IAllCompleteSchemaMapsBuilderAllocator<U, V> completeSchemaMapsBuilderAllocator;
+    private final IAllCompleteSchemaMapsBuilderAllocator<ALL_COMPLETE_SCHEMA_MAPS, HEAP_ALL_COMPLETE_SCHEMA_MAPS, ALL_COMPLETE_SCHEMA_MAPS_BUILDER>
+            completeSchemaMapsBuilderAllocator;
 
-    protected DatabasesSchemaManagerAllocator(DroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator, IDatabaseSchemasAllocator databaseSchemasAllocator,
-            IAllCompleteSchemaMapsBuilderAllocator<U, V> completeSchemaMapsBuilderAllocator) {
+    protected DatabasesSchemaManagerAllocator(SchemaDroppedElementsAllocators<MUTABLE_INT_SET, MUTABLE_INT_TO_MUTABLE_INT_SET_MAP> droppedSchemaObjectsAllocator,
+            IDatabaseSchemasAllocator<MUTABLE_INT_SET, MUTABLE_INT_TO_MUTABLE_INT_SET_MAP> databaseSchemasAllocator,
+            IAllCompleteSchemaMapsBuilderAllocator<ALL_COMPLETE_SCHEMA_MAPS, HEAP_ALL_COMPLETE_SCHEMA_MAPS, ALL_COMPLETE_SCHEMA_MAPS_BUILDER> completeSchemaMapsBuilderAllocator) {
 
         this.droppedSchemaObjectsAllocator = Objects.requireNonNull(droppedSchemaObjectsAllocator);
         this.databaseSchemasAllocator = Objects.requireNonNull(databaseSchemasAllocator);
@@ -35,32 +42,42 @@ public abstract class DatabasesSchemaManagerAllocator<
         this.completeSchemaMapsBuilderAllocator = Objects.requireNonNull(completeSchemaMapsBuilderAllocator);
     }
 
-    public final DroppedSchemaObjectsAllocator getDroppedSchemaObjectsAllocator() {
+    public final SchemaDroppedElementsAllocators<MUTABLE_INT_SET, MUTABLE_INT_TO_MUTABLE_INT_SET_MAP> getDroppedSchemaObjectsAllocator() {
         return droppedSchemaObjectsAllocator;
     }
 
-    public final DroppedElementsSchemaObjects allocateDroppedElementsSchemaObjects() {
+    public final SchemaDroppedElements<MUTABLE_INT_SET, MUTABLE_INT_TO_MUTABLE_INT_SET_MAP> allocateDroppedElementsSchemaObjects() {
 
-        return databaseSchemasAllocator.allocateDroppedElementsSchemaObjects();
+        return databaseSchemasAllocator.allocateSchemaDroppedElements();
     }
 
-    public final void freeDroppedElementsSchemaObjects(DroppedElementsSchemaObjects droppedSchemaObjects) {
+    public final void freeDroppedElementsSchemaObjects(SchemaDroppedElements<MUTABLE_INT_SET, MUTABLE_INT_TO_MUTABLE_INT_SET_MAP> schemaDroppedElements) {
 
-        databaseSchemasAllocator.freeDroppedElementsSchemaObjects(droppedSchemaObjects);
-    }
+        Objects.requireNonNull(schemaDroppedElements);
 
-    @Override
-    public final V allocateCompleteSchemaMapsBuilder() {
-
-        return completeSchemaMapsBuilderAllocator.allocateCompleteSchemaMapsBuilder();
+        databaseSchemasAllocator.freeSchemaDroppedElements(schemaDroppedElements);
     }
 
     @Override
-    public final void freeCompleteSchemaMapsBuilder(V builder) {
+    public final ALL_COMPLETE_SCHEMA_MAPS_BUILDER createBuilder() {
+
+        return completeSchemaMapsBuilderAllocator.createBuilder();
+    }
+
+    @Override
+    public final void freeBuilder(ALL_COMPLETE_SCHEMA_MAPS_BUILDER builder) {
 
         Objects.requireNonNull(builder);
 
-        completeSchemaMapsBuilderAllocator.freeCompleteSchemaMapsBuilder(builder);
+        completeSchemaMapsBuilderAllocator.freeBuilder(builder);
+    }
+
+    @Override
+    public final void freeImmutable(ALL_COMPLETE_SCHEMA_MAPS immutable) {
+
+        Objects.requireNonNull(immutable);
+
+        completeSchemaMapsBuilderAllocator.freeImmutable(immutable);
     }
 
     @Override
@@ -70,7 +87,8 @@ public abstract class DatabasesSchemaManagerAllocator<
 
         statisticsGatherer.addAllocators("droppedSchemaObjectsAllocator", RefType.PASSED, droppedSchemaObjectsAllocator);
         statisticsGatherer.addAllocators("databaseSchemasAllocator", RefType.PASSED, databaseSchemasAllocator);
-        statisticsGatherer.addAllocators("completeSchemaMapsBuilderAllocator", RefType.PASSED, completeSchemaMapsBuilderAllocator);
-
+// fix
+//        statisticsGatherer.addAllocators("completeSchemaMapsBuilderAllocator", RefType.PASSED, completeSchemaMapsBuilderAllocator);
+        throw new UnsupportedOperationException();
     }
 }

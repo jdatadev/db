@@ -1,7 +1,10 @@
 package dev.jdata.db.utils.adt.maps;
 
-import dev.jdata.db.utils.adt.IClearable;
+import dev.jdata.db.utils.adt.elements.INonDistinct;
+import dev.jdata.db.utils.adt.elements.IOrderedAddable;
 
-abstract class BaseMutableIntToIntegerOrObjectNonBucketMapTest<V, M extends IIntKeyMap & IClearable & IMapMutators> extends BaseMutableIntToIntegerOrObjectMapTest<V, M> {
+abstract class BaseMutableIntToIntegerOrObjectNonBucketMapTest<VALUES_ARRAY, VALUES_ADDABLE extends IOrderedAddable<?> & INonDistinct, MAP extends IMutableIntKeyMap>
+
+        extends BaseMutableIntToIntegerOrObjectMapTest<VALUES_ARRAY, VALUES_ADDABLE, MAP> {
 
 }

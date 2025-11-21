@@ -1,9 +1,14 @@
 package dev.jdata.db.utils.adt.maps;
 
-import dev.jdata.db.utils.adt.IClearable;
+import dev.jdata.db.utils.adt.elements.INonDistinct;
+import dev.jdata.db.utils.adt.elements.IOrderedAddable;
 
-abstract class BaseMutableLongToIntegerOrObjectBucketMapTest<V, M extends ILongContainsKeyMap & IClearable & ILongKeyDynamicMapRemovalMutators>
+abstract class BaseMutableLongToIntegerOrObjectBucketMapTest<
 
-        extends BaseMutableLongToIntegerOrObjectDynamicMapTest<V, M> {
+                VALUES_ARRAY,
+                VALUES_ADDABLE extends IOrderedAddable<?> & INonDistinct,
+                MAP extends IMutableLongKeyMap & ILongContainsKeyMapView & ILongKeyDynamicMapRemovalMutators>
+
+        extends BaseMutableLongToIntegerOrObjectDynamicMapTest<VALUES_ARRAY, VALUES_ADDABLE, MAP> {
 
 }

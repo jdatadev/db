@@ -6,7 +6,7 @@ import org.jutils.ast.objects.BaseASTElement;
 import org.jutils.ast.objects.expression.Expression;
 import org.jutils.ast.objects.list.ASTList;
 import org.jutils.ast.objects.list.ASTSingle;
-import org.jutils.ast.objects.list.IIndexListGetters;
+import org.jutils.ast.objects.list.IIndexListView;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
@@ -17,7 +17,7 @@ public final class SQLTriggeredAction extends BaseASTElement {
     private final ASTSingle<Expression> condition;
     private final ASTList<BaseSQLStatement> statements;
 
-    public SQLTriggeredAction(Context context, long whenKeyword, Expression condition, IIndexListGetters<SQLTriggeredStatement> statements) {
+    public SQLTriggeredAction(Context context, long whenKeyword, Expression condition, IIndexListView<SQLTriggeredStatement> statements) {
         super(context);
 
         checkIsKeywordAndElementOrNot(whenKeyword, condition);
@@ -26,7 +26,7 @@ public final class SQLTriggeredAction extends BaseASTElement {
         this.condition = safeMakeSingle(condition);
 
         @SuppressWarnings("unchecked")
-        final IIndexListGetters<BaseSQLStatement> statementsList = (IIndexListGetters<BaseSQLStatement>)(IIndexListGetters<?>)statements;
+        final IIndexListView<BaseSQLStatement> statementsList = (IIndexListView<BaseSQLStatement>)(IIndexListView<?>)statements;
 
         this.statements = makeList(statementsList);
     }

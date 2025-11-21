@@ -2,17 +2,14 @@ package dev.jdata.db.utils.adt.maps;
 
 import java.util.function.IntFunction;
 
-abstract class BaseIntToObjectWithRemoveNonBucketMap<T> extends BaseIntToObjectNonContainsKeyNonBucketMap<T> {
+abstract class BaseIntToObjectWithRemoveNonBucketMap<V, M extends BaseIntToObjectWithRemoveNonBucketMap<V, M>> extends BaseIntToObjectNonContainsKeyNonBucketMap<V, M> {
 
-    BaseIntToObjectWithRemoveNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createValuesArray) {
-        super(initialCapacityExponent, createValuesArray);
+    BaseIntToObjectWithRemoveNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor,
+            IntFunction<V[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
     }
 
-    BaseIntToObjectWithRemoveNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createValuesArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
-    }
-
-    BaseIntToObjectWithRemoveNonBucketMap(BaseIntToObjectWithRemoveNonBucketMap<T> toCopy) {
-        super(toCopy);
+    BaseIntToObjectWithRemoveNonBucketMap(AllocationType allocationType, BaseIntToObjectWithRemoveNonBucketMap<V, M> toCopy) {
+        super(allocationType, toCopy);
     }
 }

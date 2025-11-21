@@ -28,7 +28,7 @@ public final class MapsTest extends BaseDBTest {
             f.each(345, "cde", b, p);
         };
 
-        final String string = Maps.intToObjectMapToString(prefix, 3L, parameter, intToObjectMapForEachCaller);
+        final String string = Maps.intToObjectMapToString(prefix, 3, parameter, intToObjectMapForEachCaller);
 
         assertThat(string).isEqualTo(prefix + " {123=abc,234=bcd,345=cde}");
     }
@@ -50,7 +50,7 @@ public final class MapsTest extends BaseDBTest {
             f.each(345, "cde", b, p);
         };
 
-        final String string = Maps.longToObjectMapToString(prefix, 3L, parameter, longToObjectMapForEachCaller);
+        final String string = Maps.longToObjectMapToString(prefix, 3, parameter, longToObjectMapForEachCaller);
 
         assertThat(string).isEqualTo(prefix + " {123=abc,234=bcd,345=cde}");
     }
@@ -74,7 +74,7 @@ public final class MapsTest extends BaseDBTest {
 
         final ILongAppendEachValue<String, Integer> longAppendEachValue = (k, v, b, p) -> b.append(v);
 
-        final String string = Maps.longAppendToString(prefix, 3L, parameter, longForEachAppendCaller, longAppendEachValue);
+        final String string = Maps.longAppendToString(prefix, 3, parameter, longForEachAppendCaller, longAppendEachValue);
 
         assertThat(string).isEqualTo(prefix + " {123=abc,234=bcd,345=cde}");
     }

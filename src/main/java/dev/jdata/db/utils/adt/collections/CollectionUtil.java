@@ -16,7 +16,7 @@ public class CollectionUtil {
     public static <T, C> T[] toArray(C collection, int numElements, IntFunction<T[]> createArray, CollectionElementGetter<T, C> elementGetter) {
 
         Objects.requireNonNull(collection);
-        Checks.isNumElements(numElements);
+        Checks.isIntNumElements(numElements);
         Objects.requireNonNull(elementGetter);
 
         final T[] result = createArray.apply(numElements);

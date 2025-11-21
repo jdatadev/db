@@ -2,11 +2,7 @@ package dev.jdata.db.utils.allocators;
 
 import dev.jdata.db.utils.builders.IBuilder;
 
-public interface IBuilderAllocator<T extends IBuilder> extends IElementAllocator {
+public interface IBuilderAllocator<T extends IBuilder> extends IBuilderAllocationTracking {
 
-    long getNumCurrentlyAllocatedBuilders();
-    long getNumFreeListBuilders();
-
-    long getTotalNumAllocatedBuilders();
-    long getTotalNumFreedBuilders();
+    void freeBuilder(T builder);
 }

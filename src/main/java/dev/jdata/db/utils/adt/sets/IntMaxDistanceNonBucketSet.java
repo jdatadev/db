@@ -1,8 +1,12 @@
 package dev.jdata.db.utils.adt.sets;
 
-abstract class IntMaxDistanceNonBucketSet extends BaseIntMaxDistanceNonBucketSet implements IIntSet {
+abstract class IntMaxDistanceNonBucketSet extends BaseIntMaxDistanceNonBucketSet implements IBaseIntSet {
 
-    IntMaxDistanceNonBucketSet(BaseIntMaxDistanceNonBucketSet toCopy) {
-        super(toCopy);
+    IntMaxDistanceNonBucketSet(AllocationType allocationType, int[] values) {
+        super(allocationType, values);
+    }
+
+    IntMaxDistanceNonBucketSet(AllocationType allocationType, BaseIntMaxDistanceNonBucketSet toCopy) {
+        super(allocationType, toCopy);
     }
 }

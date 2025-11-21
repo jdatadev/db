@@ -8,8 +8,6 @@ import java.util.function.IntFunction;
 import org.jutils.io.strings.StringRef;
 import org.jutils.io.strings.StringResolver;
 
-import dev.jdata.db.schema.model.ISchemaMap;
-import dev.jdata.db.schema.model.SchemaMap;
 import dev.jdata.db.schema.model.objects.DBFunction;
 import dev.jdata.db.schema.model.objects.DBNamedIdentifiableObject;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
@@ -19,28 +17,30 @@ import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.model.objects.Trigger;
 import dev.jdata.db.schema.model.objects.View;
+import dev.jdata.db.schema.model.schemamap.ISchemaMap;
 import dev.jdata.db.utils.Initializable;
 import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseSchemaMaps<T extends ISchemaMap<? extends SchemaObject>> extends ObjectCacheNode implements ISchemaMaps, IResettable {
+public abstract class BaseSchemaMaps<T extends ISchemaMap<?>> extends ObjectCacheNode implements ISchemaMaps, IResettable {
 
-    private final Function<SchemaMap<?, ?, ?>, T> createObjectState;
-    private final Function<T, SchemaMap<?, ?, ?>> getSchemaMap;
+    private final Function<ISchemaMap<?>, T> createObjectState;
+    private final Function<T, ISchemaMap<?>> getSchemaMap;
 
     private final T[] schemaObjectStates;
 
-    protected BaseSchemaMaps(Function<SchemaMap<?, ?, ?>, T> createObjectState, IntFunction<T[]> createArray, Function<T, SchemaMap<?, ?, ?>> getSchemaMap,
-            SchemaMap<Table, ?, ?> tables, SchemaMap<View, ?, ?> views, SchemaMap<Index, ?, ?> indices, SchemaMap<Trigger, ?, ?> triggers,
-            SchemaMap<DBFunction, ?, ?> functions, SchemaMap<Procedure, ?, ?> procedures) {
-        this(createObjectState, createArray, getSchemaMap);
+    protected BaseSchemaMaps(AllocationType allocationType, Function<ISchemaMap<?>, T> createObjectState, IntFunction<T[]> createArray, Function<T, ISchemaMap<?>> getSchemaMap,
+            ISchemaMap<Table> tables, ISchemaMap<View> views, ISchemaMap<Index> indices, ISchemaMap<Trigger> triggers, ISchemaMap<DBFunction> functions,
+            ISchemaMap<Procedure> procedures) {
+        this(allocationType, createObjectState, createArray, getSchemaMap);
 
         initialize(createObjectState, tables, views, indices, triggers, functions, procedures);
     }
 
-    BaseSchemaMaps(Function<SchemaMap<?, ?, ?>, T> createObjectState, IntFunction<T[]> createArray, Function<T, SchemaMap<?, ?, ?>> getSchemaMap) {
+    BaseSchemaMaps(AllocationType allocationType, Function<ISchemaMap<?>, T> createObjectState, IntFunction<T[]> createArray, Function<T, ISchemaMap<?>> getSchemaMap) {
+        super(allocationType);
 
         Objects.requireNonNull(createObjectState);
         Objects.requireNonNull(createArray);
@@ -52,24 +52,39 @@ public abstract class BaseSchemaMaps<T extends ISchemaMap<? extends SchemaObject
         this.schemaObjectStates = createArray.apply(DDLObjectType.getNumObjectTypes());
     }
 
-    protected final void initialize(SchemaMap<Table, ?, ?> tables, SchemaMap<View, ?, ?> views, SchemaMap<Index, ?, ?> indices, SchemaMap<Trigger, ?, ?> triggers,
-            SchemaMap<DBFunction, ?, ?> functions, SchemaMap<Procedure, ?, ?> procedures) {
+    protected final void initialize(ISchemaMap<Table> tables, ISchemaMap<View> views, ISchemaMap<Index> indices, ISchemaMap<Trigger> triggers,
+            ISchemaMap<DBFunction> functions, ISchemaMap<Procedure> procedures) {
 
         initialize(createObjectState, tables, views, indices, triggers, functions, procedures);
     }
 
-    private void initialize(Function<SchemaMap<?, ?, ?>, T> createObjectState, SchemaMap<Table, ?, ?> tables, SchemaMap<View, ?, ?> views, SchemaMap<Index, ?, ?> indices,
-            SchemaMap<Trigger, ?, ?> triggers, SchemaMap<DBFunction, ?, ?> functions, SchemaMap<Procedure, ?, ?> procedures) {
+    private void initialize(Function<ISchemaMap<?>, T> createObjectState, ISchemaMap<Table> tables, ISchemaMap<View> views, ISchemaMap<Index> indices,
+            ISchemaMap<Trigger> triggers, ISchemaMap<DBFunction> functions, ISchemaMap<Procedure> procedures) {
 
-        setSchemaMap(DDLObjectType.TABLE, tables);
-        setSchemaMap(DDLObjectType.VIEW, views);
-        setSchemaMap(DDLObjectType.INDEX, indices);
-        setSchemaMap(DDLObjectType.TRIGGER, triggers);
-        setSchemaMap(DDLObjectType.FUNCTION, functions);
-        setSchemaMap(DDLObjectType.PROCEDURE, procedures);
+        setSchemaMapOrNull(DDLObjectType.TABLE, tables);
+        setSchemaMapOrNull(DDLObjectType.VIEW, views);
+        setSchemaMapOrNull(DDLObjectType.INDEX, indices);
+        setSchemaMapOrNull(DDLObjectType.TRIGGER, triggers);
+        setSchemaMapOrNull(DDLObjectType.FUNCTION, functions);
+        setSchemaMapOrNull(DDLObjectType.PROCEDURE, procedures);
     }
 
-    private void setSchemaMap(DDLObjectType ddlObjectType, SchemaMap<?, ?, ?> schemaMap) {
+    private void setSchemaMapOrNull(DDLObjectType ddlObjectType, ISchemaMap<?> schemaMap) {
+
+        Objects.requireNonNull(ddlObjectType);
+
+        if (schemaMap != null) {
+
+            setSchemaMap(ddlObjectType, schemaMap);
+        }
+        else {
+            final int index = ddlObjectType.ordinal();
+
+            schemaObjectStates[index] = Initializable.checkNotYetInitializedToNull(schemaObjectStates[index]);
+        }
+    }
+
+    private void setSchemaMap(DDLObjectType ddlObjectType, ISchemaMap<?> schemaMap) {
 
         Objects.requireNonNull(ddlObjectType);
         Objects.requireNonNull(schemaMap);
@@ -94,6 +109,7 @@ public abstract class BaseSchemaMaps<T extends ISchemaMap<? extends SchemaObject
         return (IIndexList<U>)getSchemaMapForObjectType(ddlObjectType).getSchemaObjects();
     }
 
+    @Override
     public final boolean containsSchemaObjectName(DDLObjectType ddlObjectType, long hashObjectName) {
 
         Objects.requireNonNull(ddlObjectType);
@@ -121,6 +137,7 @@ public abstract class BaseSchemaMaps<T extends ISchemaMap<? extends SchemaObject
         return (ISchemaMap<R>)getSchemaMapForObjectType(ddlObjectType);
     }
 
+    @Override
     public final int computeMaxId(DDLObjectType ddlObjectType, int defaultValue) {
 
         Objects.requireNonNull(ddlObjectType);

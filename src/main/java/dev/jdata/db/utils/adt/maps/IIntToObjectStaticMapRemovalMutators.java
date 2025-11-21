@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.adt.maps;
 
-interface IIntToObjectStaticMapRemovalMutators<T> extends IKeyValueStaticMapRemovalMutators {
+interface IIntToObjectStaticMapRemovalMutators<V> extends IKeyValueStaticMapRemovalMutatorsMarker {
 
-    T removeAndReturnPrevious(int key);
+    V removeAndReturnPrevious(int key);
 }

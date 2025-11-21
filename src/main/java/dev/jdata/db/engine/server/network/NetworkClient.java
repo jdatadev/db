@@ -48,8 +48,8 @@ final class NetworkClient extends StateObject<NetworkClient.NetworkClientState> 
     private int databaseId;
     private int sessionId;
 
-    NetworkClient(DatabaseNetworkServer server) {
-        super(NetworkClientState.CREATED, false);
+    NetworkClient(AllocationType allocationType, DatabaseNetworkServer server) {
+        super(allocationType, NetworkClientState.CREATED, false);
 
         this.server = Objects.requireNonNull(server);
 

@@ -49,29 +49,33 @@ public class DebugConstants {
     public static final boolean DEBUG_BASE_INT_ARRAY = DEBUG_ARRAYS;
     public static final boolean DEBUG_MUTABLE_INT_ARRAY = DEBUG_ARRAYS;
     public static final boolean DEBUG_BASE_LONG_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_LONG_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_HEAP_LONG_ARRAY = DEBUG_ARRAYS;
     public static final boolean DEBUG_MUTABLE_LONG_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_OBJECT_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_BASE_OBJECT_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_HEAP_OBJECT_ARRAY = DEBUG_ARRAYS;
 
     public static final boolean DEBUG_LARGE_ONE_DIMENSIONAL_ARRAY_CAPACITY_ALGORITHM = DEBUG_ARRAYS;
     public static final boolean DEBUG_BASE_ANY_LARGE_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_BASE_LARGE_ONE_DIMENSIONAL_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_BASE_LARGE_EXPONENT_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_BASE_ONE_DIMENSIONAL_LARGE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_EXPONENT_LARGE_ARRAY = DEBUG_ARRAYS;
     public static final boolean DEBUG_LARGE_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_LARGE_LIMIT_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_BASE_LARGE_BYTE_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_LARGE_BYTE_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_LARGE_INT_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_LARGE_LONG_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_LARGE_OBJECT_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_LIMIT_LARGE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_MUTABlE_BASE_BYTE_LARGE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_MUTABlE_BYTE_LARGE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_MUTABlE_INT_LARGE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_MUTABlE_LONG_LARGE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_MUTABlE_OBJECT_LARGE_ARRAY = DEBUG_ARRAYS;
 
     public static final boolean DEBUG_TWO_DIMENSIONAL_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_LARGE_CHAR_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_BASE_MUTABLE_CHAR_LARGE_ARRAY = DEBUG_ARRAYS;
+
+    public static final boolean DEBUG_MUTABLE_STRINGS_CHAR_LARGE_ARRAY = DEBUG_ARRAYS;
 
     public static final boolean DEBUG_HASH_ARRAY = DEBUG_HASHED;
     public static final boolean DEBUG_LARGE_HASH_ARRAY = DEBUG_HASHED;
 
     public static final boolean DEBUG_MAX_DISTANCE = DEBUG_HASHED;
+    public static final boolean DEBUG_LARGE_MAX_DISTANCE = DEBUG_HASHED;
 
     public static final boolean DEBUG_BASE_HASHED = DEBUG_HASHED;
     public static final boolean DEBUG_BASE_CAPACITY_HASHED = DEBUG_HASHED;
@@ -83,6 +87,9 @@ public class DebugConstants {
     public static final boolean DEBUG_BASE_LONG_CAPACITY_EXPONENT_ARRAY_HASHED = DEBUG_HASHED;
 
     public static final boolean DEBUG_BASE_INT_CAPACITY_EXPONENT_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_LONG_CAPACITY_EXPONENT_MAP = DEBUG_MAPS;
+
+    public static final boolean DEBUG_BASE_ARRAY_KEYS_VALUES_MAP = DEBUG_MAPS;
 
     public static final boolean DEBUG_BASE_INT_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
 
@@ -92,7 +99,7 @@ public class DebugConstants {
     public static final boolean DEBUG_BASE_INT_TO_INT_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_BASE_INT_TO_INT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_MUTABLE_INT_TO_INT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
-    public static final boolean DEBUG_BASE_INT_TO_INT_NON_CONTAINS_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_INT_TO_INT_NON_CONTAINS_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_MUTABLE_INT_TO_INT_NON_REMOVE_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_MUTABLE_INT_TO_INT_WITH_REMOVE_NON_BUCKET_MAP = DEBUG_MAPS;
 
@@ -102,43 +109,43 @@ public class DebugConstants {
     public static final boolean DEBUG_BASE_INT_TO_LONG_NON_CONTAINS_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_MUTABLE_INT_TO_LONG_WITH_REMOVE_NON_BUCKET_MAP = DEBUG_MAPS;
 
-    public static final boolean DEBUG_BASE_INT_TO_OBJECT_NON_CONTAINS_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_INT_TO_OBJECT_NON_CONTAINS_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
 
-    public static final boolean DEBUG_BASE_LONG_NON_BUCKET_MAP = DEBUG_MAPS;
-    public static final boolean DEBUG_BASE_LONG_NON_BUCKET_ARRAY_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_LONG_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_BASE_LONG_TO_OBJECT_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_LONG_TO_LONG_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_BASE_LONG_TO_INT_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_MUTABLE_LONG_TO_INT_NON_REMOVE_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_MUTABLE_LONG_TO_INT_WITH_REMOVE_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_BASE_LONG_TO_INT_NON_CONTAINS_NON_BUCKET_MAP = DEBUG_MAPS;
 
     public static final boolean DEBUG_BASE_LONG_TO_LONG_NON_BUCKET_MAP = DEBUG_MAPS;
-    public static final boolean DEBUG_BASE_LONG_TO_LONG_NON_CONTAINS_NON_BUCKET_MAP = DEBUG_MAPS;
-
-    public static final boolean DEBUG_BASE_LONG_TO_OBJECT_NON_CONTAINS_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_LONG_TO_LONG_NON_CONTAINS_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_LONG_TO_OBJECT_NON_CONTAINS_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_MUTABLE_LONG_TO_OBJECT_WITH_REMOVE_NON_BUCKET_MAP = DEBUG_MAPS;
-
     public static final boolean DEBUG_BASE_LONG_TO_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_MUTABLE_LONG_TO_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
 
-    public static final boolean DEBUG_BASE_OBJECT_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_OBJECT_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_BASE_OBJECT_TO_OBJECT_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_OBJECT_TO_OBJECT_NON_CONTAINS_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_MUTABLE_OBJECT_TO_OBJECT_NON_REMOVE_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_OBJECT_TO_OBJECT_WITH_REMOVE_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_OBJECT_TO_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_MUTABLE_OBJECT_TO_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
 
-    public static final boolean DEBUG_BASE_OBJECT_NON_CONTAINS_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
-    public static final boolean DEBUG_OBJECT_WITH_REMOVE_NON_BUCKET_MAP = DEBUG_MAPS;
-    public static final boolean DEBUG_BASE_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
-    public static final boolean DEBUG_MUTABLE_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_ARRAY_KEYS_VALUES_LARGE_MAP = DEBUG_MAPS;
 
-    public static final boolean DEBUG_BASE_LARGE_ARRAY_KEYS_VALUES_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_NON_BUCKET_LARGE_MAP = DEBUG_MAPS;
 
-    public static final boolean DEBUG_BASE_LARGE_INTEGER_KEY_MAP = DEBUG_MAPS;
-    public static final boolean DEBUG_BASE_LARGE_INT_KEY_MAP = DEBUG_MAPS;
-    public static final boolean DEBUG_BASE_LARGE_INT_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_INT_KEY_LARGE_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_INT_KEY_NON_BUCKET_LARGE_MAP = DEBUG_MAPS;
 
-    public static final boolean DEBUG_BASE_LARGE_LONG_KEY_MAP = DEBUG_MAPS;
-    public static final boolean DEBUG_BASE_LARGE_LONG_KEY_NON_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_LONG_KEY_LARGE_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_LONG_KEY_NON_BUCKET_LARGE_MAP = DEBUG_MAPS;
 
-    public static final boolean DEBUG_BASE_INTEGER_KEY_BUCKET_MAP = DEBUG_MAPS;
+    public static final boolean DEBUG_BASE_BUCKET_MAP = DEBUG_MAPS;
 
     public static final boolean DEBUG_BASE_INT_BUCKET_MAP = DEBUG_MAPS;
 
@@ -146,11 +153,31 @@ public class DebugConstants {
     public static final boolean DEBUG_MUTABLE_LONG_TO_INT_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_MUTABLE_LONG_TO_OBJECT_BUCKET_MAP = DEBUG_MAPS;
 
+    public static final boolean DEBUG_BASE_NON_BUCKET_SET = DEBUG_SETS;
+
     public static final boolean DEBUG_BASE_INT_NON_BUCKET_SET = DEBUG_SETS;
 
     public static final boolean DEBUG_BASE_INT_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
     public static final boolean DEBUG_MUTABLE_INT_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
 
+    public static final boolean DEBUG_BASE_LONG_NON_BUCKET_SET = DEBUG_SETS;
+
+    public static final boolean DEBUG_BASE_LONG_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
+    public static final boolean DEBUG_MUTABLE_LONG_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
+
+    public static final boolean DEBUG_BASE_LONG_LARGE_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
+    public static final boolean DEBUG_MUTABLE_LONG_LARGE_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
+
+    public static final boolean DEBUG_BASE_OBJECT_NON_BUCKET_SET = DEBUG_SETS;
+
+    public static final boolean DEBUG_BASE_OBJECT_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
+    public static final boolean DEBUG_MUTABLE_OBJECT_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
+
+    public static final boolean DEBUG_BASE_NON_BUCKET_LARGE_SET = DEBUG_SETS;
+
+    public static final boolean DEBUG_BASE_LONG_LARGE_NON_BUCKET_SET = DEBUG_SETS;
+
+    public static final boolean DEBUG_BASE_BUCKET_SET = DEBUG_SETS;
     public static final boolean DEBUG_BASE_INT_BUCKET_SET = DEBUG_SETS;
     public static final boolean DEBUG_MUTABLE_INT_BUCKET_SET = DEBUG_SETS;
     public static final boolean DEBUG_BASE_LONG_BUCKET_SET = DEBUG_SETS;
@@ -159,8 +186,8 @@ public class DebugConstants {
     public static final boolean DEBUG_BASE_LONG_TO_OBJECT_BUCKET_MAP = DEBUG_MAPS;
     public static final boolean DEBUG_BASE_LONG_TO_INT_BUCKET_MAP = DEBUG_MAPS;
 
-    public static final boolean DEBUG_BASE_LARGE_LONG_BUCKET_SET = DEBUG_SETS;
-    public static final boolean DEBUG_MUTABLE_LARGE_LONG_BUCKET_SET = DEBUG_SETS;
+    public static final boolean DEBUG_BASE_LONG_BUCKET_LARGE_SET = DEBUG_SETS;
+    public static final boolean DEBUG_MUTABLE_LONG_BUCKET_LARGE_SET = DEBUG_SETS;
 
     public static final boolean DEBUG_BIT_BUFFER_UTIL = Boolean.FALSE;
 }

@@ -8,7 +8,7 @@ import dev.jdata.db.utils.checks.Checks;
 
 public final class MutableString extends CharString implements IClearable {
 
-    public interface CharArrayAllocator {
+    public interface ICharArrayAllocator {
 
         char[] allocateCharArray(int length);
 
@@ -21,14 +21,14 @@ public final class MutableString extends CharString implements IClearable {
         this.numCharacters = 0;
     }
 
-    public void append(char c, CharArrayAllocator charArrayAllocator) {
+    public void append(char c, ICharArrayAllocator charArrayAllocator) {
 
         final char[] dst = checkCapacity(c, charArrayAllocator, (a, l) -> a != null ? a.length << 1 : 10);
 
         dst[numCharacters ++] = c;
     }
 
-    public void set(CharBuffer charBuffer, int offset, int length, CharArrayAllocator allocator) {
+    public void set(CharBuffer charBuffer, int offset, int length, ICharArrayAllocator allocator) {
 
         Checks.isExactlyZero(charBuffer.position());
         Checks.checkFromIndexSize(offset, charBuffer.limit(), length);
@@ -50,7 +50,7 @@ public final class MutableString extends CharString implements IClearable {
         int getCapacity(char[] array, int length);
     }
 
-    private char[] checkCapacity(int length, CharArrayAllocator allocator, CapacityGetter capacityGetter) {
+    private char[] checkCapacity(int length, ICharArrayAllocator allocator, CapacityGetter capacityGetter) {
 
         final char[] dst;
 

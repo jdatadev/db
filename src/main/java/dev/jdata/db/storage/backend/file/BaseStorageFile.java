@@ -11,7 +11,8 @@ public abstract class BaseStorageFile<T extends FileAccess> extends FileStorage 
 
     private final T file;
 
-    protected BaseStorageFile(T file) {
+    protected BaseStorageFile(AllocationType allocationType, T file) {
+        super(allocationType);
 
         this.file = Objects.requireNonNull(file);
     }

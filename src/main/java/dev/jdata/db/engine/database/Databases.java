@@ -7,30 +7,31 @@ import java.util.Objects;
 
 import dev.jdata.db.engine.database.Database.DatabaseState;
 import dev.jdata.db.engine.database.operations.IDatabaseOperations;
+import dev.jdata.db.engine.database.strings.IStringCache;
 import dev.jdata.db.engine.descriptorables.BaseSingleTypeDescriptorables;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
 import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.parse.ISQLString;
-import dev.jdata.db.utils.adt.maps.MutableObjectWithRemoveNonBucketMap;
+import dev.jdata.db.utils.adt.maps.IHeapMutableWithRemoveStaticMap;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class Databases extends BaseSingleTypeDescriptorables<DatabaseState, Database> implements IDatabases {
 
     private final IStringCache stringCache;
 
-    private final MutableObjectWithRemoveNonBucketMap<String, Database> databaseByName;
+    private final IHeapMutableWithRemoveStaticMap<String, Database> databaseByName;
 
-    private final MutableObjectWithRemoveNonBucketMap<ISQLString, BaseSQLStatement> statementCache;
+    private final IHeapMutableWithRemoveStaticMap<ISQLString, BaseSQLStatement> statementCache;
 
-    public Databases(IStringCache stringCache, boolean cacheStatements) {
-        super(Database[]::new);
+    public Databases(AllocationType allocationType, IStringCache stringCache, boolean cacheStatements) {
+        super(allocationType, Database[]::new);
 
         this.stringCache = Objects.requireNonNull(stringCache);
 
-        this.databaseByName = new MutableObjectWithRemoveNonBucketMap<>(0, String[]::new, Database[]::new);
-        this.statementCache = cacheStatements ? new MutableObjectWithRemoveNonBucketMap<>(0, ISQLString[]::new, BaseSQLStatement[]::new) : null;
+        this.databaseByName = IHeapMutableWithRemoveStaticMap.create(0, String[]::new, Database[]::new);
+        this.statementCache = cacheStatements ? IHeapMutableWithRemoveStaticMap.create(0, ISQLString[]::new, BaseSQLStatement[]::new) : null;
     }
 
     @Override
@@ -66,7 +67,7 @@ public final class Databases extends BaseSingleTypeDescriptorables<DatabaseState
 
             if (database == null) {
 
-                database = addDescriptorable(parameters, p -> new Database(dbNameString, p, p.getAllocators(), p.getAllocators()));
+                database = addDescriptorable(parameters, (a, p) -> new Database(a, dbNameString, p, p.getAllocators(), p.getAllocators()));
 
                 databaseByName.put(dbNameString, database);
             }
@@ -91,7 +92,7 @@ public final class Databases extends BaseSingleTypeDescriptorables<DatabaseState
 
             if (database == null) {
 
-                database = addDescriptorable(parameters, p -> new Database(dbNameString, p, p.getAllocators(), p.getAllocators()));
+                database = addDescriptorable(parameters, (a, p) -> new Database(a, dbNameString, p, p.getAllocators(), p.getAllocators()));
 
                 databaseByName.put(dbNameString, database);
             }
@@ -183,7 +184,7 @@ public final class Databases extends BaseSingleTypeDescriptorables<DatabaseState
         Checks.isDatabaseId(databaseId);
         Checks.isSessionDescriptor(sessionId);
         Checks.isPreparedStatementId(preparedStatementId);
-        Checks.isLengthAboveZero(length);
+        Checks.isLongLengthAboveZero(length);
 
         final Database database = getDescriptorable(databaseId);
 
@@ -199,7 +200,7 @@ public final class Databases extends BaseSingleTypeDescriptorables<DatabaseState
         Checks.isPreparedStatementId(preparedStatementId);
         Checks.isLargeObjectRef(largeObjectRef);
         Objects.requireNonNull(byteBuffer);
-        Checks.isOffset(offset);
+        Checks.isIntOffset(offset);
         Checks.isNumBytes(length);
 
         final Database database = getDescriptorable(databaseId);

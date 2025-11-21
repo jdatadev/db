@@ -1,8 +1,8 @@
 package dev.jdata.db.data.locktable;
 
-import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 
-interface ILockTableRowsMap extends IElements {
+interface ILockTableRowsMap extends IOnlyElementsView {
 
     public static final long NO_LOCK_INDEX = -1L;
 

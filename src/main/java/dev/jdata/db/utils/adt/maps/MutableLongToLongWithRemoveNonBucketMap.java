@@ -4,30 +4,17 @@ import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 
-public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLongWithRemoveNonBucketMap implements IMutableLongToLongStaticMap {
+abstract class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLongWithRemoveNonBucketMap implements IMutableLongToLongWithRemoveStaticMap {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_LONG_TO_LONG_NON_BUCKET_MAP;
 
-    public MutableLongToLongWithRemoveNonBucketMap(int initialCapacityExponent) {
-        super(initialCapacityExponent);
+    MutableLongToLongWithRemoveNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent));
-        }
-
-        if (DEBUG) {
-
-            exit();
-        }
-    }
-
-    public MutableLongToLongWithRemoveNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
-
-        if (DEBUG) {
-
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor));
         }
 
         if (DEBUG) {
@@ -37,7 +24,29 @@ public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLon
     }
 
     @Override
-    public long put(long key, long value, long defaultPreviousValue) {
+    public final long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
+    public final void clear() {
+
+        if (DEBUG) {
+
+            enter();
+        }
+
+        clearBaseLongToLongNonBucketMap();
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public final long put(long key, long value, long defaultPreviousValue) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -57,7 +66,7 @@ public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLon
     }
 
     @Override
-    public long removeAndReturnPrevious(long key) {
+    public final long removeAndReturnPrevious(long key) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -72,12 +81,12 @@ public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLon
 
         if (indexToRemove != NO_INDEX) {
 
-            decrementNumElements();
-
             result = getValues()[indexToRemove];
+
+            decrementNumElements();
         }
         else {
-            throw new IllegalStateException();
+            throw MapExceptions.noSuchKeyException();
         }
 
         if (DEBUG) {
@@ -89,7 +98,7 @@ public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLon
     }
 
     @Override
-    public void remove(long key) {
+    public final void remove(long key) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -102,7 +111,7 @@ public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLon
 
         if (indexToRemove == NO_INDEX) {
 
-            throw new IllegalStateException();
+            throw MapExceptions.noSuchKeyException();
         }
 
         decrementNumElements();
@@ -110,22 +119,6 @@ public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLon
         if (DEBUG) {
 
             exit(b -> b.add("key", key));
-        }
-    }
-
-    @Override
-    public void clear() {
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        clearBaseLongToLongNonBucketMap();
-
-        if (DEBUG) {
-
-            exit();
         }
     }
 }

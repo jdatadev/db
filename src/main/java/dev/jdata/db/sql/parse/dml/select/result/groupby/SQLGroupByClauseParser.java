@@ -2,7 +2,7 @@ package dev.jdata.db.sql.parse.dml.select.result.groupby;
 
 import java.util.Objects;
 
-import org.jutils.ast.objects.list.IIndexListGetters;
+import org.jutils.ast.objects.list.IIndexListView;
 import org.jutils.io.strings.CharInput;
 import org.jutils.parse.ParserException;
 import org.jutils.parse.context.Context;
@@ -36,7 +36,7 @@ public class SQLGroupByClauseParser extends BaseSQLGroupOrOrderByClauseParser<SQ
     }
 
     @Override
-    protected SQLGroupByClause createGroupOrOrderByClause(Context context, IIndexListGetters<SQLOrderByOrGroupByItem> elements) {
+    protected SQLGroupByClause createGroupOrOrderByClause(Context context, IIndexListView<SQLOrderByOrGroupByItem> elements) {
 
         return new SQLGroupByClause(context, elements);
     }

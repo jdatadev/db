@@ -3,13 +3,15 @@ package dev.jdata.db.utils.adt.lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
+
 public final class MultiTypeFreeListTest extends BaseFreeListTest {
 
     @Test
     @Category(UnitTest.class)
     public void testAllocateUnknownType() {
 
-        final MultiTypeFreeList<Object> freeList = new MultiTypeFreeList<>(Object[]::new, Integer.class, Long.class, String.class);
+        final MultiTypeFreeList<Object> freeList = new MultiTypeFreeList<>(AllocationType.HEAP, Object[]::new, Integer.class, Long.class, String.class);
 
         assertThatThrownBy(() -> freeList.allocate(Short.class)).isInstanceOf(IllegalArgumentException.class);
     }
@@ -18,7 +20,7 @@ public final class MultiTypeFreeListTest extends BaseFreeListTest {
     @Category(UnitTest.class)
     public void testFreeUnknownType() {
 
-        final MultiTypeFreeList<Object> freeList = new MultiTypeFreeList<>(Object[]::new, Integer.class, Long.class, String.class);
+        final MultiTypeFreeList<Object> freeList = new MultiTypeFreeList<>(AllocationType.HEAP, Object[]::new, Integer.class, Long.class, String.class);
 
         assertThatThrownBy(() -> freeList.free(Short.valueOf((short)1))).isInstanceOf(IllegalArgumentException.class);
     }
@@ -27,7 +29,7 @@ public final class MultiTypeFreeListTest extends BaseFreeListTest {
     @Category(UnitTest.class)
     public void testAllocateAndFree() {
 
-        final MultiTypeFreeList<Object> freeList = new MultiTypeFreeList<>(Object[]::new, Object.class);
+        final MultiTypeFreeList<Object> freeList = new MultiTypeFreeList<>(AllocationType.HEAP, Object[]::new, Object.class);
 
         final Object object1 = new Object();
         final Object object2 = new Object();
@@ -50,7 +52,7 @@ public final class MultiTypeFreeListTest extends BaseFreeListTest {
 
         final Class<?> [] typesToAllocate = new Class<?>[] { type1, type2, type3 };
 
-        final MultiTypeFreeList<Object> freeList = new MultiTypeFreeList<>(Object[]::new, typesToAllocate);
+        final MultiTypeFreeList<Object> freeList = new MultiTypeFreeList<>(AllocationType.HEAP, Object[]::new, typesToAllocate);
 
         checkIsEmpty(freeList, typesToAllocate);
 

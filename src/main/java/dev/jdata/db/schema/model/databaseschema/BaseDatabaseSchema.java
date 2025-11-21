@@ -7,16 +7,16 @@ import org.jutils.io.strings.StringResolver;
 
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.schema.model.DatabaseSchemaModelObject;
-import dev.jdata.db.schema.model.IDatabaseSchema;
-import dev.jdata.db.schema.model.ISchemaMap;
+import dev.jdata.db.schema.model.DatabaseSchemaModelRootObject;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
+import dev.jdata.db.schema.model.schemamap.ISchemaMap;
 import dev.jdata.db.schema.model.schemamaps.BaseSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.ISchemaMaps;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseDatabaseSchema<T extends BaseSchemaMaps<?>> extends DatabaseSchemaModelObject implements IDatabaseSchema {
+public abstract class BaseDatabaseSchema<T extends ISchemaMaps> extends DatabaseSchemaModelRootObject implements IDatabaseSchema {
 
     private final T schemaMaps;
     private final DatabaseSchemaVersion version;
@@ -65,7 +65,9 @@ public abstract class BaseDatabaseSchema<T extends BaseSchemaMaps<?>> extends Da
 
         Objects.requireNonNull(ddlObjectType);
 
-        return (IIndexList<R>)getSchemaMap(ddlObjectType).getSchemaObjects();
+        final ISchemaMap<R> schemaMap = (ISchemaMap<R>)getSchemaMap(ddlObjectType);
+
+        return schemaMap != null ? schemaMap.getSchemaObjects() : null;
     }
 
     @Override

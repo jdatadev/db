@@ -5,10 +5,10 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.allocators.IFreeing;
 
-public final class FreeList<T> implements IFreeing<T>, IElements {
+public final class FreeList<T> implements IFreeing<T>, IOnlyElementsView {
 
     private T[] list;
     private int numElements;

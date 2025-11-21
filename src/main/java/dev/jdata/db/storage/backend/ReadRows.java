@@ -13,8 +13,8 @@ public final class ReadRows {
     void init(long[] rowIds, int offset, int numRowIds) {
 
         this.rowIds = Objects.requireNonNull(rowIds);
-        this.offset = Checks.isOffset(offset);
-        this.numRowIds = Checks.isNumElements(numRowIds);
+        this.offset = Checks.isIntOffset(offset);
+        this.numRowIds = Checks.isIntNumElements(numRowIds);
     }
 
     public long getRowId(int index) {

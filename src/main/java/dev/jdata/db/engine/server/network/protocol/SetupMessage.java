@@ -40,7 +40,8 @@ public final class SetupMessage extends ProtocolMessage {
 
     private DatabaseCreateMode createMode;
 
-    public SetupMessage() {
+    public SetupMessage(AllocationType allocationType) {
+        super(allocationType);
 
         this.databaseName = new MutableString();
         this.charsetName = new MutableString();
@@ -65,7 +66,7 @@ public final class SetupMessage extends ProtocolMessage {
     }
 
     @Override
-    void decode(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, ProtocolAllocator allocator) throws ProtocolDecodeException {
+    void decode(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, IProtocolAllocator allocator) throws ProtocolDecodeException {
 
         int currentOffset = offset;
         int currentLength = length;

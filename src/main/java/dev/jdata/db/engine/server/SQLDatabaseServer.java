@@ -12,12 +12,12 @@ import org.jutils.parse.ParserException;
 import dev.jdata.db.engine.database.DatabaseParameters;
 import dev.jdata.db.engine.database.EvaluateException;
 import dev.jdata.db.engine.database.ExecuteException;
-import dev.jdata.db.engine.database.operations.IDatabaseOperations;
-import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.ISelectResultWriter;
 import dev.jdata.db.engine.database.IDatabaseExecutePreparedStatement;
 import dev.jdata.db.engine.database.IDatabaseFreePreparedStatement;
 import dev.jdata.db.engine.database.IDatabaseLookup;
 import dev.jdata.db.engine.database.IDatabaseSessions;
+import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.ISelectResultWriter;
+import dev.jdata.db.engine.database.operations.IDatabaseOperations;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
 import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
 import dev.jdata.db.sql.ast.statements.BaseSQLDDLOperationStatement;
@@ -27,17 +27,18 @@ import dev.jdata.db.sql.ast.statements.dml.SQLSelectStatement;
 import dev.jdata.db.sql.parse.SQLParser;
 import dev.jdata.db.sql.parse.SQLParserFactory;
 import dev.jdata.db.sql.parse.SQLParserHelper;
-import dev.jdata.db.sql.parse.SQLParserHelper.ParsedSQLStatementsFunction;
-import dev.jdata.db.utils.adt.lists.CachedIndexList;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
+import dev.jdata.db.sql.parse.SQLParserHelper.IParsedSQLStatementsFunction;
+import dev.jdata.db.utils.adt.lists.ICachedIndexList;
+import dev.jdata.db.utils.adt.lists.ICachedIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.ICachedIndexListBuilder;
+import dev.jdata.db.utils.allocators.IAllocators;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.allocators.ObjectCache;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessions, IDatabaseExecutePreparedStatement, IDatabaseFreePreparedStatement {
+public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessions, IDatabaseExecutePreparedStatement, IDatabaseFreePreparedStatement, IAllocators {
 
     public interface ExecuteSQLResultWriter<E extends Exception> {
 
@@ -49,6 +50,10 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
         private IDatabaseServer server;
         private ExecuteSQLResultWriter<?> resultWriter;
 
+        ExecuteSQLParameter(AllocationType allocationType) {
+            super(allocationType);
+        }
+
         public void initialize(IDatabaseServer server, ExecuteSQLResultWriter<?> resultWriter) {
 
             this.server = Objects.requireNonNull(server);
@@ -58,9 +63,9 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
 
     private final IDatabaseServer server;
 
-    private final SQLParserHelper<CachedIndexList<BaseSQLStatement>, CachedIndexListBuilder<BaseSQLStatement>, CacheIndexListAllocator<BaseSQLStatement>> sqlParserHelper;
+    private final SQLParserHelper<ICachedIndexList<BaseSQLStatement>, ICachedIndexListBuilder<BaseSQLStatement>, ICachedIndexListAllocator<BaseSQLStatement>> sqlParserHelper;
 
-    private final NodeObjectCache<SQLAllocator> allocatorsCache;
+    private final NodeObjectCache<SQLAllocator> sqlAllocatorsCache;
     private final ObjectCache<CharBufferLoadStream> charBufferLoadStreamCache;
     private final ObjectCache<LoadStreamStringBuffers<RuntimeException>> loadStreamStringBuffersCache;
     private final NodeObjectCache<ExecuteSQLParameter> executeSQLParameterCache;
@@ -74,12 +79,23 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
 
         final SQLParser sqlParser = sqlParserFactory.createParser();
 
-        this.sqlParserHelper = new SQLParserHelper<>(sqlParser, CacheIndexListAllocator::new);
+        this.sqlParserHelper = new SQLParserHelper<>(sqlParser, ICachedIndexListAllocator::create);
 
-        this.allocatorsCache = new NodeObjectCache<>(SQLAllocator::new);
+        this.sqlAllocatorsCache = new NodeObjectCache<>(SQLAllocator::new);
         this.charBufferLoadStreamCache = new ObjectCache<>(CharBufferLoadStream::new, CharBufferLoadStream[]::new);
         this.loadStreamStringBuffersCache = new ObjectCache<>(LoadStreamStringBuffers::new, LoadStreamStringBuffers[]::new);
         this.executeSQLParameterCache = new NodeObjectCache<>(ExecuteSQLParameter::new);
+    }
+
+    @Override
+    public void gatherStatistics(IAllocatorsStatisticsGatherer statisticsGatherer) {
+
+        Objects.requireNonNull(statisticsGatherer);
+
+        statisticsGatherer.addNodeObjectCache("sqlAllocatorsCache", SQLAllocator.class, sqlAllocatorsCache);
+        statisticsGatherer.addObjectCache("charBufferLoadStreamCache", CharBufferLoadStream.class, charBufferLoadStreamCache);
+        statisticsGatherer.addObjectCacheForGenericType("loadStreamStringBuffersCache", LoadStreamStringBuffers.class, loadStreamStringBuffersCache);
+        statisticsGatherer.addNodeObjectCache("executeSQLParameterCache", ExecuteSQLParameter.class, executeSQLParameterCache);
     }
 
     @Override
@@ -253,7 +269,7 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
         server.freePreparedStatement(databaseId, sessionId, preparedStatementId);
     }
 
-    private <T, R, E extends Exception> long onSQL(T instance, int databaseId, int sessionId, CharBuffer charBuffer, ParsedSQLStatementsFunction<T, E> onParsedStatements)
+    private <T, R, E extends Exception> long onSQL(T instance, int databaseId, int sessionId, CharBuffer charBuffer, IParsedSQLStatementsFunction<T, E> onParsedStatements)
             throws ParserException, E {
 
         final SQLAllocator sqlAllocator;
@@ -262,7 +278,7 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
 
         synchronized (this) {
 
-            sqlAllocator = allocatorsCache.allocate();
+            sqlAllocator = sqlAllocatorsCache.allocate();
             charBufferLoadStream = charBufferLoadStreamCache.allocate();
             loadStreamStringBuffers = loadStreamStringBuffersCache.allocate();
         }
@@ -278,7 +294,7 @@ public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessio
 
             synchronized (this) {
 
-                allocatorsCache.free(sqlAllocator);
+                sqlAllocatorsCache.free(sqlAllocator);
                 charBufferLoadStreamCache.free(charBufferLoadStream);
                 loadStreamStringBuffersCache.free(loadStreamStringBuffers);
             }

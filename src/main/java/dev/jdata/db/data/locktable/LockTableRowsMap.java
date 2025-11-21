@@ -1,14 +1,17 @@
 package dev.jdata.db.data.locktable;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.arrays.IHeapMutableLongLargeArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
-import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
+import dev.jdata.db.utils.adt.hashed.helpers.IntCapacityPutResult;
 import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
-import dev.jdata.db.utils.adt.maps.BaseLongKeyNonBucketMap;
+import dev.jdata.db.utils.adt.maps.InheritableLongKeyNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
-final class LockTableRowsMap extends BaseLongKeyNonBucketMap<LockTableRowsMap.RowsMapValues> implements ILockTableRowsMap {
+final class LockTableRowsMap extends InheritableLongKeyNonBucketMap<LockTableRowsMap.RowsMapValues, LockTableRowsMap> implements ILockTableRowsMap {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_LOCK_TABLE_ROWS;
 
@@ -40,8 +43,8 @@ final class LockTableRowsMap extends BaseLongKeyNonBucketMap<LockTableRowsMap.Ro
         }
     }
 
-    LockTableRowsMap(int initialCapacityExponent) {
-        super(initialCapacityExponent, RowsMapValues::new);
+    LockTableRowsMap(AllocationType allocationType, int initialCapacityExponent) {
+        super(allocationType, initialCapacityExponent, RowsMapValues::new);
     }
 
     @Override
@@ -98,7 +101,7 @@ final class LockTableRowsMap extends BaseLongKeyNonBucketMap<LockTableRowsMap.Ro
 
         final long putResult = put(key);
 
-        final int index = IntPutResult.getPutIndex(putResult);
+        final int index = IntCapacityPutResult.getPutIndex(putResult);
 
         if (index != NO_INDEX) {
 
@@ -133,14 +136,39 @@ final class LockTableRowsMap extends BaseLongKeyNonBucketMap<LockTableRowsMap.Ro
     @Override
     public LockedRows getLockedRows() {
 
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(getNumElements());
+        final LockedRows result;
 
-        final long[] keysDst = new long[numElements];
-        final long[] valuesDst = new long[numElements];
+        final long numElements = getNumElements();
 
-        keysAndValues(keysDst, getValues(), valuesDst, (src, srcIndex, dst, dstIndex) -> dst[dstIndex] = src.locks[srcIndex]);
+        if (Array.isArrayCapacity(numElements)) {
 
-        return new IntLockedRows(keysDst, valuesDst);
+            final int intNumElements = IOnlyElementsView.intNumElementsRenamed(numElements);
+
+            final long[] keysDst = new long[intNumElements];
+            final long[] valuesDst = new long[intNumElements];
+
+            keysAndValues(keysDst, valuesDst, (srcIndex, kSrc, vSrc, dstIndex, kDst, vDst) -> {
+
+                kDst[dstIndex] = kSrc[srcIndex];
+                vDst[dstIndex] = vSrc.locks[srcIndex];
+            });
+
+            result = new IntCapacityLockedRows(keysDst, valuesDst);
+        }
+        else {
+            final IMutableLongLargeArray keysDst = IHeapMutableLongLargeArray.create(numElements);
+            final IMutableLongLargeArray valuesDst = IHeapMutableLongLargeArray.create(numElements);
+
+            keysAndValues(keysDst, valuesDst, (srcIndex, kSrc, vSrc, dstIndex, kDst, vDst) -> {
+
+                kDst.add(kSrc[srcIndex]);
+                vDst.add(vSrc.locks[srcIndex]);
+            });
+
+            result = new ObjectLockedRows(keysDst, valuesDst);
+        }
+
+        return result;
     }
 
     @Override
@@ -163,7 +191,27 @@ final class LockTableRowsMap extends BaseLongKeyNonBucketMap<LockTableRowsMap.Ro
     }
 
     @Override
-    protected void put(RowsMapValues values, int index, RowsMapValues newValues, int newIndex) {
+    protected <P, R> R makeFromElements(AllocationType allocationType, P parameter, IMakeFromElementsFunction<Void, LockTableRowsMap, P, R> makeFromElements) {
+
+        checkMakeFromElementsParameters(allocationType, parameter, makeFromElements);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void recreateElements() {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void resetToNull() {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void putValue(RowsMapValues values, int index, RowsMapValues newValues, int newIndex) {
 
         newValues.put(values, index, newIndex);
     }

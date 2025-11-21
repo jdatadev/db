@@ -2,20 +2,21 @@ package dev.jdata.db.schema.model.schemamaps;
 
 import java.util.function.IntFunction;
 
-import dev.jdata.db.schema.model.SchemaMap;
 import dev.jdata.db.schema.model.objects.SchemaObject;
+import dev.jdata.db.schema.model.schemamap.ISchemaMap;
 
-public abstract class SimpleCompleteSchemaMapsBuilder<
+abstract class SimpleCompleteSchemaMapsBuilder<
 
-                T extends SchemaMap<? extends SchemaObject, ?, ?>,
-                U extends CompleteSchemaMaps<T>,
-                V extends SimpleCompleteSchemaMapsBuilder<T, U, V>>
+                SCHEMA_OBJECT extends SchemaObject,
+                SCHEMA_MAP extends ISchemaMap<SCHEMA_OBJECT>,
+                COMPLETE_SCHEMA_MAPS extends ICompleteSchemaMaps,
+                HEAP_COMPLETE_SCHEMA_MAPS extends ICompleteSchemaMaps & IHeapSchemaMapsMarker,
+                COMPLETE_SCHEMA_MAPS_BUILDER extends ICompleteSchemaMapsBuilder<SCHEMA_OBJECT, COMPLETE_SCHEMA_MAPS, HEAP_COMPLETE_SCHEMA_MAPS, COMPLETE_SCHEMA_MAPS_BUILDER>>
 
-        extends BaseSimpleSchemaMapsBuilder<T, V> {
+        extends BaseSimpleSchemaMapsBuilder<SCHEMA_OBJECT, SCHEMA_MAP, COMPLETE_SCHEMA_MAPS, HEAP_COMPLETE_SCHEMA_MAPS, COMPLETE_SCHEMA_MAPS_BUILDER>
+        implements ICompleteSchemaMapsBuilder<SCHEMA_OBJECT, COMPLETE_SCHEMA_MAPS, HEAP_COMPLETE_SCHEMA_MAPS, COMPLETE_SCHEMA_MAPS_BUILDER> {
 
-    SimpleCompleteSchemaMapsBuilder(IntFunction<T[]> createSchemaMapsArray) {
-        super(createSchemaMapsArray);
+    SimpleCompleteSchemaMapsBuilder(AllocationType allocationType, IntFunction<SCHEMA_MAP[]> createSchemaMapsArray) {
+        super(allocationType, createSchemaMapsArray);
     }
-
-    public abstract U build();
 }

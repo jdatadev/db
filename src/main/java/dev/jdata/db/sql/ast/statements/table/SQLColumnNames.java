@@ -7,14 +7,18 @@ import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.BaseSQLElement;
-import dev.jdata.db.utils.adt.elements.ILongIterableElements;
-import dev.jdata.db.utils.adt.lists.LongIndexList;
+import dev.jdata.db.sql.ast.ISQLAllocator;
+import dev.jdata.db.sql.ast.ISQLFreeable;
+import dev.jdata.db.utils.adt.elements.ILongForEach;
+import dev.jdata.db.utils.adt.elements.ILongForEachWithResult;
+import dev.jdata.db.utils.adt.elements.ILongIterableOnlyElementsView;
+import dev.jdata.db.utils.adt.lists.ICachedLongIndexList;
 
-public final class SQLColumnNames extends BaseSQLElement implements ILongIterableElements {
+public final class SQLColumnNames extends BaseSQLElement implements ILongIterableOnlyElementsView, ISQLFreeable  {
 
-    private final LongIndexList names;
+    private final ICachedLongIndexList names;
 
-    public SQLColumnNames(Context context, LongIndexList names) {
+    public SQLColumnNames(Context context, ICachedLongIndexList names) {
         super(context);
 
         this.names = Objects.requireNonNull(names);
@@ -33,15 +37,33 @@ public final class SQLColumnNames extends BaseSQLElement implements ILongIterabl
     }
 
     @Override
-    public <P, E extends Exception> void forEach(P parameter, IForEach<P, E> forEach) throws E {
+    public long getNumIterableElements() {
+
+        return getNumElements();
+    }
+
+    @Override
+    public <P, E extends Exception> void forEach(P parameter, ILongForEach<P, E> forEach) throws E {
+
+        Objects.requireNonNull(forEach);
 
         names.forEach(parameter, forEach);
     }
 
     @Override
-    public <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<P1, P2, R, E> forEach) throws E {
+    public <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, ILongForEachWithResult<P1, P2, R, E> forEach) throws E {
+
+        Objects.requireNonNull(forEach);
 
         return names.forEachWithResult(defaultResult, parameter1, parameter2, forEach);
+    }
+
+    @Override
+    public void free(ISQLAllocator allocator) {
+
+        Objects.requireNonNull(allocator);
+
+        allocator.freeLongIndexList(names);
     }
 
     public long get(int index) {

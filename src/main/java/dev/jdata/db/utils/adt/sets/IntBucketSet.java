@@ -1,17 +1,12 @@
 package dev.jdata.db.utils.adt.sets;
 
-public final class IntBucketSet extends BaseIntBucketSet {
+abstract class IntBucketSet extends BaseIntBucketSet implements IIntSet {
 
-    public static IntBucketSet of(int ... values) {
-
-        return new IntBucketSet(values);
+    IntBucketSet(AllocationType allocationType, int[] values) {
+        super(allocationType, values);
     }
 
-    IntBucketSet(BaseIntBucketSet toCopy) {
-        super(toCopy);
-    }
-
-    private IntBucketSet(int[] values) {
-        super(values);
+    IntBucketSet(AllocationType allocationType, BaseIntBucketSet toCopy) {
+        super(allocationType, toCopy);
     }
 }

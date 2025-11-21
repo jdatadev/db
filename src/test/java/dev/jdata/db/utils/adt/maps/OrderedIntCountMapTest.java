@@ -13,7 +13,7 @@ public final class OrderedIntCountMapTest extends BaseTest {
     @Category(UnitTest.class)
     public void testAdd() {
 
-        final OrderedIntCountMap countMap = new OrderedIntCountMap(10);
+        final MutableOrderedIntCountMap countMap = new HeapMutableOrderedIntCountMap(10);
 
         assertThat(countMap).isEmpty();
 
@@ -52,7 +52,7 @@ public final class OrderedIntCountMapTest extends BaseTest {
     @Category(UnitTest.class)
     public void testIsEmpty() {
 
-        final OrderedIntCountMap countMap = new OrderedIntCountMap(10);
+        final MutableOrderedIntCountMap countMap = new HeapMutableOrderedIntCountMap(10);
 
         assertThat(countMap).isEmpty();
 
@@ -70,7 +70,7 @@ public final class OrderedIntCountMapTest extends BaseTest {
     @Category(UnitTest.class)
     public void testGetNumElements() {
 
-        final OrderedIntCountMap countMap = new OrderedIntCountMap(10);
+        final MutableOrderedIntCountMap countMap = new HeapMutableOrderedIntCountMap(10);
 
         assertThat(countMap).hasNumElements(0);
 
@@ -91,7 +91,7 @@ public final class OrderedIntCountMapTest extends BaseTest {
     @Category(UnitTest.class)
     public void testClear() {
 
-        final OrderedIntCountMap countMap = new OrderedIntCountMap(10);
+        final MutableOrderedIntCountMap countMap = new HeapMutableOrderedIntCountMap(10);
 
         countMap.add(1);
         countMap.add(4);

@@ -1,44 +1,21 @@
 package dev.jdata.db.utils.adt.arrays;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.debug.PrintDebug;
 
-public final class MutableIntArray extends BaseIntArray implements IMutableIntArray {
+abstract class MutableIntArray extends BaseIntArray implements IMutableIntArray {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_INT_ARRAY;
 
-    private static final Class<?> debugClass = MutableIntArray.class;
-
-    public static MutableIntArray copyOf(MutableIntArray toCopy) {
-
-        Objects.requireNonNull(toCopy);
-
-        if (DEBUG) {
-
-            PrintDebug.enter(debugClass, b -> b.add("toCopy", toCopy));
-        }
-
-        final MutableIntArray result = new MutableIntArray(toCopy);
-
-        if (DEBUG) {
-
-            PrintDebug.exit(debugClass, result);
-        }
-
-        return result;
-    }
-
     private final int clearValue;
 
-    public MutableIntArray(int initialCapacity) {
-        this(initialCapacity, 0, false);
+    MutableIntArray(AllocationType allocationType, int initialCapacity) {
+        this(allocationType, initialCapacity, 0, false);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacity", initialCapacity));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacity", initialCapacity));
         }
 
         if (DEBUG) {
@@ -47,12 +24,12 @@ public final class MutableIntArray extends BaseIntArray implements IMutableIntAr
         }
     }
 
-    public MutableIntArray(int initialCapacity, int clearValue) {
-        this(initialCapacity, clearValue, true);
+    MutableIntArray(AllocationType allocationType, int initialCapacity, int clearValue) {
+        this(allocationType, initialCapacity, clearValue, true);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacity", initialCapacity).add("clearValue", clearValue));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacity", initialCapacity).add("clearValue", clearValue));
         }
 
         if (DEBUG) {
@@ -61,8 +38,8 @@ public final class MutableIntArray extends BaseIntArray implements IMutableIntAr
         }
     }
 
-    private MutableIntArray(int initialCapacity, int clearValue, boolean hasClearValue) {
-        super(createArray(initialCapacity, clearValue, hasClearValue), 0, hasClearValue);
+    private MutableIntArray(AllocationType allocationType, int initialCapacity, int clearValue, boolean hasClearValue) {
+        super(allocationType, createArray(initialCapacity, clearValue, hasClearValue), 0, hasClearValue);
 
         this.clearValue = clearValue;
     }
@@ -79,20 +56,30 @@ public final class MutableIntArray extends BaseIntArray implements IMutableIntAr
         return array;
     }
 
-    private MutableIntArray(MutableIntArray toCopy) {
-        super(toCopy);
+    MutableIntArray(AllocationType allocationType, MutableIntArray toCopy) {
+        super(allocationType, toCopy);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy));
+        }
 
         this.clearValue = toCopy.clearValue;
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
-    public long getCapacity() {
+    public final long getCapacity() {
 
-        return elements.length;
+        return getElementsArray().length;
     }
 
     @Override
-    public void clear() {
+    public final void clear() {
 
         if (DEBUG) {
 
@@ -103,7 +90,7 @@ public final class MutableIntArray extends BaseIntArray implements IMutableIntAr
 
         if (hasClearValue()) {
 
-            Arrays.fill(elements, clearValue);
+            Arrays.fill(getElementsArray(), clearValue);
         }
 
         if (DEBUG) {
@@ -113,7 +100,7 @@ public final class MutableIntArray extends BaseIntArray implements IMutableIntAr
     }
 
     @Override
-    public void add(int value) {
+    public final void add(int value) {
 
         if (DEBUG) {
 
@@ -122,7 +109,7 @@ public final class MutableIntArray extends BaseIntArray implements IMutableIntAr
 
         final int index = ensureAddIndex();
 
-        elements[index] = value;
+        getElementsArray()[index] = value;
 
         if (DEBUG) {
 
@@ -131,7 +118,7 @@ public final class MutableIntArray extends BaseIntArray implements IMutableIntAr
     }
 
     @Override
-    public void set(long index, int value) {
+    public final void set(long index, int value) {
 
         if (DEBUG) {
 
@@ -140,7 +127,7 @@ public final class MutableIntArray extends BaseIntArray implements IMutableIntAr
 
         final int intIndex = ensureIndex(index);
 
-        elements[intIndex] = value;
+        getElementsArray()[intIndex] = value;
 
         if (DEBUG) {
 
@@ -149,15 +136,18 @@ public final class MutableIntArray extends BaseIntArray implements IMutableIntAr
     }
 
     @Override
-    int[] reallocate(int[] elements, int newCapacity) {
+    final int[] reallocate(int[] elementsArray, int newCapacity) {
 
-        final int[] array = Arrays.copyOf(elements, newCapacity);
+        checkReallocateParameters(elementsArray, elementsArray.length, newCapacity);
 
-        if (hasClearValue()) {
+        return Arrays.copyOf(elementsArray, newCapacity);
+    }
 
-            Arrays.fill(array, elements.length, array.length, clearValue);
-        }
+    @Override
+    final void clearElementsArray(int[] elementsArray, int startIndex, int numElements) {
 
-        return array;
+        checkClearElementsArrayParameters(elementsArray, elementsArray.length, startIndex, numElements);
+
+        Arrays.fill(elementsArray, startIndex, startIndex + numElements, clearValue);
     }
 }
