@@ -7,9 +7,9 @@ import dev.jdata.db.schema.allocators.model.SchemaMapBuilderAllocator;
 import dev.jdata.db.schema.model.cache.CachedSchemaMap;
 import dev.jdata.db.schema.model.cache.CachedSchemaMapBuilder;
 import dev.jdata.db.schema.model.objects.SchemaObject;
+import dev.jdata.db.utils.adt.lists.CacheIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.CachedIndexList;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
+import dev.jdata.db.utils.adt.lists.CachedIndexListBuilder;
 import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 
@@ -46,7 +46,7 @@ public final class CacheSchemaMapBuilderAllocator<T extends SchemaObject>
     }
 
     @Override
-    public CachedSchemaMapBuilder<T> allocateSchemaMapBuilder(int minimumCapacity) {
+    public CachedSchemaMapBuilder<T> createBuilder(int minimumCapacity) {
 
         final CachedSchemaMapBuilder<T> result = objectCache.allocate();
 
@@ -56,7 +56,7 @@ public final class CacheSchemaMapBuilderAllocator<T extends SchemaObject>
     }
 
     @Override
-    public void freeSchemaMapBuilder(CachedSchemaMapBuilder<T> builder) {
+    public void freeBuilder(CachedSchemaMapBuilder<T> builder) {
 
         Objects.requireNonNull(builder);
 

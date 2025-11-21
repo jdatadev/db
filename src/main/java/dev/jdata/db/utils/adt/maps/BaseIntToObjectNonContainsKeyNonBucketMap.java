@@ -6,13 +6,13 @@ import java.util.function.IntFunction;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
-import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
+import dev.jdata.db.utils.adt.hashed.helpers.IntCapacityPutResult;
 
-abstract class BaseIntToObjectNonContainsKeyNonBucketMap<T> extends BaseIntToObjectNonBucketMap<T, IIntToObjectStaticMapCommon<T>> implements IIntToObjectStaticMapCommon<T> {
+abstract class BaseIntToObjectNonContainsKeyNonBucketMap<V> extends BaseIntToObjectNonBucketMap<V> implements IIntToObjectBaseStaticMapCommon<V> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_TO_OBJECT_NON_CONTAINS_NON_BUCKET_MAP;
 
-    BaseIntToObjectNonContainsKeyNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createValuesArray) {
+    BaseIntToObjectNonContainsKeyNonBucketMap(int initialCapacityExponent, IntFunction<V[]> createValuesArray) {
         super(initialCapacityExponent, createValuesArray);
 
         if (DEBUG) {
@@ -26,7 +26,7 @@ abstract class BaseIntToObjectNonContainsKeyNonBucketMap<T> extends BaseIntToObj
         }
     }
 
-    BaseIntToObjectNonContainsKeyNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createValuesArray) {
+    BaseIntToObjectNonContainsKeyNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<V[]> createValuesArray) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
 
         if (DEBUG) {
@@ -41,7 +41,7 @@ abstract class BaseIntToObjectNonContainsKeyNonBucketMap<T> extends BaseIntToObj
         }
     }
 
-    BaseIntToObjectNonContainsKeyNonBucketMap(BaseIntToObjectNonContainsKeyNonBucketMap<T> toCopy) {
+    BaseIntToObjectNonContainsKeyNonBucketMap(BaseIntToObjectNonContainsKeyNonBucketMap<V> toCopy) {
         super(toCopy);
 
         if (DEBUG) {
@@ -56,7 +56,7 @@ abstract class BaseIntToObjectNonContainsKeyNonBucketMap<T> extends BaseIntToObj
     }
 
     @Override
-    public final T get(int key) {
+    public final V get(int key) {
 
         IntNonBucket.checkIsHashArrayElement(key);
 
@@ -65,7 +65,7 @@ abstract class BaseIntToObjectNonContainsKeyNonBucketMap<T> extends BaseIntToObj
             enter(b -> b.add("key", key));
         }
 
-        final T result;
+        final V result;
 
         final int index = HashArray.getIndexScanEntireHashArray(getHashed(), key, getKeyMask());
 
@@ -103,7 +103,7 @@ abstract class BaseIntToObjectNonContainsKeyNonBucketMap<T> extends BaseIntToObj
         return result;
     }
 
-    final T putValue(int key, T value, T defaultPreviousValue) {
+    final V putValue(int key, V value, V defaultPreviousValue) {
 
         IntNonBucket.checkIsHashArrayElement(key);
 
@@ -114,10 +114,10 @@ abstract class BaseIntToObjectNonContainsKeyNonBucketMap<T> extends BaseIntToObj
 
         final long putResult = put(key);
 
-        final T[] values = getValues();
-        final int index = IntPutResult.getPutIndex(putResult);
+        final V[] values = getValues();
+        final int index = IntCapacityPutResult.getPutIndex(putResult);
 
-        final T result = IntPutResult.getPutNewAdded(putResult) ? defaultPreviousValue : values[index];
+        final V result = IntCapacityPutResult.getPutNewAdded(putResult) ? defaultPreviousValue : values[index];
 
         values[index] = value;
 
@@ -130,7 +130,8 @@ abstract class BaseIntToObjectNonContainsKeyNonBucketMap<T> extends BaseIntToObj
     }
 
     @Override
-    public final <P1, P2> boolean equals(P1 thisParameter, IIntToObjectStaticMapCommon<T> other, P2 otherParameter, IObjectValueMapEqualityTester<T, P1, P2> equalityTester) {
+    public final <P1, P2, E extends Exception> boolean equals(P1 thisParameter, IIntToObjectBaseStaticMapView<V> other, P2 otherParameter,
+            IObjectValueMapEqualityTester<V, P1, P2, E> equalityTester) throws E {
 
         Objects.requireNonNull(other);
         Objects.requireNonNull(equalityTester);
@@ -145,12 +146,12 @@ abstract class BaseIntToObjectNonContainsKeyNonBucketMap<T> extends BaseIntToObj
         if (other instanceof BaseIntToObjectNonBucketMap) {
 
             @SuppressWarnings("unchecked")
-            final BaseIntToObjectNonBucketMap<T, IIntToObjectStaticMapCommon<T>> otherMap = (BaseIntToObjectNonBucketMap<T, IIntToObjectStaticMapCommon<T>>)other;
+            final BaseIntToObjectNonBucketMap<V> otherMap = (BaseIntToObjectNonBucketMap<V>)other;
 
             result = equalsIntToObjectNonBucketMap(thisParameter, otherMap, otherParameter, equalityTester);
         }
         else {
-            result = IIntToObjectStaticMapCommon.super.equals(thisParameter, other, otherParameter, equalityTester);
+            result = IIntToObjectBaseStaticMapCommon.super.equals(thisParameter, other, otherParameter, equalityTester);
         }
 
         if (DEBUG) {
@@ -162,7 +163,8 @@ abstract class BaseIntToObjectNonContainsKeyNonBucketMap<T> extends BaseIntToObj
     }
 
     @Override
-    public final <P1, P2> boolean equalsParameters(ObjectValueMapScratchEqualsParameter<T, IIntToObjectStaticMapCommon<T>, P1, P2> scratchEqualsParameter) {
+    public final <P1, P2, E extends Exception> boolean equalsParameters(
+            ObjectValueMapScratchEqualsParameter<V, IIntToObjectBaseStaticMapView<V>, P1, P2, E> scratchEqualsParameter) throws E {
 
         Objects.requireNonNull(scratchEqualsParameter);
 
@@ -173,18 +175,18 @@ abstract class BaseIntToObjectNonContainsKeyNonBucketMap<T> extends BaseIntToObj
 
         final boolean result;
 
-        final IIntToObjectStaticMapCommon<T> other = scratchEqualsParameter.getOther();
+        final IIntToObjectBaseStaticMapView<V> other = scratchEqualsParameter.getOther();
 
         if (other instanceof BaseIntToObjectNonBucketMap) {
 
             @SuppressWarnings("unchecked")
-            final BaseIntToObjectNonBucketMap<T, IIntToObjectStaticMapCommon<T>> otherMap = (BaseIntToObjectNonBucketMap<T, IIntToObjectStaticMapCommon<T>>)other;
+            final BaseIntToObjectNonBucketMap<V> otherMap = (BaseIntToObjectNonBucketMap<V>)other;
 
             result = equalsIntToObjectNonBucketMap(scratchEqualsParameter.getThisParameter(), otherMap, scratchEqualsParameter.getOtherParameter(),
                     scratchEqualsParameter.getEqualityTester());
         }
         else {
-            result = IIntToObjectStaticMapCommon.super.equalsParameters(scratchEqualsParameter);
+            result = IIntToObjectBaseStaticMapCommon.super.equalsParameters(scratchEqualsParameter);
         }
 
         if (DEBUG) {

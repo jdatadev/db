@@ -3,12 +3,14 @@ package dev.jdata.db.utils.adt.lists;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
+import dev.jdata.db.utils.adt.elements.IElementsView;
+import dev.jdata.db.utils.allocators.BaseAllocatableArrayAllocator;
 import dev.jdata.db.utils.allocators.IAllocators;
 import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer.RefType;
 
-public final class CachedMutableIndexList<T> extends MutableIndexList<T> implements ICachedMutableIndexList<T> {
+public final class CachedMutableIndexList<T> extends MutableObjectIndexList<T> implements ICachedMutableIndexList<T> {
 
-    public static final class CacheMutableIndexListAllocator<T> extends MutableIndexListAllocator<T, CachedMutableIndexList<T>> implements IAllocators {
+    public static final class CacheMutableIndexListAllocator<T> extends MutableObjectIndexListAllocator<T, CachedMutableIndexList<T>> implements IAllocators {
 
         private static final AllocationType ALLOCATION_TYPE = AllocationType.CACHING_ALLOCATOR;
 
@@ -26,7 +28,7 @@ public final class CachedMutableIndexList<T> extends MutableIndexList<T> impleme
 
             Objects.requireNonNull(statisticsGatherer);
 
-            statisticsGatherer.addInstanceAllocator("mutableIndexListArrayAllocator", RefType.INSTANTIATED, MutableIndexList.class, mutableIndexListArrayAllocator);
+            statisticsGatherer.addInstanceAllocator("mutableIndexListArrayAllocator", RefType.INSTANTIATED, MutableObjectIndexList.class, mutableIndexListArrayAllocator);
         }
 
         @Override
@@ -39,6 +41,23 @@ public final class CachedMutableIndexList<T> extends MutableIndexList<T> impleme
         public void freeMutableIndexList(CachedMutableIndexList<T> list) {
 
             mutableIndexListArrayAllocator.freeMutableIndexList(list);
+        }
+    }
+
+    private static final class MutableIndexListArrayAllocator<T, U extends MutableObjectIndexList<T>> extends BaseAllocatableArrayAllocator<U> {
+
+        MutableIndexListArrayAllocator(AllocationType allocationType, IntFunction<U> createList) {
+            super(createList, l -> IElementsView.intNumElements(l.getNumElements()));
+        }
+
+        U allocateMutableIndexList(int minimumCapacity) {
+
+            return allocateAllocatableArrayInstance(minimumCapacity);
+        }
+
+        void freeMutableIndexList(U list) {
+
+            freeAllocatableArrayInstance(list);
         }
     }
 

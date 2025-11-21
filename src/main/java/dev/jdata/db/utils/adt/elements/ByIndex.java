@@ -6,16 +6,10 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import dev.jdata.db.utils.adt.elements.IElements.IElementEqualityTester;
 import dev.jdata.db.utils.adt.strings.StringBuilders;
 import dev.jdata.db.utils.checks.Checks;
 
 public class ByIndex {
-
-    @FunctionalInterface
-    public interface IByIndexElementEqualityTester<T, P1, P2> extends IElementEqualityTester<T, P1, P2> {
-
-    }
 
     @FunctionalInterface
     public interface IByIndexGetter<T, U> {
@@ -104,7 +98,7 @@ public class ByIndex {
 
                 if (foundIndex != -1L) {
 
-                    throw new IllegalStateException();
+                    throw ElementsExceptions.moreThanOneFoundException();
                 }
 
                 foundIndex = i;
@@ -134,13 +128,13 @@ public class ByIndex {
     }
 
     @FunctionalInterface
-    public interface IByIndexEqualityTester<T, P1, P2, DELEGATE> {
+    public interface IByIndexEqualityTester<T, P1, P2, DELEGATE, E extends Exception> {
 
-        boolean equals(T byIndex1, long startIndex1, P1 parameter1, T byIndex2, long startIndex2, P2 parameter2, DELEGATE delegate);
+        boolean equals(T byIndex1, long startIndex1, P1 parameter1, T byIndex2, long startIndex2, P2 parameter2, DELEGATE delegate) throws E;
     }
 
-    public static <T, P1, P2, DELEGATE> boolean equals(T byIndex1, long startIndex1, P1 parameter1, T byIndex2, long startIndex2, P2 parameter2, long numElements,
-            DELEGATE delegate, IByIndexEqualityTester<T, P1, P2, DELEGATE> equalityTester) {
+    public static <T, P1, P2, DELEGATE, E extends Exception> boolean equals(T byIndex1, long startIndex1, P1 parameter1, T byIndex2, long startIndex2, P2 parameter2,
+            long numElements, DELEGATE delegate, IByIndexEqualityTester<T, P1, P2, DELEGATE, E> equalityTester) throws E {
 
         Objects.requireNonNull(byIndex1);
         Objects.requireNonNull(byIndex2);
@@ -204,8 +198,8 @@ public class ByIndex {
     public static <T> void closureOrConstantToString(T byIndex, int startIndex, int numElements, StringBuilder sb, BiConsumer<T, StringBuilder> prefixAdder,
             ByIndexStringAdderPredicate<T> byIndexStringAdderPredicate, ByIndexStringAdder<T> byIndexStringAdder) {
 
-        closureOrConstantToString(byIndex, (long)startIndex, (long)numElements, sb, prefixAdder, (a, i) -> byIndexStringAdderPredicate.test(a, (int)i),
-                (a, i, b) -> byIndexStringAdder.addString(a, (int)i, b));
+        closureOrConstantToString(byIndex, (long)startIndex, (long)numElements, sb, prefixAdder,
+                byIndexStringAdderPredicate != null ? (a, i) -> byIndexStringAdderPredicate.test(a, (int)i) : null, (a, i, b) -> byIndexStringAdder.addString(a, (int)i, b));
     }
 
     public static <T> String closureOrConstantLargeToString(T byIndex, long startIndex, long numElements, BiConsumer<T, StringBuilder> prefixAdder,

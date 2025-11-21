@@ -3,7 +3,7 @@ package dev.jdata.db.ddl.allocators;
 import dev.jdata.db.ddl.scratchobjects.ProcessAlterTableScratchObject;
 import dev.jdata.db.ddl.scratchobjects.ProcessCreateTableScratchObject;
 import dev.jdata.db.schema.model.objects.Column;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.CacheIndexListAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 
 public class DDLSchemaScratchObjects {

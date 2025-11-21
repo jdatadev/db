@@ -6,8 +6,9 @@ import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
 import dev.jdata.db.schema.model.schemamaps.HeapCompleteSchemaMapsBuilder;
 import dev.jdata.db.utils.adt.lists.HeapIndexList;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
+import dev.jdata.db.utils.adt.lists.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.HeapIndexListBuilder;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 
 public final class HeapDDLSchemaSQLStatementsWorkerObjects extends DDLSchemaSQLStatementsWorkerObjects<
 
@@ -23,6 +24,6 @@ public final class HeapDDLSchemaSQLStatementsWorkerObjects extends DDLSchemaSQLS
     @Override
     HeapCompleteSchemaMapsBuilder createCompleteSchemaMapsBuilder() {
 
-        return new HeapCompleteSchemaMapsBuilder();
+        return new HeapCompleteSchemaMapsBuilder(AllocationType.HEAP);
     }
 }

@@ -14,9 +14,8 @@ import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.sql.ast.statements.table.SQLCreateTableStatement;
 import dev.jdata.db.sql.ast.statements.table.SQLTableColumnDefinition;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
-import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.lists.CacheIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.CachedIndexListBuilder;
 import dev.jdata.db.utils.debug.PrintDebug;
 
 public class DDLCreateTableSchemasHelper extends DDLTableSchemasHelper {
@@ -46,7 +45,7 @@ public class DDLCreateTableSchemasHelper extends DDLTableSchemasHelper {
 
         final CacheIndexListAllocator<Column> columnIndexListAllocator = ddlSchemaScratchObjects.getColumnIndexListAllocator();
 
-        final CachedIndexListBuilder<Column> columnsBuilder = IndexList.createBuilder(sqlCreateTableStatement.getColumns().size(), columnIndexListAllocator);
+        final CachedIndexListBuilder<Column> columnsBuilder = columnIndexListAllocator.createBuilder(sqlCreateTableStatement.getColumns().size());
 
         final ProcessCreateTableScratchObject processCreateTableScratchObject = ddlSchemaScratchObjects.allocateProcessCreateTableScratchObject();
 

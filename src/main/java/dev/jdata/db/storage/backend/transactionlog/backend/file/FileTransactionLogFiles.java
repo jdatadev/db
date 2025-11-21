@@ -5,10 +5,9 @@ import java.util.Arrays;
 
 import dev.jdata.db.storage.backend.file.BaseStorageFiles;
 import dev.jdata.db.utils.adt.hashed.HashedConstants;
-import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IMutableIndexList;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
+import dev.jdata.db.utils.adt.lists.IBaseIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.adt.maps.MutableLongToObjectWithRemoveNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
@@ -28,7 +27,7 @@ public final class FileTransactionLogFiles extends BaseStorageFiles<SequentialFi
     private final MutableLongToObjectWithRemoveNonBucketMap<FileTransactionLogFile> fileByLongToObjectMap;
 
     public FileTransactionLogFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath directoryPath, IIndexList<FileTransactionLogFile> files,
-            IndexListAllocator<FileTransactionLogFile, ? extends IndexList<FileTransactionLogFile>, ?, ? extends IMutableIndexList<FileTransactionLogFile>> indexListAllocator) {
+            IIndexListAllocator<FileTransactionLogFile, ? extends IndexList<FileTransactionLogFile>, ?> indexListAllocator) {
         super(fileSystemAccess, directoryPath, files, indexListAllocator);
 
         this.fileByLongToObjectMap = new MutableLongToObjectWithRemoveNonBucketMap<>(10, 1, HashedConstants.DEFAULT_LOAD_FACTOR, FileTransactionLogFile[]::new);

@@ -8,9 +8,9 @@ import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.schema.model.schemamaps.CompleteSchemaMapsBuilder;
 import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
+import dev.jdata.db.utils.adt.lists.CacheIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.CachedIndexList;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
+import dev.jdata.db.utils.adt.lists.CachedIndexListBuilder;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 
 @Deprecated // currently not in use
@@ -26,8 +26,8 @@ final class CacheCompleteSchemaMapsBuilder extends CompleteSchemaMapsBuilder<
 
     private final NodeObjectCache<CachedAllCompleteSchemaMaps> completeSchemaMapsCache;
 
-    CacheCompleteSchemaMapsBuilder() {
-        super(CachedSchemaMapBuilder[]::new);
+    CacheCompleteSchemaMapsBuilder(AllocationType allocationType) {
+        super(allocationType, CachedSchemaMapBuilder[]::new);
 
         this.completeSchemaMapsCache = new NodeObjectCache<>(CachedAllCompleteSchemaMaps::new);
     }

@@ -6,7 +6,7 @@ import java.util.function.IntFunction;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 
-public final class MutableObjectWithRemoveNonBucketMap<K, V> extends BaseObjectWithRemoveNonBucketMap<K, V> implements IMutableObjectStaticMap<K, V> {
+public final class MutableObjectWithRemoveNonBucketMap<K, V> extends BaseObjectWithRemoveNonBucketMap<K, V> implements IMutableStaticMap<K, V> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_OBJECT_WITH_REMOVE_NON_BUCKET_MAP;
 
@@ -38,6 +38,12 @@ public final class MutableObjectWithRemoveNonBucketMap<K, V> extends BaseObjectW
 
             exit();
         }
+    }
+
+    @Override
+    public long getCapacity() {
+
+        return getHashedCapacity();
     }
 
     @Override

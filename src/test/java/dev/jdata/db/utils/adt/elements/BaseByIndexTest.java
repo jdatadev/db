@@ -396,14 +396,14 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
         boolean areEqual(T element, int integer);
     }
 
-    protected static <T, U, E> void checkCopyElements(Function<int[], T> create, Function<T, U> copy, ElementGetter<U, E> elementGetter,
-            NumElementsGetter<U> numElementsGetter) {
+    protected static <SRC, DST, SRC_ELEMENT, DST_ELEMENT> void checkCopyElements(Function<int[], SRC> create, Function<SRC, DST> copy,
+            ElementGetter<DST, DST_ELEMENT> dstElementGetter, NumElementsGetter<DST> numElementsGetter) {
 
-        checkCopyOfElementsByIndex(create, copy, elementGetter, numElementsGetter, (e, i) -> e.equals(i));
+        checkCopyOfElementsByIndex(create, copy, dstElementGetter, numElementsGetter, (e, i) -> e.equals(i));
     }
 
-    protected static <T, U, E> void checkCopyOfElementsByIndex(Function<int[], T> create, Function<T, U> copy, ElementGetter<U, E> elementGetter,
-            NumElementsGetter<U> numElementsGetter, ElementComparator<E> elementComparator) {
+    protected static <SRC, DST, DST_ELEMENT> void checkCopyOfElementsByIndex(Function<int[], SRC> create, Function<SRC, DST> copy, ElementGetter<DST, DST_ELEMENT> elementGetter,
+            NumElementsGetter<DST> numElementsGetter, ElementComparator<DST_ELEMENT> elementComparator) {
 
         Objects.requireNonNull(create);
         Objects.requireNonNull(copy);
@@ -413,8 +413,8 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
         checkCopyOfElementsByIndexNonNull(create, copy, elementGetter, numElementsGetter, elementComparator);
     }
 
-    protected static <T, U, E> void checkSafeCopyOfElementsByIndex(Function<int[], T> create, Function<T, U> copy, ElementGetter<U, E> elementGetter,
-            NumElementsGetter<U> numElementsGetter, ElementComparator<E> elementComparator) {
+    protected static <SRC, DST, DST_ELEMENT> void checkSafeCopyOfElementsByIndex(Function<int[], SRC> create, Function<SRC, DST> copy,
+            ElementGetter<DST, DST_ELEMENT> elementGetter, NumElementsGetter<DST> numElementsGetter, ElementComparator<DST_ELEMENT> elementComparator) {
 
         Objects.requireNonNull(create);
         Objects.requireNonNull(copy);
@@ -424,8 +424,8 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
         checkCopyOfElementsByIndexNonNull(create, copy, elementGetter, numElementsGetter, elementComparator);
     }
 
-    private static <T, U, E> void checkCopyOfElementsByIndexNonNull(Function<int[], T> create, Function<T, U> copy, ElementGetter<U, E> elementGetter,
-            NumElementsGetter<U> numElementsGetter, ElementComparator<E> elementComparator) {
+    private static <SRC, DST, DST_ELEMENT> void checkCopyOfElementsByIndexNonNull(Function<int[], SRC> create, Function<SRC, DST> copy,
+            ElementGetter<DST, DST_ELEMENT> elementGetter, NumElementsGetter<DST> numElementsGetter, ElementComparator<DST_ELEMENT> elementComparator) {
 
         checkCopyIntElements(create, copy, elementGetter, numElementsGetter, elementComparator);
         checkCopyIntElements(create, copy, elementGetter, numElementsGetter, elementComparator, 12);
@@ -433,22 +433,22 @@ public abstract class BaseByIndexTest extends BaseElementsTest {
         checkCopyIntElements(create, copy, elementGetter, numElementsGetter, elementComparator, 12, 23, 34);
     }
 
-    private static <T, U, E> void checkCopyIntElements(Function<int[], T> create, Function<T, U> copy, ElementGetter<U, E> elementGetter,
-            NumElementsGetter<U> numElementsGetter, ElementComparator<E> elementComparator, int ... elements) {
+    private static <SRC, DST, DST_ELEMENT> void checkCopyIntElements(Function<int[], SRC> create, Function<SRC, DST> copyElements, ElementGetter<DST, DST_ELEMENT> elementGetter,
+            NumElementsGetter<DST> numElementsGetter, ElementComparator<DST_ELEMENT> elementComparator, int ... elements) {
 
-        final T byIndex = create.apply(elements);
+        final SRC byIndex = create.apply(elements);
 
-        final U c = copy.apply(byIndex);
+        final DST copied = copyElements.apply(byIndex);
 
-        assertThat(c).isNotSameAs(byIndex);
+        assertThat(copied).isNotSameAs(byIndex);
 
         final int numElements = elements.length;
 
-        assertThat(numElementsGetter.getNumElements(c)).isEqualTo(numElements);
+        assertThat(numElementsGetter.getNumElements(copied)).isEqualTo(numElements);
 
         for (int i = 0; i < numElements; ++ i) {
 
-            assertThat(elementComparator.areEqual(elementGetter.getElement(c, i), elements[i])).isTrue();
+            assertThat(elementComparator.areEqual(elementGetter.getElement(copied, i), elements[i])).isTrue();
         }
     }
 

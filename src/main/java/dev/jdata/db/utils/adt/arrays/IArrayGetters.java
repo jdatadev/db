@@ -1,7 +1,20 @@
 package dev.jdata.db.utils.adt.arrays;
 
-import dev.jdata.db.utils.adt.IGetters;
+interface IArrayGetters extends IArrayGettersMarker {
 
-public interface IArrayGetters extends IGetters {
+    boolean hasClearValue();
 
+//    void toString(StringBuilder sb, ObjLongConsumer<StringBuilder> appender);
+
+    void toString(StringBuilder sb);
+    void toHexString(StringBuilder sb);
+
+    default String toHexString() {
+
+        final StringBuilder sb = new StringBuilder();
+
+        toHexString(sb);
+
+        return sb.toString();
+    }
 }

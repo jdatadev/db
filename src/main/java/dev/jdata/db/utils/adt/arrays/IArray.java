@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.arrays;
 
-public interface IArray extends IArrayCommon {
+import dev.jdata.db.utils.adt.contains.IContains;
+
+public interface IArray extends IContains, IArrayCommon {
 
 }

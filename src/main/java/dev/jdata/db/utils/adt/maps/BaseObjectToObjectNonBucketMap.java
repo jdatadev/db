@@ -5,13 +5,10 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.elements.IObjectAnyOrderAddable;
 import dev.jdata.db.utils.adt.maps.Maps.IObjectForEachAppend;
-import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseObjectToObjectNonBucketMap<K, V, M extends IBaseObjectToObjectMapCommon<K, V, M>>
-
-        extends BaseObjectKeyNonBucketMap<K, V[]>
-        implements IBaseObjectToObjectMapCommon<K, V, M> {
+abstract class BaseObjectToObjectNonBucketMap<K, V> extends BaseObjectKeyNonBucketMap<K, V[]> implements IObjectToObjectMapCommon<K, V> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_OBJECT_TO_OBJECT_NON_BUCKET_MAP;
 
@@ -35,12 +32,12 @@ abstract class BaseObjectToObjectNonBucketMap<K, V, M extends IBaseObjectToObjec
         }
     }
 
-    BaseObjectToObjectNonBucketMap(BaseObjectToObjectNonBucketMap<K, V, M> toCopy) {
+    BaseObjectToObjectNonBucketMap(BaseObjectToObjectNonBucketMap<K, V> toCopy) {
         super(toCopy, (a1, a2) -> System.arraycopy(a1, 0, a2, 0, a1.length));
     }
 
     @Override
-    public final <P> void forEachValue(P parameter, IForEachValue<V, P> forEach) {
+    public final <P, E extends Exception> void forEachValue(P parameter, IObjectForEachMapValue<V, P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -58,7 +55,7 @@ abstract class BaseObjectToObjectNonBucketMap<K, V, M extends IBaseObjectToObjec
     }
 
     @Override
-    public final <P> void forEachKeyAndValue(P parameter, IForEachKeyAndValue<K, V, P> forEach) {
+    public final <P, E extends Exception> void forEachKeyAndValue(P parameter, IObjectToObjectForEachMapKeyAndValue<K, V, P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -76,35 +73,50 @@ abstract class BaseObjectToObjectNonBucketMap<K, V, M extends IBaseObjectToObjec
     }
 
     @Override
-    public final <P, DELEGATE, R> R forEachKeyAndValueWithResult(R defaultResult, P parameter, DELEGATE delegate, IForEachKeyAndValueWithResult<K, V, P, DELEGATE, R> forEach) {
+    public final <P1, P2, R, E extends Exception> R forEachKeyAndValueWithResult(R defaultResult, P1 parameter1, P2 parameter2,
+            IObjectToObjectForEachMapKeyAndValueWithResult<K, V, P1, P2, R, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
         if (DEBUG) {
 
-            enter(b -> b.add("defaultResult", defaultResult).add("parameter", parameter).add("delegate", delegate).add("forEach", forEach));
+            enter(b -> b.add("defaultResult", defaultResult).add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
         }
 
-        final R result = forEachKeyAndValueWithResultWithResult(defaultResult, parameter, delegate, forEach,
+        final R result = forEachKeyAndValueWithResult(defaultResult, parameter1, parameter2, forEach,
                 (keys, keyIndex, values, valueIndex, p1, p2, f) -> f.each(keys[keyIndex], values[valueIndex], p1, p2));
 
         if (DEBUG) {
 
-            exit(result, b -> b.add("defaultResult", defaultResult).add("parameter", parameter).add("delegate", delegate).add("forEach", forEach));
+            exit(result, b -> b.add("defaultResult", defaultResult).add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
         }
 
         return result;
     }
 
     @Override
-    public final void keysAndValues(K[] keysDst, V[] valuesDst) {
+    public final long keysAndValues(IObjectAnyOrderAddable<K> keysDst, IObjectAnyOrderAddable<V> valuesDst) {
 
-        final long numElements = getNumElements();
+        Objects.requireNonNull(keysDst);
+        Objects.requireNonNull(valuesDst);
 
-        Checks.areEqual(keysDst.length, numElements);
-        Checks.areEqual(valuesDst.length, numElements);
+        if (DEBUG) {
 
-        keysAndValues(keysDst, getValues(), valuesDst, (src, srcIndex, dst, dstIndex) -> dst[dstIndex] = src[srcIndex]);
+            enter(b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst));
+        }
+
+        final long result = keysAndValues(keysDst, valuesDst, (index, kSrc, kDst, vSrc, vDst) -> {
+
+            kDst.addInAnyOrder(kSrc[index]);
+            vDst.addInAnyOrder(vSrc[index]);
+        });
+
+        if (DEBUG) {
+
+            exit(result, b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst));
+        }
+
+        return result;
     }
 
     @Override
@@ -134,8 +146,8 @@ abstract class BaseObjectToObjectNonBucketMap<K, V, M extends IBaseObjectToObjec
         }
     }
 
-    final <P1, P2, DELEGATE> boolean equalsObjectToObjectNonBucketMap(P1 parameter1, BaseObjectToObjectNonBucketMap<K, V, M> other, P2 parameter2,
-            IObjectValueMapEqualityTester<V, P1, P2> equalityTester) {
+    final <P1, P2, DELEGATE, E extends Exception> boolean equalsObjectToObjectNonBucketMap(P1 parameter1, BaseObjectToObjectNonBucketMap<K, V> other, P2 parameter2,
+            IObjectValueMapEqualityTester<V, P1, P2, E> equalityTester) throws E {
 
         if (DEBUG) {
 
@@ -172,7 +184,7 @@ abstract class BaseObjectToObjectNonBucketMap<K, V, M extends IBaseObjectToObjec
         }
         else {
             @SuppressWarnings("unchecked")
-            final BaseObjectMaxDistanceNonBucketMap<K, V> other = (BaseObjectMaxDistanceNonBucketMap<K, V>)object;
+            final BaseObjectToObjectMaxDistanceNonBucketMap<K, V> other = (BaseObjectToObjectMaxDistanceNonBucketMap<K, V>)object;
 
             result = equalsObjectKeyNonBucketMapWithIndex(other, null, null, null, (v1, i1, p1, v2, i2, p2, d) -> Objects.equals(v1[i1], v2[i2]));
         }
@@ -184,7 +196,7 @@ abstract class BaseObjectToObjectNonBucketMap<K, V, M extends IBaseObjectToObjec
     public final String toString() {
 
         return Maps.objectToObjectMapToString(getClass().getSimpleName(), getNumElements(), this,
-                (StringBuilder b, BaseObjectToObjectNonBucketMap<K, V, M> i, IObjectForEachAppend<K, V, BaseObjectToObjectNonBucketMap<K, V, M>> f)
+                (StringBuilder b, BaseObjectToObjectNonBucketMap<K, V> i, IObjectForEachAppend<K, V, BaseObjectToObjectNonBucketMap<K, V>> f)
                         -> i.forEachKeyAndValue(b, (k, v, forEachStringBuilder) -> f.each(k, v, b, i)));
     }
 }

@@ -6,6 +6,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.Capacity;
 import dev.jdata.db.utils.adt.CapacityExponents;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
@@ -19,6 +20,9 @@ abstract class BaseCapacityHashed<T> extends BaseHashed<T> {
     private static final boolean ASSERT = AssertionContants.ASSERT_BASE_CAPACITY_HASHED;
 
     protected static final float DEFAULT_LOAD_FACTOR = HashedConstants.DEFAULT_LOAD_FACTOR;
+    protected static final int DEFAULT_INITIAL_CAPACITY_EXPONENT = HashedConstants.DEFAULT_INITIAL_CAPACITY_EXPONENT;
+    protected static final int DEFAULT_CAPACITY_EXPONENT_INCREASE = HashedConstants.DEFAULT_CAPACITY_EXPONENT_INCREASE;
+    protected static final int DEFAULT_INNER_CAPACITY_EXPONENT = HashedConstants.DEFAULT_INNER_CAPACITY_EXPONENT;
 
     private static final int DEFAULT_BUCKETS_OUTER_INITIAL_CAPACITY_EXPONENT = 0;
     protected static final int DEFAULT_BUCKETS_OUTER_INITIAL_CAPACITY = CapacityExponents.computeIntCapacityFromExponent(DEFAULT_BUCKETS_OUTER_INITIAL_CAPACITY_EXPONENT);
@@ -72,7 +76,7 @@ abstract class BaseCapacityHashed<T> extends BaseHashed<T> {
 
     final int getIntCapacity() {
 
-        return Integers.checkUnsignedLongToUnsignedInt(capacity);
+        return Capacity.intCapacity(capacity);
     }
 
     final long getLongCapacity() {
@@ -103,7 +107,7 @@ abstract class BaseCapacityHashed<T> extends BaseHashed<T> {
         return result;
     }
 
-    private <P> long increaseCapacityAndRehash(P parameter, Rehasher<T, P> rehasher) {
+    final <P> long increaseCapacityAndRehash(P parameter, Rehasher<T, P> rehasher) {
 
         if (DEBUG) {
 

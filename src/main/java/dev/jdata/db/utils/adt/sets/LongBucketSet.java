@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.adt.sets;
 
-public final class LongBucketSet extends BaseLongBucketSet implements ILongSet {
+public final class LongBucketSet extends BaseLongBucketSet implements IBaseLongSet {
 
     public static LongBucketSet of(long ... values) {
 

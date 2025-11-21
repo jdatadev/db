@@ -4,7 +4,7 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.schema.model.HeapSchemaMap.HeapSchemaMapBuilderAllocator;
 import dev.jdata.db.schema.model.objects.SchemaObject;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.HeapIndexListAllocator;
 import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 import dev.jdata.db.utils.allocators.LongToObjectMaxDistanceMapAllocator;
 

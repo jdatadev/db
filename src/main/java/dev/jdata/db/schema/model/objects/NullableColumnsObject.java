@@ -6,21 +6,21 @@ import org.jutils.io.strings.StringResolver;
 import org.jutils.io.strings.StringResolver.RefStringResolver;
 
 import dev.jdata.db.utils.adt.elements.ByIndex;
-import dev.jdata.db.utils.adt.lists.HeapIndexList;
-import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.scalars.Integers;
+import dev.jdata.db.utils.adt.elements.IElementsView;
+import dev.jdata.db.utils.adt.elements.IObjectIterableElementsView;
+import dev.jdata.db.utils.adt.lists.IHeapIndexList;
 
 abstract class NullableColumnsObject extends ColumnsObject {
 
     private final int numNullableColumns;
 
-    NullableColumnsObject(long parsedName, long hashName, int id, HeapIndexList<Column> columns) {
+    NullableColumnsObject(long parsedName, long hashName, int id, IHeapIndexList<Column> columns) {
         super(parsedName, hashName, id, columns);
 
         this.numNullableColumns = countNullableColumns(columns);
     }
 
-    NullableColumnsObject(NullableColumnsObject toCopy, HeapIndexList<Column> columns) {
+    NullableColumnsObject(NullableColumnsObject toCopy, IHeapIndexList<Column> columns) {
         super(toCopy, columns);
 
         this.numNullableColumns = countNullableColumns(columns);
@@ -32,9 +32,9 @@ abstract class NullableColumnsObject extends ColumnsObject {
         this.numNullableColumns = toCopy.numNullableColumns;
     }
 
-    private static int countNullableColumns(IIndexList<Column> columns) {
+    private static int countNullableColumns(IObjectIterableElementsView<Column> columns) {
 
-        return Integers.checkUnsignedLongToUnsignedInt(columns.closureOrConstantCount(Column::isNullable));
+        return IElementsView.intNumElements(columns.closureOrConstantCount(Column::isNullable));
     }
 
     public final int getNumNullableColumns() {

@@ -4,7 +4,7 @@ import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 
-public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLongWithRemoveNonBucketMap implements IMutableLongToLongStaticMap {
+public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLongWithRemoveNonBucketMap implements IMutableLongToLongWithRemoveStaticMap {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_LONG_TO_LONG_NON_BUCKET_MAP;
 
@@ -34,6 +34,12 @@ public final class MutableLongToLongWithRemoveNonBucketMap extends BaseLongToLon
 
             exit();
         }
+    }
+
+    @Override
+    public long getCapacity() {
+
+        return getHashedCapacity();
     }
 
     @Override

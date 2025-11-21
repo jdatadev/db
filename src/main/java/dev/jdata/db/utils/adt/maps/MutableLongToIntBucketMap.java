@@ -3,7 +3,7 @@ package dev.jdata.db.utils.adt.maps;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 
-public final class MutableLongToIntBucketMap extends BaseLongToIntBucketMap<MutableLongToIntBucketMap> implements IMutableLongToIntMap {
+public final class MutableLongToIntBucketMap extends BaseLongToIntBucketMap<MutableLongToIntBucketMap> implements IMutableLongToIntDynamicMap {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_LONG_TO_INT_BUCKET_MAP;
 
@@ -33,6 +33,12 @@ public final class MutableLongToIntBucketMap extends BaseLongToIntBucketMap<Muta
 
             exit();
         }
+    }
+
+    @Override
+    public long getCapacity() {
+
+        return getHashedCapacity();
     }
 
     @Override

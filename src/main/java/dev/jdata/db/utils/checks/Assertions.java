@@ -1,8 +1,8 @@
 package dev.jdata.db.utils.checks;
 
-import dev.jdata.db.utils.adt.IContains;
-import dev.jdata.db.utils.adt.arrays.IOneDimensionalArrayGetters;
-import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.arrays.IOneDimensionalArrayView;
+import dev.jdata.db.utils.adt.contains.IContainsView;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 
 public class Assertions {
 
@@ -102,7 +102,7 @@ public class Assertions {
         }
     }
 
-    public static void isEmpty(IContains contains) {
+    public static void isEmpty(IContainsView contains) {
 
         if (!contains.isEmpty()) {
 
@@ -110,7 +110,7 @@ public class Assertions {
         }
     }
 
-    public static void areSameNumElements(IElements elements1, IElements elements2) {
+    public static void areSameNumElements(IOnlyElementsView elements1, IOnlyElementsView elements2) {
 
         if (elements1.getNumElements() != elements2.getNumElements()) {
 
@@ -118,7 +118,7 @@ public class Assertions {
         }
     }
 
-    public static void isSameLimit(IOneDimensionalArrayGetters array1, IOneDimensionalArrayGetters array2) {
+    public static void isSameLimit(IOneDimensionalArrayView array1, IOneDimensionalArrayView array2) {
 
         if (array1.getLimit() != array2.getLimit()) {
 

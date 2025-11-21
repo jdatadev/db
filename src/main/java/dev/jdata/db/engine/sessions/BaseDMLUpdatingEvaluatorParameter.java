@@ -11,7 +11,7 @@ import dev.jdata.db.dml.DMLUpdateRows;
 import dev.jdata.db.dml.DMLUpdateRows.UpdateRow;
 import dev.jdata.db.engine.database.SQLExpressionEvaluator;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
 import dev.jdata.db.utils.allocators.IArrayAllocator;
 import dev.jdata.db.utils.allocators.IByteArrayByteBufferAllocator;
 import dev.jdata.db.utils.checks.Checks;
@@ -77,12 +77,12 @@ abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParamet
         byteArrayByteBufferAllocator.freeByteBuffer(byteArrayByteBuffer);
     }
 
-    final LargeLongArray allocateLargeLongArray() {
+    final IMutableLongLargeArray allocateLargeLongArray() {
 
         return largeLongArrayAllocator.allocateLargeLongArray();
     }
 
-    final void freeLargeLongArray(LargeLongArray largeLongArray) {
+    final void freeLargeLongArray(IMutableLongLargeArray largeLongArray) {
 
         Objects.requireNonNull(largeLongArray);
 

@@ -41,7 +41,7 @@ abstract class BaseIntCapacityHashed<T> extends BaseCapacityHashed<T> {
         }
     }
 
-    protected final int getCapacity() {
+    protected final int getHashedCapacity() {
 
         return getIntCapacity();
     }

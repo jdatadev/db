@@ -17,4 +17,9 @@ public abstract class SchemaObject extends DBNamedIdentifiableObject {
     SchemaObject(SchemaObject toCopy, int newSchemaObjectId) {
         super(toCopy, newSchemaObjectId);
     }
+
+    public final SchemaObject makeCopyOrImmutable() {
+
+        return this;
+    }
 }

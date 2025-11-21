@@ -3,9 +3,9 @@ package dev.jdata.db.utils.adt.maps;
 import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.adt.elements.IIntAnyOrderAddable;
 
-abstract class BaseIntToIntNonBucketMap<M extends IBaseIntToIntMapCommon<M>> extends BaseIntArrayKeysNonBucketMap<int[]> implements IBaseIntToIntMapCommon<M> {
+abstract class BaseIntToIntNonBucketMap extends BaseIntArrayKeysNonBucketMap<int[]> implements IIntToIntMapCommon {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_TO_INT_NON_BUCKET_MAP;
 
@@ -37,7 +37,7 @@ abstract class BaseIntToIntNonBucketMap<M extends IBaseIntToIntMapCommon<M>> ext
         }
     }
 
-    BaseIntToIntNonBucketMap(BaseIntToIntNonBucketMap<M> toCopy) {
+    BaseIntToIntNonBucketMap(BaseIntToIntNonBucketMap toCopy) {
         super(toCopy, (a1, a2) -> System.arraycopy(a1, 0, a2, 0, a1.length));
 
         if (DEBUG) {
@@ -52,7 +52,7 @@ abstract class BaseIntToIntNonBucketMap<M extends IBaseIntToIntMapCommon<M>> ext
     }
 
     @Override
-    public final <P> void forEachValue(P parameter, IForEachValue<P> forEach) {
+    public final <P, E extends Exception> void forEachValue(P parameter, IIntForEachMapValue<P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -70,7 +70,7 @@ abstract class BaseIntToIntNonBucketMap<M extends IBaseIntToIntMapCommon<M>> ext
     }
 
     @Override
-    public final <P> void forEachKeyAndValue(P parameter, IForEachKeyAndValue<P> forEach) {
+    public final <P, E extends Exception> void forEachKeyAndValue(P parameter, IIntToIntForEachMapKeyAndValue<P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -88,46 +88,50 @@ abstract class BaseIntToIntNonBucketMap<M extends IBaseIntToIntMapCommon<M>> ext
     }
 
     @Override
-    public final <P, DELEGATE, R> R forEachKeyAndValueWithResult(R defaultResult, P parameter, DELEGATE delegate, IForEachKeyAndValueWithResult<P, DELEGATE, R> forEach) {
+    public final <P1, P2, R, E extends Exception> R forEachKeyAndValueWithResult(R defaultResult, P1 parameter1, P2 parameter2,
+            IIntToIntForEachMapKeyAndValueWithResult<P1, P2, R, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
         if (DEBUG) {
 
-            enter(b -> b.add("defaultResult", defaultResult).add("parameter", parameter).add("delegate", delegate).add("forEach", forEach));
+            enter(b -> b.add("defaultResult", defaultResult).add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
         }
 
-        final R result = forEachKeyAndValueWithResult(defaultResult, parameter, forEach, delegate,
+        final R result = forEachKeyAndValueWithResult(defaultResult, parameter1, forEach, parameter2,
                 (keys, keyIndex, values, valueIndex, p1, p2, d) -> p2.each(keys[keyIndex], values[valueIndex], p1, d));
 
         if (DEBUG) {
 
-            exit(result, b -> b.add("defaultResult", defaultResult).add("parameter", parameter).add("delegate", delegate).add("forEach", forEach));
+            exit(result, b -> b.add("defaultResult", defaultResult).add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
         }
 
         return result;
     }
 
     @Override
-    public final void keysAndValues(int[] keysDst, int[] valuesDst) {
+    public final long keysAndValues(IIntAnyOrderAddable keysDst, IIntAnyOrderAddable valuesDst) {
 
-        final long numElements = getNumElements();
-
-        Checks.isGreaterThanOrEqualTo(keysDst.length, numElements);
-        Checks.isGreaterThanOrEqualTo(valuesDst.length, numElements);
-        Checks.areEqual(keysDst.length, valuesDst.length);
+        Objects.requireNonNull(keysDst);
+        Objects.requireNonNull(valuesDst);
 
         if (DEBUG) {
 
-            enter();
+            enter(b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst));
         }
 
-        keysAndValues(keysDst, getValues(), valuesDst, (src, srcIndex, dst, dstIndex) -> dst[dstIndex] = src[srcIndex]);
+        final long result = keysAndValues(keysDst, valuesDst, (index, kSrc, kDst, vSrc, vDst) -> {
+
+            kDst.addInAnyOrder(kSrc[index]);
+            vDst.addInAnyOrder(vSrc[index]);
+        });
 
         if (DEBUG) {
 
-            exit(b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst));
+            exit(result, b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst));
         }
+
+        return result;
     }
 
     @Override
@@ -156,8 +160,8 @@ abstract class BaseIntToIntNonBucketMap<M extends IBaseIntToIntMapCommon<M>> ext
         }
     }
 
-    final <P1, P2, DELEGATE> boolean equalsIntToIntNonBucketMap(P1 parameter1, BaseIntToIntNonBucketMap<M> other, P2 parameter2,
-            IIntValueMapEqualityTester<P1, P2> equalityTester) {
+    final <P1, P2, E extends Exception> boolean equalsIntToIntNonBucketMap(P1 parameter1, BaseIntToIntNonBucketMap other, P2 parameter2,
+            IIntValueMapEqualityTester<P1, P2, E> equalityTester) throws E {
 
         Objects.requireNonNull(other);
         Objects.requireNonNull(equalityTester);

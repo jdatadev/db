@@ -2,7 +2,7 @@ package dev.jdata.db.utils.adt.maps;
 
 import dev.jdata.db.utils.adt.IClearable;
 
-abstract class BaseMutableIntToIntegerOrObjectMapTest<V, M extends IIntKeyMap & IClearable & IMapMutators> extends BaseMutableIntegerToIntegerOrObjectMapTest<int[], V, M> {
+abstract class BaseMutableIntToIntegerOrObjectMapTest<V, M extends IMutableIntKeyMap & IClearable & IMapMutatorsMarker> extends BaseMutableIntegerToIntegerOrObjectMapTest<int[], V, M> {
 
     @Override
     final int[] createKeysArray(int length) {

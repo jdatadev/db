@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.lists;
 
-public interface IHeapIndexList<T> extends IIndexList<T> {
+import dev.jdata.db.utils.adt.contains.builders.IHeapContainsMarker;
+
+public interface IHeapIndexList<T> extends IIndexList<T>, IHeapContainsMarker {
 
 }

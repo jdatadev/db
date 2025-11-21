@@ -4,19 +4,20 @@ import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.elements.IIntIterableElements;
+import dev.jdata.db.utils.adt.elements.IElementsView;
+import dev.jdata.db.utils.adt.elements.IIntForEach;
+import dev.jdata.db.utils.adt.elements.IIntForEachWithResult;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
+import dev.jdata.db.utils.adt.hashed.helpers.IntCapacityPutResult;
 import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
-import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IIntIterableElements {
+abstract class BaseIntNonBucketSet extends BaseIntegerNonBucketSet<int[]> implements IIntSetCommon {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_NON_BUCKET_SET;
 
-    static final int NO_ELEMENT = -1;
+    static final int NO_ELEMENT = IntNonBucket.NO_ELEMENT;
 
     BaseIntNonBucketSet(int initialCapacityExponent, float loadFactor) {
         this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, loadFactor);
@@ -51,7 +52,7 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
     }
 
     @Override
-    public final <P, E extends Exception> void forEach(P parameter, IForEach<P, E> forEach) throws E {
+    public final <P, E extends Exception> void forEach(P parameter, IIntForEach<P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -81,7 +82,7 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
     }
 
     @Override
-    public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<P1, P2, R, E> forEach) throws E {
+    public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IIntForEachWithResult<P1, P2, R, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -120,21 +121,21 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
         return result;
     }
 
-    final int getIndexScanHashArrayToMax(int key, int hashArrayIndex, int max) {
+    final int getIndexScanHashArrayToMax(int value, int hashArrayIndex, int max) {
 
-        IntNonBucket.checkIsHashArrayElement(key);
+        IntNonBucket.checkIsHashArrayElement(value);
         Checks.isLengthAboveOrAtZero(max);
 
         if (DEBUG) {
 
-            enter(b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            enter(b -> b.add("value", value).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
-        final int result = HashArray.getIndexScanHashArrayToMaxHashArrayIndex(getHashed(), key, hashArrayIndex, max);
+        final int result = HashArray.getIndexScanHashArrayToMaxHashArrayIndex(getHashed(), value, hashArrayIndex, max);
 
         if (DEBUG) {
 
-            exit(result, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            exit(result, b -> b.add("values", value).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         return result;
@@ -153,7 +154,7 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
 
         final long putResult = add(hashArray, value);
 
-        final boolean newAdded = IntPutResult.getPutNewAdded(putResult);
+        final boolean newAdded = IntCapacityPutResult.getPutNewAdded(putResult);
 
         if (newAdded) {
 
@@ -166,6 +167,12 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
         }
 
         return putResult;
+    }
+
+    @Override
+    public final IHeapIntSet toHeapAllocated() {
+
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -190,7 +197,7 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
 
                 final long addResult = add(newHashArray, element);
 
-                final int newIndex = IntPutResult.getPutIndex(addResult);
+                final int newIndex = IntCapacityPutResult.getPutIndex(addResult);
 
                 newHashArray[newIndex] = element;
             }
@@ -230,6 +237,8 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
 
     private long add(int[] hashArray, int value, int hashArrayIndex) {
 
+        IntNonBucket.checkIsHashArrayElement(value);
+
         if (DEBUG) {
 
             enter(b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
@@ -246,14 +255,14 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
     }
 
     @Override
-    public int[] toArray() {
+    public final int[] toArray() {
 
         if (DEBUG) {
 
             enter();
         }
 
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(getNumElements());
+        final int numElements = IElementsView.intNumElements(getNumElements());
 
         final int[] result = new int[numElements];
 
@@ -261,13 +270,15 @@ abstract class BaseIntNonBucketSet extends BaseIntegerSet<int[]> implements IInt
 
         final int hashArrayLength = hashArray.length;
 
+        final int noElement = NO_ELEMENT;
+
         int dstIndex = 0;
 
         for (int i = 0; i < hashArrayLength; ++ i) {
 
             final int element = hashArray[i];
 
-            if (element != NO_ELEMENT) {
+            if (element != noElement) {
 
                 result[dstIndex ++] = element;
             }

@@ -3,11 +3,11 @@ package dev.jdata.db.utils.adt.maps;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import dev.jdata.db.utils.adt.arrays.LargeExponentArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLargeArrayMarker;
 import dev.jdata.db.utils.adt.hashed.BaseLongCapacityExponentArrayHashed;
 import dev.jdata.db.utils.function.BiIntToObjectFunction;
 
-public abstract class BaseLargeArrayKeysMap<T extends LargeExponentArray<?, ?>> extends BaseLongCapacityExponentArrayHashed<T> {
+public abstract class BaseLargeArrayKeysMap<KEYS extends IMutableLargeArrayMarker> extends BaseLongCapacityExponentArrayHashed<KEYS> {
 
     @FunctionalInterface
     interface LongMapIndexValueSetter<T, U> {
@@ -28,11 +28,11 @@ public abstract class BaseLargeArrayKeysMap<T extends LargeExponentArray<?, ?>> 
     }
 
     protected BaseLargeArrayKeysMap(int initialOuterCapacityExponent, int capacityExponentIncrease, int innerCapacityExponent, float loadFactor,
-            BiIntToObjectFunction<T> createHashed, Consumer<T> clearHashed) {
+            BiIntToObjectFunction<KEYS> createHashed, Consumer<KEYS> clearHashed) {
         super(initialOuterCapacityExponent, capacityExponentIncrease, innerCapacityExponent, loadFactor, createHashed, clearHashed);
     }
 
-    BaseLargeArrayKeysMap(BaseLargeArrayKeysMap<T> toCopy, Function<T, T> copyHashed) {
+    BaseLargeArrayKeysMap(BaseLargeArrayKeysMap<KEYS> toCopy, Function<KEYS, KEYS> copyHashed) {
         super(toCopy, copyHashed);
     }
 }

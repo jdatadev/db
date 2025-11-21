@@ -7,11 +7,11 @@ import java.util.function.Supplier;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.elements.BaseNumElements;
-import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 
-abstract class BaseHashed<T> extends BaseNumElements implements IElements, PrintDebug {
+abstract class BaseHashed<T> extends BaseNumElements implements IOnlyElementsView, PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_HASHED;
 

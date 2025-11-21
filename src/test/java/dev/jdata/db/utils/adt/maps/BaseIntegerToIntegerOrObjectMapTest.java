@@ -9,9 +9,10 @@ import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.adt.hashed.BaseHashedTest;
 
-abstract class BaseIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & IClearable> extends BaseHashedTest {
+abstract class BaseIntegerToIntegerOrObjectMapTest<K, V, M extends IOnlyElementsView & IIntegerKeyMapCommon & IClearable> extends BaseHashedTest {
 
     static int value(int key) {
 

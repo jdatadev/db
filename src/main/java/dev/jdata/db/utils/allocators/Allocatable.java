@@ -135,6 +135,6 @@ public abstract class Allocatable {
     @Override
     public String toString() {
 
-        return getClass().getSimpleName() + " [allocationType=" + allocationType + ", allocated=" + state + "]";
+        return Allocatable.class.getSimpleName() + " [allocationType=" + allocationType + ", allocated=" + state + ']';
     }
 }

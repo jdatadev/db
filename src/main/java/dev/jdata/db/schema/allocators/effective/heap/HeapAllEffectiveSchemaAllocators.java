@@ -11,15 +11,15 @@ import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
 import dev.jdata.db.schema.model.schemamaps.HeapAllSimpleCompleteSchemaMapsBuilder;
 import dev.jdata.db.utils.adt.lists.HeapIndexList;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.adt.sets.MutableIntMaxDistanceNonBucketSet;
-import dev.jdata.db.utils.allocators.IMutableIntSetAllocator;
+import dev.jdata.db.utils.adt.lists.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.HeapIndexListBuilder;
+import dev.jdata.db.utils.adt.sets.IBaseMutableIntSetAllocator;
+import dev.jdata.db.utils.adt.lists.IBaseIndexListAllocator;
 
 public final class HeapAllEffectiveSchemaAllocators
 
         extends AllEffectiveSchemaAllocators<
+
                 HeapIndexList<SchemaObject>,
                 HeapIndexListBuilder<SchemaObject>,
                 HeapIndexListAllocator<SchemaObject>,
@@ -28,8 +28,8 @@ public final class HeapAllEffectiveSchemaAllocators
                 HeapAllCompleteSchemaMaps,
                 HeapAllSimpleCompleteSchemaMapsBuilder> {
 
-    public HeapAllEffectiveSchemaAllocators(IndexListAllocator<Column, ?, ?, ?> columnIndexListAllocator,
-            IMutableIntSetAllocator<MutableIntMaxDistanceNonBucketSet> intSetAllocator, IHeapCompleteSchemaMapsBuilderAllocator completeSchemaMapsBuilderAllocator,
+    public HeapAllEffectiveSchemaAllocators(IIndexListAllocator<Column, ?, ?> columnIndexListAllocator,
+            IBaseMutableIntSetAllocator intSetAllocator, IHeapCompleteSchemaMapsBuilderAllocator completeSchemaMapsBuilderAllocator,
             HeapSchemaMapBuilderAllocator<SchemaObject> schemaMapBuilderAllocator, HeapSchemaObjectIndexListAllocators<SchemaObject> indexListAllocators) {
         super(columnIndexListAllocator, intSetAllocator, completeSchemaMapsBuilderAllocator, schemaMapBuilderAllocator, indexListAllocators);
     }

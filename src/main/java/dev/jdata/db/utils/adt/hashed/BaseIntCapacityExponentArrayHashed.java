@@ -70,6 +70,10 @@ public abstract class BaseIntCapacityExponentArrayHashed<T> extends BaseIntCapac
         }
     }
 
+    private int getCapacityExponent() {
+        return capacityExponent;
+    }
+
     @Override
     protected final T rehash(T hashed, int newCapacity) {
 
@@ -144,8 +148,8 @@ public abstract class BaseIntCapacityExponentArrayHashed<T> extends BaseIntCapac
         return keyMask;
     }
 
-    public final int getCapacityExponent() {
-        return capacityExponent;
+    protected final int getCapacityExponentIncrease() {
+        return capacityExponentIncrease;
     }
 
     private static int makeKeyMask(int capacityExponent) {

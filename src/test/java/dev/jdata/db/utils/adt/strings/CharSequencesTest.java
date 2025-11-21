@@ -8,12 +8,49 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.utils.adt.CapacityExponents;
+import dev.jdata.db.utils.adt.byindex.IByIndexView;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.CharPredicate;
-import dev.jdata.db.utils.scalars.Integers;
 
 public final class CharSequencesTest extends BaseCharSequencesTest {
+
+    @Test
+    @Category(UnitTest.class)
+    public void testAreEqual() {
+
+        checkAreEqual(String::toString);
+        checkAreEqual(StringBuilder::new);
+    }
+
+    private void checkAreEqual(Function<String, CharSequence> createCharSequence) {
+
+        assertThatThrownBy(() -> CharSequences.areEqual(null, createCharSequence.apply("abc"))).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> CharSequences.areEqual(createCharSequence.apply("abc"), null)).isInstanceOf(NullPointerException.class);
+
+        checkAreEqual("", "", createCharSequence, true);
+        checkAreEqual(" ", "", createCharSequence, false);
+        checkAreEqual("", " ", createCharSequence, false);
+        checkAreEqual("a", "", createCharSequence, false);
+        checkAreEqual("", "a", createCharSequence, false);
+        checkAreEqual("a", "a", createCharSequence, true);
+        checkAreEqual("a", "ab", createCharSequence, false);
+        checkAreEqual("ab", "a", createCharSequence, false);
+        checkAreEqual("a", "b", createCharSequence, false);
+        checkAreEqual("ab", "ac", createCharSequence, false);
+        checkAreEqual("abc", "a", createCharSequence, false);
+        checkAreEqual("abc", "ab", createCharSequence, false);
+        checkAreEqual("abc", "abc", createCharSequence, true);
+        checkAreEqual("abc", "abcd", createCharSequence, false);
+    }
+
+    private void checkAreEqual(String charSequence1String, String charSequence2String, Function<String, CharSequence> createCharSequence, boolean expectedResult) {
+
+        final CharSequence charSequence = createCharSequence.apply(charSequence1String);
+        final CharSequence otherCharSequence = createCharSequence.apply(charSequence2String);
+
+        assertThat(CharSequences.areEqual(charSequence, otherCharSequence)).isEqualTo(expectedResult);
+    }
 
     @Test
     @Category(UnitTest.class)
@@ -136,7 +173,7 @@ public final class CharSequencesTest extends BaseCharSequencesTest {
 
             final long longHashArrayIndex = HashFunctions.longHashArrayIndex(hash, keyMask);
 
-            final int hashArrayIndex = Integers.checkUnsignedLongToUnsignedInt(longHashArrayIndex);
+            final int hashArrayIndex = IByIndexView.intIndex(longHashArrayIndex);
 
             if (keys[hashArrayIndex] > 0) {
 

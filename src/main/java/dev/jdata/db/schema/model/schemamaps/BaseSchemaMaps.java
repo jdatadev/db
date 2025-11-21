@@ -21,7 +21,7 @@ import dev.jdata.db.schema.model.objects.Trigger;
 import dev.jdata.db.schema.model.objects.View;
 import dev.jdata.db.utils.Initializable;
 import dev.jdata.db.utils.adt.IResettable;
-import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -61,12 +61,27 @@ public abstract class BaseSchemaMaps<T extends ISchemaMap<? extends SchemaObject
     private void initialize(Function<SchemaMap<?, ?, ?>, T> createObjectState, SchemaMap<Table, ?, ?> tables, SchemaMap<View, ?, ?> views, SchemaMap<Index, ?, ?> indices,
             SchemaMap<Trigger, ?, ?> triggers, SchemaMap<DBFunction, ?, ?> functions, SchemaMap<Procedure, ?, ?> procedures) {
 
-        setSchemaMap(DDLObjectType.TABLE, tables);
-        setSchemaMap(DDLObjectType.VIEW, views);
-        setSchemaMap(DDLObjectType.INDEX, indices);
-        setSchemaMap(DDLObjectType.TRIGGER, triggers);
-        setSchemaMap(DDLObjectType.FUNCTION, functions);
-        setSchemaMap(DDLObjectType.PROCEDURE, procedures);
+        setSchemaMapOrNull(DDLObjectType.TABLE, tables);
+        setSchemaMapOrNull(DDLObjectType.VIEW, views);
+        setSchemaMapOrNull(DDLObjectType.INDEX, indices);
+        setSchemaMapOrNull(DDLObjectType.TRIGGER, triggers);
+        setSchemaMapOrNull(DDLObjectType.FUNCTION, functions);
+        setSchemaMapOrNull(DDLObjectType.PROCEDURE, procedures);
+    }
+
+    private void setSchemaMapOrNull(DDLObjectType ddlObjectType, SchemaMap<?, ?, ?> schemaMap) {
+
+        Objects.requireNonNull(ddlObjectType);
+
+        if (schemaMap != null) {
+
+            setSchemaMap(ddlObjectType, schemaMap);
+        }
+        else {
+            final int index = ddlObjectType.ordinal();
+
+            schemaObjectStates[index] = Initializable.checkNotYetInitializedToNull(schemaObjectStates[index]);
+        }
     }
 
     private void setSchemaMap(DDLObjectType ddlObjectType, SchemaMap<?, ?, ?> schemaMap) {
@@ -87,11 +102,11 @@ public abstract class BaseSchemaMaps<T extends ISchemaMap<? extends SchemaObject
 
     @SuppressWarnings("unchecked")
     @Override
-    public final <U extends SchemaObject> IIndexList<U> getSchemaObjects(DDLObjectType ddlObjectType) {
+    public final <U extends SchemaObject> IndexList<U> getSchemaObjects(DDLObjectType ddlObjectType) {
 
         Objects.requireNonNull(ddlObjectType);
 
-        return (IIndexList<U>)getSchemaMapForObjectType(ddlObjectType).getSchemaObjects();
+        return (IndexList<U>)getSchemaMapForObjectType(ddlObjectType).getSchemaObjects();
     }
 
     public final boolean containsSchemaObjectName(DDLObjectType ddlObjectType, long hashObjectName) {

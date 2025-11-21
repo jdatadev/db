@@ -1,9 +1,9 @@
 package dev.jdata.db.utils.adt.elements;
 
-import dev.jdata.db.utils.adt.byindex.IByIndex;
+import dev.jdata.db.utils.adt.byindex.IByIndexView;
 
 @Deprecated // currently not in use
-public abstract class BaseByIndexElements extends BaseNumElements implements IByIndex {
+public abstract class BaseByIndexElements extends BaseNumElements implements IByIndexView {
 
     @Override
     public final String toString() {

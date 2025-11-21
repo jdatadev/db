@@ -1,12 +1,11 @@
 package dev.jdata.db.utils.adt.lists;
 
-import java.util.Comparator;
+interface IMutableIndexList<
 
-import dev.jdata.db.utils.adt.elements.ICapacity;
+                T,
+                IMMUTABLE extends IIndexList<T>,
+                ALLOCATOR extends IIndexListAllocator<T, IMMUTABLE, ?>>
 
-public interface IMutableIndexList<T> extends IIndexListCommon<T>, ICapacity, IIndexListMutators<T> {
+        extends IBaseMutableIndexList<T, IMMUTABLE, ALLOCATOR> {
 
-    void set(long index, T instance);
-
-    void sort(Comparator<? super T> comparator);
 }

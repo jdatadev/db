@@ -111,7 +111,7 @@ abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet implem
         @Override
         public long getCapacity(BaseIntMaxDistanceNonBucketSet hashed) {
 
-            return hashed.getCapacity();
+            return hashed.getHashedCapacity();
         }
     };
 

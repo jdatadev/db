@@ -4,15 +4,17 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.byindex.IByIndexView;
+import dev.jdata.db.utils.adt.elements.IElementsView;
 import dev.jdata.db.utils.allocators.BaseArrayAllocator;
-import dev.jdata.db.utils.allocators.ElementAllocator;
 import dev.jdata.db.utils.allocators.IAllocators;
 import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer.RefType;
-import dev.jdata.db.utils.scalars.Integers;
+import dev.jdata.db.utils.allocators.TrackingInstanceAllocator;
+import dev.jdata.db.utils.checks.Checks;
 
-public final class MutableLongIndexList extends BaseLongIndexList implements IMutableLongIndexList {
+abstract class MutableLongIndexList extends BaseLongIndexList implements IMutableLongIndexList {
 
-    static abstract class MutableLongIndexListAllocator extends ElementAllocator {
+    static abstract class MutableLongIndexListAllocator extends TrackingInstanceAllocator {
 
         abstract MutableLongIndexList allocateMutableLongIndexList(int minimumCapacity);
         abstract void freeMutableLongIndexList(MutableLongIndexList list);
@@ -42,7 +44,7 @@ public final class MutableLongIndexList extends BaseLongIndexList implements IMu
     private static final class MutableLongIndexListArrayAllocator extends BaseArrayAllocator<MutableLongIndexList> {
 
         MutableLongIndexListArrayAllocator(AllocationType allocationType) {
-            super(c -> new MutableLongIndexList(allocationType, c), l -> Integers.checkUnsignedLongToUnsignedInt(l.getNumElements()));
+            super(c -> new MutableLongIndexList(allocationType, c), l -> IElementsView.intNumElements(l.getNumElements()));
         }
 
         MutableLongIndexList allocateMutableLongIndexList(int minimumCapacity) {
@@ -74,7 +76,7 @@ public final class MutableLongIndexList extends BaseLongIndexList implements IMu
 
             Objects.requireNonNull(statisticsGatherer);
 
-            statisticsGatherer.addInstanceAllocator("mutableLongIndexListArrayAllocator", RefType.INSTANTIATED, MutableIndexList.class, mutableLongIndexListArrayAllocator);
+            statisticsGatherer.addInstanceAllocator("mutableLongIndexListArrayAllocator", RefType.INSTANTIATED, MutableObjectIndexList.class, mutableLongIndexListArrayAllocator);
         }
 
         @Override
@@ -90,7 +92,7 @@ public final class MutableLongIndexList extends BaseLongIndexList implements IMu
         }
     }
 
-    public MutableLongIndexList(int initialCapacity) {
+    MutableLongIndexList(int initialCapacity) {
         this(AllocationType.HEAP, initialCapacity);
     }
 
@@ -123,7 +125,10 @@ public final class MutableLongIndexList extends BaseLongIndexList implements IMu
         elementsArray[numElements ++] = value;
     }
 
+    @Override
     public void addTail(long ... values) {
+
+        Checks.isNotEmpty(values);
 
         final int num = numElements;
         final int numValues = values.length;
@@ -142,9 +147,36 @@ public final class MutableLongIndexList extends BaseLongIndexList implements IMu
         this.numElements = numTotal;
     }
 
+    @Override
+    public final long setAndReturnPrevious(long index, long value) {
+
+        Checks.checkIndex(index, getNumElements());
+
+        final int intIndex = IByIndexView.intIndex(index);
+
+        final long result = elementsArray[intIndex];
+
+        elementsArray[intIndex] = value;
+
+        return result;
+    }
 
     @Override
-    public boolean removeAtMostOne(long value) {
+    public final long removeTailAndReturnValue() {
+
+        if (isEmpty()) {
+
+            throw new IllegalStateException();
+        }
+
+        final long result = getTail();
+
+        -- numElements;
+
+        return result;
+    }
+
+    private boolean removeAtMostOne(long value) {
 
         final boolean result;
 

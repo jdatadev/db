@@ -5,11 +5,11 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.elements.IElementsView;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
-import dev.jdata.db.utils.scalars.Integers;
 
 abstract class BaseAnyLargeArray<O, I> extends BaseArray implements PrintDebug {
 
@@ -341,7 +341,7 @@ abstract class BaseAnyLargeArray<O, I> extends BaseArray implements PrintDebug {
             enter(b -> b.add("outerIndex", outerIndex).add("numElements", numElements));
         }
 
-        innerArrayNumElements[outerIndex] = Integers.checkUnsignedLongToUnsignedInt(numElements);
+        innerArrayNumElements[outerIndex] = IElementsView.intNumElements(numElements);
 
         if (DEBUG) {
 

@@ -10,6 +10,11 @@ import dev.jdata.db.utils.function.CharPredicate;
 
 public class Strings {
 
+    public static String nullOrNonNullString(Object object) {
+
+        return object != null ? "<non-null>" : "<null>";
+    }
+
     public static String repeat(String string, int times) {
 
         Checks.isNotEmpty(string);

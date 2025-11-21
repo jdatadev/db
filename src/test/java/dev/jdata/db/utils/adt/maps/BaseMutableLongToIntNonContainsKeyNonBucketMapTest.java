@@ -5,7 +5,7 @@ import java.util.List;
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseMutableLongToIntNonContainsKeyNonBucketMapTest<M extends ILongToIntStaticMapCommon & IClearable & ILongToIntCommonMapMutators>
+abstract class BaseMutableLongToIntNonContainsKeyNonBucketMapTest<M extends ILongToIntBaseStaticMapCommon & IClearable & ILongToIntStoreMapMutators>
 
         extends BaseMutableLongToIntegerOrObjectNonBucketMapTest<int[], M> {
 

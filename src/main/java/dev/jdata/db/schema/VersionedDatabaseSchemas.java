@@ -9,9 +9,9 @@ import dev.jdata.db.schema.model.IDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.adt.IForEachSequenceElement;
 import dev.jdata.db.utils.adt.arrays.TwoDimensionalArray;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.scalars.Integers;
+import dev.jdata.db.utils.adt.elements.IElementsView;
+import dev.jdata.db.utils.adt.lists.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
 
 public final class VersionedDatabaseSchemas {
 
@@ -56,7 +56,7 @@ public final class VersionedDatabaseSchemas {
 
         this.databaseId = databaseId;
 
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(schemas.getNumElements());
+        final int numElements = IElementsView.intNumElements(schemas.getNumElements());
 
         this.schemasByVersion = new LinkedHashMap<>(numElements);
         this.tableSchemasOrderedByVersion = new TwoDimensionalArray<>(100, VersionedTable[][]::new, 10, VersionedTable[]::new);

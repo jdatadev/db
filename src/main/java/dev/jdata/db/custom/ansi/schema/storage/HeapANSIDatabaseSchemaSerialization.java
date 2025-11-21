@@ -9,8 +9,8 @@ import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
 import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.utils.adt.lists.HeapIndexList;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
+import dev.jdata.db.utils.adt.lists.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.HeapIndexListBuilder;
 
 public final class HeapANSIDatabaseSchemaSerialization
 

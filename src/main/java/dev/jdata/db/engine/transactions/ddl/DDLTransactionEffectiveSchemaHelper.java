@@ -13,20 +13,21 @@ import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
 import dev.jdata.db.schema.model.schemamaps.ICompleteSchemaMapsBuilder;
 import dev.jdata.db.utils.Initializable;
 import dev.jdata.db.utils.adt.IResettable;
+import dev.jdata.db.utils.adt.elements.IElementsView;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
 import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
 class DDLTransactionEffectiveSchemaHelper {
 
-    static final class DDLComputeEffectiveDatabaseSchemaParameter implements IResettable {
+    static final class DDLComputeEffectiveDatabaseSchemaParameter extends ObjectCacheNode implements IResettable {
 
         private IndexList<DDLTransactionObject> ddlTransactionObjects;
         private ICompleteSchemaMapsBuilder<SchemaObject, ?, HeapAllCompleteSchemaMaps> completeSchemaMapsBuilder;
         private ToIntFunction<DDLObjectType> schemaObjectIdAllocator;
 
         private int scratchIndex;
-        private int scratchNumDDLTransactionObjects;
 
         void initialize(IndexList<DDLTransactionObject> ddlTransactionObjects, ICompleteSchemaMapsBuilder<SchemaObject, ?, HeapAllCompleteSchemaMaps> completeSchemaMapsBuilder,
                 ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
@@ -51,7 +52,6 @@ class DDLTransactionEffectiveSchemaHelper {
         private void resetWorkerParameters() {
 
             this.scratchIndex = -1;
-            this.scratchNumDDLTransactionObjects = -1;
         }
     }
 
@@ -61,7 +61,7 @@ class DDLTransactionEffectiveSchemaHelper {
         @Override
         public Void onAddedColumnsSchemaObject(DDLTransactionAddedColumnsSchemaObject addedColumnsSchemaObject, DDLComputeEffectiveDatabaseSchemaParameter parameter) {
 
-            final SchemaObject schemaObject = addedColumnsSchemaObject.getSchemaObject();
+            addSchemaObject(parameter, addedColumnsSchemaObject);
 
             return null;
         }
@@ -69,7 +69,7 @@ class DDLTransactionEffectiveSchemaHelper {
         @Override
         public Void onAddedNonColumnsSchemaObject(DDLTransactionAddedNonColumnsSchemaObject addedNonColumnsSchemaObject, DDLComputeEffectiveDatabaseSchemaParameter parameter) {
 
-            parameter.completeSchemaMapsBuilder.addSchemaObject(addedNonColumnsSchemaObject.getSchemaObject());
+            addSchemaObject(parameter, addedNonColumnsSchemaObject);
 
             return null;
         }
@@ -78,6 +78,17 @@ class DDLTransactionEffectiveSchemaHelper {
         public Void onColumnsDiffObject(DDLTransactionColumnsDiffObject columnsDiffObject, DDLComputeEffectiveDatabaseSchemaParameter parameter) {
 
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Void onDroppedSchemaObject(DDLTransactionDroppedSchemaObject droppedSchemaObject, DDLComputeEffectiveDatabaseSchemaParameter parameter) {
+
+            return null;
+        }
+
+        private void addSchemaObject(DDLComputeEffectiveDatabaseSchemaParameter parameter, DDLTransactionAddedSchemaObject<?> addedSchemaObject) {
+
+            parameter.completeSchemaMapsBuilder.addSchemaObject(addedSchemaObject.getSchemaObject());
         }
     };
 
@@ -107,9 +118,10 @@ class DDLTransactionEffectiveSchemaHelper {
 
         final IndexList<DDLTransactionObject> ddlTransactionObjects = ddlComputeEffectiveDatabaseSchemaParameter.ddlTransactionObjects;
 
-        final int numDDLTransactionObjects = Integers.checkUnsignedLongToUnsignedInt(ddlTransactionObjects.getNumElements());
+        final ICompleteSchemaMapsBuilder<SchemaObject, ?, HeapAllCompleteSchemaMaps> completeSchemaMapsBuilder
+                = ddlComputeEffectiveDatabaseSchemaParameter.completeSchemaMapsBuilder;
 
-        ddlComputeEffectiveDatabaseSchemaParameter.scratchNumDDLTransactionObjects = numDDLTransactionObjects;
+        final int numDDLTransactionObjects = IElementsView.intNumElements(ddlTransactionObjects.getNumElements());
 
         for (int i = 0; i < numDDLTransactionObjects; ++ i) {
 
@@ -120,6 +132,45 @@ class DDLTransactionEffectiveSchemaHelper {
             ddlTransactionObject.visit(processTransactionObjectVisitor, ddlComputeEffectiveDatabaseSchemaParameter);
         }
 
-        return EffectiveDatabaseSchema.of(databaseId, version, ddlComputeEffectiveDatabaseSchemaParameter.completeSchemaMapsBuilder.buildHeapAllocated());
+        for (DDLObjectType ddlObjectType : DDLObjectType.values()) {
+
+            final IIndexList<SchemaObject> schemaObjects = currentSchema.getSchemaObjects(ddlObjectType);
+
+            if (schemaObjects != null) {
+
+                final long numSchemaObjects = schemaObjects.getNumElements();
+
+                for (int i = 0; i < numSchemaObjects; ++ i) {
+
+                    final SchemaObject schemaObject = schemaObjects.get(i);
+
+                    final boolean shouldBeAddedFromCurrentSchema = ddlTransactionObjects.contains(schemaObject, (e, o) -> {
+
+                        final boolean keepFromCurrentSchema;
+
+                        if (e instanceof DDLTransactionDroppedSchemaObject) {
+
+                            final DDLTransactionDroppedSchemaObject ddlTransactionDroppedSchemaObject = (DDLTransactionDroppedSchemaObject)e;
+
+                            keepFromCurrentSchema = ddlTransactionDroppedSchemaObject.getSchemaObjectId() != o.getId();
+                        }
+                        else {
+                            keepFromCurrentSchema = true;
+                        }
+
+                        return keepFromCurrentSchema;
+                    });
+
+                    if (shouldBeAddedFromCurrentSchema) {
+
+                        completeSchemaMapsBuilder.addSchemaObject(schemaObject.makeCopyOrImmutable());
+                    }
+                }
+            }
+        }
+
+System.out.println("complete schema maps builder " + completeSchemaMapsBuilder);
+
+        return EffectiveDatabaseSchema.of(databaseId, version, completeSchemaMapsBuilder.buildHeapAllocated());
     }
 }

@@ -36,8 +36,8 @@ import dev.jdata.db.sql.parse.SQLParserFactory;
 import dev.jdata.db.sql.parse.SQLParserHelper;
 import dev.jdata.db.sql.parse.expression.SQLScratchExpressionValues;
 import dev.jdata.db.test.unit.BaseDBTest;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.CacheIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
 import dev.jdata.db.utils.allocators.AddableListAllocator;
 import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
 import dev.jdata.db.utils.allocators.IAddableListAllocator;
@@ -85,7 +85,7 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
 
         final ToIntFunction<DDLObjectType> schemaObjectIdAllocator = t -> DBConstants.INITIAL_SCHEMA_OBJECT_ID;
 
-        final IEffectiveDatabaseSchema effectiveDatabaseSchema = createEffectiveDatabaseSchema(getTestDatabaseId(), deserializeStringStorer, schemaObjectIdAllocator);
+        final IEffectiveDatabaseSchema effectiveDatabaseSchema = createTestEffectiveDatabaseSchema(getTestDatabaseId(), deserializeStringStorer, schemaObjectIdAllocator);
 
         final String serializedSQL = serialize(effectiveDatabaseSchema, builderStringStorer, databaseSchemaSerializer);
 

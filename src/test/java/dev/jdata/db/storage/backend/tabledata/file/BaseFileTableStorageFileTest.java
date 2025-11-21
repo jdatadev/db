@@ -27,7 +27,7 @@ import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.Storag
 import dev.jdata.db.test.unit.BaseDBTest;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.lists.HeapIndexList;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.HeapIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 import dev.jdata.db.utils.bits.BitBufferUtil;

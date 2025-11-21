@@ -14,8 +14,9 @@ import dev.jdata.db.schema.model.effective.EffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
+import dev.jdata.db.utils.adt.lists.HeapIndexList;
 import dev.jdata.db.utils.adt.lists.HeapMutableIndexList;
-import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.allocators.IFreeing;
 import dev.jdata.db.utils.checks.Checks;
@@ -39,7 +40,7 @@ public final class DatabaseSchemaManager extends BaseDatabaseSchemas implements 
         Objects.requireNonNull(completeDatabaseSchema);
         Objects.requireNonNull(databasesSchemaManagerAllocator);
 
-        return new DatabaseSchemaManager(AllocationType.HEAP, databaseId, completeDatabaseSchema, IndexList.empty(), databasesSchemaManagerAllocator);
+        return new DatabaseSchemaManager(AllocationType.HEAP, databaseId, completeDatabaseSchema, HeapIndexList.empty(), databasesSchemaManagerAllocator);
     }
 
     private DatabaseSchemaManager(AllocationType allocationType, DatabaseId databaseId, CompleteDatabaseSchema initialCompleteSchema,

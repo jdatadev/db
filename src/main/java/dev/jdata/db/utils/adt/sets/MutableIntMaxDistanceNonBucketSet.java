@@ -1,27 +1,34 @@
 package dev.jdata.db.utils.adt.sets;
 
+import java.util.Objects;
+
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
-import dev.jdata.db.utils.allocators.IIntSetAllocator;
 
-public final class MutableIntMaxDistanceNonBucketSet extends BaseIntMaxDistanceNonBucketSet implements IMutableIntSet {
+abstract class MutableIntMaxDistanceNonBucketSet extends BaseIntMaxDistanceNonBucketSet implements IMutableIntSet {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_INT_MAX_DISTANCE_NON_BUCKET_SET;
 
-    public MutableIntMaxDistanceNonBucketSet(int initialCapacityExponent) {
+    MutableIntMaxDistanceNonBucketSet(int initialCapacityExponent) {
         super(initialCapacityExponent, DEFAULT_LOAD_FACTOR);
     }
 
-    public MutableIntMaxDistanceNonBucketSet(int initialCapacityExponent, float loadFactor) {
+    MutableIntMaxDistanceNonBucketSet(int initialCapacityExponent, float loadFactor) {
         super(initialCapacityExponent, loadFactor);
     }
 
-    public MutableIntMaxDistanceNonBucketSet(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
+    MutableIntMaxDistanceNonBucketSet(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
     }
 
     @Override
-    public void add(int value) {
+    public final long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
+    public final void addUnordered(int value) {
 
         if (DEBUG) {
 
@@ -37,7 +44,7 @@ public final class MutableIntMaxDistanceNonBucketSet extends BaseIntMaxDistanceN
     }
 
     @Override
-    public boolean addToSet(int value) {
+    public final boolean addToSet(int value) {
 
         if (DEBUG) {
 
@@ -55,7 +62,7 @@ public final class MutableIntMaxDistanceNonBucketSet extends BaseIntMaxDistanceN
     }
 
     @Override
-    public boolean remove(int value) {
+    public final boolean removeAtMostOne(int value) {
 
         if (DEBUG) {
 
@@ -75,7 +82,7 @@ public final class MutableIntMaxDistanceNonBucketSet extends BaseIntMaxDistanceN
     }
 
     @Override
-    public void clear() {
+    public final void clear() {
 
         if (DEBUG) {
 
@@ -91,8 +98,10 @@ public final class MutableIntMaxDistanceNonBucketSet extends BaseIntMaxDistanceN
     }
 
     @Override
-    public <T extends IIntSet> T toImmutable(IIntSetAllocator<T> intSetAllocator) {
+    public final IHeapIntSet copyToImmutable(IHeapIntSetAllocator immutableAllocator) {
 
-        return intSetAllocator.copyToImmutable(this);
+        Objects.requireNonNull(immutableAllocator);
+
+        return ((HeapIntSetAllocator)immutableAllocator).copyToImmutable(this);
     }
 }

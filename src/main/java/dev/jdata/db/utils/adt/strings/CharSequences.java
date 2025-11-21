@@ -7,15 +7,47 @@ import dev.jdata.db.utils.function.CharPredicate;
 
 public class CharSequences {
 
+    public static boolean areEqual(CharSequence charSequence1, CharSequence charSequence2) {
+
+        Objects.requireNonNull(charSequence1);
+        Objects.requireNonNull(charSequence2);
+
+        final boolean result;
+
+        final int charSequence1Length = charSequence1.length();
+        final int charSequence2Length = charSequence2.length();
+
+        if (charSequence1Length != charSequence2Length) {
+
+            result = false;
+        }
+        else {
+            boolean equals = true;
+
+            for (int i = 0; i < charSequence1Length; ++ i) {
+
+                if (charSequence1.charAt(i) != charSequence2.charAt(i)) {
+
+                    equals = false;
+                    break;
+                }
+            }
+
+            result = equals;
+        }
+
+        return result;
+    }
+
     public static boolean startsWith(CharSequence charSequence, CharSequence other) {
 
         Objects.requireNonNull(charSequence);
         Objects.requireNonNull(other);
 
+        final boolean result;
+
         final int charSequenceLength = charSequence.length();
         final int otherLength = other.length();
-
-        final boolean result;
 
         if (charSequenceLength == 0) {
 

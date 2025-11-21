@@ -3,10 +3,10 @@ package dev.jdata.db.engine.transactions.ddl;
 import dev.jdata.db.ddl.allocators.DDLSchemaScratchObjects;
 import dev.jdata.db.engine.transactions.ddl.DDLTransaction.DDLTransactionStatement;
 import dev.jdata.db.utils.adt.lists.HeapIndexList;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
+import dev.jdata.db.utils.adt.lists.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.HeapIndexListBuilder;
 import dev.jdata.db.utils.adt.lists.HeapMutableIndexList;
-import dev.jdata.db.utils.adt.lists.HeapMutableIndexList.HeapMutableIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.HeapMutableIndexListAllocator;
 
 final class HeapDDLTransaction
 

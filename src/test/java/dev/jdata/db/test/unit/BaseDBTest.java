@@ -48,12 +48,13 @@ import dev.jdata.db.schema.types.TextObjectType;
 import dev.jdata.db.schema.types.TimeType;
 import dev.jdata.db.schema.types.TimestampType;
 import dev.jdata.db.schema.types.VarCharType;
-import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
 import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.sets.MutableIntSetAllocator;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.allocators.ByteArrayByteBufferAllocator;
 import dev.jdata.db.utils.allocators.CharBufferAllocator;
 import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
-import dev.jdata.db.utils.allocators.MutableIntMaxDistanceNonBucketSetAllocator;
 import dev.jdata.db.utils.checks.Checks;
 
 public abstract class BaseDBTest extends BaseSQLTest {
@@ -65,9 +66,10 @@ public abstract class BaseDBTest extends BaseSQLTest {
 
     protected static final DatabaseSchemaVersion TEST_DATABASE_SCHEMA_VERSION = DatabaseSchemaVersion.of(DatabaseSchemaVersion.INITIAL_VERSION);
 
-    private static final String TEST_TABLE_NAME = "testtable";
+    protected static final String TEST_TABLE_NAME = "test_table";
+    protected static final String TEST_COLUMN_NAME = "test_column";
 
-    private static IIndexList<SchemaDataType> schemaDataTypes = IndexList.of(
+    private static IBaseIndexList<SchemaDataType> schemaDataTypes = IndexList.of(
 
             BooleanType.INSTANCE,
             SmallIntType.INSTANCE,
@@ -122,14 +124,31 @@ public abstract class BaseDBTest extends BaseSQLTest {
         return TEST_DATABASE_ID;
     }
 
-    protected static IEffectiveDatabaseSchema createEffectiveDatabaseSchema(DatabaseId databaseId, StringStorer stringStorer,
+    private static final ToIntFunction<DDLObjectType> initialSchemaObjectIdAllocator = t -> DBConstants.INITIAL_SCHEMA_OBJECT_ID;
+
+    protected static IEffectiveDatabaseSchema createTestEffectiveDatabaseSchema(DatabaseId databaseId, StringStorer stringStorer) {
+
+        return createTestEffectiveDatabaseSchema(databaseId, stringStorer, initialSchemaObjectIdAllocator);
+    }
+
+    protected static IEffectiveDatabaseSchema createTestEffectiveDatabaseSchema(DatabaseId databaseId, StringStorer stringStorer,
+            ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
+
+        return createTestEffectiveDatabaseSchema(databaseId, TEST_TABLE_NAME, stringStorer, schemaObjectIdAllocator);
+    }
+
+    protected static IEffectiveDatabaseSchema createTestEffectiveDatabaseSchema(DatabaseId databaseId, String tableName, StringStorer stringStorer) {
+
+        return createTestEffectiveDatabaseSchema(databaseId, tableName, stringStorer, initialSchemaObjectIdAllocator);
+    }
+
+    protected static IEffectiveDatabaseSchema createTestEffectiveDatabaseSchema(DatabaseId databaseId, String tableName, StringStorer stringStorer,
             ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
 
         Objects.requireNonNull(databaseId);
+        Checks.isTableName(tableName);
         Objects.requireNonNull(stringStorer);
         Objects.requireNonNull(schemaObjectIdAllocator);
-
-        final String tableName = TEST_TABLE_NAME;
 
         return SchemaBuilder.create(databaseId, stringStorer, schemaObjectIdAllocator)
                 .addTable(tableName, b -> createTestTable(b))
@@ -177,7 +196,7 @@ public abstract class BaseDBTest extends BaseSQLTest {
 
         final DatabaseSchemaVersion schemaVersion = DatabaseSchemaVersion.of(DatabaseSchemaVersion.INITIAL_VERSION);
 
-        final MutableIntMaxDistanceNonBucketSetAllocator intSetAllocator = new MutableIntMaxDistanceNonBucketSetAllocator();
+        final MutableIntSetAllocator intSetAllocator = new MutableIntSetAllocator();
 
         final SchemaManagementAllocators schemaManagementAllocators = new SchemaManagementAllocators(intSetAllocator);
 
@@ -240,7 +259,7 @@ public abstract class BaseDBTest extends BaseSQLTest {
 
     protected static ICompleteSchemaMapsBuilder<SchemaObject, ?, HeapAllCompleteSchemaMaps> createCompleteSchemaMapsBuilder() {
 
-        return new HeapCompleteSchemaMapsBuilder();
+        return new HeapCompleteSchemaMapsBuilder(AllocationType.HEAP);
     }
 
     protected static HeapDDLSchemaSQLStatementsWorkerObjects createDDLSchemaSQLStatementsWorkerObjects() {

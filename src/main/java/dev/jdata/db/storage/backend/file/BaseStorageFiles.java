@@ -5,11 +5,11 @@ import java.io.IOException;
 import java.util.Objects;
 
 import dev.jdata.db.storage.file.FileStorage;
-import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IIndexListGetters;
-import dev.jdata.db.utils.adt.lists.IMutableIndexList;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
+import dev.jdata.db.utils.adt.lists.IBaseIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IBaseMutableIndexList;
+import dev.jdata.db.utils.adt.lists.IObjectIndexListView;
 import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.file.access.FileAccess;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
@@ -21,7 +21,7 @@ public abstract class BaseStorageFiles<T extends FileAccess, U extends BaseStora
     private final IRelativeFileSystemAccess fileSystemAccess;
     private final RelativeDirectoryPath directoryPath;
 
-    private final IMutableIndexList<U> files;
+    private final IBaseMutableIndexList<U> files;
 
     protected static int parseSequenceNo(String fileName, String fileNamePrefix) {
 
@@ -34,7 +34,7 @@ public abstract class BaseStorageFiles<T extends FileAccess, U extends BaseStora
     protected abstract String getFileNamePrefix();
 
     protected BaseStorageFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath directoryPath, IIndexList<U> files,
-            IndexListAllocator<U, ? extends IndexList<U>, ?, ? extends IMutableIndexList<U>> indexListAllocator) {
+            IIndexListAllocator<U, ? extends IndexList<U>, ?> indexListAllocator) {
 
         Objects.requireNonNull(fileSystemAccess);
         Objects.requireNonNull(directoryPath);
@@ -76,7 +76,7 @@ public abstract class BaseStorageFiles<T extends FileAccess, U extends BaseStora
         files.addTail(file);
     }
 
-    protected final IIndexListGetters<U> getFiles() {
+    protected final IObjectIndexListView<U> getFiles() {
 
         return files;
     }

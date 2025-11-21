@@ -446,7 +446,7 @@ public class HashArray {
             Assertions.areNotEqual(found, noIndex);
         }
 
-        final long result = IntPutResult.makePutResult(newAdded, found);
+        final long result = IntCapacityPutResult.makePutResult(newAdded, found);
 
         if (DEBUG) {
 
@@ -544,7 +544,7 @@ public class HashArray {
             Assertions.areNotEqual(found, noIndex);
         }
 
-        final long result = IntPutResult.makePutResult(newAdded, found);
+        final long result = IntCapacityPutResult.makePutResult(newAdded, found);
 
         if (DEBUG) {
 
@@ -644,7 +644,7 @@ public class HashArray {
             Assertions.areNotEqual(found, noIndex);
         }
 
-        final long result = IntPutResult.makePutResult(newAdded, found);
+        final long result = IntCapacityPutResult.makePutResult(newAdded, found);
 
         if (DEBUG) {
 

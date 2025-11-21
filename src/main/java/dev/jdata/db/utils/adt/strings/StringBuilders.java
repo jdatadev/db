@@ -48,7 +48,7 @@ public class StringBuilders {
 
     public static void hexString(StringBuilder sb, long value, boolean addPrefix) {
 
-        hexString(sb, value, addPrefix);
+        hexString(sb, value, addPrefix, 0);
     }
 
     public static void hexString(StringBuilder sb, long value, boolean addPrefix, int zeroPad) {

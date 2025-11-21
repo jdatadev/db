@@ -8,8 +8,8 @@ import dev.jdata.db.engine.database.StringStorer;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.types.SchemaDataType;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
+import dev.jdata.db.utils.adt.lists.HeapIndexList;
+import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class TableBuilder {
@@ -23,7 +23,7 @@ public final class TableBuilder {
     private final int tableId;
 
     private final StringStorer stringStorer;
-    private final IndexListBuilder<Column, ?, ?> columnsBuilder;
+    private final IIndexListBuilder<Column, ?> columnsBuilder;
 
     private int columnIdSequenceNo;
 
@@ -37,7 +37,7 @@ public final class TableBuilder {
         this.tableId = Checks.isTableId(tableId);
         this.stringStorer = Objects.requireNonNull(stringStorer);
 
-        this.columnsBuilder = IndexList.createBuilder(Column[]::new);
+        this.columnsBuilder = HeapIndexList.createBuilder(Column[]::new);
 
         this.columnIdSequenceNo = DBConstants.INITIAL_COLUMN_ID;
     }

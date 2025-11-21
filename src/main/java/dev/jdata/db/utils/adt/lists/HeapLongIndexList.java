@@ -61,6 +61,12 @@ public final class HeapLongIndexList extends LongIndexList {
         private HeapLongIndexListBuilder(AllocationType allocationType, int minimumCapacity, HeapLongIndexListAllocator listAllocator) {
             super(allocationType, minimumCapacity, listAllocator);
         }
+
+        @Override
+        HeapLongIndexList empty() {
+
+            return HeapLongIndexList.empty();
+        }
     }
 
     private static final HeapLongIndexList emptyList = new HeapLongIndexList(AllocationType.HEAP);

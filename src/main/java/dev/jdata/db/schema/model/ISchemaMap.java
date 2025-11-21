@@ -3,10 +3,10 @@ package dev.jdata.db.schema.model;
 import org.jutils.io.strings.StringResolver;
 
 import dev.jdata.db.schema.model.objects.SchemaObject;
-import dev.jdata.db.utils.adt.elements.IObjectIterableElements;
-import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.elements.IObjectIterableElementsView;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
 
-public interface ISchemaMap<T extends SchemaObject> extends IObjectIterableElements<T> {
+public interface ISchemaMap<T extends SchemaObject> extends IObjectIterableElementsView<T> {
 
     boolean containsSchemaObjectName(long schemaObjectName);
 
@@ -14,7 +14,7 @@ public interface ISchemaMap<T extends SchemaObject> extends IObjectIterableEleme
 
     T getSchemaObjectById(int id);
 
-    IndexList<T> getSchemaObjects();
+    IBaseIndexList<T> getSchemaObjects();
 
     boolean isEqualTo(StringResolver thisStringResolver, ISchemaMap<T> other, StringResolver otherStringResolver);
 }

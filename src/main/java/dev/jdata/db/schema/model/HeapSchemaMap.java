@@ -6,8 +6,8 @@ import java.util.function.IntFunction;
 import dev.jdata.db.schema.allocators.model.SchemaMapBuilderAllocator;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.utils.adt.lists.HeapIndexList;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
+import dev.jdata.db.utils.adt.lists.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.HeapIndexListBuilder;
 import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 
 public final class HeapSchemaMap<T extends SchemaObject> extends SchemaMap<T, HeapIndexList<T>, HeapSchemaMap<T>> {
@@ -22,7 +22,7 @@ public final class HeapSchemaMap<T extends SchemaObject> extends SchemaMap<T, He
         }
 
         @Override
-        public HeapSchemaMapBuilder<T> allocateSchemaMapBuilder(int minimumCapacity) {
+        public HeapSchemaMapBuilder<T> createBuilder(int minimumCapacity) {
 
             return new HeapSchemaMapBuilder<>(getCreateValuesArray(), getIndexListAllocator(), getLongToObjectMapAllocator(), minimumCapacity);
         }

@@ -5,6 +5,8 @@ import dev.jdata.db.utils.checks.Checks;
 
 public class CapacityExponents {
 
+    public static final int DEFAULT_INNER_CAPACITY_EXPONENT = 10;
+
     public static int computeIntCapacityFromExponent(int capacityExponent) {
 
         Checks.isIntCapacityExponent(capacityExponent);
@@ -40,6 +42,11 @@ public class CapacityExponents {
     }
 
     public static int computeArrayOuterCapacity(int capacity, int innerCapacityExponent) {
+
+        return computeArrayOuterCapacity((long)capacity, innerCapacityExponent);
+    }
+
+    public static int computeArrayOuterCapacity(long capacity, int innerCapacityExponent) {
 
         final int innerCapacity = CapacityExponents.computeIntCapacityFromExponent(innerCapacityExponent);
 

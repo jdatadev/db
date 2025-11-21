@@ -9,13 +9,15 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.elements.IElementsToString;
-import dev.jdata.db.utils.adt.elements.IObjectIterableElements.IForEach;
-import dev.jdata.db.utils.adt.elements.IObjectIterableElements.IForEachWithResult;
+import dev.jdata.db.utils.adt.byindex.IByIndexView;
+import dev.jdata.db.utils.adt.elements.ByIndex;
+import dev.jdata.db.utils.adt.elements.IElementsView;
+import dev.jdata.db.utils.adt.elements.IObjectElementsToString;
+import dev.jdata.db.utils.adt.elements.IObjectForEach;
+import dev.jdata.db.utils.adt.elements.IObjectForEachWithResult;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
-public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implements IElementsToString<T> {
+public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implements IObjectElementsToString<T> {
 
     BaseObjectArrayList(AllocationType allocationType) {
         super(allocationType);
@@ -64,11 +66,11 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         copy(createElementsArray, toCopy);
     }
 
-    BaseObjectArrayList(IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
+    BaseObjectArrayList(IntFunction<T[]> createElementsArray, IBaseIndexList<T> toCopy) {
         this(AllocationType.HEAP, createElementsArray);
     }
 
-    BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
+    BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IBaseIndexList<T> toCopy) {
         super(allocationType, createElementsArray);
 
         if (toCopy instanceof BaseObjectArrayList<?>) {
@@ -79,7 +81,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
             copy(createElementsArray, indexList);
         }
         else {
-            final int numElements = Integers.checkUnsignedLongToUnsignedInt(toCopy.getNumElements());
+            final int numElements = IElementsView.intNumElements(toCopy.getNumElements());
 
             this.elementsArray = createElementsArray.apply(numElements);
 
@@ -92,7 +94,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         }
     }
 
-    <U> BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<U> toCopy, Function<U, T> mapper) {
+    <U> BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IBaseIndexList<U> toCopy, Function<U, T> mapper) {
         super(allocationType, createElementsArray);
 
         if (toCopy instanceof BaseObjectArrayList<?>) {
@@ -103,7 +105,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
             copy(createElementsArray, indexList, mapper);
         }
         else {
-            final int numElements = Integers.checkUnsignedLongToUnsignedInt(toCopy.getNumElements());
+            final int numElements = IElementsView.intNumElements(toCopy.getNumElements());
 
             this.elementsArray = createElementsArray.apply(numElements);
 
@@ -345,7 +347,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         elementsArray[(int)index] = instance;
     }
 
-    public final T removeHead() {
+    public final T removeHeadAndReturnValue() {
 
         return remove(0);
     }
@@ -361,7 +363,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
                 remove(0);
             }
             else {
-                final int numToRemove = Integers.checkUnsignedLongToUnsignedInt(numElements);
+                final int numToRemove = IElementsView.intNumElements(numElements);
 
                 final int num = this.numElements;
 
@@ -388,7 +390,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
 
         Checks.checkIndex(index, num);
 
-        final int intIndex = Integers.checkUnsignedLongToUnsignedInt(index);
+        final int intIndex = IByIndexView.intIndex(index);
 
         final T result;
 
@@ -459,7 +461,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         Arrays.sort(elementsArray, 0, numElements, comparator);
     }
 
-    public final <P, E extends Exception> void forEach(P parameter, IForEach<T, P, E> forEach) throws E {
+    public final <P, E extends Exception> void forEach(P parameter, IObjectForEach<T, P, E> forEach) throws E {
 
         final int num = numElements;
 
@@ -469,7 +471,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         }
     }
 
-    public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<T, P1, P2, R, E> forEach) throws E {
+    public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IObjectForEachWithResult<T, P1, P2, R, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -643,29 +645,6 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
     }
 
     @Override
-    public final <P> void toString(StringBuilder sb, P parameter, ElementsToStringAdder<T, P> elementsToStringAdder) {
-
-        Objects.requireNonNull(sb);
-        Objects.requireNonNull(elementsToStringAdder);
-
-        sb.append('[');
-
-        final int num = numElements;
-
-        for (int i = 0; i < num; ++ i) {
-
-            if (i > 0) {
-
-                sb.append(',');
-            }
-
-            elementsToStringAdder.addString(elementsArray[i], sb, parameter);
-        }
-
-        sb.append(']');
-    }
-
-    @Override
     public final int hashCode() {
 
         throw new UnsupportedOperationException();
@@ -697,5 +676,11 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         }
 
         return result;
+    }
+
+    @Override
+    public String toString() {
+
+        return ByIndex.closureOrConstantToString(this, 0, getNumElements(), null, (e, i, b) -> b.append(e.get(i).toString()));
     }
 }

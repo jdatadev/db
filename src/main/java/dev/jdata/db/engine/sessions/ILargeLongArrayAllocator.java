@@ -1,10 +1,10 @@
 package dev.jdata.db.engine.sessions;
 
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
 
 public interface ILargeLongArrayAllocator {
 
-    LargeLongArray allocateLargeLongArray();
+    IMutableLongLargeArray allocateLargeLongArray();
 
-    void freeLargeLongArray(LargeLongArray largeLongArray);
+    void freeLargeLongArray(IMutableLongLargeArray largeLongArray);
 }

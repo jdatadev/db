@@ -1,119 +1,35 @@
 package dev.jdata.db.utils.adt.lists;
 
-import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.lists.CachedMutableIndexList.CacheMutableIndexListAllocator;
-import dev.jdata.db.utils.allocators.IAllocators;
-import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer.RefType;
-import dev.jdata.db.utils.allocators.ICacheable;
+import dev.jdata.db.utils.adt.elements.IElementsView;
+import dev.jdata.db.utils.allocators.BaseAllocatableArrayAllocator;
 
 public final class CachedIndexList<T> extends IndexList<T> implements ICachedIndexList<T> {
 
-    private static final CachedIndexList<?> emptyList = new CachedIndexList<>(AllocationType.HEAP_CONSTANT);
+    static final class IndexListArrayAllocator<T, U extends IndexList<T>> extends BaseAllocatableArrayAllocator<U> {
 
-    public static final class CacheIndexListAllocator<T> extends IndexListAllocator<T, CachedIndexList<T>, CachedIndexListBuilder<T>, CachedMutableIndexList<T>> implements IAllocators {
-
-        private static final AllocationType ALLOCATION_TYPE = AllocationType.CACHING_ALLOCATOR;
-
-        private final ArrayIndexListBuilderAllocator<T, CachedIndexListBuilder<T>> listBuilderArrayAllocator;
-        private final IndexListArrayAllocator<T, CachedIndexList<T>> listArrayAllocator;
-        private final CacheMutableIndexListAllocator<T> mutableListAllocator;
-
-        public CacheIndexListAllocator(IntFunction<T[]> createElementsArray) {
-
-            Objects.requireNonNull(createElementsArray);
-
-            this.listBuilderArrayAllocator = new ArrayIndexListBuilderAllocator<>(ALLOCATION_TYPE, c -> new CachedIndexListBuilder<>(ALLOCATION_TYPE, c, this));
-            this.listArrayAllocator = new IndexListArrayAllocator<>(ALLOCATION_TYPE, c -> new CachedIndexList<T>(ALLOCATION_TYPE, createElementsArray, c));
-            this.mutableListAllocator = new CacheMutableIndexListAllocator<>(createElementsArray);
+        IndexListArrayAllocator(AllocationType allocationType, IntFunction<U> createList) {
+            super(createList, l -> IElementsView.intNumElements(l.getNumElements()));
         }
 
-        @Override
-        public void gatherStatistics(IAllocatorsStatisticsGatherer statisticsGatherer) {
+        U allocateIndexList(int minimumCapacity) {
 
-            Objects.requireNonNull(statisticsGatherer);
-
-            statisticsGatherer.addInstanceAllocator("listBuilderArrayAllocator", RefType.INSTANTIATED, CachedIndexListBuilder.class, listBuilderArrayAllocator);
-            statisticsGatherer.addInstanceAllocator("listArrayAllocator", RefType.INSTANTIATED, CachedIndexList.class, listArrayAllocator);
-            statisticsGatherer.addInstanceAllocator("mutableListArrayAllocator", RefType.INSTANTIATED, MutableIndexList.class, mutableListAllocator);
+            return allocateAllocatableArrayInstance(minimumCapacity);
         }
 
-        @Override
-        CachedIndexListBuilder<T> allocateIndexListBuilder(int minimumCapacity) {
+        void freeIndexList(U list) {
 
-            return listBuilderArrayAllocator.allocateIndexListBuilder(minimumCapacity);
-        }
-
-        @Override
-        public void freeIndexListBuilder(CachedIndexListBuilder<T> builder) {
-
-            listBuilderArrayAllocator.freeIndexListBuilder(builder);
-        }
-
-        @Override
-        public void freeIndexList(CachedIndexList<T> list) {
-
-            listArrayAllocator.freeIndexList(list);
-        }
-
-        @Override
-        CachedMutableIndexList<T> allocateMutableIndexList(int minimumCapacity) {
-
-            return mutableListAllocator.allocateMutableIndexList(minimumCapacity);
-        }
-
-        @Override
-        public void freeIndexMutableList(CachedMutableIndexList<T> list) {
-
-            mutableListAllocator.freeMutableIndexList(list);
-        }
-
-        @Override
-        CachedIndexList<T> allocateIndexListFrom(T[] values, int numElements) {
-
-            final CachedIndexList<T> result = listArrayAllocator.allocateIndexList(numElements);
-
-            result.initialize(values, numElements);
-
-            return result;
-        }
-
-        @Override
-        CachedIndexList<T> copyToImmutable(MutableIndexList<T> mutableIndexList) {
-
-            return mutableIndexList.makeFromElementsAndRecreate(this, (c, e, n, i) -> i.allocateIndexListFrom(e, n));
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        CachedIndexList<T> emptyList() {
-
-            return (CachedIndexList<T>)emptyList;
+            freeAllocatableArrayInstance(list);
         }
     }
 
-    public static final class CachedIndexListBuilder<T> extends IndexListBuilder<T, CachedIndexList<T>, CachedIndexListBuilder<T>> implements ICacheable {
+    static final CachedIndexList<?> emptyList = new CachedIndexList<>(AllocationType.HEAP_CONSTANT);
 
-        private final CacheIndexListAllocator<T> listAllocator;
+    @SuppressWarnings("unchecked")
+    public static <T> CachedIndexList<T> empty() {
 
-        private CachedIndexListBuilder(AllocationType allocationType, int initialCapacity, CacheIndexListAllocator<T> listAllocator) {
-            super(allocationType, initialCapacity, listAllocator);
-
-            this.listAllocator = Objects.requireNonNull(listAllocator);
-        }
-
-        @Override
-        public final CachedIndexList<T> build() {
-
-            return listAllocator.copyToImmutable(getList());
-        }
-
-        @Override
-        public HeapIndexList<T> buildHeapAllocated() {
-
-            return getList().makeFromElementsAndRecreate(this, (c, e, n, i) -> new HeapIndexList<>(AllocationType.HEAP, c, e, n));
-        }
+        return (CachedIndexList<T>)emptyList;
     }
 
     private CachedIndexList(AllocationType allocationType) {

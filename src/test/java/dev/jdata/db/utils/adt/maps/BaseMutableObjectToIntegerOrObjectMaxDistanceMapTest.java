@@ -3,7 +3,7 @@ package dev.jdata.db.utils.adt.maps;
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.arrays.Array;
 
-abstract class BaseMutableObjectToIntegerOrObjectMaxDistanceMapTest<K, V, M extends IObjectContainsKeyMap<K> & IClearable & IObjectKeyDynamicMapRemovalMutators<K>>
+abstract class BaseMutableObjectToIntegerOrObjectMaxDistanceMapTest<K, V, M extends IObjectContainsKeyMapView<K> & IClearable & IObjectKeyDynamicMapRemovalMutators<K>>
 
             extends BaseMutableObjectToIntegerOrObjectMapTest<K, V[], M> {
 

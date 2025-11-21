@@ -4,21 +4,32 @@ import java.util.Collection;
 
 import dev.jdata.db.utils.adt.KeyElements;
 import dev.jdata.db.utils.adt.KeySetElements;
-import dev.jdata.db.utils.adt.arrays.IOneDimensionalArrayCommon;
-import dev.jdata.db.utils.adt.elements.IElements;
-import dev.jdata.db.utils.adt.maps.ILongContainsKeyMap;
+import dev.jdata.db.utils.adt.arrays.IOneDimensionalArrayView;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
+import dev.jdata.db.utils.adt.elements.IObjectIterableElementsView;
+import dev.jdata.db.utils.adt.maps.ILongContainsKeyMapView;
 import dev.jdata.db.utils.adt.maps.IMapOfCollection;
 import dev.jdata.db.utils.adt.sets.MutableIntBucketSet;
 import dev.jdata.db.utils.adt.sets.MutableLongBucketSet;
 
 public class CustomAssertJAssertions extends org.assertj.core.api.Assertions {
 
-    public static ElementsAssert assertThat(IElements actual) {
+    public static <T extends CharSequence> CharSequenceAssert<T> assertThatCharSeq(T actual) {
+
+        return new CharSequenceAssert<>(actual);
+    }
+
+    public static ElementsAssert assertThat(IOnlyElementsView actual) {
 
         return new ElementsAssert(actual);
     }
 
-    public static OneDimensionalArrayAssert assertThat(IOneDimensionalArrayCommon actual) {
+    public static <T> ObjectIterableElementsAssert<T> assertThat(IObjectIterableElementsView<T> actual) {
+
+        return new ObjectIterableElementsAssert<>(actual);
+    }
+
+    public static OneDimensionalArrayAssert assertThat(IOneDimensionalArrayView actual) {
 
         return new OneDimensionalArrayAssert(actual);
     }
@@ -48,7 +59,7 @@ public class CustomAssertJAssertions extends org.assertj.core.api.Assertions {
         return new LongBucketSetAssert(actual);
     }
 
-    public static LongKeyMapAssert assertThat(ILongContainsKeyMap actual) {
+    public static LongKeyMapAssert assertThat(ILongContainsKeyMapView actual) {
 
         return new LongKeyMapAssert(actual);
     }

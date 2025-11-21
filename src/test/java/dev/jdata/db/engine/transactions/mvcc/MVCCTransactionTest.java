@@ -24,7 +24,7 @@ import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.types.IntegerType;
 import dev.jdata.db.test.unit.BaseDBTest;
 import dev.jdata.db.test.unit.TableBuilder;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
+import dev.jdata.db.utils.adt.arrays.MutableLongLargeArray;
 import dev.jdata.db.utils.adt.arrays.ObjectArray;
 import dev.jdata.db.utils.adt.sets.MutableLongBucketSet;
 
@@ -64,7 +64,7 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = createRowIdsArray();
+        final MutableLongLargeArray rowIds = createRowIdsArray();
 
         final DMLInsertRows rows = makeInsertRows(rowId, rowIds, intValue);
 
@@ -124,7 +124,7 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = createRowIdsArray();
+        final MutableLongLargeArray rowIds = createRowIdsArray();
 
         final DMLUpdateRows rows = makeUpdateRows(rowId, rowIds, intValue);
 
@@ -224,7 +224,7 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = createRowIdsArray();
+        final MutableLongLargeArray rowIds = createRowIdsArray();
 
         rowIds.add(rowId);
 
@@ -275,7 +275,7 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = createRowIdsArray();
+        final MutableLongLargeArray rowIds = createRowIdsArray();
 
         final DMLInsertRows rows = makeInsertRows(rowId, rowIds, intValue);
 
@@ -351,12 +351,12 @@ public final class MVCCTransactionTest extends BaseDBTest {
 */
     }
 
-    private static DMLInsertRows makeInsertRows(long rowId, LargeLongArray rowIds, int intValue) {
+    private static DMLInsertRows makeInsertRows(long rowId, MutableLongLargeArray rowIds, int intValue) {
 
         return makeInsertUpdateRows(rowId, rowIds, new DMLInsertRows(), new InsertRow(), intValue, InsertRow[]::new);
     }
 
-    private static DMLUpdateRows makeUpdateRows(long rowId, LargeLongArray rowIds, int intValue) {
+    private static DMLUpdateRows makeUpdateRows(long rowId, MutableLongLargeArray rowIds, int intValue) {
 
         return makeInsertUpdateRows(rowId, rowIds, new DMLUpdateRows(), new UpdateRow(), intValue, UpdateRow[]::new);
     }
@@ -366,7 +366,7 @@ public final class MVCCTransactionTest extends BaseDBTest {
         return makeInsertUpdateRows(new DMLUpdateRows(), new UpdateRow(), intValue, UpdateRow[]::new);
     }
 
-    private static <T extends InsertUpdateRow, U extends DMLInsertUpdateRows<T>> U makeInsertUpdateRows(long rowId, LargeLongArray rowIds, U rows, T row, int intValue,
+    private static <T extends InsertUpdateRow, U extends DMLInsertUpdateRows<T>> U makeInsertUpdateRows(long rowId, MutableLongLargeArray rowIds, U rows, T row, int intValue,
             IntFunction<T[]> createRowArray) {
 
         rowIds.add(rowId);
@@ -438,8 +438,8 @@ public final class MVCCTransactionTest extends BaseDBTest {
                 .build();
     }
 
-    private static LargeLongArray createRowIdsArray() {
+    private static MutableLongLargeArray createRowIdsArray() {
 
-        return new LargeLongArray(0, 10);
+        return new MutableLongLargeArray(0, 10);
     }
 }

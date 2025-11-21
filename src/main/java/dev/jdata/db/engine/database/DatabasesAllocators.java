@@ -10,8 +10,8 @@ import dev.jdata.db.engine.sessions.DMLUpdatingPreparedEvaluatorParameter;
 import dev.jdata.db.engine.sessions.ILargeLongArrayAllocator;
 import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.engine.transactions.TransactionSelect.TransactionSelectAllocator;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
-import dev.jdata.db.utils.adt.sets.MutableLargeLongBucketSet;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
+import dev.jdata.db.utils.adt.sets.IMutableLongLargeSet;
 import dev.jdata.db.utils.allocators.ArrayAllocator;
 import dev.jdata.db.utils.allocators.ByteArrayByteBufferAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
@@ -24,9 +24,9 @@ public final class DatabasesAllocators implements IDatabasesAllocators {
         private static final int LARGE_OUTER_INITIAL_CAPACITY = 1;
         private static final int LARGE_INNER_CAPACITY_EXPONENT = 16;
 
-        private final ObjectCache<LargeLongArray> largeLongArrayCache;
+        private final ObjectCache<IMutableLongLargeArray> largeLongArrayCache;
         private final NodeObjectCache<TransactionSelect> transactionSelectCache;
-        private final ObjectCache<MutableLargeLongBucketSet> largeLongSetCache;
+        private final ObjectCache<IMutableLongLargeSet> largeLongSetCache;
 
         private final ArrayAllocator<SQLExpressionEvaluator> expressionEvaluatorArrayAllocator;
         private final ByteArrayByteBufferAllocator byteArrayByteBufferAllocator;
@@ -37,9 +37,9 @@ public final class DatabasesAllocators implements IDatabasesAllocators {
 
         UtilAllocators() {
 
-            this.largeLongArrayCache = new ObjectCache<>(() -> new LargeLongArray(LARGE_OUTER_INITIAL_CAPACITY, LARGE_INNER_CAPACITY_EXPONENT), LargeLongArray[]::new);
+            this.largeLongArrayCache = new ObjectCache<>(() -> new MutableLongLargeArray(LARGE_OUTER_INITIAL_CAPACITY, LARGE_INNER_CAPACITY_EXPONENT), MutableLongLargeArray[]::new);
             this.transactionSelectCache = new NodeObjectCache<>(TransactionSelect::new);
-            this.largeLongSetCache = new ObjectCache<>(() -> new MutableLargeLongBucketSet(LARGE_OUTER_INITIAL_CAPACITY, LARGE_INNER_CAPACITY_EXPONENT), MutableLargeLongBucketSet[]::new);
+            this.largeLongSetCache = new ObjectCache<>(() -> new MutableLongLargeBucketSet(LARGE_OUTER_INITIAL_CAPACITY, LARGE_INNER_CAPACITY_EXPONENT), MutableLongLargeBucketSet[]::new);
 
             this.expressionEvaluatorArrayAllocator = new ArrayAllocator<>(SQLExpressionEvaluator[]::new);
             this.byteArrayByteBufferAllocator = new ByteArrayByteBufferAllocator();
@@ -47,13 +47,13 @@ public final class DatabasesAllocators implements IDatabasesAllocators {
             this.largeLongArrayAllocator = new ILargeLongArrayAllocator() {
 
                 @Override
-                public LargeLongArray allocateLargeLongArray() {
+                public MutableLongLargeArray allocateLargeLongArray() {
 
                     return largeLongArrayCache.allocate();
                 }
 
                 @Override
-                public void freeLargeLongArray(LargeLongArray largeLongArray) {
+                public void freeLargeLongArray(MutableLongLargeArray largeLongArray) {
 
                     largeLongArrayCache.free(largeLongArray);
                 }
@@ -77,13 +77,13 @@ public final class DatabasesAllocators implements IDatabasesAllocators {
             this.largeLongSetAllocator = new ILargeLongSetAllocator() {
 
                 @Override
-                public MutableLargeLongBucketSet allocateLargeLongSet() {
+                public MutableLongLargeBucketSet allocateLargeLongSet() {
 
                     return largeLongSetCache.allocate();
                 }
 
                 @Override
-                public void freeLargeLongSet(MutableLargeLongBucketSet largeLongSet) {
+                public void freeLargeLongSet(MutableLongLargeBucketSet largeLongSet) {
 
                     largeLongSetCache.free(largeLongSet);
                 }

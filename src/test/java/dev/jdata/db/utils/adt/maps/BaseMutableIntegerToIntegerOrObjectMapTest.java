@@ -8,7 +8,7 @@ import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.sets.MutableIntBucketSet;
 import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & IClearable> extends BaseIntegerToIntegerOrObjectMapTest<K, V, M> {
+abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IMutableIntegerKeyMap<?> & IClearable> extends BaseIntegerToIntegerOrObjectMapTest<K, V, M> {
 
     abstract M createMap(int initialCapacityExponent);
 

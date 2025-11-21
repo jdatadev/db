@@ -1,10 +1,10 @@
 package dev.jdata.db.utils.adt.maps;
 
-interface ILongToObjectDynamicMapGetters<T> extends IDynamicMapGetters {
+interface ILongToObjectDynamicMapGetters<V> extends IKeyValueDynamicMapGettersMarker {
 
-    T get(long key, T defaultValue);
+    V get(long key, V defaultValue);
 
-    default T get(long key) {
+    default V get(long key) {
 
         return get(key, null);
     }

@@ -6,11 +6,11 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.elements.BaseNumElements;
-import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.allocators.IFreeing;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class MultiTypeFreeList<T> extends BaseNumElements implements IFreeing<T>, IElements {
+public final class MultiTypeFreeList<T> extends BaseNumElements implements IFreeing<T>, IOnlyElementsView {
 
     private final Map<Class<?>, FreeList<T>> freeListsByType;
 

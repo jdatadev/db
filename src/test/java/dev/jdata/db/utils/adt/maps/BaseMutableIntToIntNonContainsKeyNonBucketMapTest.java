@@ -6,7 +6,7 @@ import dev.jdata.db.utils.adt.IClearable;
 
 abstract class BaseMutableIntToIntNonContainsKeyNonBucketMapTest<
 
-                M extends IIntToIntStaticMapCommon & IClearable & IIntToIntCommonMapMutators>
+                M extends IIntToIntBaseStaticMapCommon & IClearable & IIntToIntStoreMapMutators>
 
         extends BaseMutableIntToIntegerOrObjectNonBucketMapTest<int[], M> {
 

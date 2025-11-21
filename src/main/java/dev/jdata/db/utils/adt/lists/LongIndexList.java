@@ -2,11 +2,11 @@ package dev.jdata.db.utils.adt.lists;
 
 import java.util.Objects;
 
+import dev.jdata.db.utils.adt.elements.ILongIterableElementsView;
+import dev.jdata.db.utils.adt.elements.allocators.ElementsBuilderTrackingAllocator;
 import dev.jdata.db.utils.adt.lists.HeapLongIndexList.HeapLongIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.HeapLongIndexList.HeapLongIndexListBuilder;
 import dev.jdata.db.utils.allocators.Allocatable;
-import dev.jdata.db.utils.allocators.BuilderElementAllocator;
-import dev.jdata.db.utils.builders.IBuilder;
 import dev.jdata.db.utils.checks.Checks;
 
 public abstract class LongIndexList extends BaseLongIndexList implements ILongIndexList {
@@ -24,8 +24,9 @@ public abstract class LongIndexList extends BaseLongIndexList implements ILongIn
         }
     }
 
-    public static abstract class LongIndexListAllocator<T extends LongIndexList, U extends LongIndexListBuilder<T, U>> extends BuilderElementAllocator<U>
+    public static abstract class LongIndexListAllocator<T extends LongIndexList, U extends LongIndexListBuilder<T, U>>
 
+            extends ElementsBuilderTrackingAllocator<T, U>
             implements ILongIndexListAllocator<T, U> {
 
         @Override
@@ -63,13 +64,12 @@ public abstract class LongIndexList extends BaseLongIndexList implements ILongIn
         return listAllocator.allocateLongIndexListBuilder(minimumCapacity);
     }
 
-    public static abstract class LongIndexListBuilder<T extends LongIndexList, U extends LongIndexListBuilder<T, U>>
-
-            extends Allocatable
-            implements ILongIndexListBuildable<T, U>, IBuilder {
+    public static abstract class LongIndexListBuilder<T extends LongIndexList, U extends LongIndexListBuilder<T, U>> extends Allocatable implements ILongIndexListBuilder<T> {
 
         private final LongIndexListAllocator<T, U> listAllocator;
         private final MutableLongIndexList list;
+
+        abstract T empty();
 
         LongIndexListBuilder(AllocationType allocationType, int minimumCapacity, LongIndexListAllocator<T, U> listAllocator) {
             super(allocationType);
@@ -89,40 +89,53 @@ public abstract class LongIndexList extends BaseLongIndexList implements ILongIn
         }
 
         @Override
-        public final U addTail(long value) {
+        public final void addTail(long value) {
 
             checkIsAllocated();
 
             list.addTail(value);
-
-            return getThis();
         }
 
         @Override
-        public final U addTail(long ... values) {
+        public final void addTail(long ... values) {
+
+            Checks.isNotEmpty(values);
 
             checkIsAllocated();
 
             list.addTail(values);
-
-            return getThis();
         }
 
         @Override
-        public final T build() {
+        public final void addTail(ILongIterableElementsView elements) {
 
-            return list.makeFromElements(this, (c, e, n, i) -> i.listAllocator.allocateLongIndexListFrom(e, n));
+            Objects.requireNonNull(elements);
+
+            checkIsAllocated();
+
+            list.addTail(elements);
         }
 
-        final long getCapacity() {
+        @Override
+        public final T buildOrEmpty() {
+
+            return isEmpty() ? empty() : build();
+        }
+
+        @Override
+        public final T buildOrNull() {
+
+            return isEmpty() ? null : build();
+        }
+
+        private long getCapacity() {
 
             return list.getElementCapacity();
         }
 
-        @SuppressWarnings("unchecked")
-        private U getThis() {
+        private T build() {
 
-            return (U)this;
+            return list.makeFromElements(this, (c, e, n, i) -> i.listAllocator.allocateLongIndexListFrom(e, n));
         }
     }
 
@@ -132,8 +145,9 @@ public abstract class LongIndexList extends BaseLongIndexList implements ILongIn
 
         final U builder = createBuilder(1, listAllocator);
 
-        final T result = builder.addTail(value)
-                .build();
+        builder.addTail(value);
+
+        final T result = builder.buildOrEmpty();
 
         listAllocator.freeLongIndexListBuilder(builder);
 
@@ -151,7 +165,6 @@ public abstract class LongIndexList extends BaseLongIndexList implements ILongIn
 
         return builder.build();
     }
-
 
     LongIndexList(AllocationType allocationType) {
         super(allocationType);

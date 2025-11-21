@@ -6,8 +6,8 @@ import java.util.function.ToIntFunction;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.arrays.BaseLargeByteArray;
-import dev.jdata.db.utils.adt.arrays.IMutableArray;
+import dev.jdata.db.utils.adt.arrays.BaseByteLargeArray;
+import dev.jdata.db.utils.adt.arrays.IMutableOneDimensionalArray;
 import dev.jdata.db.utils.adt.decimals.MutableDecimal;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.bits.BitsUtil;
@@ -19,7 +19,7 @@ import dev.jdata.db.utils.function.ByteGetter;
 import dev.jdata.db.utils.math.Sign;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class BitBuffer extends BaseLargeByteArray implements IMutableArray, PrintDebug {
+public final class BitBuffer extends BaseByteLargeArray implements IMutableOneDimensionalArray, PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BIT_BUFFER;
 
@@ -85,6 +85,13 @@ public final class BitBuffer extends BaseLargeByteArray implements IMutableArray
     @Override
     public void toString(long index, StringBuilder sb) {
 
+        sb.append(isBitSet(index) ? '1' : '0');
+    }
+
+    @Override
+    public void toHexString(long index, StringBuilder sb) {
+
+        toString(index, sb);
     }
 
     public long getBitOffset() {
@@ -619,6 +626,16 @@ public final class BitBuffer extends BaseLargeByteArray implements IMutableArray
     protected int getInnerByteArrayLength(long innerArrayElementCapacity) {
 
         return Integers.checkUnsignedLongToUnsignedInt(innerArrayElementCapacity >>> 3);
+    }
+
+    private boolean isBitSet(long bitOffset) {
+
+        final int outerIndex = getOuterIndex(bitOffset);
+        final byte[] byteArray = getByteArrayByOuterIndex(outerIndex);
+
+        final long byteArrayBitOffset = bitOffset & innerBitsCapacityMask;
+
+        return BitBufferUtil.isBitSet(byteArray, byteArrayBitOffset);
     }
 
     private static int getInnerBitsCapacityExponent(int innerBytesCapacityExponent) {

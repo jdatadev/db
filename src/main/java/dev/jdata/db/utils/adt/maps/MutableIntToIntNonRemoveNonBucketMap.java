@@ -50,6 +50,12 @@ public final class MutableIntToIntNonRemoveNonBucketMap extends BaseIntToIntNonR
     }
 
     @Override
+    public long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
     public int put(int key, int value, int defaultPreviousValue) {
 
         IntNonBucket.checkIsHashArrayElement(key);

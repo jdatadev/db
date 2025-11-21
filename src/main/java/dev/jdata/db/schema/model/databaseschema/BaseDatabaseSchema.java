@@ -13,7 +13,7 @@ import dev.jdata.db.schema.model.ISchemaMap;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.schema.model.schemamaps.BaseSchemaMaps;
-import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
 import dev.jdata.db.utils.checks.Checks;
 
 public abstract class BaseDatabaseSchema<T extends BaseSchemaMaps<?>> extends DatabaseSchemaModelObject implements IDatabaseSchema {
@@ -61,11 +61,13 @@ public abstract class BaseDatabaseSchema<T extends BaseSchemaMaps<?>> extends Da
 
     @SuppressWarnings("unchecked")
     @Override
-    public final <R extends SchemaObject> IIndexList<R> getSchemaObjects(DDLObjectType ddlObjectType) {
+    public final <R extends SchemaObject> IBaseIndexList<R> getSchemaObjects(DDLObjectType ddlObjectType) {
 
         Objects.requireNonNull(ddlObjectType);
 
-        return (IIndexList<R>)getSchemaMap(ddlObjectType).getSchemaObjects();
+        final ISchemaMap<R> schemaMap = (ISchemaMap<R>)getSchemaMap(ddlObjectType);
+
+        return schemaMap != null ? schemaMap.getSchemaObjects() : null;
     }
 
     @Override

@@ -4,9 +4,10 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
+import dev.jdata.db.review.IDeprecatedInstanceAllocator;
 import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer;
 
-public final class ObjectCache<T> implements IObjectCache<T>, IInstanceAllocator<T> {
+public final class ObjectCache<T> implements IObjectCache<T>, IDeprecatedInstanceAllocator<T> {
 
     private final ParameterObjectCache<T, Void> delegate;
 

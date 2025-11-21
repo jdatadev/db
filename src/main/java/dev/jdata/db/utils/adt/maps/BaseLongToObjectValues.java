@@ -4,17 +4,17 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.lists.BaseLongValues;
+import dev.jdata.db.utils.adt.lists.BaseLongInnerOuterNodeListValues;
 import dev.jdata.db.utils.checks.Checks;
 
 public abstract class BaseLongToObjectValues<
 
                 INSTANCE,
                 T,
-                LIST extends BaseLongToObjectBucketMapMultiHeadSinglyLinkedList<INSTANCE, T, LIST, VALUES>,
+                LIST extends BaseLongToObjectBucketMapMultiHeadSinglyLinkedNodeList<INSTANCE, T, LIST, VALUES>,
                 VALUES extends BaseLongToObjectValues<INSTANCE, T, LIST, VALUES>>
 
-        extends BaseLongValues<LIST, VALUES> {
+        extends BaseLongInnerOuterNodeListValues<LIST, VALUES> {
 
     private final IntFunction<T[]> createInnerArray;
 

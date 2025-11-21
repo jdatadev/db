@@ -4,11 +4,11 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.lists.LargeLists;
+import dev.jdata.db.utils.adt.lists.LargeNodeLists;
 
 abstract class BaseIntegerBucketSet<T> extends BaseIntegerSet<T> {
 
-    static final long NO_LONG_NODE = LargeLists.NO_LONG_NODE;
+    static final long NO_LONG_NODE = LargeNodeLists.NO_LONG_NODE;
 
     BaseIntegerBucketSet(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T> createHashed, Consumer<T> clearHashed) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createHashed, clearHashed);

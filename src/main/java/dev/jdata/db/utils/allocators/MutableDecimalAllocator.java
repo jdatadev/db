@@ -1,5 +1,6 @@
 package dev.jdata.db.utils.allocators;
 
+import dev.jdata.db.utils.adt.decimals.IMutableDecimalAllocator;
 import dev.jdata.db.utils.adt.decimals.MutableDecimal;
 import dev.jdata.db.utils.adt.integers.ILargeInteger;
 

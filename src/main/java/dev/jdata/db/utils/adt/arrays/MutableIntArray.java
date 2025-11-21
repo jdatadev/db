@@ -6,13 +6,13 @@ import java.util.Objects;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.debug.PrintDebug;
 
-public final class MutableIntArray extends BaseIntArray implements IMutableIntArray {
+final class MutableIntArray extends BaseIntArray implements IMutableIntArray {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_INT_ARRAY;
 
     private static final Class<?> debugClass = MutableIntArray.class;
 
-    public static MutableIntArray copyOf(MutableIntArray toCopy) {
+    static MutableIntArray copyOf(MutableIntArray toCopy) {
 
         Objects.requireNonNull(toCopy);
 
@@ -33,7 +33,7 @@ public final class MutableIntArray extends BaseIntArray implements IMutableIntAr
 
     private final int clearValue;
 
-    public MutableIntArray(int initialCapacity) {
+    MutableIntArray(int initialCapacity) {
         this(initialCapacity, 0, false);
 
         if (DEBUG) {
@@ -47,7 +47,7 @@ public final class MutableIntArray extends BaseIntArray implements IMutableIntAr
         }
     }
 
-    public MutableIntArray(int initialCapacity, int clearValue) {
+    MutableIntArray(int initialCapacity, int clearValue) {
         this(initialCapacity, clearValue, true);
 
         if (DEBUG) {

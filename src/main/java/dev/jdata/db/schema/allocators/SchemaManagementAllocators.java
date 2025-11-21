@@ -7,11 +7,11 @@ import dev.jdata.db.schema.allocators.databases.heap.HeapDatabasesSchemaManagerA
 import dev.jdata.db.schema.allocators.model.diff.dropped.heap.HeapDroppedSchemaObjectsAllocator;
 import dev.jdata.db.schema.allocators.schemas.DatabaseSchemasAllocator;
 import dev.jdata.db.schema.allocators.schemas.heap.HeapDatabaseSchemasAllocator;
+import dev.jdata.db.utils.adt.sets.IMutableIntSet;
+import dev.jdata.db.utils.adt.sets.IBaseMutableIntSetAllocator;
 import dev.jdata.db.utils.adt.sets.MutableIntBucketSet;
-import dev.jdata.db.utils.adt.sets.MutableIntMaxDistanceNonBucketSet;
 import dev.jdata.db.utils.allocators.IAllocators;
 import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer.RefType;
-import dev.jdata.db.utils.allocators.IMutableIntSetAllocator;
 import dev.jdata.db.utils.allocators.IntToObjectMapAllocator;
 
 /**
@@ -19,17 +19,17 @@ import dev.jdata.db.utils.allocators.IntToObjectMapAllocator;
  */
 public final class SchemaManagementAllocators implements IAllocators {
 
-    private final IntToObjectMapAllocator<MutableIntMaxDistanceNonBucketSet> intToObjectMapAllocator;
+    private final IntToObjectMapAllocator<IMutableIntSet> intToObjectMapAllocator;
     private final HeapSchemaObjectIndexListAllocators<?> schemaObjectIndexListAllocators;
     private final HeapDroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator;
     private final DatabaseSchemasAllocator databaseSchemasAllocator;
     private final HeapDatabasesSchemaManagerAllocator schemaManagerAllocator;
 
-    public SchemaManagementAllocators(IMutableIntSetAllocator<MutableIntMaxDistanceNonBucketSet> intSetAllocator) {
+    public SchemaManagementAllocators(IBaseMutableIntSetAllocator intSetAllocator) {
 
         Objects.requireNonNull(intSetAllocator);
 
-        this.intToObjectMapAllocator = new IntToObjectMapAllocator<>(MutableIntMaxDistanceNonBucketSet[]::new);
+        this.intToObjectMapAllocator = new IntToObjectMapAllocator<>(IMutableIntSet[]::new);
 
         this.schemaObjectIndexListAllocators = HeapSchemaObjectIndexListAllocators.INSTANCE;
         this.droppedSchemaObjectsAllocator = new HeapDroppedSchemaObjectsAllocator(intSetAllocator, intToObjectMapAllocator);

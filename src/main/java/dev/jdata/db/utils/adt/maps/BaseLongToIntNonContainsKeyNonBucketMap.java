@@ -4,10 +4,10 @@ import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
-import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
+import dev.jdata.db.utils.adt.hashed.helpers.IntCapacityPutResult;
 import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 
-abstract class BaseLongToIntNonContainsKeyNonBucketMap extends BaseLongToIntNonBucketMap<ILongToIntStaticMapCommon> implements ILongToIntStaticMapCommon {
+abstract class BaseLongToIntNonContainsKeyNonBucketMap extends BaseLongToIntNonBucketMap implements ILongToIntBaseStaticMapCommon {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_TO_INT_NON_CONTAINS_NON_BUCKET_MAP;
 
@@ -112,10 +112,10 @@ abstract class BaseLongToIntNonContainsKeyNonBucketMap extends BaseLongToIntNonB
 
         final long putResult = put(key);
 
-        final int index = IntPutResult.getPutIndex(putResult);
+        final int index = IntCapacityPutResult.getPutIndex(putResult);
         final int[] values = getValues();
 
-        final int result = IntPutResult.getPutNewAdded(putResult) ? defaultPreviousValue : values[index];
+        final int result = IntCapacityPutResult.getPutNewAdded(putResult) ? defaultPreviousValue : values[index];
 
         values[index] = value;
 
@@ -128,7 +128,8 @@ abstract class BaseLongToIntNonContainsKeyNonBucketMap extends BaseLongToIntNonB
     }
 
     @Override
-    public final <P1, P2> boolean equals(P1 thisParameter, ILongToIntStaticMapCommon other, P2 otherParameter, IIntValueMapEqualityTester<P1, P2> equalityTester) {
+    public final <P1, P2, E extends Exception> boolean equals(P1 thisParameter, ILongToIntBaseStaticMapView other, P2 otherParameter,
+            IIntValueMapEqualityTester<P1, P2, E> equalityTester) throws E {
 
         Objects.requireNonNull(other);
         Objects.requireNonNull(equalityTester);
@@ -142,13 +143,12 @@ abstract class BaseLongToIntNonContainsKeyNonBucketMap extends BaseLongToIntNonB
 
         if (other instanceof BaseLongToIntNonBucketMap) {
 
-            @SuppressWarnings("unchecked")
-            final BaseLongToIntNonBucketMap<ILongToIntStaticMapCommon> otherMap = (BaseLongToIntNonBucketMap<ILongToIntStaticMapCommon>)other;
+            final BaseLongToIntNonBucketMap otherMap = (BaseLongToIntNonBucketMap)other;
 
             result = equalsLongToIntNonBucketMap(thisParameter, otherMap, otherParameter, equalityTester);
         }
         else {
-            result = ILongToIntStaticMapCommon.super.equals(thisParameter, other, otherParameter, equalityTester);
+            result = ILongToIntBaseStaticMapCommon.super.equals(thisParameter, other, otherParameter, equalityTester);
         }
 
         if (DEBUG) {
@@ -160,7 +160,8 @@ abstract class BaseLongToIntNonContainsKeyNonBucketMap extends BaseLongToIntNonB
     }
 
     @Override
-    public final <P1, P2> boolean equalsParameters(IntValueMapScratchEqualsParameter<ILongToIntStaticMapCommon, P1, P2> scratchEqualsParameter) {
+    public final <P1, P2, E extends Exception> boolean equalsParameters(IntValueMapScratchEqualsParameter<ILongToIntBaseStaticMapView, P1, P2, E> scratchEqualsParameter)
+            throws E {
 
         Objects.requireNonNull(scratchEqualsParameter);
 
@@ -171,18 +172,17 @@ abstract class BaseLongToIntNonContainsKeyNonBucketMap extends BaseLongToIntNonB
 
         final boolean result;
 
-        final ILongToIntStaticMapCommon other = scratchEqualsParameter.getOther();
+        final ILongToIntBaseStaticMapView other = scratchEqualsParameter.getOther();
 
         if (other instanceof BaseLongToIntNonBucketMap) {
 
-            @SuppressWarnings("unchecked")
-            final BaseLongToIntNonBucketMap<ILongToIntStaticMapCommon> otherMap = (BaseLongToIntNonBucketMap<ILongToIntStaticMapCommon>)other;
+            final BaseLongToIntNonBucketMap otherMap = (BaseLongToIntNonBucketMap)other;
 
             result = equalsLongToIntNonBucketMap(scratchEqualsParameter.getThisParameter(), otherMap, scratchEqualsParameter.getOtherParameter(),
                     scratchEqualsParameter.getEqualityTester());
         }
         else {
-            result = ILongToIntStaticMapCommon.super.equalsParameters(scratchEqualsParameter);
+            result = ILongToIntBaseStaticMapCommon.super.equalsParameters(scratchEqualsParameter);
         }
 
         if (DEBUG) {

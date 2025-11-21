@@ -4,7 +4,7 @@ import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
 
-public final class MutableIntToIntWithRemoveNonBucketMap extends BaseIntToIntWithRemoveNonBucketMap implements IMutableIntToIntStaticMap {
+public final class MutableIntToIntWithRemoveNonBucketMap extends BaseIntToIntWithRemoveNonBucketMap implements IMutableIntToIntWithRemoveStaticMap {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_INT_TO_INT_WITH_REMOVE_NON_BUCKET_MAP;
 
@@ -48,6 +48,12 @@ public final class MutableIntToIntWithRemoveNonBucketMap extends BaseIntToIntWit
 
             exit();
         }
+    }
+
+    @Override
+    public long getCapacity() {
+
+        return getHashedCapacity();
     }
 
     @Override

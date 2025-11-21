@@ -4,7 +4,7 @@ import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseMutableLongToIntegerOrObjectMapTest<V, M extends ILongKeyMap & IClearable & IMapMutators> extends BaseMutableIntegerToIntegerOrObjectMapTest<long[], V, M> {
+abstract class BaseMutableLongToIntegerOrObjectMapTest<V, M extends IMutableLongKeyMap & IClearable & IMapMutatorsMarker> extends BaseMutableIntegerToIntegerOrObjectMapTest<long[], V, M> {
 
     @Override
     final long[] createKeysArray(int length) {

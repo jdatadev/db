@@ -11,7 +11,7 @@ import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.sql.ast.statements.dml.SQLObjectName;
 import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.maps.ILongToIntCommonMapGetters;
+import dev.jdata.db.utils.adt.maps.ILongToIntMapView;
 import dev.jdata.db.utils.adt.maps.MutableLongToIntWithRemoveNonBucketMap;
 import dev.jdata.db.utils.allocators.ILongToIntMapAllocator;
 import dev.jdata.db.utils.checks.Checks;
@@ -115,7 +115,7 @@ abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject> {
         return databaseSchema.getSchemaObject(getDDLObjectType(), columnsObjectId);
     }
 
-    public final ILongToIntCommonMapGetters getColumnIndices(int columnsObjectId) {
+    public final ILongToIntMapView getColumnIndices(int columnsObjectId) {
 
         checkColumnsObjectId(columnsObjectId);
 

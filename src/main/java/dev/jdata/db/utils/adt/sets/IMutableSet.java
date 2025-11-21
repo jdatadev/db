@@ -1,7 +1,7 @@
 package dev.jdata.db.utils.adt.sets;
 
-import dev.jdata.db.utils.adt.elements.IMutableElements;
+import dev.jdata.db.utils.adt.elements.IMutableObjectUnorderedElements;
 
-public interface IMutableSet extends IMutableElements, ISet {
+public interface IMutableSet<T> extends IMutableObjectUnorderedElements<T>, IBaseMutableSet, IObjectSetCommon<T> {
 
 }

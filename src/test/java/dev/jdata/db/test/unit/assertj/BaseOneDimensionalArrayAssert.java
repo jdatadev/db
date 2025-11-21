@@ -1,10 +1,10 @@
 package dev.jdata.db.test.unit.assertj;
 
-import dev.jdata.db.utils.adt.arrays.IOneDimensionalArrayCommon;
+import dev.jdata.db.utils.adt.arrays.IOneDimensionalArrayView;
 
-abstract class BaseOneDimensionalArrayAssert<S extends BaseOneDimensionalArrayAssert<S, A>, A extends IOneDimensionalArrayCommon> extends BaseArrayAssert<S, A> {
+abstract class BaseOneDimensionalArrayAssert<S extends BaseOneDimensionalArrayAssert<S, A>, A extends IOneDimensionalArrayView> extends BaseArrayAssert<S, A> {
 
-    protected BaseOneDimensionalArrayAssert(A actual, Class<S> assertClass) {
+    BaseOneDimensionalArrayAssert(A actual, Class<S> assertClass) {
         super(actual, assertClass);
     }
 

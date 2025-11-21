@@ -10,15 +10,15 @@ import dev.jdata.db.schema.model.schemamaps.IAllCompleteSchemaMaps;
 import dev.jdata.db.schema.storage.BaseDatabaseSchemaSerialization;
 import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
+import dev.jdata.db.utils.adt.lists.IBaseIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
 
 public abstract class ANSIDatabaseSchemaSerialization<
 
-                INDEX_LIST extends IndexList<BaseSQLStatement>,
-                INDEX_LIST_BUILDER extends IndexListBuilder<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER>,
-                INDEX_LIST_ALLOCATOR extends IndexListAllocator<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
+                INDEX_LIST extends IBaseIndexList<BaseSQLStatement>,
+                INDEX_LIST_BUILDER extends IIndexListBuilder<BaseSQLStatement, INDEX_LIST>,
+                INDEX_LIST_ALLOCATOR extends IBaseIndexListAllocator<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER>,
                 COMPLETE_SCHEMA_MAPS extends IAllCompleteSchemaMaps>
 
         extends BaseDatabaseSchemaSerialization<INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, COMPLETE_SCHEMA_MAPS> {

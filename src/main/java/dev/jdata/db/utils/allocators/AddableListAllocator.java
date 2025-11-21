@@ -7,9 +7,9 @@ import org.jutils.ast.objects.list.IAddableList;
 import org.jutils.ast.objects.list.IImmutableIndexList;
 
 import dev.jdata.db.utils.adt.IResettable;
+import dev.jdata.db.utils.adt.elements.ICapacity;
 import dev.jdata.db.utils.adt.lists.BaseObjectArrayList;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
 public final class AddableListAllocator extends BaseArrayAllocator<AddableListAllocator.AddableList<?>> implements IAddableListAllocator {
 
@@ -97,6 +97,12 @@ public final class AddableListAllocator extends BaseArrayAllocator<AddableListAl
             this.initialized = false;
         }
 
+        @Override
+        public <P> void toString(StringBuilder sb, P parameter, ElementsToStringAdder<T, P> consumer) {
+
+            throw new UnsupportedOperationException();
+        }
+
         int getCapacity() {
 
             return getElementsCapacity();
@@ -104,7 +110,7 @@ public final class AddableListAllocator extends BaseArrayAllocator<AddableListAl
     }
 
     public AddableListAllocator() {
-        super(c -> new AddableList<>(Object[]::new, c), l -> Integers.checkUnsignedLongToUnsignedInt(l.getCapacity()));
+        super(c -> new AddableList<>(Object[]::new, c), l -> ICapacity.intCapacity(l.getCapacity()));
     }
 
     @Override

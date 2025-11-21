@@ -2,7 +2,7 @@ package dev.jdata.db.engine.statements;
 
 import java.util.Objects;
 
-import dev.jdata.db.utils.adt.arrays.IIntArrayCommon;
+import dev.jdata.db.utils.adt.arrays.IIntArrayView;
 import dev.jdata.db.utils.adt.maps.MutableIntToObjectWithRemoveNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -28,29 +28,29 @@ public final class SQLStatementsCache {
 
     static abstract class InsertOrUpdateStatement extends DMLStatement {
 
-        private final IIntArrayCommon columns;
+        private final IIntArrayView columns;
 
-        InsertOrUpdateStatement(int tableId, IIntArrayCommon columns) {
+        InsertOrUpdateStatement(int tableId, IIntArrayView columns) {
             super(tableId);
 
             this.columns = Objects.requireNonNull(columns);
         }
 
-        public final IIntArrayCommon getColumns() {
+        public final IIntArrayView getColumns() {
             return columns;
         }
     }
 
     public static final class InsertStatement extends InsertOrUpdateStatement {
 
-        InsertStatement(int tableId, IIntArrayCommon columns) {
+        InsertStatement(int tableId, IIntArrayView columns) {
             super(tableId, columns);
         }
     }
 
     public static final class UpdateStatement extends InsertOrUpdateStatement {
 
-        UpdateStatement(int tableId, IIntArrayCommon columns) {
+        UpdateStatement(int tableId, IIntArrayView columns) {
             super(tableId, columns);
         }
     }

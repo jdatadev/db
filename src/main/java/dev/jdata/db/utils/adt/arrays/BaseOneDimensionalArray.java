@@ -4,16 +4,16 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.byindex.IByIndexView;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
 abstract class BaseOneDimensionalArray<T> extends BaseArray implements IOneDimensionalArrayCommon {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_ONE_DIMENSIONAL_ARRAY;
 
-    T elements;
-    int limit;
-    int capacity;
+    private T elements;
+    private int limit;
+    private int capacity;
 
     abstract T reallocate(T elements, int newCapacity);
 
@@ -73,6 +73,16 @@ abstract class BaseOneDimensionalArray<T> extends BaseArray implements IOneDimen
         return limit;
     }
 
+    @Override
+    final long getToStringLimit() {
+
+        return limit;
+    }
+
+    final T getElements() {
+        return elements;
+    }
+
     final int ensureAddIndex() {
 
         if (DEBUG) {
@@ -97,7 +107,7 @@ abstract class BaseOneDimensionalArray<T> extends BaseArray implements IOneDimen
             enter(b -> b.add("index", index));
         }
 
-        final int intIndex = Integers.checkUnsignedLongToUnsignedInt(index);
+        final int intIndex = IByIndexView.intIndex(index);
 
         final int currentLimit = limit;
         final int currentCapacity = capacity;

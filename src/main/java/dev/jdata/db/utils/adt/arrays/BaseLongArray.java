@@ -1,9 +1,8 @@
 package dev.jdata.db.utils.adt.arrays;
 
-import java.util.Arrays;
-
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.scalars.Integers;
+import dev.jdata.db.utils.adt.byindex.IByIndexView;
+import dev.jdata.db.utils.adt.elements.ILongElementPredicate;
 
 abstract class BaseLongArray extends BaseIntegerArray<long[]> implements ILongArrayCommon {
 
@@ -40,18 +39,12 @@ abstract class BaseLongArray extends BaseIntegerArray<long[]> implements ILongAr
     @Override
     public final long get(long index) {
 
-        return elements[Integers.checkUnsignedLongToUnsignedInt(index)];
+        return getElements()[IByIndexView.intIndex(index)];
     }
 
     @Override
-    public final void toString(long index, StringBuilder sb) {
-
-        sb.append(get(index));
-    }
-
-    @Override
-    public final String toString() {
-
-        return getClass().getSimpleName() + " [elements=" + Arrays.toString(elements) + "]";
+    public <P> boolean contains(P parameter, ILongElementPredicate<P> predicate) {
+        // TODO Auto-generated method stub
+        return false;
     }
 }

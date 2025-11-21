@@ -6,7 +6,7 @@ abstract class BaseMutableObjectToObjectNonContainsKeyNonBucketMapTest<
 
                 K,
                 V,
-                M extends IMutableCommonMap<K, V, ?> & IObjectToObjectCommonMapMutators<K, V> & IObjectToObjectCommonMapGetters<K, V> & IObjectStaticMapGetters<K, V>>
+                M extends IMutableMap<K, V> & IObjectToObjectStoreMapMutators<K, V> & IObjectToObjectMapGetters<K, V> & IObjectToObjectBaseStaticMapGetters<K, V>>
 
         extends BaseMutableIntegerToIntegerOrObjectMapTest<K[], V[], M> {
 
@@ -45,9 +45,9 @@ abstract class BaseMutableObjectToObjectNonContainsKeyNonBucketMapTest<
 
         map.forEachKeyAndValue(parameter, (k, v, p) -> {
 
-            keysDst.add(objectKeyToInt(k));
-            valuesDst.add(objectValueToInt(v));
-            parameters.add(p);
+            keysDst.addUnordered(objectKeyToInt(k));
+            valuesDst.addUnordered(objectValueToInt(v));
+            parameters.addUnordered(p);
         });
     }
 

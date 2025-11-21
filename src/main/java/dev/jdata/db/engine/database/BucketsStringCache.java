@@ -5,39 +5,39 @@ import java.util.Objects;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.CapacityExponents;
 import dev.jdata.db.utils.adt.IClearable;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.helpers.LongBuckets;
-import dev.jdata.db.utils.adt.lists.BaseLargeObjectMultiHeadSinglyLinkedList;
-import dev.jdata.db.utils.adt.lists.BaseObjectValues;
+import dev.jdata.db.utils.adt.lists.BaseObjectLargeSinglyLinkedMultiHeadNodeList;
+import dev.jdata.db.utils.adt.lists.BaseObjectInnerOuterNodeValues;
 import dev.jdata.db.utils.adt.lists.ILongNodeSetter;
-import dev.jdata.db.utils.adt.lists.LargeLists;
+import dev.jdata.db.utils.adt.lists.LargeNodeLists;
 import dev.jdata.db.utils.adt.maps.BaseLargeArrayKeysMap;
 import dev.jdata.db.utils.adt.strings.CharSequences;
 import dev.jdata.db.utils.adt.strings.Strings;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class BucketsStringCache extends BaseLargeArrayKeysMap<LargeLongArray> implements IStringCache, IClearable {
+public final class BucketsStringCache extends BaseLargeArrayKeysMap<IMutableLongLargeArray> implements IStringCache, IClearable {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BUCKETS_STRING_CACHE;
 
-    private static final long NO_NODE = LargeLists.NO_LONG_NODE;
+    private static final long NO_NODE = LargeNodeLists.NO_LONG_NODE;
 
-    static final class StringMultiHeadSinglyLinkedList<INSTANCE>
+    static final class StringLargeMultiHeadSinglyLinkedList<INSTANCE>
 
-            extends BaseLargeObjectMultiHeadSinglyLinkedList<
+            extends BaseObjectLargeSinglyLinkedMultiHeadNodeList<
 
                             INSTANCE,
                             String,
-                            StringMultiHeadSinglyLinkedList<INSTANCE>,
+                            StringLargeMultiHeadSinglyLinkedList<INSTANCE>,
                             LongToStringValues<INSTANCE>> {
 
-        StringMultiHeadSinglyLinkedList(int initialOuterCapacity, int innerCapacity) {
+        StringLargeMultiHeadSinglyLinkedList(int initialOuterCapacity, int innerCapacity) {
             super(initialOuterCapacity, innerCapacity, LongToStringValues::new);
         }
     }
 
-    static final class LongToStringValues<INSTANCE> extends BaseObjectValues<String, StringMultiHeadSinglyLinkedList<INSTANCE>, LongToStringValues<INSTANCE>> {
+    static final class LongToStringValues<INSTANCE> extends BaseObjectInnerOuterNodeValues<String, StringLargeMultiHeadSinglyLinkedList<INSTANCE>, LongToStringValues<INSTANCE>> {
 
         LongToStringValues(int initialOuterCapacity) {
             super(initialOuterCapacity, String[][]::new, String[]::new);
@@ -47,12 +47,12 @@ public final class BucketsStringCache extends BaseLargeArrayKeysMap<LargeLongArr
     private static final ILongNodeSetter<BucketsStringCache> headSetter = (i, h) -> i.scratchHashArray.set(i.scratchHashArrayIndex, h);
     private static final ILongNodeSetter<BucketsStringCache> tailSetter = (i, t) -> { };
 
-    private StringMultiHeadSinglyLinkedList<BucketsStringCache> buckets;
+    private StringLargeMultiHeadSinglyLinkedList<BucketsStringCache> buckets;
 
     private final StringBuilder scratchStringBuilder;
 
     private long scratchHashArrayIndex;
-    private LargeLongArray scratchHashArray;
+    private IMutableLongLargeArray scratchHashArray;
 
     public BucketsStringCache(int initialOuterCapacityExponent, int innerCapacityExponent) {
         this(initialOuterCapacityExponent, innerCapacityExponent, DEFAULT_LOAD_FACTOR);
@@ -176,7 +176,7 @@ public final class BucketsStringCache extends BaseLargeArrayKeysMap<LargeLongArr
     }
 
     @Override
-    protected LargeLongArray rehash(LargeLongArray bucketHeadNodesHashArray, long newCapacity, int newCapacityExponent, long newKeyMask) {
+    protected IMutableLongLargeArray rehash(IMutableLongLargeArray bucketHeadNodesHashArray, long newCapacity, int newCapacityExponent, long newKeyMask) {
 
         if (DEBUG) {
 
@@ -188,14 +188,14 @@ public final class BucketsStringCache extends BaseLargeArrayKeysMap<LargeLongArr
 
         final int newOuterCapacityExponent = computeOuterCapacityExponent(newCapacityExponent, innerCapacityExponent);
 
-        final LargeLongArray newBucketHeadNodesHashArray = createHashArray(newOuterCapacityExponent, innerCapacityExponent);
-        final StringMultiHeadSinglyLinkedList<BucketsStringCache> newBuckets = createStringBuckets(newOuterCapacityExponent, innerCapacityExponent);
+        final IMutableLongLargeArray newBucketHeadNodesHashArray = createHashArray(newOuterCapacityExponent, innerCapacityExponent);
+        final StringLargeMultiHeadSinglyLinkedList<BucketsStringCache> newBuckets = createStringBuckets(newOuterCapacityExponent, innerCapacityExponent);
 
         clearHashArray(newBucketHeadNodesHashArray);
 
         final long hashArrayLength = bucketHeadNodesHashArray.getLimit();
 
-        final StringMultiHeadSinglyLinkedList<BucketsStringCache> existingBuckets = buckets;
+        final StringLargeMultiHeadSinglyLinkedList<BucketsStringCache> existingBuckets = buckets;
 
         final long noNode = NO_NODE;
 
@@ -237,8 +237,8 @@ public final class BucketsStringCache extends BaseLargeArrayKeysMap<LargeLongArr
 
         final long hashArrayIndex = HashFunctions.longHashArrayIndex(hash, getKeyMask());
 
-        final LargeLongArray bucketHeadNodesArray = getHashed();
-        final StringMultiHeadSinglyLinkedList<BucketsStringCache> b = buckets;
+        final IMutableLongLargeArray bucketHeadNodesArray = getHashed();
+        final StringLargeMultiHeadSinglyLinkedList<BucketsStringCache> b = buckets;
 
         if (hashArrayIndex < bucketHeadNodesArray.getLimit()) {
 
@@ -278,8 +278,8 @@ public final class BucketsStringCache extends BaseLargeArrayKeysMap<LargeLongArr
 
         final long hashArrayIndex = HashFunctions.longHashArrayIndex(hash, getKeyMask());
 
-        final LargeLongArray bucketHeadNodesArray = getHashed();
-        final StringMultiHeadSinglyLinkedList<BucketsStringCache> b = buckets;
+        final IMutableLongLargeArray bucketHeadNodesArray = getHashed();
+        final StringLargeMultiHeadSinglyLinkedList<BucketsStringCache> b = buckets;
 
         if (hashArrayIndex < bucketHeadNodesArray.getLimit()) {
 
@@ -319,7 +319,7 @@ public final class BucketsStringCache extends BaseLargeArrayKeysMap<LargeLongArr
         return result;
     }
 
-    private void addNotAlreadyAdded(LargeLongArray bucketHeadNodesHashArray, long hash, long keyMask, StringMultiHeadSinglyLinkedList<BucketsStringCache> buckets,
+    private void addNotAlreadyAdded(IMutableLongLargeArray bucketHeadNodesHashArray, long hash, long keyMask, StringLargeMultiHeadSinglyLinkedList<BucketsStringCache> buckets,
             String string) {
 
         if (DEBUG) {
@@ -343,22 +343,22 @@ public final class BucketsStringCache extends BaseLargeArrayKeysMap<LargeLongArr
         }
     }
 
-    private static <T> StringMultiHeadSinglyLinkedList<T> createStringBuckets(int initialOuterCapacityExponent, int innerCapacityExponent) {
+    private static <T> StringLargeMultiHeadSinglyLinkedList<T> createStringBuckets(int initialOuterCapacityExponent, int innerCapacityExponent) {
 
         final int initialOuterCapacity = CapacityExponents.computeIntCapacityFromExponent(initialOuterCapacityExponent);
         final int innerCapacity = CapacityExponents.computeIntCapacityFromExponent(innerCapacityExponent);
 
-        return new StringMultiHeadSinglyLinkedList<>(initialOuterCapacity, innerCapacity);
+        return new StringLargeMultiHeadSinglyLinkedList<>(initialOuterCapacity, innerCapacity);
     }
 
-    private static LargeLongArray createHashArray(int outerCapacityExponent, int innerCapacityExponent) {
+    private static IMutableLongLargeArray createHashArray(int outerCapacityExponent, int innerCapacityExponent) {
 
         final int outerCapacity = CapacityExponents.computeIntCapacityFromExponent(outerCapacityExponent);
 
-        return new LargeLongArray(outerCapacity, innerCapacityExponent, NO_NODE);
+        return IMutableLongLargeArray.create(outerCapacity, innerCapacityExponent, NO_NODE);
     }
 
-    private static void clearHashArray(LargeLongArray bucketHeadNodesHashArray) {
+    private static void clearHashArray(IMutableLongLargeArray bucketHeadNodesHashArray) {
 
         LongBuckets.clearHashArray(bucketHeadNodesHashArray);
     }

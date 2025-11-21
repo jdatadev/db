@@ -6,8 +6,8 @@ import java.util.Objects;
 import dev.jdata.db.data.BaseRows;
 import dev.jdata.db.data.RowDataNumBitsGetter;
 import dev.jdata.db.data.cache.DataCache;
-import dev.jdata.db.utils.adt.lists.LargeLongDoublyLinkedList;
-import dev.jdata.db.utils.adt.lists.LargeLongSinglyLinkedList;
+import dev.jdata.db.utils.adt.lists.MutableLongLargeDoublyLinkedNodeList;
+import dev.jdata.db.utils.adt.lists.MutableLongLargeSinglyLinkedNodeList;
 import dev.jdata.db.utils.adt.maps.MutableLongToLongWithRemoveNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -23,8 +23,8 @@ public final class RowCache extends BaseRows implements DataCache {
     private final RowLargeByteArray cache;
     private final long[] numBits;
 
-    private final LargeLongDoublyLinkedList insertionOrderList;
-    private final LargeLongSinglyLinkedList insertionOrderFreeList;
+    private final MutableLongLargeDoublyLinkedNodeList insertionOrderList;
+    private final MutableLongLargeSinglyLinkedNodeList insertionOrderFreeList;
 
     public RowCache() {
 
@@ -42,8 +42,8 @@ public final class RowCache extends BaseRows implements DataCache {
 
         final int insertOrderListInnerCapacity = 1000 * 1000;
 
-        this.insertionOrderList = new LargeLongDoublyLinkedList(initialInsertionOrderListCapacity, insertOrderListInnerCapacity);
-        this.insertionOrderFreeList = new LargeLongSinglyLinkedList(initialInsertionOrderListCapacity, insertOrderListInnerCapacity);
+        this.insertionOrderList = new MutableLongLargeDoublyLinkedNodeList(initialInsertionOrderListCapacity, insertOrderListInnerCapacity);
+        this.insertionOrderFreeList = new MutableLongLargeSinglyLinkedNodeList(initialInsertionOrderListCapacity, insertOrderListInnerCapacity);
     }
 
     @Override
@@ -153,7 +153,7 @@ public final class RowCache extends BaseRows implements DataCache {
 
         final long node = insertionOrderNodeByRow.get(rowKey);
 
-        insertionOrderList.removeNode(node);
+        insertionOrderList.removeNodeAndReturnValue(node);
 
         addToInsertionOrderList(rowKey);
     }

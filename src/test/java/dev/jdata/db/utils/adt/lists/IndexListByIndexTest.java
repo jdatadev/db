@@ -18,7 +18,7 @@ public final class IndexListByIndexTest extends BaseByIndexTest {
     @Override
     protected <T, R> R[] map(T[] array, IntFunction<R[]> createMappedArray, Function<T, R> mapper) {
 
-        final LongFunction<IIndexListBuildable<R, ?, ?>> createIndexListAddable = l -> IndexList.createBuilder(createMappedArray);
+        final LongFunction<IIndexListBuilder<R, ?>> createIndexListAddable = l -> HeapIndexList.createBuilder(createMappedArray);
 
         return makeList(array).map(createIndexListAddable, mapper).toArray(createMappedArray);
     }
@@ -32,8 +32,8 @@ public final class IndexListByIndexTest extends BaseByIndexTest {
     @Override
     protected <T, P> boolean equals(T[] array1, P parameter1, T[] array2, P parameter2, IByIndexTestEqualityTester<T, P> byIndexEqualityTester) {
 
-        final IIndexListGetters<T> list1 = makeList(array1);
-        final IIndexListGetters<T> list2 = makeList(array2);
+        final IObjectIndexListView<T> list1 = makeList(array1);
+        final IObjectIndexListView<T> list2 = makeList(array2);
 
         return list1.equals(parameter1, list2, parameter2,
                 byIndexEqualityTester != null
@@ -45,8 +45,8 @@ public final class IndexListByIndexTest extends BaseByIndexTest {
     protected <T, P> boolean equals(T[] array1, int startIndex1, P parameter1, T[] array2, int startIndex2, P parameter2, int numElements,
             IByIndexTestEqualityTester<T, P> byIndexEqualityTester) {
 
-        final IIndexListGetters<T> list1 = makeList(array1);
-        final IIndexListGetters<T> list2 = makeList(array2);
+        final IObjectIndexListView<T> list1 = makeList(array1);
+        final IObjectIndexListView<T> list2 = makeList(array2);
 
         return list1.equals(startIndex1, parameter1, list2, startIndex2, parameter2, numElements,
                 byIndexEqualityTester != null
@@ -90,7 +90,7 @@ public final class IndexListByIndexTest extends BaseByIndexTest {
         return Integers.checkLongToInt(makeList(array).closureOrConstantFindAtMostOneIndexInRange(startIndex, numElements, predicate));
     }
 
-    private static <T> IIndexListGetters<T> makeList(T[] array) {
+    private static <T> IObjectIndexListView<T> makeList(T[] array) {
 
         return IndexList.of(array);
     }

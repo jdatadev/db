@@ -5,12 +5,12 @@ import java.util.List;
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseMutableLongToObjectNonContainsKeyNonBucketMapTest<T, M extends ILongToObjectStaticMapCommon<T> & IClearable & ILongToObjectCommonMapMutators<T>>
+abstract class BaseMutableLongToObjectNonContainsKeyNonBucketMapTest<V, M extends IMutableLongToObjectBaseStaticMap<V> & IClearable & ILongToObjectStoreMapMutators<V>>
 
-        extends BaseMutableLongToIntegerOrObjectNonBucketMapTest<T[], M> {
+        extends BaseMutableLongToIntegerOrObjectNonBucketMapTest<V[], M> {
 
-    abstract int objectToInt(T object);
-    abstract T intToObject(int integer);
+    abstract int objectToInt(V object);
+    abstract V intToObject(int integer);
 
     @Override
     final boolean supportsRemoveNonAdded() {
@@ -25,7 +25,7 @@ abstract class BaseMutableLongToObjectNonContainsKeyNonBucketMapTest<T, M extend
     }
 
     @Override
-    final int getValue(T[] values, int index) {
+    final int getValue(V[] values, int index) {
 
         return objectToInt(values[index]);
     }
@@ -37,19 +37,18 @@ abstract class BaseMutableLongToObjectNonContainsKeyNonBucketMapTest<T, M extend
     }
 
     @Override
-    final <P> void forEachKeyAndValue(M map, P parameter, List<Integer> keysDst, List<Integer> valuesDst,
-            List<P> parameters) {
+    final <P> void forEachKeyAndValue(M map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
 
         map.forEachKeyAndValue(parameter, (k, v, p) -> {
 
-            keysDst.add(Integers.checkLongToInt(k));
-            valuesDst.add(objectToInt(v));
-            parameters.add(p);
+            keysDst.addUnordered(Integers.checkLongToInt(k));
+            valuesDst.addUnordered(objectToInt(v));
+            parameters.addUnordered(p);
         });
     }
 
     @Override
-    final void keysAndValues(M map, long[] keysDst, T[] valuesDst) {
+    final void keysAndValues(M map, long[] keysDst, V[] valuesDst) {
 
         map.keysAndValues(keysDst, valuesDst);
     }

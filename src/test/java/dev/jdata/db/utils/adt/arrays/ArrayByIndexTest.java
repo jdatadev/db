@@ -94,7 +94,15 @@ public final class ArrayByIndexTest extends BaseByIndexTest {
     @Category(UnitTest.class)
     public void testCopyOfByteArray() {
 
-        checkCopyElements(a -> Array.mapInt(a, null, (e, p) -> Integers.checkIntToByte(e)), Array::copyOf, (a, i) -> a[i], a -> a.length);
+        checkCopyOfElementsByIndex(a -> Array.mapIntToByte(a, null, (e, p) -> Integers.checkIntToByte(e)), Array::copyOf, (a, i) -> a[i], a -> a.length,
+                (c, i) -> c.intValue() == i);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testCopyOfCharArray() {
+
+        checkCopyOfElementsByIndex(a -> Array.mapIntToChar(a, null, (e, p) -> (char)e), Array::copyOf, (a, i) -> a[i], a -> a.length, (c, i) -> c.charValue() == i);
     }
 
     @Test
@@ -127,14 +135,62 @@ public final class ArrayByIndexTest extends BaseByIndexTest {
 
     @Test
     @Category(UnitTest.class)
-    public void testMapInt() {
+    public void testMapIntToByte() {
 
         final Object parameter = new Object();
 
-        assertThatThrownBy(() -> Array.mapInt(null, parameter, (e, p) -> 0)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> Array.mapInt(create(123), parameter, null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Array.mapIntToByte(null, parameter, (e, p) -> 0)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Array.mapIntToByte(create(123), parameter, null)).isInstanceOf(NullPointerException.class);
 
-        assertThat(Array.mapInt(create(123), parameter, (e, p) -> {
+        assertThat(Array.mapIntToByte(create(12), parameter, (e, p) -> {
+
+            assertThat(p).isSameAs(parameter);
+
+            return (byte)(e + 11);
+        }))
+        .containsExactly(23);
+
+        final byte[] oneMapped = Array.mapIntToByte(create(12), parameter, (e, p) -> (byte)(e + 11));
+        assertThat(oneMapped).containsExactly(23);
+
+        final byte[] threeMapped = Array.mapIntToByte(create(1, 2, 3), parameter, (e, p) -> (byte)(e + 10));
+        assertThat(threeMapped).containsExactly(11, 12, 13);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testMapIntToChar() {
+
+        final Object parameter = new Object();
+
+        assertThatThrownBy(() -> Array.mapIntToChar(null, parameter, (e, p) -> 0)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Array.mapIntToChar(create(123), parameter, null)).isInstanceOf(NullPointerException.class);
+
+        assertThat(Array.mapIntToChar(create(123), parameter, (e, p) -> {
+
+            assertThat(p).isSameAs(parameter);
+
+            return (char)(e + 111);
+        }))
+        .containsExactly((char)234);
+
+        final char[] oneMapped = Array.mapIntToChar(create(123), parameter, (e, p) -> (char)(e + 111));
+        assertThat(oneMapped).containsExactly((char)234);
+
+        final char[] threeMapped = Array.mapIntToChar(create(1, 2, 3), parameter, (e, p) -> (char)(e + 10));
+        assertThat(threeMapped).containsExactly((char)11, (char)12, (char)13);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testMapIntToInt() {
+
+        final Object parameter = new Object();
+
+        assertThatThrownBy(() -> Array.mapIntToInt(null, parameter, (e, p) -> 0)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Array.mapIntToInt(create(123), parameter, null)).isInstanceOf(NullPointerException.class);
+
+        assertThat(Array.mapIntToInt(create(123), parameter, (e, p) -> {
 
             assertThat(p).isSameAs(parameter);
 
@@ -142,10 +198,10 @@ public final class ArrayByIndexTest extends BaseByIndexTest {
         }))
         .containsExactly(234);
 
-        final int[] oneMapped = Array.mapInt(create(123), parameter, (e, p) -> e + 111);
+        final int[] oneMapped = Array.mapIntToInt(create(123), parameter, (e, p) -> e + 111);
         assertThat(oneMapped).containsExactly(234);
 
-        final int[] threeMapped = Array.mapInt(create(1, 2, 3), parameter, (e, p) -> e + 10);
+        final int[] threeMapped = Array.mapIntToInt(create(1, 2, 3), parameter, (e, p) -> e + 10);
         assertThat(threeMapped).containsExactly(11, 12, 13);
     }
 
@@ -249,21 +305,58 @@ public final class ArrayByIndexTest extends BaseByIndexTest {
     @Category(UnitTest.class)
     public void testCheckToIntArray() {
 
+        checkCheckToIntArray(Array::checkToIntArray);
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testCheckToIntArrayDst() {
+
+        assertThatThrownBy(() -> Array.checkToIntArray(new long[0], null)).isInstanceOf(NullPointerException.class);
+
+        checkCheckToIntArray(a -> {
+
+            final int[] result;
+
+            if (a != null) {
+
+                result = new int[a.length];
+
+                Array.checkToIntArray(a, result);
+            }
+            else {
+                Array.checkToIntArray(a, null);
+
+                result = null;
+            }
+
+            return result;
+        });
+    }
+
+    @FunctionalInterface
+    private interface ToIntArrayChecker {
+
+        int[] check(long[] longArray);
+    }
+
+    private static void checkCheckToIntArray(ToIntArrayChecker toIntArrayChecker) {
+
         final long minUnsignedInt = Integer.MIN_VALUE;
         final long maxUnsignedInt = Integer.MAX_VALUE;
 
-        assertThatThrownBy(() -> Array.checkToUnsignedIntArray(null)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> Array.checkToUnsignedIntArray(new long[] { minUnsignedInt - 1L })).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> Array.checkToUnsignedIntArray(new long[] { maxUnsignedInt + 1L })).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> toIntArrayChecker.check(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> toIntArrayChecker.check(new long[] { minUnsignedInt - 1L })).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> toIntArrayChecker.check(new long[] { maxUnsignedInt + 1L })).isInstanceOf(IllegalArgumentException.class);
 
-        assertThat(Array.checkToIntArray(new long[0])).isEmpty();
-        assertThat(Array.checkToIntArray(new long[] { 0L })).containsExactly(0);
+        assertThat(toIntArrayChecker.check(new long[0])).isEmpty();
+        assertThat(toIntArrayChecker.check(new long[] { 0L })).containsExactly(0);
 
-        assertThat(Array.checkToIntArray(new long[] { minUnsignedInt })).containsExactly((int)(minUnsignedInt));
-        assertThat(Array.checkToIntArray(new long[] { maxUnsignedInt })).containsExactly((int)(maxUnsignedInt));
-        assertThat(Array.checkToIntArray(new long[] { 0L })).containsExactly(0);
-        assertThat(Array.checkToIntArray(new long[] { 1L, 0L })).containsExactly(1, 0);
-        assertThat(Array.checkToIntArray(new long[] { 1L, 0L, 2L })).containsExactly(1, 0, 2);
+        assertThat(toIntArrayChecker.check(new long[] { minUnsignedInt })).containsExactly((int)(minUnsignedInt));
+        assertThat(toIntArrayChecker.check(new long[] { maxUnsignedInt })).containsExactly((int)(maxUnsignedInt));
+        assertThat(toIntArrayChecker.check(new long[] { 0L })).containsExactly(0);
+        assertThat(toIntArrayChecker.check(new long[] { 1L, 0L })).containsExactly(1, 0);
+        assertThat(toIntArrayChecker.check(new long[] { 1L, 0L, 2L })).containsExactly(1, 0, 2);
     }
 
     @Test
@@ -306,31 +399,56 @@ public final class ArrayByIndexTest extends BaseByIndexTest {
 
     @Test
     @Category(UnitTest.class)
-    public void testMove() {
+    public void testMoveInt() {
 
-        assertThatThrownBy(() -> Array.move(null, 0, 0, 0)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> Array.move(new long[] { 0L }, 1, 1, -1)).isInstanceOf(ArrayIndexOutOfBoundsException.class);
-        assertThatThrownBy(() -> Array.move(new long[] { 0L }, 0, 2, 1)).isInstanceOf(ArrayIndexOutOfBoundsException.class);
-        assertThatThrownBy(() -> Array.move(new long[] { 0L }, 0, 1, -1)).isInstanceOf(ArrayIndexOutOfBoundsException.class);
-        assertThatThrownBy(() -> Array.move(new long[] { 0L, 1 }, 1, 1, -2)).isInstanceOf(ArrayIndexOutOfBoundsException.class);
-
-        assertThatThrownBy(() -> Array.move(new long[] { 0L }, 0, 0, 1)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> Array.move(new long[] { 0L }, 0, 1, 0)).isInstanceOf(IllegalArgumentException.class);
-
-        checkLong(new long[] { 123L, 234L, 345L }, 0, 1, 1, new long[] { 123L, 123L, 345L });
-        checkLong(new long[] { 123L, 234L, 345L }, 0, 2, 1, new long[] { 123L, 123L, 234L });
-        checkLong(new long[] { 123L, 234L, 345L }, 0, 1, 2, new long[] { 123L, 234L, 123L });
-
-        checkLong(new long[] { 123L, 234L, 345L }, 2, 1, -1, new long[] { 123L, 345L, 345L });
-        checkLong(new long[] { 123L, 234L, 345L }, 1, 2, -1, new long[] { 234L, 345L, 345L });
-        checkLong(new long[] { 123L, 234L, 345L }, 2, 1, -2, new long[] { 345L, 234L, 345L });
+        checkMove(Array::move);
     }
 
-    private void checkLong(long[] array, int startIndex, int numElements, int delta, long[] expectedResult) {
+    @Test
+    @Category(UnitTest.class)
+    public void testMoveLong() {
 
-        Array.move(array, startIndex, numElements, delta);
+        checkMove((a, s, n, d) -> {
+
+            final long[] longArray = Array.toLongArray(a);
+
+            Array.move(longArray, s, n, d);
+
+            Array.checkToIntArray(longArray, a);
+        });
+    }
+
+    private static void checkMove(ArrayMover arrayMover) {
+
+        assertThatThrownBy(() -> arrayMover.move(null, 0, 0, 0)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> arrayMover.move(new int[] { 0 }, 1, 1, -1)).isInstanceOf(ArrayIndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> arrayMover.move(new int[] { 0 }, 0, 2, 1)).isInstanceOf(ArrayIndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> arrayMover.move(new int[] { 0 }, 0, 1, -1)).isInstanceOf(ArrayIndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> arrayMover.move(new int[] { 0, 1 }, 1, 1, -2)).isInstanceOf(ArrayIndexOutOfBoundsException.class);
+
+        assertThatThrownBy(() -> arrayMover.move(new int[] { 0 }, 0, 0, 1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> arrayMover.move(new int[] { 0 }, 0, 1, 0)).isInstanceOf(IllegalArgumentException.class);
+
+        checkMoveLong(new int[] { 123, 234, 345 }, 0, 1, 1, new int[] { 123, 123, 345 }, arrayMover);
+        checkMoveLong(new int[] { 123, 234, 345 }, 0, 2, 1, new int[] { 123, 123, 234 }, arrayMover);
+        checkMoveLong(new int[] { 123, 234, 345 }, 0, 1, 2, new int[] { 123, 234, 123 }, arrayMover);
+
+        checkMoveLong(new int[] { 123, 234, 345 }, 2, 1, -1, new int[] { 123, 345, 345 }, arrayMover);
+        checkMoveLong(new int[] { 123, 234, 345 }, 1, 2, -1, new int[] { 234, 345, 345 }, arrayMover);
+        checkMoveLong(new int[] { 123, 234, 345 }, 2, 1, -2, new int[] { 345, 234, 345 }, arrayMover);
+    }
+
+    private static void checkMoveLong(int[] array, int startIndex, int numElements, int delta, int[] expectedResult, ArrayMover arrayMover) {
+
+        arrayMover.move(array, startIndex, numElements, delta);
 
         assertThat(array).isEqualTo(expectedResult);
+    }
+
+    @FunctionalInterface
+    private interface ArrayMover {
+
+        void move(int[] array, int startIndex, int numElements, int delta);
     }
 
     @Override

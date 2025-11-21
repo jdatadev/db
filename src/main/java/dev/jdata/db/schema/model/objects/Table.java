@@ -1,17 +1,19 @@
 package dev.jdata.db.schema.model.objects;
 
+import java.util.Objects;
+
 import dev.jdata.db.DBConstants;
-import dev.jdata.db.utils.adt.lists.HeapIndexList;
+import dev.jdata.db.utils.adt.lists.IHeapIndexList;
 
 public final class Table extends BaseTable {
 
     public static final int INITIAL_TABLE_ID = DBConstants.INITIAL_SCHEMA_OBJECT_ID;
 
-    public Table(long parsedName, long hashName, int id, HeapIndexList<Column> columns) {
+    public Table(long parsedName, long hashName, int id, IHeapIndexList<Column> columns) {
         super(parsedName, hashName, id, columns);
     }
 
-    private Table(Table toCopy, HeapIndexList<Column> columns) {
+    private Table(Table toCopy, IHeapIndexList<Column> columns) {
         super(toCopy, columns);
     }
 
@@ -37,7 +39,9 @@ public final class Table extends BaseTable {
     }
 
     @Override
-    public Table makeCopy(HeapIndexList<Column> columns) {
+    public Table makeCopy(IHeapIndexList<Column> columns) {
+
+        Objects.requireNonNull(columns);
 
         return new Table(this, columns);
     }

@@ -8,15 +8,15 @@ import dev.jdata.db.storage.backend.transactionlog.backend.file.BaseFileTransact
 import dev.jdata.db.storage.backend.transactionlog.backend.file.FileTransactionLogBackendConfiguration;
 import dev.jdata.db.storage.backend.transactionlog.backend.file.FileTransactionLogFile;
 import dev.jdata.db.storage.backend.transactionlog.backend.file.FileTransactionLogFiles;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
-import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.elements.IElementsView;
+import dev.jdata.db.utils.adt.lists.CacheIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.CachedIndexListBuilder;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.file.access.AbsoluteDirectoryPath;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.scalars.Integers;
 
 public final class SimpleFilesTransactionLogBackendFactory
         extends BaseFileTransactionLogBackendFactory<FileTransactionLogBackendConfiguration, SimpleFilesTransactionLogBackend> {
@@ -59,7 +59,7 @@ public final class SimpleFilesTransactionLogBackendFactory
             throws IOException {
 
         final long numElements = transactionLogFilePaths.getNumElements();
-        final int initialCapacity = Integers.checkUnsignedLongToUnsignedInt(numElements);
+        final int initialCapacity = IElementsView.intNumElements(numElements);
 
         final IndexList<FileTransactionLogFile> result;
 

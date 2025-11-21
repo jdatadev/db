@@ -16,15 +16,15 @@ import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.TableDataStorageBackend;
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
-import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.elements.IElementsView;
+import dev.jdata.db.utils.adt.lists.CacheIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.CachedIndexListBuilder;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
 import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.file.access.AbsoluteDirectoryPath;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.scalars.Integers;
 
 public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDataStorageBackendFactory<FileTableStorageBackendConfiguration> {
 
@@ -92,14 +92,14 @@ public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDa
         return new FileTableStorageFiles(fileSystemAccess, tableFilePath, fileTableStorageFileList, null);
     }
 
-    private static IIndexList<FileTableStorageFile> readTableFiles(IRelativeFileSystemAccess fileSystemAccess, IIndexList<RelativeFilePath> tableFilePaths,
+    private static IBaseIndexList<FileTableStorageFile> readTableFiles(IRelativeFileSystemAccess fileSystemAccess, IIndexList<RelativeFilePath> tableFilePaths,
             StorageTableFileSchemaGetters storageTableFileSchemaGetters) throws IOException {
 
         final IIndexList<FileTableStorageFile> result;
 
         final long numElements = tableFilePaths.getNumElements();
 
-        final int initialCapacity = Integers.checkUnsignedLongToUnsignedInt(numElements);
+        final int initialCapacity = IElementsView.intNumElements(numElements);
 
         final CacheIndexListAllocator<FileTableStorageFile> indexListAllocator = null;
 

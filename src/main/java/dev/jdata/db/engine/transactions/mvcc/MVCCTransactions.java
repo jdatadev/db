@@ -6,14 +6,14 @@ import dev.jdata.db.DBConstants;
 import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.utils.adt.lists.FreeList;
 import dev.jdata.db.utils.adt.lists.HeapMutableIndexList;
-import dev.jdata.db.utils.adt.lists.MutableIndexList;
+import dev.jdata.db.utils.adt.lists.MutableObjectIndexList;
 import dev.jdata.db.utils.adt.sets.MutableLongBucketSet;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class MVCCTransactions {
 
-    private final MutableIndexList<MVCCTransaction> ongoingTransactions;
-    private final MutableIndexList<MVCCTransaction> ongoingOriginatingFromTransactions;
+    private final MutableObjectIndexList<MVCCTransaction> ongoingTransactions;
+    private final MutableObjectIndexList<MVCCTransaction> ongoingOriginatingFromTransactions;
 
     private final FreeList<MVCCTransaction> freeList;
 
@@ -22,8 +22,8 @@ public final class MVCCTransactions {
 
     MVCCTransactions() {
 
-        this.ongoingTransactions = HeapMutableIndexList.from(MVCCTransaction[]::new);
-        this.ongoingOriginatingFromTransactions = HeapMutableIndexList.from(MVCCTransaction[]::new);
+        this.ongoingTransactions = HeapMutableIndexList.create(MVCCTransaction[]::new);
+        this.ongoingOriginatingFromTransactions = HeapMutableIndexList.create(MVCCTransaction[]::new);
 
         this.freeList = new FreeList<>(MVCCTransaction[]::new);
     }

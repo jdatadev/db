@@ -1,5 +1,6 @@
 package dev.jdata.db.utils.allocators;
 
+import dev.jdata.db.review.IDeprecatedInstanceAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
 public interface IAllocators extends IAllocator {
@@ -12,7 +13,7 @@ public interface IAllocators extends IAllocator {
             INSTANTIATED
         }
 
-        <T> void addInstanceAllocator(String name, RefType refType, Class<?> objectType, IInstanceAllocator<T> instanceAllocator);
+        <T> void addInstanceAllocator(String name, RefType refType, Class<?> objectType, IDeprecatedInstanceAllocator<T> instanceAllocator);
 
         void addAllocators(String name, RefType refType, IAllocators cache);
         void addAllocators(String name, RefType refType, Class<?> objectTye, IAllocators cache);

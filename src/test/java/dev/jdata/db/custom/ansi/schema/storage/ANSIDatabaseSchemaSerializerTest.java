@@ -5,7 +5,7 @@ import dev.jdata.db.ddl.helpers.buildschema.HeapDDLSchemaSQLStatementsWorkerObje
 import dev.jdata.db.schema.storage.BaseDatabaseSchemaSerializerTest;
 import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.parse.SQLParserFactory;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.HeapIndexListAllocator;
 
 public final class ANSIDatabaseSchemaSerializerTest extends BaseDatabaseSchemaSerializerTest<HeapANSIDatabaseSchemaSerialization> {
 

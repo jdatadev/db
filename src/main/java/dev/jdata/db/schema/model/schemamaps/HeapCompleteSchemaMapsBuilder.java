@@ -1,12 +1,13 @@
 package dev.jdata.db.schema.model.schemamaps;
 
+import dev.jdata.db.schema.allocators.model.HeapSchemaMapBuilderAllocators;
 import dev.jdata.db.schema.model.HeapSchemaMap;
 import dev.jdata.db.schema.model.HeapSchemaMap.HeapSchemaMapBuilder;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.utils.adt.lists.HeapIndexList;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
+import dev.jdata.db.utils.adt.lists.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.HeapIndexListBuilder;
 
 public final class HeapCompleteSchemaMapsBuilder extends CompleteSchemaMapsBuilder<
 
@@ -18,8 +19,10 @@ public final class HeapCompleteSchemaMapsBuilder extends CompleteSchemaMapsBuild
                 HeapAllCompleteSchemaMaps,
                 HeapAllCompleteSchemaMaps> {
 
-    public HeapCompleteSchemaMapsBuilder() {
-        super(HeapSchemaMapBuilder[]::new);
+    public HeapCompleteSchemaMapsBuilder(AllocationType allocationType) {
+        super(allocationType, HeapSchemaMapBuilder[]::new);
+
+        initialize(HeapSchemaMapBuilderAllocators.INSTANCE);
     }
 
     @Override

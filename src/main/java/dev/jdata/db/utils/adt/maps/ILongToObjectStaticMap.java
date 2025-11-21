@@ -1,6 +1,0 @@
-package dev.jdata.db.utils.adt.maps;
-
-@Deprecated // currently not in use
-public interface ILongToObjectStaticMap<T> extends IBaseLongToObjectMapCommon<T, ILongToObjectStaticMap<T>> {
-
-}

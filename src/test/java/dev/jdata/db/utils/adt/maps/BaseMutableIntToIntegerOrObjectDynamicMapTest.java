@@ -2,7 +2,7 @@ package dev.jdata.db.utils.adt.maps;
 
 import dev.jdata.db.utils.adt.IClearable;
 
-abstract class BaseMutableIntToIntegerOrObjectDynamicMapTest<V, M extends IIntContainsKeyMap & IClearable & IIntKeyDynamicMapRemovalMutators>
+abstract class BaseMutableIntToIntegerOrObjectDynamicMapTest<V, M extends IIntContainsKeyMapGetters & IClearable & IIntKeyDynamicMapRemovalMutators>
 
         extends BaseMutableIntToIntegerOrObjectMapTest<V, M> {
 

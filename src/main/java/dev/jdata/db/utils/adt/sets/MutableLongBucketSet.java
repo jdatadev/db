@@ -28,6 +28,12 @@ public final class MutableLongBucketSet extends BaseLongBucketSet implements IMu
     }
 
     @Override
+    public long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
     public void clear() {
 
         if (DEBUG) {
@@ -44,7 +50,7 @@ public final class MutableLongBucketSet extends BaseLongBucketSet implements IMu
     }
 
     @Override
-    public void add(long value) {
+    public void addUnordered(long value) {
 
         if (DEBUG) {
 

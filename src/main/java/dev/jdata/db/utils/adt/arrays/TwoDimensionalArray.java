@@ -12,11 +12,12 @@ import java.util.function.Predicate;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.IForEachSequenceElement;
-import dev.jdata.db.utils.adt.elements.IMutableElements;
+import dev.jdata.db.utils.adt.byindex.IByIndexView;
+import dev.jdata.db.utils.adt.elements.ByIndex;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.debug.PrintDebug;
 
-public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> implements IMutableElements, PrintDebug {
+public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> implements IMutableArray, IOnlyElementsView {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_TWO_DIMENSIONAL_ARRAY;
 
@@ -69,6 +70,22 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
 
             exit();
         }
+    }
+
+    @Override
+    public void toString(long index, StringBuilder sb) {
+
+        final int outerIndex = IByIndexView.intIndex(index);
+
+        final T[] innerArray = getInnerArray(outerIndex);
+
+        ByIndex.toString(innerArray, 0L, getNumInnerElements(outerIndex), sb, null, (a, i, b, p) -> b.append(Objects.toString(a[IByIndexView.intIndex(index)])));
+    }
+
+    @Override
+    public void toHexString(long index, StringBuilder sb) {
+
+        toString(index, sb);
     }
 
     public int getNumOuterElements() {
@@ -373,6 +390,12 @@ public final class TwoDimensionalArray<T> extends BaseAnyLargeArray<T[][], T[]> 
     protected T[] getInnerArray(T[][] outerArray, int index) {
 
         return outerArray[index];
+    }
+
+    @Override
+    long getToStringLimit() {
+
+        return getNumOuterUtilizedEntries();
     }
 
     private void checkOuterIndex(int index) {

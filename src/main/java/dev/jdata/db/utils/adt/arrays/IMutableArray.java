@@ -1,8 +1,7 @@
 package dev.jdata.db.utils.adt.arrays;
 
-import dev.jdata.db.utils.adt.IClearable;
-import dev.jdata.db.utils.adt.elements.ICapacity;
+import dev.jdata.db.utils.adt.contains.IMutableContains;
 
-public interface IMutableArray extends IOneDimensionalArrayCommon, ICapacity, IClearable {
+public interface IMutableArray extends IMutableContains, IArrayCommon {
 
 }

@@ -8,9 +8,7 @@ import java.util.function.ToLongFunction;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
-
-public final class IndexListTest extends BaseImmutableObjectArrayListTest<IIndexList<Integer>, IndexList<String>> {
+public final class IndexListTest extends BaseImmutableObjectArrayListTest<IBaseIndexList<Integer>, IndexList<String>> {
 
     @Test
     @Category(UnitTest.class)
@@ -77,9 +75,9 @@ public final class IndexListTest extends BaseImmutableObjectArrayListTest<IIndex
     }
 
     @Override
-    protected IIndexList<Integer> createTestElements(Integer[] elementsToAdd) {
+    protected IBaseIndexList<Integer> createTestElements(Integer[] elementsToAdd) {
 
-        final HeapIndexList.HeapIndexListBuilder<Integer> builder = IndexList.createBuilder(Integer[]::new);
+        final HeapIndexListBuilder<Integer> builder = HeapIndexList.createBuilder(Integer[]::new);
 
         switch (elementsToAdd.length) {
 
@@ -101,25 +99,25 @@ public final class IndexListTest extends BaseImmutableObjectArrayListTest<IIndex
     }
 
     @Override
-    protected <P> long count(IIndexList<Integer> elements, P parameter, BiPredicate<Integer, P> predicate) {
+    protected <P> long count(IBaseIndexList<Integer> elements, P parameter, BiPredicate<Integer, P> predicate) {
 
         return elements.count(parameter, predicate);
     }
 
     @Override
-    protected long countWithClosure(IIndexList<Integer> elements, Predicate<Integer> predicate) {
+    protected long countWithClosure(IBaseIndexList<Integer> elements, Predicate<Integer> predicate) {
 
         return elements.closureOrConstantCount(predicate);
     }
 
     @Override
-    protected int maxInt(IIndexList<Integer> elements, int defaultValue, ToIntFunction<Integer> mapper) {
+    protected int maxInt(IBaseIndexList<Integer> elements, int defaultValue, ToIntFunction<Integer> mapper) {
 
         return elements.maxInt(defaultValue, mapper);
     }
 
     @Override
-    protected long maxLong(IIndexList<Integer> elements, long defaultValue, ToLongFunction<Integer> mapper) {
+    protected long maxLong(IBaseIndexList<Integer> elements, long defaultValue, ToLongFunction<Integer> mapper) {
 
         return elements.maxLong(defaultValue, mapper);
     }

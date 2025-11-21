@@ -83,7 +83,7 @@ final class RowBufferComparer implements IClearable, PrintDebug {
             enter(b -> b.add("select", select).add("mvccBitBuffer", mvccBitBuffer).add("startBufferBitOffset", startBufferBitOffset).add("addedRowIdsDst", addedRowIdsDst));
         }
 
-        final long result = compareRowsForInsertOperation(select, mvccBitBuffer, startBufferBitOffset, addedRowIdsDst, IMutableLongSet::add);
+        final long result = compareRowsForInsertOperation(select, mvccBitBuffer, startBufferBitOffset, addedRowIdsDst, IMutableLongSet::addUnordered);
 
         if (DEBUG) {
 
@@ -109,8 +109,8 @@ final class RowBufferComparer implements IClearable, PrintDebug {
                     .add("addedRowIdsDst", addedRowIdsDst).add("removedRowIdsDst", removedRowIdsDst));
         }
 
-        final long result = compareRowsForUpdateOperation(select, mvccBitBuffer, startBufferBitOffset, commitedRows, addedRowIdsDst, IMutableLongSet::add, removedRowIdsDst,
-                IMutableLongSet::add);
+        final long result = compareRowsForUpdateOperation(select, mvccBitBuffer, startBufferBitOffset, commitedRows, addedRowIdsDst, IMutableLongSet::addUnordered,
+                removedRowIdsDst, IMutableLongSet::addUnordered);
 
         if (DEBUG) {
 

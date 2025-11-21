@@ -4,9 +4,9 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.schema.model.SchemaMap.SchemaMapBuilder;
 import dev.jdata.db.schema.model.objects.SchemaObject;
+import dev.jdata.db.utils.adt.lists.CacheIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.CachedIndexList;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
+import dev.jdata.db.utils.adt.lists.CachedIndexListBuilder;
 import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 
 public final class CachedSchemaMapBuilder<T extends SchemaObject>

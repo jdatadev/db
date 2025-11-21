@@ -3,41 +3,21 @@ package dev.jdata.db.utils.adt.lists;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.allocators.BaseArrayAllocator;
-import dev.jdata.db.utils.scalars.Integers;
-
-abstract class BaseIndexList<T> extends BaseObjectArrayList<T> implements IIndexListGetters<T> {
-
-    static final class MutableIndexListArrayAllocator<T, U extends MutableIndexList<T>> extends BaseArrayAllocator<U> {
-
-        MutableIndexListArrayAllocator(AllocationType allocationType, IntFunction<U> createList) {
-            super(createList, l -> Integers.checkUnsignedLongToUnsignedInt(l.getNumElements()));
-        }
-
-        U allocateMutableIndexList(int minimumCapacity) {
-
-            return allocateArrayInstance(minimumCapacity);
-        }
-
-        void freeMutableIndexList(U list) {
-
-            freeArrayInstance(list);
-        }
-    }
+abstract class BaseIndexList<T> extends BaseObjectArrayList<T> implements IObjectIndexListView<T> {
 
     BaseIndexList(AllocationType allocationType) {
         super(allocationType);
     }
 
-    BaseIndexList(IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
+    BaseIndexList(IntFunction<T[]> createElementsArray, IBaseIndexList<T> toCopy) {
         super(createElementsArray, toCopy);
     }
 
-    BaseIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
+    BaseIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IBaseIndexList<T> toCopy) {
         super(allocationType, createElementsArray, toCopy);
     }
 
-    <U> BaseIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<U> toCopy, Function<U, T> mapper) {
+    <U> BaseIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IBaseIndexList<U> toCopy, Function<U, T> mapper) {
         super(allocationType, createElementsArray, toCopy, mapper);
     }
 

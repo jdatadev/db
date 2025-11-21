@@ -9,8 +9,8 @@ import dev.jdata.db.schema.model.HeapSchemaMap;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
-import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.lists.HeapIndexList;
+import dev.jdata.db.utils.adt.lists.HeapIndexListBuilder;
 import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
 import dev.jdata.db.utils.allocators.LongToObjectMaxDistanceMapAllocator;
 import dev.jdata.db.utils.checks.Checks;
@@ -34,7 +34,7 @@ abstract class BaseSchemaBuilder<T extends BaseSchemaBuilder<T>> {
         this.longToObjectMapAllocator = Objects.requireNonNull(longToObjectMapAllocator);
         this.schemaObjectIdAllocator = Objects.requireNonNull(schemaObjectIdAllocator);
 
-        this.tablesBuilder = IndexList.createBuilder(Table[]::new);
+        this.tablesBuilder = HeapIndexList.createBuilder(Table[]::new);
     }
 
     private int allocateSchemaObjectId(DDLObjectType ddlObjectType) {

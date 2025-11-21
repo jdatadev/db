@@ -31,11 +31,11 @@ import dev.jdata.db.sql.ast.statements.table.SQLModifyColumn;
 import dev.jdata.db.sql.ast.statements.table.SQLModifyColumnsOperation;
 import dev.jdata.db.sql.ast.statements.table.SQLTableColumnDefinition;
 import dev.jdata.db.utils.adt.CapacityExponents;
+import dev.jdata.db.utils.adt.lists.CacheIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.CachedIndexList;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
+import dev.jdata.db.utils.adt.lists.CachedIndexListBuilder;
 import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.sets.IIntSet;
+import dev.jdata.db.utils.adt.sets.IBaseIntSet;
 import dev.jdata.db.utils.debug.PrintDebug;
 
 public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
@@ -196,7 +196,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
             if (addedColumns != null) {
 
-                columnIndexListAllocator.freeIndexList(addedColumns);
+                columnIndexListAllocator.freeImmutable(addedColumns);
             }
 
             columnIndexListAllocator.freeIndexListBuilder(addedColumnsBuilder);
@@ -278,7 +278,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
             if (modifiedColumns != null) {
 
-                columnIndexListAllocator.freeIndexList(modifiedColumns);
+                columnIndexListAllocator.freeImmutable(modifiedColumns);
             }
 
             columnIndexListAllocator.freeIndexListBuilder(modifiedColumnsBuilder);
@@ -320,7 +320,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         final long numColumnNames = sqlColumnNames.getNumElements();
 
-        final IIntSet.Builder droppedColumnsBuilder = IIntSet.createBuilder(CapacityExponents.computeCapacityExponent(numColumnNames));
+        final IBaseIntSet.IntSetBuilder droppedColumnsBuilder = IBaseIntSet.createBuilder(CapacityExponents.computeCapacityExponent(numColumnNames));
 
         final Table table = processAlterTableScratchObject.getTable();
 

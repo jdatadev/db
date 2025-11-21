@@ -1,12 +1,14 @@
 package dev.jdata.db.data.locktable;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
+import dev.jdata.db.utils.adt.elements.IElementsView;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
-import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
+import dev.jdata.db.utils.adt.hashed.helpers.IntCapacityPutResult;
 import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 import dev.jdata.db.utils.adt.maps.BaseLongKeyNonBucketMap;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
 final class LockTableRowsMap extends BaseLongKeyNonBucketMap<LockTableRowsMap.RowsMapValues> implements ILockTableRowsMap {
 
@@ -98,7 +100,7 @@ final class LockTableRowsMap extends BaseLongKeyNonBucketMap<LockTableRowsMap.Ro
 
         final long putResult = put(key);
 
-        final int index = IntPutResult.getPutIndex(putResult);
+        final int index = IntCapacityPutResult.getPutIndex(putResult);
 
         if (index != NO_INDEX) {
 
@@ -133,14 +135,33 @@ final class LockTableRowsMap extends BaseLongKeyNonBucketMap<LockTableRowsMap.Ro
     @Override
     public LockedRows getLockedRows() {
 
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(getNumElements());
+        final LockedRows result;
 
-        final long[] keysDst = new long[numElements];
-        final long[] valuesDst = new long[numElements];
+        final long numElements = getNumElements();
 
-        keysAndValues(keysDst, getValues(), valuesDst, (src, srcIndex, dst, dstIndex) -> dst[dstIndex] = src.locks[srcIndex]);
+        if (Array.isArrayCapacity(numElements)) {
 
-        return new IntLockedRows(keysDst, valuesDst);
+            final int intNumElements = IElementsView.intNumElements(numElements);
+
+            final long[] keysDst = new long[intNumElements];
+            final long[] valuesDst = new long[intNumElements];
+
+            keysAndValues(keysDst, getValues(), valuesDst, (src, srcIndex, dst, dstIndex) -> dst[dstIndex] = src.locks[srcIndex]);
+
+            result = new IntCapacityLockedRows(keysDst, valuesDst);
+        }
+        else {
+            final int intNumElements = IElementsView.intNumElements(numElements);
+
+            final IMutableLongLargeArray keysDst = IMutableLongLargeArray.create(numElements);
+            final IMutableLongLargeArray valuesDst = IMutableLongLargeArray.create(numElements);
+
+            keysAndValues(keysDst, getValues(), valuesDst, (src, srcIndex, dst, dstIndex) -> dst[dstIndex] = src.locks[srcIndex]);
+
+            result = new ObjectLockedRows(keysDst, valuesDst);
+        }
+
+        return result;
     }
 
     @Override

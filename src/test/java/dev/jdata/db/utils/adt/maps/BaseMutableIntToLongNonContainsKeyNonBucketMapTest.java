@@ -7,7 +7,7 @@ import dev.jdata.db.utils.scalars.Integers;
 
 abstract class BaseMutableIntToLongNonContainsKeyNonBucketMapTest<
 
-                M extends IIntToLongStaticMapCommon & IClearable & IIntToLongCommonMapMutators>
+                M extends IIntToLongBaseStaticMapCommon & IClearable & IIntToLongStoreMapMutators>
 
         extends BaseMutableIntToIntegerOrObjectNonBucketMapTest<long[], M> {
 

@@ -11,19 +11,17 @@ import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.schema.model.schemamaps.CompleteSchemaMaps;
 import dev.jdata.db.schema.model.schemamaps.SimpleCompleteSchemaMapsBuilder;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
-import dev.jdata.db.utils.adt.sets.IMutableIntSet;
-import dev.jdata.db.utils.allocators.IMutableIntSetAllocator;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
+import dev.jdata.db.utils.adt.lists.IBaseIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
+import dev.jdata.db.utils.adt.sets.IBaseMutableIntSetAllocator;
 
 public abstract class SchemaMapEffectiveSchemaAllocators<
 
-                MUTABLE_INT_SET extends IMutableIntSet,
                 SCHEMA_OBJECT extends SchemaObject,
-                INDEX_LIST extends IndexList<SCHEMA_OBJECT>,
-                INDEX_LIST_BUILDER extends IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
-                INDEX_LIST_ALLOCATOR extends IndexListAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
+                INDEX_LIST extends IBaseIndexList<SCHEMA_OBJECT>,
+                INDEX_LIST_BUILDER extends IIndexListBuilder<SCHEMA_OBJECT, INDEX_LIST>,
+                INDEX_LIST_ALLOCATOR extends IBaseIndexListAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
                 SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, SCHEMA_MAP>,
                 SCHEMA_MAP_BUILDER extends SchemaMapBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER>,
                 COMPLETE_SCHEMA_MAPS extends CompleteSchemaMaps<SCHEMA_MAP>,
@@ -32,7 +30,6 @@ public abstract class SchemaMapEffectiveSchemaAllocators<
 
         extends EffectiveSchemaAllocators<
 
-                MUTABLE_INT_SET,
                 SCHEMA_OBJECT,
                 INDEX_LIST,
                 INDEX_LIST_BUILDER,
@@ -45,7 +42,7 @@ public abstract class SchemaMapEffectiveSchemaAllocators<
 
     private final SchemaObjectIndexListAllocators<INDEX_LIST_ALLOCATOR> indexListAllocators;
 
-    SchemaMapEffectiveSchemaAllocators(IndexListAllocator<Column, ?, ?, ?> columnIndexListAllocator, IMutableIntSetAllocator<MUTABLE_INT_SET> intSetAllocator,
+    SchemaMapEffectiveSchemaAllocators(IIndexListAllocator<Column, ?, ?> columnIndexListAllocator, IBaseMutableIntSetAllocator intSetAllocator,
             COMPLETE_SCHEMA_MAPS_BUILDER_ALLOCATOR completeSchemaMapsBuilderAllocator,
             SchemaMapBuilderAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER> schemaMapBuilderAllocator,
             SchemaObjectIndexListAllocators<INDEX_LIST_ALLOCATOR> indexListAllocators) {

@@ -1,9 +1,7 @@
 package dev.jdata.db.utils.adt.arrays;
 
-import java.util.Arrays;
-
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.scalars.Integers;
+import dev.jdata.db.utils.adt.byindex.IByIndexView;
 
 abstract class BaseIntArray extends BaseIntegerArray<int[]> implements IIntArrayCommon {
 
@@ -58,18 +56,6 @@ abstract class BaseIntArray extends BaseIntegerArray<int[]> implements IIntArray
     @Override
     public final int get(long index) {
 
-        return elements[Integers.checkUnsignedLongToUnsignedInt(index)];
-    }
-
-    @Override
-    public final void toString(long index, StringBuilder sb) {
-
-        sb.append(get(index));
-    }
-
-    @Override
-    public final String toString() {
-
-        return getClass().getSimpleName() + " [elements=" + Arrays.toString(elements) + "]";
+        return elements[IByIndexView.intIndex(index)];
     }
 }

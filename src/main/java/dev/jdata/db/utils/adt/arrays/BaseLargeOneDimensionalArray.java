@@ -9,7 +9,7 @@ import dev.jdata.db.utils.adt.arrays.LargeOneDimensionalArrayCapacityAlgorithm.O
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseLargeOneDimensionalArray<O, I> extends BaseAnyLargeArray<O, I> {
+abstract class BaseLargeOneDimensionalArray<O, I> extends BaseAnyLargeArray<O, I> implements IOneDimensionalArrayCommon {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LARGE_ONE_DIMENSIONAL_ARRAY;
 
@@ -61,6 +61,12 @@ abstract class BaseLargeOneDimensionalArray<O, I> extends BaseAnyLargeArray<O, I
 
             exit();
         }
+    }
+
+    @Override
+    final long getToStringLimit() {
+
+        return getLimit();
     }
 
     private long getAllocatedInnerArrayElementsCapacity() {

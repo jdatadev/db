@@ -1,8 +1,9 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.adt.elements.ICapacity;
-import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.elements.IMutableObjectOrderedOnlyElements;
 
-public interface IMutableList extends IElements, ICapacity {
+public interface IMutableList<T>
+
+        extends IMutableObjectOrderedOnlyElements<T>, IObjectListCommon<T>, IBaseListMutable, IObjectListMutators<T>, IMutableListMarker {
 
 }

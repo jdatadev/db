@@ -2,20 +2,20 @@ package dev.jdata.db.utils.adt.lists;
 
 import java.util.Objects;
 
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
+import dev.jdata.db.utils.adt.elements.ICapacity;
+import dev.jdata.db.utils.adt.elements.IElementsView;
 import dev.jdata.db.utils.allocators.BaseAllocatableArrayAllocator;
 import dev.jdata.db.utils.allocators.BaseArrayAllocator;
 import dev.jdata.db.utils.allocators.IAllocators;
 import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer.RefType;
 import dev.jdata.db.utils.allocators.ICacheable;
-import dev.jdata.db.utils.scalars.Integers;
 
 public final class CachedLongIndexList extends LongIndexList implements ICacheable {
 
     private static final class ArrayLongIndexListBuilderAllocator extends BaseAllocatableArrayAllocator<CachedLongIndexListBuilder> {
 
         ArrayLongIndexListBuilderAllocator(AllocationType allocationType, CacheLongIndexListAllocator listAllocator) {
-            super(c -> new CachedLongIndexListBuilder(allocationType, c, listAllocator), l -> Integers.checkUnsignedLongToUnsignedInt(l.getCapacity()));
+            super(c -> new CachedLongIndexListBuilder(allocationType, c, listAllocator), l -> ICapacity.intCapacity(l.getCapacity()));
         }
 
         CachedLongIndexListBuilder allocateIndexListBuilder(int minimumCapacity) {
@@ -32,7 +32,7 @@ public final class CachedLongIndexList extends LongIndexList implements ICacheab
     private static final class LongIndexListArrayAllocator extends BaseArrayAllocator<CachedLongIndexList> {
 
         LongIndexListArrayAllocator(AllocationType allocationType) {
-            super(c -> new CachedLongIndexList(allocationType, c), l -> Integers.checkUnsignedLongToUnsignedInt(l.getNumElements()));
+            super(c -> new CachedLongIndexList(allocationType, c), l -> IElementsView.intNumElements(l.getNumElements()));
         }
 
         CachedLongIndexList allocateIndexList(int minimumCapacity) {
@@ -49,7 +49,7 @@ public final class CachedLongIndexList extends LongIndexList implements ICacheab
     private static final class MutableLongIndexListArrayAllocator extends BaseArrayAllocator<MutableLongIndexList> {
 
         MutableLongIndexListArrayAllocator(AllocationType allocationType) {
-            super(c -> new MutableLongIndexList(allocationType, c), l -> Integers.checkUnsignedLongToUnsignedInt(l.getNumElements()));
+            super(c -> new MutableLongIndexList(allocationType, c), l -> IElementsView.intNumElements(l.getNumElements()));
         }
 
         MutableLongIndexList allocateMutableIndexList(int minimumCapacity) {
@@ -85,7 +85,7 @@ public final class CachedLongIndexList extends LongIndexList implements ICacheab
 
             statisticsGatherer.addInstanceAllocator("listBuilderArrayAllocator", RefType.INSTANTIATED, IndexListBuilder.class, listBuilderArrayAllocator);
             statisticsGatherer.addInstanceAllocator("listArrayAllocator", RefType.INSTANTIATED, IndexList.class, listArrayAllocator);
-            statisticsGatherer.addInstanceAllocator("mutableListArrayAllocator", RefType.INSTANTIATED, MutableIndexList.class, mutableListArrayAllocator);
+            statisticsGatherer.addInstanceAllocator("mutableListArrayAllocator", RefType.INSTANTIATED, MutableObjectIndexList.class, mutableListArrayAllocator);
         }
 
         @Override

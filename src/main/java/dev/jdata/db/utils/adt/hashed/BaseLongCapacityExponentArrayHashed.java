@@ -5,13 +5,13 @@ import java.util.function.Function;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.arrays.LargeExponentArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLargeArrayMarker;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.BiIntToObjectFunction;
 
-public abstract class BaseLongCapacityExponentArrayHashed<T extends LargeExponentArray<?, ?>> extends BaseLongCapacityArrayHashed<T> {
+public abstract class BaseLongCapacityExponentArrayHashed<T extends IMutableLargeArrayMarker> extends BaseLongCapacityArrayHashed<T> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_CAPACITY_EXPONENT_ARRAY_HASHED;
 

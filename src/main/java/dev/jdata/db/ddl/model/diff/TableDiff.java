@@ -5,8 +5,8 @@ import java.util.Objects;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.adt.lists.IHeapIndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
+import dev.jdata.db.utils.adt.lists.IBaseIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
 import dev.jdata.db.utils.adt.sets.IHeapIntSet;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -40,7 +40,7 @@ public final class TableDiff extends ColumnsObjectDiff {
         super(table, addedColumns, modifiedColumns, droppedColumns);
     }
 
-    <U extends IndexListBuilder<Column, ?, U>> Table applyToTable(Table table, IndexListAllocator<Column, ?, U, ?> columnIndexListAllocator) {
+    <U extends IIndexListBuilder<Column, ?>> Table applyToTable(Table table, IIndexListAllocator<Column, ?, U> columnIndexListAllocator) {
 
         return applyToColumnsObject(table, Table::makeCopy, columnIndexListAllocator);
     }

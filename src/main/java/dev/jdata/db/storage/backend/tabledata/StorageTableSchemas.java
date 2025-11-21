@@ -9,7 +9,7 @@ import dev.jdata.db.schema.model.diff.IDiffDatabaseSchema;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.adt.arrays.TwoDimensionalArray;
-import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class StorageTableSchemas {

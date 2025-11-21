@@ -81,6 +81,39 @@ public final class StringBuildersTest extends BaseTest {
     @Category(UnitTest.class)
     public void testHexString() {
 
+        assertThatThrownBy(() -> StringBuilders.hexString(null, 0L, false)).isInstanceOf(NullPointerException.class);
+
+        checkHexString(0L, false, "0");
+        checkHexString(0L, true, "0x0");
+        checkHexString(1L, false, "1");
+        checkHexString(1L, true, "0x1");
+        checkHexString(10L, false, "A");
+        checkHexString(10L, true, "0xA");
+
+        assertThatThrownBy(() -> StringBuilders.hexString(null, 0L, false, 0)).isInstanceOf(NullPointerException.class);
+
+        checkHexString(0L, false, 0, "0");
+        checkHexString(0L, true, 0, "0x0");
+        checkHexString(0L, false, 1, "0");
+        checkHexString(0L, true, 1, "0x0");
+        checkHexString(0L, false, 2, "00");
+        checkHexString(0L, true, 2, "0x00");
+        checkHexString(1L, false, 0, "1");
+        checkHexString(1L, true, 0, "0x1");
+        checkHexString(1L, false, 1, "1");
+        checkHexString(1L, true, 1, "0x1");
+        checkHexString(1L, false, 2, "01");
+        checkHexString(1L, true, 2, "0x01");
+        checkHexString(10L, false, 0, "A");
+        checkHexString(10L, true, 0, "0xA");
+        checkHexString(10L, false, 1, "A");
+        checkHexString(10L, true, 1, "0xA");
+        checkHexString(10L, false, 2, "0A");
+        checkHexString(10L, true, 2, "0x0A");
+
+        assertThatThrownBy(() -> StringBuilders.hexString(null, 0L, "", 0, Case.UPPER)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> StringBuilders.hexString(new StringBuilder(), 0L, "", 0, null)).isInstanceOf(NullPointerException.class);
+
         checkHexString(0L, null, 0, Case.UPPER, "0");
         checkHexString(0L, "hex", 0, Case.UPPER, "hex0");
 
@@ -111,12 +144,35 @@ public final class StringBuildersTest extends BaseTest {
         checkHexString(14L, "hex", 4, Case.LOWER, "hex000e");
         checkHexString(15L, "hex", 4, Case.LOWER, "hex000f");
 
-        for (int i = 3; i < 10; ++ i) {
+        for (int i = 0; i < 10; ++ i) {
 
-            checkHexString(0L, "hex", i, Case.UPPER, "hex" + Strings.repeat("0", i - 1) + '0');
-            checkHexString(1L, "hex", i, Case.UPPER, "hex" + Strings.repeat("0", i - 1) + '1');
-            checkHexString(256L, "hex", i, Case.UPPER, "hex" + Strings.repeat("0", i - 3) + "100");
+            checkHexString(0L, "hex", i, Case.UPPER, "hex" + makeZeroPad(i - 1) + '0');
+            checkHexString(1L, "hex", i, Case.UPPER, "hex" + makeZeroPad(i - 1) + '1');
+            checkHexString(256L, "hex", i, Case.UPPER, "hex" + makeZeroPad(i - 3) + "100");
         }
+    }
+
+    private static String makeZeroPad(int numCharacters) {
+
+        return numCharacters <= 0 ? "" : Strings.repeat('0', numCharacters);
+    }
+
+    private static void checkHexString(long value, boolean addPrefix, String expectedString) {
+
+        final StringBuilder sb = new StringBuilder();
+
+        StringBuilders.hexString(sb, value, addPrefix);
+
+        assertThatCharSeq(sb).isEqualToCharSequence(expectedString);
+    }
+
+    private static void checkHexString(long value, boolean addPrefix, int zeroPad, String expectedString) {
+
+        final StringBuilder sb = new StringBuilder();
+
+        StringBuilders.hexString(sb, value, addPrefix, zeroPad);
+
+        assertThatCharSeq(sb).isEqualToCharSequence(expectedString);
     }
 
     private static void checkHexString(long value, String prefix, int zeroPad, Case hexCase, String expectedString) {
@@ -139,6 +195,6 @@ public final class StringBuildersTest extends BaseTest {
 
         StringBuilders.hexString(sb, value, prefix, zeroPad, hexCase);
 
-        assertThat(sb.toString()).isEqualTo(expectedString);
+        assertThatCharSeq(sb).isEqualToCharSequence(expectedString);
     }
 }

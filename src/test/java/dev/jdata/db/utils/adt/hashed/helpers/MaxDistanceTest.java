@@ -54,6 +54,7 @@ public final class MaxDistanceTest extends BaseTest {
         checkCopyMaxDistances(12, 23, 34);
     }
 
+    @Deprecated // test LargeMaxDistance class
     private void checkCopyMaxDistances(int ... values) {
 
         final int length = values.length;

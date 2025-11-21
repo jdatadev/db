@@ -8,11 +8,14 @@ import java.util.function.IntFunction;
 import dev.jdata.db.schema.DDLObjectTypeInstances;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IBaseIndexListAllocator;
 import dev.jdata.db.utils.allocators.IAllocators;
 import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer.RefType;
 
-public abstract class SchemaObjectIndexListAllocators<T extends IndexListAllocator<? extends SchemaObject, ?, ?, ?>> extends DDLObjectTypeInstances<T> implements IAllocators {
+public abstract class SchemaObjectIndexListAllocators<T extends IBaseIndexListAllocator<? extends SchemaObject, ?, ?>>
+
+        extends DDLObjectTypeInstances<T>
+        implements IAllocators {
 
     protected SchemaObjectIndexListAllocators(IntFunction<T[]> createIndexAllocatorArray, BiFunction<DDLObjectType, Function<DDLObjectType, T>, T> createElement) {
         super(createIndexAllocatorArray, createElement);

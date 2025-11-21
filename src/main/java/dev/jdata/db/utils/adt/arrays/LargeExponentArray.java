@@ -5,12 +5,11 @@ import java.util.function.ObjLongConsumer;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.byindex.IByIndex;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-public abstract class LargeExponentArray<O, I> extends BaseLargeOneDimensionalArray<O, I> implements IByIndex {
+public abstract class LargeExponentArray<O, I> extends BaseLargeOneDimensionalArray<O, I> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LARGE_EXPONENT_ARRAY;
 

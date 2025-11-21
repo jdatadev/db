@@ -1,10 +1,10 @@
 package dev.jdata.db.test.unit.assertj;
 
-import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 
-public final class ElementsAssert extends BaseElementsAssert<ElementsAssert, IElements> {
+public final class ElementsAssert extends BaseElementsAssert<ElementsAssert, IOnlyElementsView> {
 
-    ElementsAssert(IElements actual) {
+    ElementsAssert(IOnlyElementsView actual) {
         super(actual, ElementsAssert.class);
     }
 }

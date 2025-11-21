@@ -4,7 +4,7 @@ import java.util.List;
 
 import dev.jdata.db.utils.adt.IClearable;
 
-abstract class BaseMutableIntToObjectNonContainsKeyNonBucketMapTest<T, M extends IIntToObjectStaticMapCommon<T> & IClearable & IIntToObjectCommonMapMutators<T>>
+abstract class BaseMutableIntToObjectNonContainsKeyNonBucketMapTest<T, M extends IIntToObjectBaseStaticMapCommon<T> & IClearable & IIntToObjectStoreMapMutators<T>>
 
         extends BaseMutableIntToIntegerOrObjectNonBucketMapTest<T[], M> {
 

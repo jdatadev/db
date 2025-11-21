@@ -27,16 +27,15 @@ import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.parse.SQLParserFactory;
 import dev.jdata.db.sql.parse.SQLParserHelper;
 import dev.jdata.db.sql.parse.SQLToken;
-import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
+import dev.jdata.db.utils.adt.lists.IBaseIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
 
 public abstract class BaseDatabaseSchemaSerialization<
 
-                INDEX_LIST extends IndexList<BaseSQLStatement>,
-                INDEX_LIST_BUILDER extends IndexListBuilder<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER>,
-                INDEX_LIST_ALLOCATOR extends IndexListAllocator<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
+                INDEX_LIST extends IBaseIndexList<BaseSQLStatement>,
+                INDEX_LIST_BUILDER extends IIndexListBuilder<BaseSQLStatement, INDEX_LIST>,
+                INDEX_LIST_ALLOCATOR extends IBaseIndexListAllocator<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER>,
                 COMPLETE_SCHEMA_MAPS extends IAllCompleteSchemaMaps>
 
         implements IDatabaseSchemaSerialization<COMPLETE_SCHEMA_MAPS> {

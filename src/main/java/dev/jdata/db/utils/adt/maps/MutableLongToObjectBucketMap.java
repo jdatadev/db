@@ -41,6 +41,12 @@ public final class MutableLongToObjectBucketMap<T> extends BaseLongToObjectADTBu
     }
 
     @Override
+    public long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
     public T put(long key, T value, T defaultPreviousValue) {
 
         LongNonBucket.checkIsHashArrayElement(key);
@@ -55,7 +61,7 @@ public final class MutableLongToObjectBucketMap<T> extends BaseLongToObjectADTBu
         final long putResult = putValueAndReturnNode(key);
         final long node = getPutResultNode(putResult);
 
-        final LongToObjectBucketMapMultiHeadSinglyLinkedList<?, T> buckets = getBuckets();
+        final LongToObjectBucketMapMultiHeadSinglyLinkedNodeList<?, T> buckets = getBuckets();
 
         if (isNewAdded(putResult)) {
 

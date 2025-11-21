@@ -3,9 +3,8 @@ package dev.jdata.db.utils.adt.sets;
 import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.elements.IIntIterableElements;
+import dev.jdata.db.utils.adt.elements.IIntIterableElementsView;
 import dev.jdata.db.utils.adt.hashed.helpers.IntBuckets;
-import dev.jdata.db.utils.allocators.IIntSetAllocator;
 
 public final class MutableIntBucketSet extends BaseIntBucketSet implements IMutableIntSet {
 
@@ -29,13 +28,19 @@ public final class MutableIntBucketSet extends BaseIntBucketSet implements IMuta
     }
 
     @Override
+    public long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
     public void clear() {
 
         clearBaseIntBucketSet();
     }
 
     @Override
-    public void add(int value) {
+    public void addUnordered(int value) {
 
         if (DEBUG) {
 
@@ -51,13 +56,18 @@ public final class MutableIntBucketSet extends BaseIntBucketSet implements IMuta
     }
 
     @Override
-    public void addAll(IIntIterableElements intElements) {
+    public void addUnordered(IIntIterableElementsView elements) {
 
-        Objects.requireNonNull(intElements);
+        Objects.requireNonNull(elements);
 
-        if (intElements instanceof MutableIntBucketSet) {
+        if (DEBUG) {
 
-            final MutableIntBucketSet intSet = (MutableIntBucketSet)intElements;
+            enter(b -> b.add("elements", elements));
+        }
+
+        if (elements instanceof MutableIntBucketSet) {
+
+            final MutableIntBucketSet intSet = (MutableIntBucketSet)elements;
 
             final int noIntNode = IntBuckets.NO_INT_NODE;
 
@@ -65,12 +75,17 @@ public final class MutableIntBucketSet extends BaseIntBucketSet implements IMuta
 
                 if (value != noIntNode) {
 
-                    add(value);
+                    addUnordered(elements);
                 }
             }
         }
         else {
-            IMutableIntSet.super.addAll(intElements);
+            IBaseMutableIntSet.super.addUnordered(elements);
+        }
+
+        if (DEBUG) {
+
+            exit(b -> b.add("elements", elements));
         }
     }
 
@@ -93,7 +108,7 @@ public final class MutableIntBucketSet extends BaseIntBucketSet implements IMuta
     }
 
     @Override
-    public boolean remove(int value) {
+    public boolean removeAtMostOne(int value) {
 
         if (DEBUG) {
 
@@ -111,7 +126,7 @@ public final class MutableIntBucketSet extends BaseIntBucketSet implements IMuta
     }
 
     @Override
-    public <T extends IIntSet> T toImmutable(IIntSetAllocator<T> intSetAllocator) {
+    public <T extends IBaseIntSet> T toImmutable(IBaseIntSetAllocator<T> intSetAllocator) {
 
         return intSetAllocator.copyToImmutable(this);
     }

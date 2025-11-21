@@ -1,103 +1,84 @@
 package dev.jdata.db.utils.adt.lists;
 
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.lists.HeapMutableIndexList.HeapMutableIndexListAllocator;
+import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.elements.IElementsView;
+import dev.jdata.db.utils.adt.elements.IObjectIterableElementsView;
+import dev.jdata.db.utils.checks.Checks;
 
 public final class HeapIndexList<T> extends IndexList<T> implements IHeapIndexList<T> {
 
-    public static final class HeapIndexListAllocator<T> extends IndexListAllocator<T, HeapIndexList<T>, HeapIndexListBuilder<T>, HeapMutableIndexList<T>> {
+    @SafeVarargs
+    public static <T> HeapIndexList<T> of(T ... instances) {
 
-        private static final AllocationType ALLOCATION_TYPE = AllocationType.HEAP_ALLOCATOR;
+        Objects.requireNonNull(instances);
 
-        private final IntFunction<T[]> createElementsArray;
-        private final HeapMutableIndexListAllocator<T> mutableIndexListAllocator;
-
-        public HeapIndexListAllocator(IntFunction<T[]> createElementsArray) {
-            this(createElementsArray, new HeapMutableIndexListAllocator<T>(createElementsArray));
-        }
-
-        private HeapIndexListAllocator(IntFunction<T[]> createElementsArray, HeapMutableIndexListAllocator<T> mutableIndexListAllocator) {
-
-            this.createElementsArray = Objects.requireNonNull(createElementsArray);
-            this.mutableIndexListAllocator = Objects.requireNonNull(mutableIndexListAllocator);
-        }
-
-        @Override
-        HeapIndexListBuilder<T> allocateIndexListBuilder(int minimumCapacity) {
-
-            return new HeapIndexListBuilder<>(ALLOCATION_TYPE, minimumCapacity, this);
-        }
-
-        @Override
-        public void freeIndexListBuilder(HeapIndexListBuilder<T> builder) {
-
-        }
-
-        @Override
-        HeapIndexList<T> allocateIndexListFrom(T[] values, int numElements) {
-
-            return new HeapIndexList<>(ALLOCATION_TYPE, createElementsArray, values, numElements);
-        }
-
-        @Override
-        public void freeIndexList(HeapIndexList<T> list) {
-
-        }
-
-        @Override
-        HeapMutableIndexList<T> allocateMutableIndexList(int minimumCapacity) {
-
-            return mutableIndexListAllocator.allocateMutableIndexList(minimumCapacity);
-        }
-
-        @Override
-        void freeIndexMutableList(HeapMutableIndexList<T> list) {
-
-        }
-
-        @Override
-        HeapIndexList<T> copyToImmutable(MutableIndexList<T> mutableIndexList) {
-
-            Objects.requireNonNull(mutableIndexList);
-
-            return fromMutableIndexList(ALLOCATION_TYPE, mutableIndexList);
-        }
-
-        @Override
-        HeapIndexList<T> emptyList() {
-
-            return HeapIndexList.empty();
-        }
+        return new HeapIndexList<>(AllocationType.HEAP, Array.copyOf(instances));
     }
 
-    public static final class HeapIndexListBuilder<T> extends IndexListBuilder<T, HeapIndexList<T>, HeapIndexListBuilder<T>> {
+    private static final HeapIndexList<?> emptyList = new HeapIndexList<>(AllocationType.HEAP);
 
-        HeapIndexListBuilder(AllocationType allocationType, IntFunction<T[]> createElementsArray, int initialCapacity) {
-            this(allocationType, initialCapacity, new HeapIndexListAllocator<>(createElementsArray));
+    @SuppressWarnings("unchecked")
+    public static <T> HeapIndexList<T> empty() {
+
+        return (HeapIndexList<T>)emptyList;
+    }
+
+    public static <T> HeapIndexList<T> of(T instance) {
+
+        Objects.requireNonNull(instance);
+
+        @SuppressWarnings("unchecked")
+        final IntFunction<T[]> createElementsArray = l -> (T[])java.lang.reflect.Array.newInstance(instance.getClass(), l);
+
+        return new HeapIndexList<>(AllocationType.HEAP, createElementsArray, instance);
+    }
+
+    public static <T> HeapIndexListBuilder<T> createBuilder(IntFunction<T[]> createElementsArray) {
+
+        return createBuilder(createElementsArray, DEFAULT_INITIAL_CAPACITY);
+    }
+
+    public static <T> HeapIndexListBuilder<T> createBuilder(IntFunction<T[]> createElementsArray, int initialCapacity) {
+
+        Objects.requireNonNull(createElementsArray);
+        Checks.isCapacity(initialCapacity);
+
+        return new HeapIndexListBuilder<>(AllocationType.HEAP, createElementsArray, initialCapacity);
+    }
+
+    public static <T> HeapIndexList<T> sortedOf(IObjectIterableElementsView<T> elements, Comparator<? super T> comparator, IntFunction<T[]> createElementsArray) {
+
+        final HeapIndexList<T> result;
+
+        final int numElements = IElementsView.intNumElements(elements.getNumElements());
+
+        if (numElements != 0) {
+
+            final HeapMutableIndexList<T> sorted = HeapMutableIndexList.create(createElementsArray, numElements);
+
+            sorted.addTail(elements);
+
+            sorted.sort(comparator);
+
+            result = fromMutableIndexList(AllocationType.HEAP, sorted);
+        }
+        else {
+            result = HeapIndexList.empty();
         }
 
-        private HeapIndexListBuilder(AllocationType allocationType, int initialCapacity, HeapIndexListAllocator<T> listAllocator) {
-            super(allocationType, initialCapacity, listAllocator);
-        }
+        return result;
+    }
 
-        @Override
-        public HeapIndexList<T> build() {
+    static <T> HeapIndexList<T> fromMutableIndexList(AllocationType allocationType, MutableObjectIndexList<T, ?, ?, ?> mutableIndexList) {
 
-            return fromMutableIndexListHeap();
-        }
+        AllocationType.checkIsHeap(allocationType);
+        Objects.requireNonNull(mutableIndexList);
 
-        @Override
-        public HeapIndexList<T> buildHeapAllocated() {
-
-            return fromMutableIndexListHeap();
-        }
-
-        private HeapIndexList<T> fromMutableIndexListHeap() {
-
-            return fromMutableIndexListHeap(AllocationType.HEAP_ALLOCATOR);
-        }
+        return new HeapIndexList<>(allocationType, mutableIndexList.makeArrayCopy());
     }
 
     HeapIndexList(AllocationType allocationType) {
@@ -118,7 +99,7 @@ public final class HeapIndexList<T> extends IndexList<T> implements IHeapIndexLi
         super(allocationType, instances);
     }
 
-    HeapIndexList(IndexList<T> toCopy) {
+    HeapIndexList(MutableObjectIndexList<T, ?, ?, ?> toCopy) {
         super(toCopy);
     }
 

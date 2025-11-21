@@ -1,8 +1,9 @@
 package dev.jdata.db.utils.allocators;
 
+import dev.jdata.db.review.IDeprecatedInstanceAllocator;
 import dev.jdata.db.utils.adt.maps.MutableIntToObjectWithRemoveNonBucketMap;
 
-public interface IIntToObjectMapAllocator<T> extends IInstanceAllocator<MutableIntToObjectWithRemoveNonBucketMap<T>> {
+public interface IIntToObjectMapAllocator<T> extends IDeprecatedInstanceAllocator<MutableIntToObjectWithRemoveNonBucketMap<T>> {
 
     MutableIntToObjectWithRemoveNonBucketMap<T> allocateIntToObjectMap(int minimumCapacityExponent);
 

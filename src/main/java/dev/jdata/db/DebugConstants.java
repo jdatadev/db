@@ -51,6 +51,7 @@ public class DebugConstants {
     public static final boolean DEBUG_BASE_LONG_ARRAY = DEBUG_ARRAYS;
     public static final boolean DEBUG_LONG_ARRAY = DEBUG_ARRAYS;
     public static final boolean DEBUG_MUTABLE_LONG_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_BASE_OBJECT_ARRAY = DEBUG_ARRAYS;
     public static final boolean DEBUG_OBJECT_ARRAY = DEBUG_ARRAYS;
 
     public static final boolean DEBUG_LARGE_ONE_DIMENSIONAL_ARRAY_CAPACITY_ALGORITHM = DEBUG_ARRAYS;
@@ -59,19 +60,22 @@ public class DebugConstants {
     public static final boolean DEBUG_BASE_LARGE_EXPONENT_ARRAY = DEBUG_ARRAYS;
     public static final boolean DEBUG_LARGE_ARRAY = DEBUG_ARRAYS;
     public static final boolean DEBUG_LARGE_LIMIT_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_BASE_LARGE_BYTE_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_LARGE_BYTE_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_LARGE_INT_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_LARGE_LONG_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_LARGE_OBJECT_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_MUTABlE_BASE_BYTE_LARGE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_MUTABlE_BYTE_LARGE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_MUTABlE_INT_LARGE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_MUTABlE_LONG_LARGE_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_MUTABlE_OBJECT_LARGE_ARRAY = DEBUG_ARRAYS;
 
     public static final boolean DEBUG_TWO_DIMENSIONAL_ARRAY = DEBUG_ARRAYS;
-    public static final boolean DEBUG_LARGE_CHAR_ARRAY = DEBUG_ARRAYS;
+    public static final boolean DEBUG_BASE_MUTABLE_CHAR_LARGE_ARRAY = DEBUG_ARRAYS;
+
+    public static final boolean DEBUG_MUTABLE_STRINGS_CHAR_LARGE_ARRAY = DEBUG_ARRAYS;
 
     public static final boolean DEBUG_HASH_ARRAY = DEBUG_HASHED;
     public static final boolean DEBUG_LARGE_HASH_ARRAY = DEBUG_HASHED;
 
     public static final boolean DEBUG_MAX_DISTANCE = DEBUG_HASHED;
+    public static final boolean DEBUG_LARGE_MAX_DISTANCE = DEBUG_HASHED;
 
     public static final boolean DEBUG_BASE_HASHED = DEBUG_HASHED;
     public static final boolean DEBUG_BASE_CAPACITY_HASHED = DEBUG_HASHED;
@@ -150,6 +154,16 @@ public class DebugConstants {
 
     public static final boolean DEBUG_BASE_INT_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
     public static final boolean DEBUG_MUTABLE_INT_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
+
+    public static final boolean DEBUG_BASE_LONG_NON_BUCKET_SET = DEBUG_SETS;
+
+    public static final boolean DEBUG_BASE_LONG_LARGE_NON_BUCKET_SET = DEBUG_SETS;
+
+    public static final boolean DEBUG_BASE_LONG_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
+    public static final boolean DEBUG_MUTABLE_LONG_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
+
+    public static final boolean DEBUG_BASE_LONG_LARGE_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
+    public static final boolean DEBUG_MUTABLE_LONG_LARGE_MAX_DISTANCE_NON_BUCKET_SET = DEBUG_SETS;
 
     public static final boolean DEBUG_BASE_INT_BUCKET_SET = DEBUG_SETS;
     public static final boolean DEBUG_MUTABLE_INT_BUCKET_SET = DEBUG_SETS;

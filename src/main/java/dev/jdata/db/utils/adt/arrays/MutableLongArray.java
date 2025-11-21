@@ -6,13 +6,13 @@ import java.util.Objects;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.debug.PrintDebug;
 
-public final class MutableLongArray extends BaseLongArray implements IMutableLongArray {
+final class MutableLongArray extends BaseLongArray implements IMutableLongArray {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_LONG_ARRAY;
 
     private static final Class<?> debugClass = MutableLongArray.class;
 
-    public static MutableLongArray copyOf(MutableLongArray toCopy) {
+    static MutableLongArray copyOf(MutableLongArray toCopy) {
 
         Objects.requireNonNull(toCopy);
 
@@ -33,7 +33,7 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
 
     private final long clearValue;
 
-    public MutableLongArray(int initialCapacity) {
+    MutableLongArray(int initialCapacity) {
         this(initialCapacity, 0L, false);
 
         if (DEBUG) {
@@ -47,7 +47,7 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
         }
     }
 
-    public MutableLongArray(int initialCapacity, long clearValue) {
+    MutableLongArray(int initialCapacity, long clearValue) {
         this(initialCapacity, clearValue, true);
 
         if (DEBUG) {
@@ -88,7 +88,7 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
     @Override
     public long getCapacity() {
 
-        return elements.length;
+        return getElements().length;
     }
 
     @Override
@@ -103,7 +103,7 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
 
         if (hasClearValue()) {
 
-            Arrays.fill(elements, clearValue);
+            Arrays.fill(getElements(), clearValue);
         }
 
         if (DEBUG) {
@@ -122,7 +122,7 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
 
         final int index = ensureAddIndex();
 
-        elements[index] = value;
+        getElements()[index] = value;
 
         if (DEBUG) {
 
@@ -140,7 +140,7 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
 
         final int intIndex = ensureIndex(index);
 
-        elements[intIndex] = value;
+        getElements()[intIndex] = value;
 
         if (DEBUG) {
 

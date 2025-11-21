@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.adt.sets;
 
-import dev.jdata.db.utils.adt.elements.IIntIterableElements.IForEach;
+import dev.jdata.db.utils.adt.elements.IIntForEach;
 
 public final class MutableIntBucketSetTest extends BaseMutableIntegerSetTest<MutableIntBucketSet> {
 
@@ -11,7 +11,7 @@ public final class MutableIntBucketSetTest extends BaseMutableIntegerSetTest<Mut
     }
 
     @Override
-    <P> void forEach(MutableIntBucketSet set, P parameter, IForEach<P, RuntimeException> forEach) {
+    <P> void forEach(MutableIntBucketSet set, P parameter, IIntForEach<P, RuntimeException> forEach) {
 
         set.forEach(parameter, forEach);
     }
@@ -37,6 +37,6 @@ public final class MutableIntBucketSetTest extends BaseMutableIntegerSetTest<Mut
     @Override
     boolean remove(MutableIntBucketSet set, int value) {
 
-        return set.remove(value);
+        return set.removeAtMostOne(value);
     }
 }

@@ -10,14 +10,16 @@ import java.util.function.Predicate;
 
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.utils.adt.IContains;
-import dev.jdata.db.utils.adt.arrays.IOneDimensionalArrayGetters;
-import dev.jdata.db.utils.adt.elements.IElements;
-import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.contains.IContainsView;
+import dev.jdata.db.utils.adt.elements.IObjectIterableElementsView;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
+import dev.jdata.db.utils.adt.elements.IScatteredElementsView;
+import dev.jdata.db.utils.adt.lists.IBaseIndexList;
 import dev.jdata.db.utils.adt.strings.CharSequences;
 import dev.jdata.db.utils.adt.strings.Characters;
 import dev.jdata.db.utils.adt.strings.Strings;
 import dev.jdata.db.utils.function.CharPredicate;
+import dev.jdata.db.utils.instances.Instances;
 
 public class Checks {
 
@@ -53,6 +55,24 @@ public class Checks {
     public static boolean checkIsNotNull(Object object) {
 
         return object != null;
+    }
+
+    public static void areAnyNotNull(Object instance1, Object instance2) {
+
+        if (!Instances.areAnyNotNull(instance1, instance2)) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void areBothNotNullOrBothNull(Object instance1, Object instance2) {
+
+        Instances.areBothNotNullOrBothNullOrThrowException(instance1, instance2, IllegalArgumentException::new);
+    }
+
+    public static void areAllNotNullOrAllNull(Object instance1, Object instance2, Object instance3) {
+
+        Instances.areAllNotNullOrAllNullOrThrowException(instance1, instance2, instance3, IllegalArgumentException::new);
     }
 
     public static int isNotNegative(int value) {
@@ -205,25 +225,25 @@ public class Checks {
         }
     }
 
-    public static void checkFromIndexNum(int fromIndex, int num, int limit) {
+    public static void checkFromIndexNum(long fromIndex, long num, long limit) {
 
-        if (fromIndex < 0) {
+        if (fromIndex < 0L) {
 
             throw new IndexOutOfBoundsException();
         }
-        else if (num < 0) {
+        else if (num < 0L) {
 
             throw new IllegalArgumentException();
         }
-        else if (limit < 0) {
+        else if (limit < 0L) {
 
             throw new IllegalArgumentException();
         }
-        else if (num == 0) {
+        else if (num == 0L) {
 
-            if (limit == 0) {
+            if (limit == 0L) {
 
-                if (fromIndex != 0) {
+                if (fromIndex != 0L) {
 
                     throw new IndexOutOfBoundsException();
                 }
@@ -409,6 +429,14 @@ public class Checks {
         }
     }
 
+    public static void areNotEqual(int value1, int value2) {
+
+        if (value1 == value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
     public static void isLessThan(long value1, long value2) {
 
         if (value1 >= value2) {
@@ -444,6 +472,14 @@ public class Checks {
     public static void areEqual(long value1, long value2) {
 
         if (value1 != value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void areNotEqual(long value1, long value2) {
+
+        if (value1 == value2) {
 
             throw new IllegalArgumentException();
         }
@@ -489,6 +525,14 @@ public class Checks {
         }
     }
 
+    public static void areNotEqual(float value1, float value2) {
+
+        if (value1 == value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
     public static void isLessThan(double value1, double value2) {
 
         if (value1 >= value2) {
@@ -524,6 +568,14 @@ public class Checks {
     public static void areEqual(double value1, double value2) {
 
         if (value1 != value2) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void areNotEqual(double value1, double value2) {
+
+        if (value1 == value2) {
 
             throw new IllegalArgumentException();
         }
@@ -861,7 +913,7 @@ public class Checks {
         return array;
     }
 
-    public static <T extends IContains> T isEmpty(T contains) {
+    public static <T extends IContainsView> T isEmpty(T contains) {
 
         if (contains.isEmpty()) {
 
@@ -871,7 +923,7 @@ public class Checks {
         return contains;
     }
 
-    public static <T extends IContains> T isNotEmpty(T contains) {
+    public static <T extends IContainsView> T isNotEmpty(T contains) {
 
         if (contains.isEmpty()) {
 
@@ -881,13 +933,35 @@ public class Checks {
         return contains;
     }
 
-    public static <T> void checkNumElements(int numElements, int length) {
+    public static <T, U extends IObjectIterableElementsView<T>> U isNotEmpty(U elements) {
+
+        if (IObjectIterableElementsView.isEmpty(elements)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return elements;
+    }
+
+    public static void checkNumElements(int numElements, int length) {
 
         if (numElements < 0) {
 
             throw new IllegalArgumentException();
         }
         else if (numElements > length) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void checkNumElements(int[] array, int numElements) {
+
+        if (numElements < 0) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (numElements > array.length) {
 
             throw new IllegalArgumentException();
         }
@@ -940,7 +1014,7 @@ public class Checks {
         return array;
     }
 
-    public static <T, U extends IIndexList<T>, P> U areElements(U list, P parameter, BiPredicate<T, P> predicate) {
+    public static <T, U extends IBaseIndexList<T>, P> U areElements(U list, P parameter, BiPredicate<T, P> predicate) {
 
         final long numElements = list.getNumElements();
 
@@ -1045,7 +1119,17 @@ public class Checks {
         return capacity;
     }
 
-    public static void areSameNumElements(IElements elements1, IElements elements2) {
+    public static int isArrayLength(int length) {
+
+        if (length < 0) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return length;
+    }
+
+    public static void areSameNumElements(IOnlyElementsView elements1, IOnlyElementsView elements2) {
 
         if (elements1.getNumElements() != elements2.getNumElements()) {
 
@@ -1061,9 +1145,9 @@ public class Checks {
         }
     }
 
-    public static void isSameLimit(IOneDimensionalArrayGetters array1, IOneDimensionalArrayGetters array2) {
+    public static void isSameLimit(IScatteredElementsView scatteredElementsView1, IScatteredElementsView scatteredElementsView2) {
 
-        if (array1.getLimit() != array2.getLimit()) {
+        if (scatteredElementsView1.getLimit() != scatteredElementsView2.getLimit()) {
 
             throw new IllegalArgumentException();
         }
@@ -1087,6 +1171,16 @@ public class Checks {
         }
 
         return initialCapacity;
+    }
+
+    public static int isInitialOuterCapacity(int initialOuterCapacity) {
+
+        if (initialOuterCapacity < 1) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return initialOuterCapacity;
     }
 
     public static int isCapacity(int capacity) {
@@ -1164,6 +1258,11 @@ public class Checks {
         }
 
         return capacityExponent;
+    }
+
+    public static int isInnerCapacityExponent(int capacityExponent) {
+
+        return isIntCapacityExponent(capacityExponent);
     }
 
     public static int isIntCapacityExponentIncrease(int capacityExponentIncrease) {

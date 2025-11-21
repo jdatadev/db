@@ -4,11 +4,11 @@ import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
 
-public final class MutableIntToLongWithRemoveNonBucketMap extends BaseIntToLongWithRemoveNonBucketMap implements IMutableIntToLongStaticMap {
+final class MutableIntToLongWithRemoveNonBucketMap extends BaseIntToLongWithRemoveNonBucketMap implements IMutableIntToLongWithRemoveNonBucketMap {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_INT_TO_LONG_WITH_REMOVE_NON_BUCKET_MAP;
 
-    public MutableIntToLongWithRemoveNonBucketMap(int initialCapacityExponent) {
+    MutableIntToLongWithRemoveNonBucketMap(int initialCapacityExponent) {
         super(initialCapacityExponent);
 
         if (DEBUG) {
@@ -22,7 +22,7 @@ public final class MutableIntToLongWithRemoveNonBucketMap extends BaseIntToLongW
         }
     }
 
-    public MutableIntToLongWithRemoveNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
+    MutableIntToLongWithRemoveNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
         super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
 
         if (DEBUG) {
@@ -36,7 +36,7 @@ public final class MutableIntToLongWithRemoveNonBucketMap extends BaseIntToLongW
         }
     }
 
-    public MutableIntToLongWithRemoveNonBucketMap(MutableIntToLongWithRemoveNonBucketMap toCopy) {
+    MutableIntToLongWithRemoveNonBucketMap(MutableIntToLongWithRemoveNonBucketMap toCopy) {
         super(toCopy);
 
         if (DEBUG) {
