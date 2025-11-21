@@ -5,7 +5,7 @@ import dev.jdata.db.ddl.helpers.buildschema.HeapDDLSchemaSQLStatementsWorkerObje
 import dev.jdata.db.schema.storage.BaseDatabaseSchemaSerializerTest;
 import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.parse.SQLParserFactory;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IHeapIndexListAllocator;
 
 public final class ANSIDatabaseSchemaSerializerTest extends BaseDatabaseSchemaSerializerTest<HeapANSIDatabaseSchemaSerialization> {
 
@@ -19,6 +19,6 @@ public final class ANSIDatabaseSchemaSerializerTest extends BaseDatabaseSchemaSe
     protected HeapANSIDatabaseSchemaSerialization createDatabaseSchemaSerializer(ISQLAllocator sqlAllocator,
             HeapDDLSchemaSQLStatementsWorkerObjects ddlSchemaSQLStatementsWorkerObjects) {
 
-        return new HeapANSIDatabaseSchemaSerialization(sqlAllocator, ddlSchemaSQLStatementsWorkerObjects, createDDLSchemaScratchObjects(), HeapIndexListAllocator::new);
+        return new HeapANSIDatabaseSchemaSerialization(sqlAllocator, ddlSchemaSQLStatementsWorkerObjects, createDDLSchemaScratchObjects(), IHeapIndexListAllocator::create);
     }
 }

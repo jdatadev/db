@@ -10,7 +10,8 @@ import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.ast.statements.table.SQLCreateTableStatement;
 import dev.jdata.db.sql.parse.expression.SQLScratchExpressionValues;
 import dev.jdata.db.test.unit.BaseSQLTest;
-import dev.jdata.db.utils.adt.strings.Strings;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
+import dev.jdata.db.utils.jdk.adt.strings.Strings;
 
 public final class SQLParserTest extends BaseSQLTest {
 
@@ -73,6 +74,6 @@ public final class SQLParserTest extends BaseSQLTest {
 
         final StringLoadStream loadStream = new StringLoadStream(string);
 
-        return sqlParser.parse(loadStream, RuntimeException::new, createSQLAllocator(), new SQLScratchExpressionValues());
+        return sqlParser.parse(loadStream, RuntimeException::new, createSQLAllocator(), new SQLScratchExpressionValues(AllocationType.HEAP));
     }
 }

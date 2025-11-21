@@ -5,7 +5,7 @@ import java.nio.charset.CharsetDecoder;
 import java.util.Objects;
 
 import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.IDataWriter;
-import dev.jdata.db.engine.server.network.protocol.ProtocolMessage.ProtocolAllocator;
+import dev.jdata.db.engine.server.network.protocol.ProtocolMessage.IProtocolAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -77,7 +77,7 @@ public final class Protocol {
         return ProtocolMessageType.fromByte(messageTypeByte);
     }
 
-    public ProtocolMessage decode(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, ProtocolAllocator allocator) throws ProtocolDecodeException {
+    public ProtocolMessage decode(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, IProtocolAllocator allocator) throws ProtocolDecodeException {
 
         int currentOffset = offset;
 

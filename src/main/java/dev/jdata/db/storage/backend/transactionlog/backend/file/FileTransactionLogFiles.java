@@ -4,12 +4,9 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import dev.jdata.db.storage.backend.file.BaseStorageFiles;
-import dev.jdata.db.utils.adt.hashed.HashedConstants;
 import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IMutableIndexList;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.adt.maps.MutableLongToObjectWithRemoveNonBucketMap;
+import dev.jdata.db.utils.adt.lists.IIndexListAllocator;
+import dev.jdata.db.utils.adt.maps.IHeapMutableLongToObjectWithRemoveStaticMap;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
@@ -25,13 +22,13 @@ public final class FileTransactionLogFiles extends BaseStorageFiles<SequentialFi
         return parseSequenceNo(fileName, FILE_NAME_PREFIX);
     }
 
-    private final MutableLongToObjectWithRemoveNonBucketMap<FileTransactionLogFile> fileByLongToObjectMap;
+    private final IHeapMutableLongToObjectWithRemoveStaticMap<FileTransactionLogFile> fileByLongToObjectMap;
 
     public FileTransactionLogFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath directoryPath, IIndexList<FileTransactionLogFile> files,
-            IndexListAllocator<FileTransactionLogFile, ? extends IndexList<FileTransactionLogFile>, ?, ? extends IMutableIndexList<FileTransactionLogFile>> indexListAllocator) {
+            IIndexListAllocator<FileTransactionLogFile, ? extends IIndexList<FileTransactionLogFile>, ?, ?> indexListAllocator) {
         super(fileSystemAccess, directoryPath, files, indexListAllocator);
 
-        this.fileByLongToObjectMap = new MutableLongToObjectWithRemoveNonBucketMap<>(10, 1, HashedConstants.DEFAULT_LOAD_FACTOR, FileTransactionLogFile[]::new);
+        this.fileByLongToObjectMap = IHeapMutableLongToObjectWithRemoveStaticMap.create(10, FileTransactionLogFile[]::new);
     }
 
     @Override

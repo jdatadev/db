@@ -26,7 +26,7 @@ import dev.jdata.db.sql.ast.expressions.SQLSubSelectStatement;
 import dev.jdata.db.sql.parse.SQLExpressionLexer;
 import dev.jdata.db.sql.parse.SQLLexer;
 import dev.jdata.db.sql.parse.SQLToken;
-import dev.jdata.db.utils.adt.decimals.MutableDecimal;
+import dev.jdata.db.utils.adt.numbers.decimals.ICachedMutableDecimal;
 
 public final class SQLExpressionParser extends BaseSQLExpressionParser {
 
@@ -230,7 +230,7 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
 
             final boolean isLargeFraction = scratchFractionValue.isLargeIntegerSet();
 
-            final MutableDecimal decimal;
+            final ICachedMutableDecimal decimal;
 
             if (isLargeInteger && isLargeFraction) {
 
@@ -252,7 +252,7 @@ public final class SQLExpressionParser extends BaseSQLExpressionParser {
         }
         else {
             result = isLargeInteger
-                    ? new SQLLargeIntegerLiteral(makeContext(), scratchIntegerValue.getLargeInteger())
+                    ? new SQLLargeIntegerLiteral(makeContext(), allocator.allocateLargeInteger(scratchIntegerValue.getLargeInteger()))
                     : new SQLIntegerLiteral(makeContext(), scratchIntegerValue.getLongInteger());
         }
 

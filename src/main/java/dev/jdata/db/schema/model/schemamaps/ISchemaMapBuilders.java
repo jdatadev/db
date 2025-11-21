@@ -3,8 +3,8 @@ package dev.jdata.db.schema.model.schemamaps;
 import dev.jdata.db.schema.model.ISchemaObjects;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 
-public interface ISchemaMapBuilders<SCHEMA_OBJECT extends SchemaObject> {
+public interface ISchemaMapBuilders<T extends SchemaObject, U> {
 
-    void addSchemaObject(SCHEMA_OBJECT schemaObject);
-    void addSchemaObjects(ISchemaObjects schemaObjects);
+    U addSchemaObject(T schemaObject);
+    U addSchemaObjects(ISchemaObjects schemaObjects);
 }

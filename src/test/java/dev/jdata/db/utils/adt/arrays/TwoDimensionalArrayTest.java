@@ -11,8 +11,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.test.unit.BaseTest;
-import dev.jdata.db.test.unit.assertj.BaseElementsAssert;
+import dev.jdata.db.test.unit.assertj.BaseOnlyElementsAssert;
 import dev.jdata.db.utils.adt.maps.MapOfList;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.function.BiIntToIntFunction;
 import dev.jdata.db.utils.function.IntToIntFunction;
 
@@ -25,13 +26,13 @@ public final class TwoDimensionalArrayTest extends BaseTest {
     @Category(UnitTest.class)
     public void testConstructorArguments() {
 
-        assertThatThrownBy(() -> new TwoDimensionalArray<>(-1,  Integer[][]::new, 1, Integer[]::new)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new TwoDimensionalArray<>(1,   null, 1, Integer[]::new)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> new TwoDimensionalArray<>(1,   Integer[][]::new, -1, Integer[]::new)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new TwoDimensionalArray<>(1,   Integer[][]::new, 0, Integer[]::new)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new TwoDimensionalArray<>(1,   Integer[][]::new, 1, null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> new TwoDimensionalArray<>(AllocationType.HEAP, -1, Integer[][]::new, 1, Integer[]::new)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new TwoDimensionalArray<>(AllocationType.HEAP, 1, null, 1, Integer[]::new)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> new TwoDimensionalArray<>(AllocationType.HEAP, 1, Integer[][]::new, -1, Integer[]::new)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new TwoDimensionalArray<>(AllocationType.HEAP, 1, Integer[][]::new, 0, Integer[]::new)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new TwoDimensionalArray<>(AllocationType.HEAP, 1, Integer[][]::new, 1, null)).isInstanceOf(NullPointerException.class);
 
-        final TwoDimensionalArray<Integer> twoDimensionalArray = new TwoDimensionalArray<>(0, Integer[][]::new, 1, Integer[]::new);
+        final TwoDimensionalArray<Integer> twoDimensionalArray = new TwoDimensionalArray<>(AllocationType.HEAP, 0, Integer[][]::new, 1, Integer[]::new);
 
         twoDimensionalArray.addWithOuterExpand(0, 1);
     }
@@ -319,7 +320,7 @@ public final class TwoDimensionalArrayTest extends BaseTest {
 
     private static <T> TwoDimensionalArray<T> createTwoDimensionalArray(IntFunction<T[][]> createOuterArray, IntFunction<T[]> createInnerArray) {
 
-        return new TwoDimensionalArray<>(1, createOuterArray, 1, createInnerArray);
+        return new TwoDimensionalArray<>(AllocationType.HEAP, 1, createOuterArray, 1, createInnerArray);
     }
 
     private static int makeValue(int outerIndex, int innerIndex) {
@@ -327,7 +328,7 @@ public final class TwoDimensionalArrayTest extends BaseTest {
         return (outerIndex * 1000 * 1000) + innerIndex;
     }
 
-    private static final class TwoDimensionalArrayAssert<T> extends BaseElementsAssert<TwoDimensionalArrayAssert<T>, TwoDimensionalArray<T>> {
+    private static final class TwoDimensionalArrayAssert<T> extends BaseOnlyElementsAssert<TwoDimensionalArrayAssert<T>, TwoDimensionalArray<T>> {
 
         TwoDimensionalArrayAssert(TwoDimensionalArray<T> actual) {
             super(actual, castAssertClass(TwoDimensionalArrayAssert.class));

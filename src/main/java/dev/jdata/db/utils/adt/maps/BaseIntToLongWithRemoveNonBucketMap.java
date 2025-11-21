@@ -1,16 +1,16 @@
 package dev.jdata.db.utils.adt.maps;
 
-abstract class BaseIntToLongWithRemoveNonBucketMap extends BaseIntToLongNonContainsNonBucketMap implements IIntKeyMap {
+abstract class BaseIntToLongWithRemoveNonBucketMap extends BaseIntToLongNonContainsNonBucketMap implements IIntToLongKeyMapCommon {
 
-    BaseIntToLongWithRemoveNonBucketMap(int initialCapacityExponent) {
-        super(initialCapacityExponent);
+    BaseIntToLongWithRemoveNonBucketMap(AllocationType allocationType, int initialCapacityExponent) {
+        super(allocationType, initialCapacityExponent);
     }
 
-    BaseIntToLongWithRemoveNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
+    BaseIntToLongWithRemoveNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor);
     }
 
-    BaseIntToLongWithRemoveNonBucketMap(BaseIntToLongWithRemoveNonBucketMap toCopy) {
-        super(toCopy);
+    BaseIntToLongWithRemoveNonBucketMap(AllocationType allocationType, BaseIntToLongWithRemoveNonBucketMap toCopy) {
+        super(allocationType, toCopy);
     }
 }

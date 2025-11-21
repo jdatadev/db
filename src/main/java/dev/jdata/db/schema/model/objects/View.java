@@ -1,17 +1,17 @@
 package dev.jdata.db.schema.model.objects;
 
-import dev.jdata.db.utils.adt.lists.HeapIndexList;
+import dev.jdata.db.utils.adt.lists.IHeapIndexList;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class View extends ColumnsObject {
 
-    public View(long parsedName, long hashName, int id, HeapIndexList<Column> columns) {
+    public View(long parsedName, long hashName, int id, IHeapIndexList<Column> columns) {
         super(parsedName, hashName, id, columns);
 
         Checks.isViewId(id);
     }
 
-    private View(View toCopy, HeapIndexList<Column> columns) {
+    private View(View toCopy, IHeapIndexList<Column> columns) {
         super(toCopy, columns);
     }
 
@@ -32,7 +32,7 @@ public final class View extends ColumnsObject {
     }
 
     @Override
-    public ColumnsObject makeCopy(HeapIndexList<Column> columns) {
+    public ColumnsObject makeCopy(IHeapIndexList<Column> columns) {
 
         return new View(this, columns);
     }

@@ -4,19 +4,19 @@ import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
-import dev.jdata.db.utils.adt.hashed.helpers.IntPutResult;
+import dev.jdata.db.utils.adt.hashed.helpers.IntCapacityPutResult;
 import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 
-abstract class BaseLongToLongNonContainsKeyNonBucketMap extends BaseLongToLongNonBucketMap<ILongToLongStaticMapCommon> implements ILongToLongStaticMapCommon {
+abstract class BaseLongToLongNonContainsKeyNonBucketMap extends BaseLongToLongNonBucketMap<BaseLongToLongNonContainsKeyNonBucketMap> implements ILongToLongBaseStaticMapCommon {
 
-    private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_TO_LONG_NON_CONTAINS_NON_BUCKET_MAP;
+    private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_TO_LONG_NON_CONTAINS_KEY_NON_BUCKET_MAP;
 
-    BaseLongToLongNonContainsKeyNonBucketMap(int initialCapacityExponent) {
-        super(initialCapacityExponent);
+    BaseLongToLongNonContainsKeyNonBucketMap(AllocationType allocationType, int initialCapacityExponent) {
+        super(allocationType, initialCapacityExponent);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent));
         }
 
         if (DEBUG) {
@@ -25,12 +25,13 @@ abstract class BaseLongToLongNonContainsKeyNonBucketMap extends BaseLongToLongNo
         }
     }
 
-    BaseLongToLongNonContainsKeyNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
+    BaseLongToLongNonContainsKeyNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor));
         }
 
         if (DEBUG) {
@@ -39,12 +40,12 @@ abstract class BaseLongToLongNonContainsKeyNonBucketMap extends BaseLongToLongNo
         }
     }
 
-    BaseLongToLongNonContainsKeyNonBucketMap(BaseLongToLongNonContainsKeyNonBucketMap toCopy) {
-        super(toCopy);
+    BaseLongToLongNonContainsKeyNonBucketMap(AllocationType allocationType, BaseLongToLongNonContainsKeyNonBucketMap toCopy) {
+        super(allocationType, toCopy);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy));
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy));
         }
 
         if (DEBUG) {
@@ -84,6 +85,16 @@ abstract class BaseLongToLongNonContainsKeyNonBucketMap extends BaseLongToLongNo
     }
 
     @Override
+    protected final <P, R> R makeFromElements(AllocationType allocationType, P parameter,
+            IMakeFromElementsFunction<long[], BaseLongToLongNonContainsKeyNonBucketMap, P, R> makeFromElements) {
+
+        Objects.requireNonNull(allocationType);
+        Objects.requireNonNull(makeFromElements);
+
+        return makeFromElements.apply(allocationType, long[]::new, this, getMakeFromElementsNumElements(), parameter);
+    }
+
+    @Override
     protected final int scanHashArrayForIndex(long key, int keyMask) {
 
         if (DEBUG) {
@@ -112,10 +123,10 @@ abstract class BaseLongToLongNonContainsKeyNonBucketMap extends BaseLongToLongNo
 
         final long putResult = put(key);
 
-        final int index = IntPutResult.getPutIndex(putResult);
+        final int index = IntCapacityPutResult.getPutIndex(putResult);
         final long[] values = getValues();
 
-        final long result = IntPutResult.getPutNewAdded(putResult) ? defaultPreviousValue : values[index];
+        final long result = IntCapacityPutResult.getPutNewAdded(putResult) ? defaultPreviousValue : values[index];
 
         values[index] = value;
 
@@ -128,7 +139,8 @@ abstract class BaseLongToLongNonContainsKeyNonBucketMap extends BaseLongToLongNo
     }
 
     @Override
-    public final <P1, P2> boolean equals(P1 thisParameter, ILongToLongStaticMapCommon other, P2 otherParameter, ILongValueMapEqualityTester<P1, P2> equalityTester) {
+    public final <P1, P2, E extends Exception> boolean equals(P1 thisParameter, ILongToLongBaseStaticMapView other, P2 otherParameter,
+            ILongValueMapEqualityTester<P1, P2, E> equalityTester) throws E {
 
         Objects.requireNonNull(other);
         Objects.requireNonNull(equalityTester);
@@ -142,13 +154,12 @@ abstract class BaseLongToLongNonContainsKeyNonBucketMap extends BaseLongToLongNo
 
         if (other instanceof BaseLongToLongNonBucketMap) {
 
-            @SuppressWarnings("unchecked")
-            final BaseLongToLongNonBucketMap<ILongToLongStaticMapCommon> otherMap = (BaseLongToLongNonBucketMap<ILongToLongStaticMapCommon>)other;
+            final BaseLongToLongNonBucketMap<?> otherMap = (BaseLongToLongNonBucketMap<?>)other;
 
             result = equalsLongToLongNonBucketMap(thisParameter, otherMap, otherParameter, equalityTester);
         }
         else {
-            result = ILongToLongStaticMapCommon.super.equals(thisParameter, other, otherParameter, equalityTester);
+            result = ILongToLongBaseStaticMapCommon.super.equals(thisParameter, other, otherParameter, equalityTester);
         }
 
         if (DEBUG) {
@@ -160,7 +171,8 @@ abstract class BaseLongToLongNonContainsKeyNonBucketMap extends BaseLongToLongNo
     }
 
     @Override
-    public final <P1, P2> boolean equalsParameters(LongValueMapScratchEqualsParameter<ILongToLongStaticMapCommon, P1, P2> scratchEqualsParameter) {
+    public final <P1, P2, E extends Exception> boolean equalsParameters(LongValueMapScratchEqualsParameter<ILongToLongBaseStaticMapView, P1, P2, E> scratchEqualsParameter)
+            throws E {
 
         Objects.requireNonNull(scratchEqualsParameter);
 
@@ -171,18 +183,17 @@ abstract class BaseLongToLongNonContainsKeyNonBucketMap extends BaseLongToLongNo
 
         final boolean result;
 
-        final ILongToLongStaticMapCommon other = scratchEqualsParameter.getOther();
+        final ILongToLongBaseStaticMapView other = scratchEqualsParameter.getOther();
 
         if (other instanceof BaseLongToLongNonBucketMap) {
 
-            @SuppressWarnings("unchecked")
-            final BaseLongToLongNonBucketMap<ILongToLongStaticMapCommon> otherMap = (BaseLongToLongNonBucketMap<ILongToLongStaticMapCommon>)other;
+            final BaseLongToLongNonBucketMap<?> otherMap = (BaseLongToLongNonBucketMap<?>)other;
 
             result = equalsLongToLongNonBucketMap(scratchEqualsParameter.getThisParameter(), otherMap, scratchEqualsParameter.getOtherParameter(),
                     scratchEqualsParameter.getEqualityTester());
         }
         else {
-            result = ILongToLongStaticMapCommon.super.equalsParameters(scratchEqualsParameter);
+            result = ILongToLongBaseStaticMapCommon.super.equalsParameters(scratchEqualsParameter);
         }
 
         if (DEBUG) {

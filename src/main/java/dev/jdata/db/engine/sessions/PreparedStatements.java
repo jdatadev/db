@@ -11,8 +11,8 @@ import dev.jdata.db.utils.checks.Checks;
 
 final class PreparedStatements extends BaseSingleTypeDescriptorables<PreparedStatementState, PreparedStatement> implements IClearable {
 
-    PreparedStatements() {
-        super(PreparedStatement[]::new);
+    PreparedStatements(AllocationType allocationType) {
+        super(allocationType, PreparedStatement[]::new);
     }
 
     @Override
@@ -26,7 +26,7 @@ final class PreparedStatements extends BaseSingleTypeDescriptorables<PreparedSta
         Objects.requireNonNull(sqlStatement);
         Objects.requireNonNull(sqlString);
 
-        final PreparedStatement preparedStatement = addDescriptorable(sqlStatement, p -> new PreparedStatement());
+        final PreparedStatement preparedStatement = addDescriptorable(sqlStatement, (a, p) -> new PreparedStatement(a));
 
         preparedStatement.initialize(sqlStatement, sqlString);
 

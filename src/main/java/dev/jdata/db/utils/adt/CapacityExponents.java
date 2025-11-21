@@ -1,9 +1,15 @@
 package dev.jdata.db.utils.adt;
 
+import java.util.Objects;
+
+import dev.jdata.db.utils.adt.elements.ICapacity;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
 
 public class CapacityExponents {
+
+    public static final int DEFAULT_INNER_CAPACITY_EXPONENT = 10;
 
     public static int computeIntCapacityFromExponent(int capacityExponent) {
 
@@ -19,27 +25,56 @@ public class CapacityExponents {
         return 1L << capacityExponent;
     }
 
-    public static int computeCapacityExponent(int numElements) {
+    public static int computeIntCapacityExponent(int numElements) {
 
         return computeCapacityExponent(numElements, Integer.SIZE);
     }
 
-    public static int computeCapacityExponent(long numElements) {
+    public static int computeIntCapacityExponent(long numElements) {
+
+        return computeCapacityExponent(numElements, Integer.SIZE);
+    }
+
+    public static int computeIntCapacityExponent(IOnlyElementsView elements) {
+
+        Objects.requireNonNull(elements);
+
+        return computeCapacityExponent(elements.getNumElements(), Integer.SIZE);
+    }
+
+    public static int computeLongCapacityExponent(long numElements) {
 
         return computeCapacityExponent(numElements, Long.SIZE);
     }
 
-    public static int computeCapacityExponentExact(int numElements) {
+    public static int computeIntCapacityExponentExact(int numElements) {
 
         return computeCapacityExponentExact(numElements, Integer.SIZE);
     }
 
-    public static int computeCapacityExponentExact(long numElements) {
+    public static int computeIntCapacityExponentExact(long numElements) {
+
+        return computeCapacityExponentExact(numElements, Integer.SIZE);
+    }
+
+    public static int computeIntCapacityExponentExact(ICapacity capacity) {
+
+        Objects.requireNonNull(capacity);
+
+        return computeCapacityExponentExact(capacity.getCapacity(), Integer.SIZE);
+    }
+
+    public static int computeLongCapacityExponentExact(long numElements) {
 
         return computeCapacityExponentExact(numElements, Long.SIZE);
     }
 
     public static int computeArrayOuterCapacity(int capacity, int innerCapacityExponent) {
+
+        return computeArrayOuterCapacity((long)capacity, innerCapacityExponent);
+    }
+
+    public static int computeArrayOuterCapacity(long capacity, int innerCapacityExponent) {
 
         final int innerCapacity = CapacityExponents.computeIntCapacityFromExponent(innerCapacityExponent);
 
@@ -60,7 +95,7 @@ public class CapacityExponents {
 
     private static int computeCapacityExponent(long numElements, int typeNumBits) {
 
-        Checks.isNumElements(numElements);
+        Checks.isIntOrLongNumElements(numElements);
 
         final int highestBit = BitsUtil.getIndexOfHighestSetBit(numElements);
 
@@ -84,5 +119,12 @@ public class CapacityExponents {
         Checks.isIntCapacityExponent(capacityExponent);
 
         return (1L << capacityExponent) - 1;
+    }
+
+    public static int intCapacityExponent(long capacityExponent) {
+
+        Checks.isIntCapacityExponent(capacityExponent);
+
+        return (int)capacityExponent;
     }
 }

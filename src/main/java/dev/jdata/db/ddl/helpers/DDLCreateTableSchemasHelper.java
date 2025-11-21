@@ -14,9 +14,8 @@ import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.sql.ast.statements.table.SQLCreateTableStatement;
 import dev.jdata.db.sql.ast.statements.table.SQLTableColumnDefinition;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
-import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.lists.ICachedIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.ICachedIndexListBuilder;
 import dev.jdata.db.utils.debug.PrintDebug;
 
 public class DDLCreateTableSchemasHelper extends DDLTableSchemasHelper {
@@ -44,9 +43,9 @@ public class DDLCreateTableSchemasHelper extends DDLTableSchemasHelper {
 
         final long parsedTableName = stringManagement.storeParsedStringRef(sqlCreateTableStatement.getName());
 
-        final CacheIndexListAllocator<Column> columnIndexListAllocator = ddlSchemaScratchObjects.getColumnIndexListAllocator();
+        final ICachedIndexListAllocator<Column> columnIndexListAllocator = ddlSchemaScratchObjects.getColumnIndexListAllocator();
 
-        final CachedIndexListBuilder<Column> columnsBuilder = IndexList.createBuilder(sqlCreateTableStatement.getColumns().size(), columnIndexListAllocator);
+        final ICachedIndexListBuilder<Column> columnsBuilder = columnIndexListAllocator.createBuilder(sqlCreateTableStatement.getColumns().size());
 
         final ProcessCreateTableScratchObject processCreateTableScratchObject = ddlSchemaScratchObjects.allocateProcessCreateTableScratchObject();
 
@@ -59,11 +58,11 @@ public class DDLCreateTableSchemasHelper extends DDLTableSchemasHelper {
 
             final long hashTableName = stringManagement.getHashStringRef(parsedTableName);
 
-            result = new Table(parsedTableName, hashTableName, tableId, columnsBuilder.buildHeapAllocated());
+            result = new Table(parsedTableName, hashTableName, tableId, columnsBuilder.buildHeapAllocatedNotEmpty());
         }
         finally {
 
-            columnIndexListAllocator.freeIndexListBuilder(columnsBuilder);
+            columnIndexListAllocator.freeBuilder(columnsBuilder);
 
             ddlSchemaScratchObjects.freeProcessCreateTableScratchObject(processCreateTableScratchObject);
         }

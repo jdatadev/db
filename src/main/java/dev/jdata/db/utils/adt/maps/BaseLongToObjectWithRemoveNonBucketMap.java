@@ -4,11 +4,12 @@ import java.util.function.IntFunction;
 
 abstract class BaseLongToObjectWithRemoveNonBucketMap<T> extends BaseLongToObjectNonContainsKeyNonBucketMap<T> {
 
-    BaseLongToObjectWithRemoveNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createArray) {
-        super(initialCapacityExponent, createArray);
+    BaseLongToObjectWithRemoveNonBucketMap(AllocationType allocationType, int initialCapacityExponent, IntFunction<T[]> createArray) {
+        super(allocationType, initialCapacityExponent, createArray);
     }
 
-    BaseLongToObjectWithRemoveNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createArray);
+    BaseLongToObjectWithRemoveNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor,
+            IntFunction<T[]> createArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createArray);
     }
 }

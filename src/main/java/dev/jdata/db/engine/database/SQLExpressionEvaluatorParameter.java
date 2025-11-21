@@ -2,8 +2,8 @@ package dev.jdata.db.engine.database;
 
 import java.util.Objects;
 
-import dev.jdata.db.utils.allocators.IArrayAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
+import dev.jdata.db.utils.adt.arrays.IArrayAllocator;
 import dev.jdata.db.utils.allocators.ObjectCache;
 
 public class SQLExpressionEvaluatorParameter extends ObjectCacheNode {
@@ -34,7 +34,8 @@ public class SQLExpressionEvaluatorParameter extends ObjectCacheNode {
 
     private final ObjectCache<SQLExpressionEvaluator> expressionEvaluatorCache;
 
-    protected SQLExpressionEvaluatorParameter(IArrayAllocator<SQLExpressionEvaluator> arrayAllocator) {
+    protected SQLExpressionEvaluatorParameter(AllocationType allocationType, IArrayAllocator<SQLExpressionEvaluator> arrayAllocator) {
+        super(allocationType);
 
         this.arrayAllocator = Objects.requireNonNull(arrayAllocator);
 

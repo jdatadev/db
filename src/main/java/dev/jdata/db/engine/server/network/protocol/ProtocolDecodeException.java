@@ -11,7 +11,7 @@ public final class ProtocolDecodeException extends DBException {
 
     public ProtocolDecodeException(int offset) {
 
-        this.offset = Checks.isOffset(offset);
+        this.offset = Checks.isIntOffset(offset);
     }
 
     public int getOffset() {

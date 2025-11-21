@@ -5,15 +5,15 @@ import java.util.Objects;
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.utils.adt.lists.FreeList;
-import dev.jdata.db.utils.adt.lists.HeapMutableIndexList;
-import dev.jdata.db.utils.adt.lists.MutableIndexList;
-import dev.jdata.db.utils.adt.sets.MutableLongBucketSet;
+import dev.jdata.db.utils.adt.lists.IHeapMutableIndexList;
+import dev.jdata.db.utils.adt.lists.IMutableIndexList;
+import dev.jdata.db.utils.adt.sets.IMutableLongSet;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class MVCCTransactions {
 
-    private final MutableIndexList<MVCCTransaction> ongoingTransactions;
-    private final MutableIndexList<MVCCTransaction> ongoingOriginatingFromTransactions;
+    private final IHeapMutableIndexList<MVCCTransaction> ongoingTransactions;
+    private final IHeapMutableIndexList<MVCCTransaction> ongoingOriginatingFromTransactions;
 
     private final FreeList<MVCCTransaction> freeList;
 
@@ -22,14 +22,14 @@ public final class MVCCTransactions {
 
     MVCCTransactions() {
 
-        this.ongoingTransactions = HeapMutableIndexList.from(MVCCTransaction[]::new);
-        this.ongoingOriginatingFromTransactions = HeapMutableIndexList.from(MVCCTransaction[]::new);
+        this.ongoingTransactions = IHeapMutableIndexList.create(MVCCTransaction[]::new);
+        this.ongoingOriginatingFromTransactions = IHeapMutableIndexList.create(MVCCTransaction[]::new);
 
         this.freeList = new FreeList<>(MVCCTransaction[]::new);
     }
 
-    synchronized void select(TransactionSelect select, MVCCTransaction mvccTransaction, BufferedRows commitedRows, MutableLongBucketSet addedRowIdsDst,
-            MutableLongBucketSet removedRowIdsDst, MutableIndexList<MVCCTransaction> scratchTransansactionList) {
+    synchronized void select(TransactionSelect select, MVCCTransaction mvccTransaction, BufferedRows commitedRows, IMutableLongSet addedRowIdsDst,
+            IMutableLongSet removedRowIdsDst, IMutableIndexList<MVCCTransaction> scratchTransansactionList) {
 
         Objects.requireNonNull(select);
         Objects.requireNonNull(mvccTransaction);

@@ -4,16 +4,16 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
 
-public abstract class LargeArray<O, I> extends LargeExponentArray<O, I> {
+public abstract class LargeArray<O, I> extends ExponentLargeArray<O, I> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_LARGE_ARRAY;
 
-    protected LargeArray(int initialOuterCapacity, int innerCapacityExponent, boolean hasClearValue, IntFunction<O> createOuterArray) {
-        super(initialOuterCapacity, innerCapacityExponent, 0, hasClearValue, createOuterArray, false);
+    protected LargeArray(AllocationType allocationType, int initialOuterCapacity, int innerCapacityExponent, boolean hasClearValue, IntFunction<O> createOuterArray) {
+        super(allocationType, initialOuterCapacity, innerCapacityExponent, 0, hasClearValue, createOuterArray, false);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialOuterCapacity", initialOuterCapacity).add("innerCapacityExponent", innerCapacityExponent).add("hasClearValue", hasClearValue)
+            enter(b -> b.add("allocationType", allocationType).add("initialOuterCapacity", initialOuterCapacity).add("innerCapacityExponent", innerCapacityExponent).add("hasClearValue", hasClearValue)
                     .add("createOuterArray", createOuterArray));
         }
 
@@ -23,12 +23,12 @@ public abstract class LargeArray<O, I> extends LargeExponentArray<O, I> {
         }
     }
 
-    LargeArray(LargeArray<O, I> toCopy, IOuterAndInnerArraysCopier<O> copyOuterAndInnerArrays) {
-        super(toCopy, copyOuterAndInnerArrays);
+    LargeArray(AllocationType allocationType, LargeArray<O, I> toCopy, IOuterAndInnerArraysCopier<O> copyOuterAndInnerArrays) {
+        super(allocationType, toCopy, copyOuterAndInnerArrays);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy).add("copyOuterAndInnerArrays", copyOuterAndInnerArrays));
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy).add("copyOuterAndInnerArrays", copyOuterAndInnerArrays));
         }
 
         if (DEBUG) {

@@ -5,11 +5,20 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseArrayList<T> extends BaseADTList {
+abstract class BaseArrayList<T> extends BaseADTList<T, T, T> {
+
+    static int increaseCapacity(int capacity) {
+
+        Checks.isIntCapacity(capacity);
+
+        return capacity << 1;
+    }
+
+    abstract int getElementsCapacity();
 
     final IntFunction<T> createElementsArray;
-    T elementsArray;
-    int numElements;
+    private T elementsArray;
+    private int numElements;
 
     BaseArrayList(AllocationType allocationType) {
         super(allocationType);
@@ -23,6 +32,16 @@ abstract class BaseArrayList<T> extends BaseADTList {
         super(allocationType);
 
         this.createElementsArray = Objects.requireNonNull(createElementsArray);
+        this.elementsArray = null;
+        this.numElements = 0;
+    }
+
+    private BaseArrayList(AllocationType allocationType, IntFunction<T> createElementsArray, int numElements) {
+        super(allocationType);
+
+        this.createElementsArray = Objects.requireNonNull(createElementsArray);
+        this.elementsArray = null;
+        this.numElements = Checks.isIntNumElements(numElements);
     }
 
     BaseArrayList(AllocationType allocationType, T array, int numElements) {
@@ -30,62 +49,15 @@ abstract class BaseArrayList<T> extends BaseADTList {
 
         this.createElementsArray = null;
         this.elementsArray = Objects.requireNonNull(array);
-        this.numElements = Checks.isNumElements(numElements);
+        this.numElements = Checks.isIntNumElements(numElements);
     }
 
-    BaseArrayList(AllocationType allocationType, IntFunction<T> createArray, T array, int numElements) {
+    BaseArrayList(AllocationType allocationType, IntFunction<T> createElementsArray, T array, int numElements) {
         super(allocationType);
 
-        this.createElementsArray = Objects.requireNonNull(createArray);
+        this.createElementsArray = Objects.requireNonNull(createElementsArray);
         this.elementsArray = Objects.requireNonNull(array);
-        this.numElements = Checks.isNumElements(numElements);
-    }
-
-    final void initialize(T values, int numElements, int valuesLength) {
-
-        checkIsAllocated();
-
-        if (values != null) {
-
-            Checks.checkNumElements(numElements, valuesLength);
-        }
-        else {
-            Checks.isNumElements(numElements);
-        }
-
-        this.elementsArray = values;
-        this.numElements = numElements;
-    }
-
-    final void recreateArrays(int initialCapacity) {
-
-        Checks.isInitialCapacity(initialCapacity);
-
-        checkIsAllocated();
-
-        this.elementsArray = createElementsArray.apply(initialCapacity);
-        this.numElements = 0;
-    }
-
-    final void resetToNullAndDispose() {
-
-        setDisposed();
-
-        this.elementsArray = null;
-        this.numElements = 0;
-    }
-
-    @FunctionalInterface
-    interface MakeFromElementsFunction<T, P, R> {
-
-        R apply(IntFunction<T> createElementsArray, T elements, int numElements, P parameter);
-    }
-
-    <P, R> R makeFromElements(P parameter, MakeFromElementsFunction<T, P, R> makeFromElements) {
-
-        Objects.requireNonNull(makeFromElements);
-
-        return makeFromElements.apply(createElementsArray, elementsArray, numElements, parameter);
+        this.numElements = Checks.isIntNumElements(numElements);
     }
 
     @Override
@@ -100,7 +72,105 @@ abstract class BaseArrayList<T> extends BaseADTList {
         return numElements;
     }
 
-    final void clearElements() {
+    @Override
+    protected final <P, R> R makeFromElements(AllocationType allocationType, P parameter, IMakeFromElementsFunction<T, T, P, R> makeFromElements) {
+
+        Objects.requireNonNull(allocationType);
+        Objects.requireNonNull(makeFromElements);
+
+        return makeFromElements.apply(allocationType, createElementsArray, elementsArray, numElements, parameter);
+    }
+
+    @Override
+    protected final void recreateElements() {
+
+        recreateElements(DEFAULT_INITIAL_CAPACITY);
+    }
+
+    @Override
+    protected final void resetToNull() {
+
+        this.elementsArray = null;
+        this.numElements = 0;
+    }
+
+    protected final void clearElements() {
+
+        this.numElements = 0;
+    }
+
+    final void initializeArrayList(T values, int numElements) {
+
+        Checks.isIntNumElements(numElements);
+
+        checkIsAllocatedRenamed();
+
+        this.elementsArray = values;
+        this.numElements = numElements;
+    }
+
+    final T getElementsArray() {
+
+        return elementsArray;
+    }
+
+    final int getIntNumElements() {
+
+        return numElements;
+    }
+
+    final void setNumElements(int numElements) {
+
+        this.numElements = Checks.isIntNumElements(numElements);
+    }
+
+    final void incrementNumElements() {
+
+        ++ numElements;
+    }
+
+    final void decrementNumElements() {
+
+        -- numElements;
+    }
+
+    final void increaseNumElements(int toAddNumElements) {
+
+        Checks.isAboveZero(toAddNumElements);
+
+        numElements += toAddNumElements;
+    }
+
+    final void decreaseNumElements(int toSubtractNumElements) {
+
+        Checks.isAboveZero(toSubtractNumElements);
+        Checks.isLessThanOrEqualTo(toSubtractNumElements, numElements);
+
+        numElements -= toSubtractNumElements;
+    }
+
+    final T recreateArray(int initialCapacity) {
+
+        Checks.isIntInitialCapacity(initialCapacity);
+
+        checkIsAllocatedRenamed();
+
+        return this.elementsArray = createElementsArray.apply(initialCapacity);
+    }
+
+    final void setArray(T elementsArray) {
+
+        Objects.requireNonNull(elementsArray);
+        Checks.areNotSame(elementsArray, this.elementsArray);
+
+        checkIsAllocatedRenamed();
+
+        this.elementsArray = elementsArray;
+    }
+
+    private void recreateElements(int initialCapacity) {
+
+        recreateArray(initialCapacity);
 
         this.numElements = 0;
     }

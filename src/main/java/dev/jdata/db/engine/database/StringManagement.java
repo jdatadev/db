@@ -5,6 +5,7 @@ import java.util.Objects;
 import org.jutils.io.strings.StringRef;
 import org.jutils.io.strings.StringResolver;
 
+import dev.jdata.db.engine.database.strings.IStringCache;
 import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
@@ -14,8 +15,8 @@ public final class StringManagement extends ObjectCacheNode implements IResettab
     private StringResolver parserStringResolver;
     private IStringCache stringCache;
 
-    public StringManagement() {
-
+    public StringManagement(AllocationType allocationType) {
+        super(allocationType);
     }
 
     public void initialize(DatabaseStringManagement databaseStringManagement, StringResolver parserStringResolver, IStringCache stringCache) {

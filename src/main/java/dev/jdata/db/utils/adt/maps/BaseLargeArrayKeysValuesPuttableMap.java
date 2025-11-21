@@ -4,20 +4,21 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import dev.jdata.db.utils.adt.arrays.LargeExponentArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLargeArrayMarker;
 import dev.jdata.db.utils.function.BiIntToObjectFunction;
 
-abstract class BaseLargeArrayKeysValuesPuttableMap<T extends LargeExponentArray<?, ?>, U> extends BaseLargeArrayKeysValuesMap<T, U> {
+abstract class BaseLargeArrayKeysValuesPuttableMap<KEYS extends IMutableLargeArrayMarker, VALUES> extends BaseLargeArrayKeysValuesMap<KEYS, VALUES> {
 
-    protected abstract void put(U values, long index, U newValues, long newIndex);
-    protected abstract void clearValues(U values);
+    protected abstract void put(VALUES values, long index, VALUES newValues, long newIndex);
+    protected abstract void clearValues(VALUES values);
 
-    BaseLargeArrayKeysValuesPuttableMap(int initialOuterCapacityExponent, int capacityExponentIncrease, int innerCapacityExponent, float loadFactor,
-            BiIntToObjectFunction<T> createHashed, Consumer<T> clearHashed, BiIntToObjectFunction<U> createValues) {
-        super(initialOuterCapacityExponent, capacityExponentIncrease, innerCapacityExponent, loadFactor, createHashed, clearHashed, createValues);
+    BaseLargeArrayKeysValuesPuttableMap(AllocationType allocationType, int initialOuterCapacityExponent, int capacityExponentIncrease, int innerCapacityExponent,
+            float loadFactor, BiIntToObjectFunction<KEYS> createHashed, Consumer<KEYS> clearHashed, BiIntToObjectFunction<VALUES> createValues) {
+        super(allocationType, initialOuterCapacityExponent, capacityExponentIncrease, innerCapacityExponent, loadFactor, createHashed, clearHashed, createValues);
     }
 
-    BaseLargeArrayKeysValuesPuttableMap(BaseLargeArrayKeysValuesMap<T, U> toCopy, Function<T, T> copyHashed, BiConsumer<U, U> copyValuesContent) {
-        super(toCopy, copyHashed, copyValuesContent);
+    BaseLargeArrayKeysValuesPuttableMap(AllocationType allocationType, BaseLargeArrayKeysValuesMap<KEYS, VALUES> toCopy, Function<KEYS, KEYS> copyHashed,
+            BiConsumer<VALUES, VALUES> copyValuesContent) {
+        super(allocationType, toCopy, copyHashed, copyValuesContent);
     }
 }

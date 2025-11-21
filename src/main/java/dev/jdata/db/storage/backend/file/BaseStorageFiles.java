@@ -6,10 +6,9 @@ import java.util.Objects;
 
 import dev.jdata.db.storage.file.FileStorage;
 import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IIndexListGetters;
+import dev.jdata.db.utils.adt.lists.IIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IIndexListView;
 import dev.jdata.db.utils.adt.lists.IMutableIndexList;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.file.access.FileAccess;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
@@ -34,7 +33,7 @@ public abstract class BaseStorageFiles<T extends FileAccess, U extends BaseStora
     protected abstract String getFileNamePrefix();
 
     protected BaseStorageFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath directoryPath, IIndexList<U> files,
-            IndexListAllocator<U, ? extends IndexList<U>, ?, ? extends IMutableIndexList<U>> indexListAllocator) {
+            IIndexListAllocator<U, ? extends IIndexList<U>, ?, ?> indexListAllocator) {
 
         Objects.requireNonNull(fileSystemAccess);
         Objects.requireNonNull(directoryPath);
@@ -42,7 +41,7 @@ public abstract class BaseStorageFiles<T extends FileAccess, U extends BaseStora
 
         this.fileSystemAccess = Objects.requireNonNull(fileSystemAccess);
         this.directoryPath = Objects.requireNonNull(directoryPath);
-        this.files = files.copyToMutable(indexListAllocator);
+        this.files = indexListAllocator.copyToMutable(files);
     }
 
     protected final IRelativeFileSystemAccess getFileSystemAccess() {
@@ -51,14 +50,14 @@ public abstract class BaseStorageFiles<T extends FileAccess, U extends BaseStora
 
     protected final U getFile(int index) {
 
-        Checks.isIndex(index);
+        Checks.isIntIndex(index);
 
         return files.get(index);
     }
 
     protected final void setFile(int index, U file) {
 
-        Checks.isIndex(index);
+        Checks.isIntIndex(index);
         Objects.requireNonNull(file);
 
         files.set(index, file);
@@ -76,7 +75,7 @@ public abstract class BaseStorageFiles<T extends FileAccess, U extends BaseStora
         files.addTail(file);
     }
 
-    protected final IIndexListGetters<U> getFiles() {
+    protected final IIndexListView<U> getFiles() {
 
         return files;
     }
@@ -86,22 +85,28 @@ public abstract class BaseStorageFiles<T extends FileAccess, U extends BaseStora
 
         IOException toThrow = null;
 
-        final long numFiles = files.getNumElements();
+        try {
+            final long numFiles = files.getNumElements();
 
-        for (long i = 0L; i < numFiles; ++ i) {
+            for (long i = 0L; i < numFiles; ++ i) {
 
-            final U file = files.get(i);
+                final U file = files.get(i);
 
-            try {
-                file.close();
-            }
-            catch (IOException ex) {
+                try {
+                    file.close();
+                }
+                catch (IOException ex) {
 
-                if (toThrow != null) {
+                    if (toThrow != null) {
 
-                    toThrow = ex;
+                        toThrow = ex;
+                    }
                 }
             }
+        }
+        finally {
+
+            mutableIndexListAllocator.freeMutableInstance(files);
         }
 
         if (toThrow != null) {

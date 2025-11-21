@@ -1,62 +1,27 @@
 package dev.jdata.db.utils.adt.arrays;
 
-import java.util.Objects;
+abstract class LongArray extends BaseLongArray implements ILongArray {
 
-import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.debug.PrintDebug;
-
-public final class LongArray extends BaseLongArray implements ILongArray {
-
-    private static final boolean DEBUG = DebugConstants.DEBUG_LONG_ARRAY;
-
-    private static final Class<?> debugClass = LongArray.class;
-
-    public static LongArray of(long ... values) {
-
-        if (DEBUG) {
-
-            PrintDebug.enter(debugClass, b -> b.add("values", values));
-        }
-
-        final LongArray result = new LongArray(values);
-
-        if (DEBUG) {
-
-            PrintDebug.exit(debugClass, result);
-        }
-
-        return result;
+    LongArray(AllocationType allocationType, long[] elements) {
+        super(allocationType, elements, elements.length, false);
     }
 
-    public static LongArray copyOf(LongArray toCopy) {
-
-        Objects.requireNonNull(toCopy);
-
-        if (DEBUG) {
-
-            PrintDebug.enter(debugClass, b -> b.add("toCopy", toCopy));
-        }
-
-        final LongArray result = new LongArray(toCopy);
-
-        if (DEBUG) {
-
-            PrintDebug.exit(debugClass, result);
-        }
-
-        return result;
-    }
-
-    private LongArray(long[] elements) {
-        super(elements, elements.length, false);
-    }
-
-    private LongArray(LongArray toCopy) {
-        super(toCopy);
+    LongArray(AllocationType allocationType, BaseLongArray toCopy) {
+        super(allocationType, toCopy);
     }
 
     @Override
-    long[] reallocate(long[] elements, int newCapacity) {
+    final long[] reallocate(long[] elementsArray, int newCapacity) {
+
+        checkReallocateParameters(elementsArray, elementsArray.length, newCapacity);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    final void clearElementsArray(long[] elementsArray, int startIndex, int numElements) {
+
+        checkClearElementsArrayParameters(elementsArray, elementsArray.length, startIndex, numElements);
 
         throw new UnsupportedOperationException();
     }

@@ -6,7 +6,7 @@ import java.util.Objects;
 
 import dev.jdata.db.test.unit.assertj.CustomAssertJAssertions;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
@@ -72,7 +72,7 @@ public abstract class BaseTest extends CustomAssertJAssertions {
         assertThat(collection).contains(value);
     }
 
-    protected static void checkIsEmpty(IElements elements) {
+    protected static void checkIsEmpty(IOnlyElementsView elements) {
 
         Objects.requireNonNull(elements);
 

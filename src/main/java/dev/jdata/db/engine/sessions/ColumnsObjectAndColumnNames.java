@@ -11,24 +11,25 @@ import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.sql.ast.statements.dml.SQLObjectName;
 import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.maps.ILongToIntCommonMapGetters;
-import dev.jdata.db.utils.adt.maps.MutableLongToIntWithRemoveNonBucketMap;
-import dev.jdata.db.utils.allocators.ILongToIntMapAllocator;
+import dev.jdata.db.utils.adt.maps.IHeapMutableLongToIntWithRemoveStaticMap;
+import dev.jdata.db.utils.adt.maps.ILongToIntMapAllocator;
+import dev.jdata.db.utils.adt.maps.ILongToIntMapView;
+import dev.jdata.db.utils.adt.maps.IMutableLongToIntWithRemoveStaticMap;
 import dev.jdata.db.utils.checks.Checks;
 
 abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject> {
 
-    private final MutableLongToIntWithRemoveNonBucketMap columnsObjectIdByName;
+    private final IHeapMutableLongToIntWithRemoveStaticMap columnsObjectIdByName;
 
     private IEffectiveDatabaseSchema databaseSchema;
-    private MutableLongToIntWithRemoveNonBucketMap[] columnNameToIndexMapsByColumnsObjectId;
+    private IMutableLongToIntWithRemoveStaticMap[] columnNameToIndexMapsByColumnsObjectId;
     private int maxColumnsObjectId;
 
     abstract DDLObjectType getDDLObjectType();
 
     ColumnsObjectAndColumnNames() {
 
-        this.columnsObjectIdByName = new MutableLongToIntWithRemoveNonBucketMap(0);
+        this.columnsObjectIdByName = IHeapMutableLongToIntWithRemoveStaticMap.create(0);
     }
 
     public final void initialize(IEffectiveDatabaseSchema databaseSchema, ILongToIntMapAllocator allocator) {
@@ -48,7 +49,7 @@ abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject> {
 
         for (int i = 0; i <= oldMaxColumnsObjectId; ++ i) {
 
-            final MutableLongToIntWithRemoveNonBucketMap longToIntMap = columnNameToIndexMapsByColumnsObjectId[i];
+            final IMutableLongToIntWithRemoveStaticMap longToIntMap = columnNameToIndexMapsByColumnsObjectId[i];
 
             if (longToIntMap != null) {
 
@@ -60,7 +61,7 @@ abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject> {
 
         if (newMaxColumnsObjectId >= arrayLength) {
 
-            this.columnNameToIndexMapsByColumnsObjectId = new MutableLongToIntWithRemoveNonBucketMap[newMaxColumnsObjectId + 1];
+            this.columnNameToIndexMapsByColumnsObjectId = new IMutableLongToIntWithRemoveStaticMap[newMaxColumnsObjectId + 1];
         }
 
         columnsObjectIdByName.clear();
@@ -75,9 +76,9 @@ abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject> {
 
             final int numColumns = columnsObject.getNumColumns();
 
-            final int capacityExponent = CapacityExponents.computeCapacityExponent(numColumns);
+            final int capacityExponent = CapacityExponents.computeIntCapacityExponent(numColumns);
 
-            final MutableLongToIntWithRemoveNonBucketMap longToIntMap = allocator.allocateLongToIntMap(capacityExponent);
+            final IMutableLongToIntWithRemoveStaticMap longToIntMap = allocator.allocateLongToIntMap(capacityExponent);
 
             for (int columnIndex = 0; columnIndex < numColumns; ++ columnIndex) {
 
@@ -115,7 +116,7 @@ abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject> {
         return databaseSchema.getSchemaObject(getDDLObjectType(), columnsObjectId);
     }
 
-    public final ILongToIntCommonMapGetters getColumnIndices(int columnsObjectId) {
+    public final ILongToIntMapView getColumnIndices(int columnsObjectId) {
 
         checkColumnsObjectId(columnsObjectId);
 

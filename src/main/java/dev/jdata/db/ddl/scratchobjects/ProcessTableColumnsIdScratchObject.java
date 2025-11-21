@@ -7,6 +7,10 @@ abstract class ProcessTableColumnsIdScratchObject extends ProcessParsedScratchOb
 
     private int columnIdSequenceNo;
 
+    ProcessTableColumnsIdScratchObject(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     final void initialize(StringManagement stringManagement, int initialColumnIdSequenceNo) {
 
         initialize(stringManagement);

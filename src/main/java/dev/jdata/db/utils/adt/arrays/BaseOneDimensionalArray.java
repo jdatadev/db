@@ -2,35 +2,62 @@ package dev.jdata.db.utils.adt.arrays;
 
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseOneDimensionalArray<T> extends BaseArray implements IOneDimensionalArrayCommon {
+abstract class BaseOneDimensionalArray<T> extends BaseAnyDimensionalArray<T, T, T> implements IOneDimensionalArrayCommon {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_ONE_DIMENSIONAL_ARRAY;
 
-    T elements;
-    int limit;
-    int capacity;
+    static <T> void checkReallocateParameters(T elementsArray, int elementsArrayLength, int newCapacity) {
 
-    abstract T reallocate(T elements, int newCapacity);
+        Objects.requireNonNull(elementsArray);
+        Checks.isArrayLength(elementsArrayLength);
+        Checks.isAboveZero(elementsArrayLength);
+        Checks.isIntCapacity(newCapacity);
+        Checks.isGreaterThan(newCapacity, elementsArrayLength);
+    }
 
-    BaseOneDimensionalArray(T elements, int limit, int capacity, boolean hasClearValue) {
-        super(hasClearValue);
+    final void checkClearElementsArrayParameters(T elementsArray, int elementsArrayLength, int startIndex, int numElements) {
+
+        assertShouldClear();
+
+        Objects.requireNonNull(elementsArray);
+        Checks.isArrayLength(elementsArrayLength);
+        Checks.isAboveZero(elementsArrayLength);
+        Checks.isIntNumElements(numElements);
+        Checks.isAboveZero(numElements);
+        Checks.checkFromIndexSize(startIndex, numElements, elementsArrayLength);
+    }
+
+    private final IntFunction<T> createElementsArray;
+
+    private T elementsArray;
+    private int limit;
+    private int capacity;
+
+    abstract T reallocate(T elementsArray, int newCapacity);
+    abstract void clearElementsArray(T elementsArray, int startIndex, int numElements);
+
+    BaseOneDimensionalArray(AllocationType allocationType, T elementsArray, int limit, int capacity, boolean hasClearValue, IntFunction<T> createElementsArray) {
+        super(allocationType, hasClearValue);
 
         if (DEBUG) {
 
-            enter(b -> b.add("elements", elements).add("limit", limit).add("capacity", capacity).add("hasClearValue", hasClearValue));
+            enter(b -> b.add("allocationType", allocationType).add("elementsArray", elementsArray).add("limit", limit).add("capacity", capacity)
+                    .add("hasClearValue", hasClearValue).add("createElementsArray", createElementsArray));
         }
 
-        Objects.requireNonNull(elements);
+        Objects.requireNonNull(elementsArray);
         Checks.isArrayLimit(limit);
         Checks.isArrayCapacity(capacity);
         Checks.isLessThanOrEqualTo(limit, capacity);
 
-        this.elements = elements;
+        this.createElementsArray = createElementsArray;
+
+        this.elementsArray = elementsArray;
         this.limit = limit;
         this.capacity = capacity;
 
@@ -40,18 +67,19 @@ abstract class BaseOneDimensionalArray<T> extends BaseArray implements IOneDimen
         }
     }
 
-    BaseOneDimensionalArray(BaseOneDimensionalArray<T> toCopy, Function<T, T> copyElements) {
-        super(toCopy);
+    BaseOneDimensionalArray(AllocationType allocationType, BaseOneDimensionalArray<T> toCopy, Function<T, T> copyElements) {
+        super(allocationType, toCopy);
 
         Objects.requireNonNull(toCopy);
         Objects.requireNonNull(copyElements);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy).add("copyElements", copyElements));
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy).add("copyElements", copyElements));
         }
 
-        this.elements = copyElements.apply(toCopy.elements);
+        this.createElementsArray = toCopy.createElementsArray;
+        this.elementsArray = copyElements.apply(toCopy.elementsArray);
         this.limit = toCopy.limit;
         this.capacity = toCopy.capacity;
 
@@ -71,6 +99,64 @@ abstract class BaseOneDimensionalArray<T> extends BaseArray implements IOneDimen
     public final long getLimit() {
 
         return limit;
+    }
+
+    @Override
+    public final long getIndexLimit() {
+
+        return limit;
+    }
+
+    @Override
+    final long getToStringLimit() {
+
+        return limit;
+    }
+
+    @Override
+    protected final <P, R> R makeFromElements(AllocationType allocationType, P parameter, IMakeFromElementsFunction<T, T, P, R> makeFromElements) {
+
+        Objects.requireNonNull(allocationType);
+        Objects.requireNonNull(makeFromElements);
+
+        return makeFromElements.apply(allocationType, createElementsArray, elementsArray, getLimit(), parameter);
+    }
+
+    @Override
+    protected final void recreateElements() {
+
+        final int capacity = this.capacity = DEFAULT_INITIAL_CAPACITY;
+
+        this.elementsArray = createElementsArray.apply(capacity);
+
+        clearArray();
+    }
+
+    @Override
+    protected final void resetToNull() {
+
+        this.elementsArray = null;
+    }
+
+    @Override
+    protected final void initializeWithValues(T values, long numElements) {
+
+        Objects.requireNonNull(values);
+        Checks.isIntNumElements(numElements);
+
+        this.elementsArray = values;
+        this.limit = intNumElements(numElements);
+    }
+
+    final T getElementsArray() {
+        return elementsArray;
+    }
+
+    final void setElementsArray(T elementsArray) {
+
+        Objects.requireNonNull(elementsArray);
+
+        this.elementsArray = Objects.requireNonNull(elementsArray);
     }
 
     final int ensureAddIndex() {
@@ -97,7 +183,7 @@ abstract class BaseOneDimensionalArray<T> extends BaseArray implements IOneDimen
             enter(b -> b.add("index", index));
         }
 
-        final int intIndex = Integers.checkUnsignedLongToUnsignedInt(index);
+        final int intIndex = intIndex(index);
 
         final int currentLimit = limit;
         final int currentCapacity = capacity;
@@ -110,7 +196,12 @@ abstract class BaseOneDimensionalArray<T> extends BaseArray implements IOneDimen
 
                 final int newCapacity = this.capacity = newLimit << 1;
 
-                this.elements = reallocate(elements, newCapacity);
+                this.elementsArray = reallocate(elementsArray, newCapacity);
+            }
+
+            if (hasClearValue()) {
+
+                clearElementsArray(elementsArray, currentLimit, newLimit - currentLimit);
             }
 
             this.limit = newLimit;

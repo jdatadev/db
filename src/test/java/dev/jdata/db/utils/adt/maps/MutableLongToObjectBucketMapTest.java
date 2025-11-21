@@ -2,14 +2,31 @@ package dev.jdata.db.utils.adt.maps;
 
 import java.util.List;
 
+import dev.jdata.db.utils.adt.sets.IMutableLongSet;
+import dev.jdata.db.utils.adt.sets.IMutableSet;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class MutableLongToObjectBucketMapTest extends BaseMutableLongToIntegerOrObjectBucketMapTest<Integer[], MutableLongToObjectBucketMap<Integer>>{
+public final class MutableLongToObjectBucketMapTest
+
+        extends BaseMutableLongToIntegerOrObjectBucketMapTest<Integer[], IMutableSet<Integer>, MutableLongToObjectBucketMap<Integer>> {
 
     @Override
     MutableLongToObjectBucketMap<Integer> createMap(int initialCapacityExponent) {
 
-        return new MutableLongToObjectBucketMap<>(initialCapacityExponent, Integer[][]::new, Integer[]::new);
+        return new HeapMutableLongToObjectBucketMap<>(AllocationType.HEAP, initialCapacityExponent, Integer[][]::new, Integer[]::new);
+    }
+
+    @Override
+    IMutableSet<Integer> createValuesAddable(int initialCapacity) {
+
+        return createObjectAddable(initialCapacity, Integer[]::new);
+    }
+
+    @Override
+    Integer[] valuesToArray(IMutableSet<Integer> valuesAddable) {
+
+        return toArray(valuesAddable, Integer[]::new);
     }
 
     @Override
@@ -66,8 +83,8 @@ public final class MutableLongToObjectBucketMapTest extends BaseMutableLongToInt
     }
 
     @Override
-    void keysAndValues(MutableLongToObjectBucketMap<Integer> map, long[] keysDst, Integer[] valuesDst) {
+    void keysAndValues(MutableLongToObjectBucketMap<Integer> map, IMutableLongSet keysAddable, IMutableSet<Integer> valuesAddable) {
 
-        map.keysAndValues(keysDst, valuesDst);
+        map.keysAndValues(keysAddable, valuesAddable);
     }
 }

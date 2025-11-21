@@ -1,30 +1,46 @@
 package dev.jdata.db.utils.allocators;
 
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
 public final class NodeObjectCache<T extends ObjectCacheNode> extends BaseNodeAllocator<T, ObjectCacheNode> implements IObjectCache<T> {
 
-    public static abstract class ObjectCacheNode extends BaseNodeAllocator.AllocatorNode<ObjectCacheNode> {
-
-        protected ObjectCacheNode() {
-
-        }
+    public static abstract class ObjectCacheNode extends AllocatorNode<ObjectCacheNode> {
 
         protected ObjectCacheNode(AllocationType allocationType) {
             super(allocationType);
         }
     }
 
-    private final Supplier<T> allocator;
+    private final Function<?, T> allocator;
+    private final Object allocatorParameter;
 
     private T freeList;
 
     public NodeObjectCache(Supplier<T> allocator) {
 
+        Objects.requireNonNull(allocator);
+
+        this.allocator = p -> allocator.get();
+        this.allocatorParameter = null;
+    }
+
+    public NodeObjectCache(Function<AllocationType, T> allocator) {
+
+        Objects.requireNonNull(allocator);
+
+        this.allocator = p -> allocator.apply(AllocationType.CACHING_ALLOCATOR);
+        this.allocatorParameter = null;
+    }
+
+    public <P> NodeObjectCache(P parameter, Function<P, T> allocator) {
+
+        this.allocatorParameter = parameter;
         this.allocator = Objects.requireNonNull(allocator);
     }
 
@@ -56,7 +72,10 @@ public final class NodeObjectCache<T extends ObjectCacheNode> extends BaseNodeAl
             fromFreeList = true;
         }
         else {
-            result = allocator.get();
+            @SuppressWarnings("unchecked")
+            final Function<Object, T> allocatorFuction = (Function<Object, T>) allocator;
+
+            result = allocatorFuction.apply(allocatorParameter);
 
             fromFreeList = false;
         }

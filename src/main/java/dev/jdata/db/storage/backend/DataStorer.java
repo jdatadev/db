@@ -2,7 +2,7 @@ package dev.jdata.db.storage.backend;
 
 import java.io.IOException;
 
-import dev.jdata.db.utils.allocators.IByteArrayAllocator;
+import dev.jdata.db.utils.adt.arrays.IByteArrayAllocator;
 
 public interface DataStorer {
 

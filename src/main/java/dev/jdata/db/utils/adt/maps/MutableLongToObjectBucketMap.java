@@ -5,16 +5,16 @@ import java.util.function.IntFunction;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 
-public final class MutableLongToObjectBucketMap<T> extends BaseLongToObjectADTBucketMap<T, MutableLongToObjectBucketMap<T>> implements IMutableLongToObjectDynamicMap<T> {
+abstract class MutableLongToObjectBucketMap<T> extends BaseLongToObjectADTBucketMap<T, MutableLongToObjectBucketMap<T>> implements IMutableLongToObjectDynamicMap<T> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_LONG_TO_OBJECT_BUCKET_MAP;
 
-    public MutableLongToObjectBucketMap(int initialCapacityExponent, IntFunction<T[][]> createOuterValuesArray, IntFunction<T[]> createValuesArray) {
-        super(initialCapacityExponent, createOuterValuesArray, createValuesArray);
+    MutableLongToObjectBucketMap(AllocationType allocationType, int initialCapacityExponent, IntFunction<T[][]> createOuterValuesArray, IntFunction<T[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, createOuterValuesArray, createValuesArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createOuterValuesArray", createOuterValuesArray)
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("createOuterValuesArray", createOuterValuesArray)
                     .add("createValuesArray", createValuesArray));
         }
 
@@ -24,14 +24,14 @@ public final class MutableLongToObjectBucketMap<T> extends BaseLongToObjectADTBu
         }
     }
 
-    public MutableLongToObjectBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[][]> createOuterValuesArray,
-            IntFunction<T[]> createValuesArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createOuterValuesArray, createValuesArray);
+    MutableLongToObjectBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor,
+            IntFunction<T[][]> createOuterValuesArray, IntFunction<T[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createOuterValuesArray, createValuesArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createOuterValuesArray", createOuterValuesArray).add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("createOuterValuesArray", createOuterValuesArray).add("createValuesArray", createValuesArray));
         }
 
         if (DEBUG) {
@@ -41,7 +41,29 @@ public final class MutableLongToObjectBucketMap<T> extends BaseLongToObjectADTBu
     }
 
     @Override
-    public T put(long key, T value, T defaultPreviousValue) {
+    public final long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
+    public final void clear() {
+
+        if (DEBUG) {
+
+            enter();
+        }
+
+        clearBaseLongToObjectBucketMap();
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public final T put(long key, T value, T defaultPreviousValue) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -55,7 +77,7 @@ public final class MutableLongToObjectBucketMap<T> extends BaseLongToObjectADTBu
         final long putResult = putValueAndReturnNode(key);
         final long node = getPutResultNode(putResult);
 
-        final LongToObjectBucketMapMultiHeadSinglyLinkedList<?, T> buckets = getBuckets();
+        final LongToObjectBucketMapMultiHeadSinglyLinkedNodeList<?, T> buckets = getBuckets();
 
         if (isNewAdded(putResult)) {
 
@@ -76,7 +98,7 @@ public final class MutableLongToObjectBucketMap<T> extends BaseLongToObjectADTBu
     }
 
     @Override
-    public T removeAndReturnPrevious(long key, T defaultValue) {
+    public final T removeAndReturnPrevious(long key, T defaultValue) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -98,7 +120,7 @@ public final class MutableLongToObjectBucketMap<T> extends BaseLongToObjectADTBu
     }
 
     @Override
-    public boolean remove(long key) {
+    public final boolean remove(long key) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -117,21 +139,5 @@ public final class MutableLongToObjectBucketMap<T> extends BaseLongToObjectADTBu
         }
 
         return result;
-    }
-
-    @Override
-    public void clear() {
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        clearBaseLongToObjectBucketMap();
-
-        if (DEBUG) {
-
-            exit();
-        }
     }
 }

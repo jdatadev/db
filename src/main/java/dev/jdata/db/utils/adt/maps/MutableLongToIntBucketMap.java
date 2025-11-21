@@ -3,16 +3,16 @@ package dev.jdata.db.utils.adt.maps;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 
-public final class MutableLongToIntBucketMap extends BaseLongToIntBucketMap<MutableLongToIntBucketMap> implements IMutableLongToIntMap {
+abstract class MutableLongToIntBucketMap extends BaseLongToIntBucketMap<MutableLongToIntBucketMap> implements IMutableLongToIntDynamicMap {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_LONG_TO_INT_BUCKET_MAP;
 
-    public MutableLongToIntBucketMap(int initialCapacityExponent) {
-        super(initialCapacityExponent);
+    MutableLongToIntBucketMap(AllocationType allocationType, int initialCapacityExponent) {
+        super(allocationType, initialCapacityExponent);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent));
         }
 
         if (DEBUG) {
@@ -21,12 +21,13 @@ public final class MutableLongToIntBucketMap extends BaseLongToIntBucketMap<Muta
         }
     }
 
-    public MutableLongToIntBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
+    MutableLongToIntBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor));
         }
 
         if (DEBUG) {
@@ -36,7 +37,29 @@ public final class MutableLongToIntBucketMap extends BaseLongToIntBucketMap<Muta
     }
 
     @Override
-    public int put(long key, int value, int defaultPreviousValue) {
+    public final long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
+    public final void clear() {
+
+        if (DEBUG) {
+
+            enter();
+        }
+
+        clearBaseLongToIntBucketMap();
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public final int put(long key, int value, int defaultPreviousValue) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -71,7 +94,7 @@ public final class MutableLongToIntBucketMap extends BaseLongToIntBucketMap<Muta
     }
 
     @Override
-    public int removeAndReturnPrevious(long key, int defaultValue) {
+    public final int removeAndReturnPrevious(long key, int defaultValue) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -93,7 +116,7 @@ public final class MutableLongToIntBucketMap extends BaseLongToIntBucketMap<Muta
     }
 
     @Override
-    public boolean remove(long key) {
+    public final boolean remove(long key) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -112,21 +135,5 @@ public final class MutableLongToIntBucketMap extends BaseLongToIntBucketMap<Muta
         }
 
         return result;
-    }
-
-    @Override
-    public void clear() {
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        clearBaseLongToIntBucketMap();
-
-        if (DEBUG) {
-
-            exit();
-        }
     }
 }

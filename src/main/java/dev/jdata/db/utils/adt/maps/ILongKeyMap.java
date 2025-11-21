@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.maps;
 
-interface ILongKeyMap extends IKeyMap<long[]> {
+import dev.jdata.db.utils.adt.elements.ILongAnyOrderAddable;
+
+public interface ILongKeyMap extends IIntegerKeyMap<ILongAnyOrderAddable>, ILongKeyMapCommon {
 
 }

@@ -4,13 +4,11 @@ import java.util.Objects;
 
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.ColumnsObject;
-import dev.jdata.db.utils.adt.IContains;
-import dev.jdata.db.utils.adt.lists.HeapIndexList;
+import dev.jdata.db.utils.adt.contains.IContainsView;
 import dev.jdata.db.utils.adt.lists.IHeapIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
+import dev.jdata.db.utils.adt.lists.IIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
 import dev.jdata.db.utils.adt.sets.IHeapIntSet;
 import dev.jdata.db.utils.adt.sets.IIntSet;
 import dev.jdata.db.utils.checks.Checks;
@@ -24,7 +22,7 @@ public abstract class ColumnsObjectDiff extends SchemaObjectDiff {
     ColumnsObjectDiff(ColumnsObject columnsObject, IHeapIndexList<Column> addedColumns, IHeapIndexList<Column> modifiedColumns, IHeapIntSet droppedColumns) {
         super(columnsObject.getParsedName(), columnsObject.getHashName(), columnsObject.getId());
 
-        if (IContains.isNullOrEmpty(addedColumns) && IContains.isNullOrEmpty(modifiedColumns) && IContains.isNullOrEmpty(droppedColumns)) {
+        if (IContainsView.isNullOrEmpty(addedColumns) && IContainsView.isNullOrEmpty(modifiedColumns) && IContainsView.isNullOrEmpty(droppedColumns)) {
 
             throw new IllegalArgumentException();
         }
@@ -49,11 +47,11 @@ public abstract class ColumnsObjectDiff extends SchemaObjectDiff {
     @FunctionalInterface
     interface ColumnsObjectFactory<T extends ColumnsObject> {
 
-        T createFrom(T from, HeapIndexList<Column> columns);
+        T createFrom(T from, IHeapIndexList<Column> columns);
     }
 
-    final <T extends ColumnsObject, U extends IndexListBuilder<Column, ?, U>> T applyToColumnsObject(T columnsObject, ColumnsObjectFactory<T> columnsObjectFactory,
-            IndexListAllocator<Column, ?, U, ?> columnIndexListAllocator) {
+    final <T extends ColumnsObject, U extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>> T applyToColumnsObject(T columnsObject,
+            ColumnsObjectFactory<T> columnsObjectFactory, IIndexListAllocator<Column, ?, ?, U> columnIndexListAllocator) {
 
         Objects.requireNonNull(columnsObject);
         Objects.requireNonNull(columnsObjectFactory);
@@ -65,7 +63,7 @@ public abstract class ColumnsObjectDiff extends SchemaObjectDiff {
 
         final int numColumns = columnsObject.getNumColumns();
 
-        final U columnsBuilder = IndexList.createBuilder(numColumns, columnIndexListAllocator);
+        final U columnsBuilder = columnIndexListAllocator.createBuilder(numColumns);
 
         try {
             final IIntSet dropped = droppedColumns;
@@ -91,13 +89,13 @@ public abstract class ColumnsObjectDiff extends SchemaObjectDiff {
                 columnsBuilder.addTail(added.get(i));
             }
 
-            final HeapIndexList<Column> columns = columnsBuilder.buildHeapAllocated();
+            final IHeapIndexList<Column> columns = columnsBuilder.buildHeapAllocatedOrNull();
 
-            result = columnsObjectFactory.createFrom(columnsObject, columns);
+            result = columns != null ? columnsObjectFactory.createFrom(columnsObject, columns) : columnsObject;
         }
         finally {
 
-            columnIndexListAllocator.freeIndexListBuilder(columnsBuilder);
+            columnIndexListAllocator.freeBuilder(columnsBuilder);
         }
 
         return result;

@@ -6,13 +6,14 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.hashed.BaseIntCapacityExponentArrayHashed;
 
-abstract class BaseIntCapacityExponentSet<T> extends BaseIntCapacityExponentArrayHashed<T> {
+abstract class BaseIntCapacityExponentSet<T, U> extends BaseIntCapacityExponentArrayHashed<T, U, T> {
 
-    BaseIntCapacityExponentSet(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T> createHashed, Consumer<T> clearHashed) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createHashed, clearHashed);
+    BaseIntCapacityExponentSet(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T> createHashed,
+            Consumer<T> clearHashed) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createHashed, clearHashed);
     }
 
-    BaseIntCapacityExponentSet(BaseIntCapacityExponentSet<T> toCopy, Function<T, T> copyHashed) {
-        super(toCopy, copyHashed);
+    BaseIntCapacityExponentSet(AllocationType allocationType, BaseIntCapacityExponentSet<T, U> toCopy, Function<T, T> copyHashed) {
+        super(allocationType, toCopy, copyHashed);
     }
 }

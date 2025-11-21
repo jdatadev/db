@@ -8,15 +8,15 @@ import java.util.function.ToLongFunction;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 
-public final class IndexListTest extends BaseImmutableObjectArrayListTest<IIndexList<Integer>, IndexList<String>> {
+public final class IndexListTest extends BaseImmutableObjectArrayListTest<IBaseObjectIndexList<Integer>, ObjectIndexList<String>> {
 
     @Test
     @Category(UnitTest.class)
     public void testEmptyList() {
 
-        final IndexList<String> emptyList = IndexList.empty();
+        final ObjectIndexList<String> emptyList = HeapObjectIndexList.empty();
 
         assertThat(emptyList).isEmpty();
     }
@@ -27,7 +27,7 @@ public final class IndexListTest extends BaseImmutableObjectArrayListTest<IIndex
 
         final String value = "abc";
 
-        final IndexList<String> list = IndexList.of(value);
+        final ObjectIndexList<String> list = HeapObjectIndexList.of(AllocationType.HEAP, value);
 
         checkElementsSameAs(list, value);
     }
@@ -40,16 +40,16 @@ public final class IndexListTest extends BaseImmutableObjectArrayListTest<IIndex
         final String bcd = "bcd";
         final String cde = "cde";
 
-        final IndexList<String> emptyList = IndexList.of();
+        final ObjectIndexList<String> emptyList = HeapObjectIndexList.of(AllocationType.HEAP);
         assertThat(emptyList).isEmpty();
 
-        final IndexList<String> oneElementList = IndexList.of(abc);
+        final ObjectIndexList<String> oneElementList = HeapObjectIndexList.of(AllocationType.HEAP, new String[] { abc });
         checkElementsSameAs(oneElementList, abc);
 
-        final IndexList<String> twoElementsList = IndexList.of(abc, bcd);
+        final ObjectIndexList<String> twoElementsList = HeapObjectIndexList.of(AllocationType.HEAP, abc, bcd);
         checkElementsSameAs(twoElementsList, abc, bcd);
 
-        final IndexList<String> threeElementList = IndexList.of(abc, bcd, cde);
+        final ObjectIndexList<String> threeElementList = HeapObjectIndexList.of(AllocationType.HEAP, abc, bcd, cde);
         checkElementsSameAs(threeElementList, abc, bcd, cde);
     }
 
@@ -61,25 +61,25 @@ public final class IndexListTest extends BaseImmutableObjectArrayListTest<IIndex
         final String bcd = "bcd";
         final String cde = "cde";
 
-        final HeapIndexListAllocator<String> indexListAllocator = new HeapIndexListAllocator<>(String[]::new);
+        final HeapObjectIndexListAllocator<String> indexListAllocator = new HeapObjectIndexListAllocator<>(String[]::new);
 
-        final IndexList<String> emptyList = IndexList.sortedOf(IndexList.empty(), String::compareTo, indexListAllocator);
+        final IHeapIndexList<String> emptyList = indexListAllocator.sortedOf(HeapObjectIndexList.empty(), String::compareTo);
         assertThat(emptyList).isEmpty();
 
-        final IndexList<String> oneElementList = IndexList.sortedOf(IndexList.of(abc), String::compareTo, indexListAllocator);
+        final IHeapIndexList<String> oneElementList = indexListAllocator.sortedOf(HeapObjectIndexList.of(AllocationType.HEAP, abc), String::compareTo);
         checkElementsSameAs(oneElementList, abc);
 
-        final IndexList<String> twoElementsList = IndexList.sortedOf(IndexList.of(bcd, abc), String::compareTo, indexListAllocator);
+        final IHeapIndexList<String> twoElementsList = indexListAllocator.sortedOf(HeapObjectIndexList.of(AllocationType.HEAP, bcd, abc), String::compareTo);
         checkElementsSameAs(twoElementsList, abc, bcd);
 
-        final IndexList<String> threeElementList = IndexList.sortedOf(IndexList.of(bcd, cde, abc), String::compareTo, indexListAllocator);
+        final IHeapIndexList<String> threeElementList = indexListAllocator.sortedOf(HeapObjectIndexList.of(AllocationType.HEAP, bcd, cde, abc), String::compareTo);
         checkElementsSameAs(threeElementList, abc, bcd, cde);
     }
 
     @Override
-    protected IIndexList<Integer> createTestElements(Integer[] elementsToAdd) {
+    protected IBaseObjectIndexList<Integer> createTestElements(Integer[] elementsToAdd) {
 
-        final HeapIndexList.HeapIndexListBuilder<Integer> builder = IndexList.createBuilder(Integer[]::new);
+        final HeapObjectIndexListBuilder<Integer> builder = new HeapObjectIndexListBuilder<>(AllocationType.HEAP, Integer[]::new);
 
         switch (elementsToAdd.length) {
 
@@ -97,36 +97,42 @@ public final class IndexListTest extends BaseImmutableObjectArrayListTest<IIndex
             break;
         }
 
-        return builder.build();
+        return builder.buildOrEmpty();
     }
 
     @Override
-    protected <P> long count(IIndexList<Integer> elements, P parameter, BiPredicate<Integer, P> predicate) {
+    protected <P> long count(IBaseObjectIndexList<Integer> elements, P parameter, BiPredicate<Integer, P> predicate) {
 
         return elements.count(parameter, predicate);
     }
 
     @Override
-    protected long countWithClosure(IIndexList<Integer> elements, Predicate<Integer> predicate) {
+    protected long countWithClosure(IBaseObjectIndexList<Integer> elements, Predicate<Integer> predicate) {
 
         return elements.closureOrConstantCount(predicate);
     }
 
     @Override
-    protected int maxInt(IIndexList<Integer> elements, int defaultValue, ToIntFunction<Integer> mapper) {
+    protected int maxInt(IBaseObjectIndexList<Integer> elements, int defaultValue, ToIntFunction<Integer> mapper) {
 
         return elements.maxInt(defaultValue, mapper);
     }
 
     @Override
-    protected long maxLong(IIndexList<Integer> elements, long defaultValue, ToLongFunction<Integer> mapper) {
+    protected long maxLong(IBaseObjectIndexList<Integer> elements, long defaultValue, ToLongFunction<Integer> mapper) {
 
         return elements.maxLong(defaultValue, mapper);
     }
 
     @Override
-    IndexList<String> createStringList(String ... values) {
+    ObjectIndexList<String> createStringList(String ... values) {
 
-        return IndexList.of(values);
+        return HeapObjectIndexList.of(AllocationType.HEAP, values);
+    }
+
+    @SafeVarargs
+    static <E, L extends IIndexList<E>> void checkElementsSameAs(L list, E ... expectedElements) {
+
+        checkElementsSameAs(list, IIndexList::get, IIndexList::isEmpty, IIndexList::getNumElements, expectedElements);
     }
 }

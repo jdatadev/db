@@ -6,4 +6,8 @@ import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 abstract class DDLTransactionObject extends ObjectCacheNode implements IResettable {
 
     abstract <P, R> R visit(DDLTransactionObjectVisitor<P, R> visitor, P parameter);
+
+    DDLTransactionObject(AllocationType allocationType) {
+        super(allocationType);
+    }
 }

@@ -2,14 +2,15 @@ package dev.jdata.db.utils.adt.maps;
 
 import java.util.List;
 
-import dev.jdata.db.utils.adt.IClearable;
+import dev.jdata.db.utils.adt.sets.IMutableIntSet;
+import dev.jdata.db.utils.adt.sets.IMutableSet;
 
-abstract class BaseMutableIntToObjectNonContainsKeyNonBucketMapTest<T, M extends IIntToObjectStaticMapCommon<T> & IClearable & IIntToObjectCommonMapMutators<T>>
+abstract class BaseMutableIntToObjectNonContainsKeyNonBucketMapTest<V, M extends IMutableIntToObjectMap<V> & IIntToObjectBaseStaticMapCommon<V> & IIntToObjectStoreMapMutators<V>>
 
-        extends BaseMutableIntToIntegerOrObjectNonBucketMapTest<T[], M> {
+        extends BaseMutableIntToIntegerOrObjectNonBucketMapTest<V[], IMutableSet<V>, M> {
 
-    abstract int objectToInt(T object);
-    abstract T intToObject(int integer);
+    abstract int objectToInt(V object);
+    abstract V intToObject(int integer);
 
     @Override
     final boolean supportsContainsKey() {
@@ -30,7 +31,7 @@ abstract class BaseMutableIntToObjectNonContainsKeyNonBucketMapTest<T, M extends
     }
 
     @Override
-    final int getValue(T[] values, int index) {
+    final int getValue(V[] values, int index) {
 
         return objectToInt(values[index]);
     }
@@ -53,9 +54,9 @@ abstract class BaseMutableIntToObjectNonContainsKeyNonBucketMapTest<T, M extends
     }
 
     @Override
-    final void keysAndValues(M map, int[] keysDst, T[] valuesDst) {
+    final void keysAndValues(M map, IMutableIntSet keysAddable, IMutableSet<V> valuesAddable) {
 
-        map.keysAndValues(keysDst, valuesDst);
+        map.keysAndValues(keysAddable, valuesAddable);
     }
 
     @Override

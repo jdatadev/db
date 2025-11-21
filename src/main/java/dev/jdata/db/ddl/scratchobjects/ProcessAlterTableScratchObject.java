@@ -8,22 +8,30 @@ import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.Initializable;
+import dev.jdata.db.utils.adt.sets.ICachedIntSetAllocator;
 
 public final class ProcessAlterTableScratchObject extends ProcessTableColumnsScratchObject {
 
     private DatabaseId databaseId;
     private Table table;
+    private ICachedIntSetAllocator intSetAllocator;
     private DDLSchemaScratchObjects ddlSchemaScratchObjects;
 
     private Column existingColumn;
     private long parsedName;
 
-    public void initialize(DatabaseId databaseId, StringManagement stringManagement, Table table, DDLSchemaScratchObjects ddlSchemaScratchObjects) {
+    public ProcessAlterTableScratchObject(AllocationType allocationType) {
+        super(allocationType);
+    }
+
+    public void initialize(DatabaseId databaseId, StringManagement stringManagement, Table table, ICachedIntSetAllocator intSetAllocator,
+            DDLSchemaScratchObjects ddlSchemaScratchObjects) {
 
         initialize(stringManagement, table.getMaxColumnId() + 1);
 
         this.databaseId = Initializable.checkNotYetInitialized(this.databaseId, databaseId);
         this.table = Initializable.checkNotYetInitialized(this.table, table);
+        this.intSetAllocator = Initializable.checkNotYetInitialized(this.intSetAllocator, intSetAllocator);
         this.ddlSchemaScratchObjects = Initializable.checkNotYetInitialized(this.ddlSchemaScratchObjects, ddlSchemaScratchObjects);
     }
 
@@ -34,6 +42,7 @@ public final class ProcessAlterTableScratchObject extends ProcessTableColumnsScr
 
         this.databaseId = Initializable.checkResettable(databaseId);
         this.table = Initializable.checkResettable(table);
+        this.intSetAllocator = Initializable.checkResettable(intSetAllocator);
         this.ddlSchemaScratchObjects = Initializable.checkResettable(ddlSchemaScratchObjects);
 
         this.existingColumn = null;
@@ -46,6 +55,14 @@ public final class ProcessAlterTableScratchObject extends ProcessTableColumnsScr
 
     public Table getTable() {
         return table;
+    }
+
+    public ICachedIntSetAllocator getIntSetAllocator() {
+        return intSetAllocator;
+    }
+
+    public void setIntSetAllocator(ICachedIntSetAllocator intSetAllocator) {
+        this.intSetAllocator = intSetAllocator;
     }
 
     public DDLSchemaScratchObjects getDDLSchemaScratchObjects() {

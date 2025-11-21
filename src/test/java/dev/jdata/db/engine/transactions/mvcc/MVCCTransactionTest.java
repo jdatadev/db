@@ -14,7 +14,7 @@ import dev.jdata.db.dml.DMLInsertUpdateRows;
 import dev.jdata.db.dml.DMLInsertUpdateRows.InsertUpdateRow;
 import dev.jdata.db.dml.DMLUpdateRows;
 import dev.jdata.db.dml.DMLUpdateRows.UpdateRow;
-import dev.jdata.db.engine.database.StringStorer;
+import dev.jdata.db.engine.database.IStringStorer;
 import dev.jdata.db.engine.transactions.RowValue;
 import dev.jdata.db.engine.transactions.SelectColumn;
 import dev.jdata.db.engine.transactions.StringLookup;
@@ -24,9 +24,12 @@ import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.types.IntegerType;
 import dev.jdata.db.test.unit.BaseDBTest;
 import dev.jdata.db.test.unit.TableBuilder;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
+import dev.jdata.db.utils.adt.arrays.IHeapMutableLongLargeArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
 import dev.jdata.db.utils.adt.arrays.ObjectArray;
-import dev.jdata.db.utils.adt.sets.MutableLongBucketSet;
+import dev.jdata.db.utils.adt.sets.IHeapMutableLongSet;
+import dev.jdata.db.utils.adt.sets.IMutableLongSet;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 
 public final class MVCCTransactionTest extends BaseDBTest {
 
@@ -64,14 +67,14 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = createRowIdsArray();
+        final IMutableLongLargeArray rowIds = createRowIdsArray();
 
         final DMLInsertRows rows = makeInsertRows(rowId, rowIds, intValue);
 
         mvccTransaction.insertRows(mvccSharedState, table, statementId, rowIds, rows);
 
-        final MutableLongBucketSet addedRowIds = new MutableLongBucketSet();
-        final MutableLongBucketSet removedRowIds = new MutableLongBucketSet();
+        final IMutableLongSet addedRowIds = IHeapMutableLongSet.create();
+        final IMutableLongSet removedRowIds = IHeapMutableLongSet.create();
 
         final TransactionSelect select = makeTransactionSelect(tableId, rowId, intValue);
 
@@ -124,14 +127,14 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = createRowIdsArray();
+        final IMutableLongLargeArray rowIds = createRowIdsArray();
 
         final DMLUpdateRows rows = makeUpdateRows(rowId, rowIds, intValue);
 
         mvccTransaction.updateRows(mvccSharedState, table, statementId, rowIds, rows);
 
-        final MutableLongBucketSet addedRowIds = new MutableLongBucketSet();
-        final MutableLongBucketSet removedRowIds = new MutableLongBucketSet();
+        final IMutableLongSet addedRowIds = IHeapMutableLongSet.create();
+        final IMutableLongSet removedRowIds = IHeapMutableLongSet.create();
 
         final TransactionSelect select = makeTransactionSelect(tableId, rowId, intValue);
 
@@ -224,14 +227,14 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = createRowIdsArray();
+        final IMutableLongLargeArray rowIds = createRowIdsArray();
 
         rowIds.add(rowId);
 
         mvccTransaction.deleteRows(mvccSharedState, table, statementId, rowIds);
 
-        final MutableLongBucketSet addedRowIds = new MutableLongBucketSet();
-        final MutableLongBucketSet removedRowIds = new MutableLongBucketSet();
+        final IMutableLongSet addedRowIds = IHeapMutableLongSet.create();
+        final IMutableLongSet removedRowIds = IHeapMutableLongSet.create();
 
         final TransactionSelect select = makeTransactionSelect(tableId, rowId, intValue);
 
@@ -275,7 +278,7 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final MVCCTransactionState mvccSharedState = new MVCCTransactionState();
 
-        final LargeLongArray rowIds = createRowIdsArray();
+        final IMutableLongLargeArray rowIds = createRowIdsArray();
 
         final DMLInsertRows rows = makeInsertRows(rowId, rowIds, intValue);
 
@@ -283,8 +286,8 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         mvccTransaction.deleteRows(mvccSharedState, table, statementId, rowIds);
 
-        final MutableLongBucketSet addedRowIds = new MutableLongBucketSet();
-        final MutableLongBucketSet removedRowIds = new MutableLongBucketSet();
+        final IMutableLongSet addedRowIds = IHeapMutableLongSet.create();
+        final IMutableLongSet removedRowIds = IHeapMutableLongSet.create();
 
         final TransactionSelect select = makeTransactionSelect(tableId, rowId, intValue);
 
@@ -351,12 +354,12 @@ public final class MVCCTransactionTest extends BaseDBTest {
 */
     }
 
-    private static DMLInsertRows makeInsertRows(long rowId, LargeLongArray rowIds, int intValue) {
+    private static DMLInsertRows makeInsertRows(long rowId, IMutableLongLargeArray rowIds, int intValue) {
 
         return makeInsertUpdateRows(rowId, rowIds, new DMLInsertRows(), new InsertRow(), intValue, InsertRow[]::new);
     }
 
-    private static DMLUpdateRows makeUpdateRows(long rowId, LargeLongArray rowIds, int intValue) {
+    private static DMLUpdateRows makeUpdateRows(long rowId, IMutableLongLargeArray rowIds, int intValue) {
 
         return makeInsertUpdateRows(rowId, rowIds, new DMLUpdateRows(), new UpdateRow(), intValue, UpdateRow[]::new);
     }
@@ -366,7 +369,7 @@ public final class MVCCTransactionTest extends BaseDBTest {
         return makeInsertUpdateRows(new DMLUpdateRows(), new UpdateRow(), intValue, UpdateRow[]::new);
     }
 
-    private static <T extends InsertUpdateRow, U extends DMLInsertUpdateRows<T>> U makeInsertUpdateRows(long rowId, LargeLongArray rowIds, U rows, T row, int intValue,
+    private static <T extends InsertUpdateRow, U extends DMLInsertUpdateRows<T>> U makeInsertUpdateRows(long rowId, IMutableLongLargeArray rowIds, U rows, T row, int intValue,
             IntFunction<T[]> createRowArray) {
 
         rowIds.add(rowId);
@@ -399,7 +402,7 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
     private static TransactionSelect makeTransactionSelect(int tableId, long rowId, int intValue) {
 
-        final TransactionSelect select = new TransactionSelect();
+        final TransactionSelect select = new TransactionSelect(AllocationType.HEAP);
 
         final SelectColumn selectColumn = new SelectColumn();
 
@@ -411,7 +414,7 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final ObjectArray<SelectColumn> selectColumns = ObjectArray.of(selectColumn);
 
-        final MutableLongBucketSet rowIdsToFilter = MutableLongBucketSet.of(rowId);
+        final IMutableLongSet rowIdsToFilter = IHeapMutableLongSet.of(rowId);
 
         final StringLookup stringLookup = new StringLookup() {
 
@@ -431,15 +434,15 @@ public final class MVCCTransactionTest extends BaseDBTest {
 
         final String tableName = "tableName";
 
-        final StringStorer stringStorer = createStringStorer();
+        final IStringStorer stringStorer = createStringStorer();
 
         return TableBuilder.create(tableName, tableId, stringStorer)
                 .addColumn("testcolumn", IntegerType.INSTANCE)
                 .build();
     }
 
-    private static LargeLongArray createRowIdsArray() {
+    private static IMutableLongLargeArray createRowIdsArray() {
 
-        return new LargeLongArray(0, 10);
+        return IHeapMutableLongLargeArray.create(0, 10);
     }
 }

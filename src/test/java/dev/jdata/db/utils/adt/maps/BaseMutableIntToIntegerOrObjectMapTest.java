@@ -1,13 +1,28 @@
 package dev.jdata.db.utils.adt.maps;
 
-import dev.jdata.db.utils.adt.IClearable;
+import dev.jdata.db.utils.adt.marker.IAnyOrderAddable;
+import dev.jdata.db.utils.adt.sets.IMutableIntSet;
 
-abstract class BaseMutableIntToIntegerOrObjectMapTest<V, M extends IIntKeyMap & IClearable & IMapMutators> extends BaseMutableIntegerToIntegerOrObjectMapTest<int[], V, M> {
+abstract class BaseMutableIntToIntegerOrObjectMapTest<VALUES_ARRAY, VALUES_ADDABLE extends IAnyOrderAddable, MAP extends IMutableIntKeyMap>
+
+        extends BaseMutableIntegerToIntegerOrObjectMapTest<int[], VALUES_ARRAY, IMutableIntSet, VALUES_ADDABLE, MAP> {
 
     @Override
     final int[] createKeysArray(int length) {
 
         return new int[length];
+    }
+
+    @Override
+    final IMutableIntSet createKeysAddable(int initialCapacity) {
+
+        return createIntAddable(initialCapacity);
+    }
+
+    @Override
+    final int[] keysToArray(IMutableIntSet keysAddable) {
+
+        return toArray(keysAddable);
     }
 
     @Override
@@ -17,8 +32,8 @@ abstract class BaseMutableIntToIntegerOrObjectMapTest<V, M extends IIntKeyMap & 
     }
 
     @Override
-    final int[] getKeys(M map) {
+    final void getKeys(MAP map, IMutableIntSet keysAddable) {
 
-        return map.keys();
+        map.keys(keysAddable);
     }
 }

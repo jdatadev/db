@@ -7,6 +7,8 @@ public final class DatabaseSchemaVersion implements Comparable<DatabaseSchemaVer
     public static final int NO_VERSION = -1;
     public static final int INITIAL_VERSION = 1;
 
+    public static final DatabaseSchemaVersion INITIAL = DatabaseSchemaVersion.of(INITIAL_VERSION);
+
     public static DatabaseSchemaVersion of(int versionNumber) {
 
         return new DatabaseSchemaVersion(versionNumber);

@@ -13,9 +13,9 @@ import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
 
-import dev.jdata.db.utils.adt.elements.ByIndex;
-import dev.jdata.db.utils.adt.elements.ByIndex.IByIndexElementEqualityTester;
-import dev.jdata.db.utils.adt.elements.ByIndex.IntByIndexStringAdder;
+import dev.jdata.db.utils.adt.byindex.ByIndex;
+import dev.jdata.db.utils.adt.byindex.ByIndex.IntByIndexStringAdder;
+import dev.jdata.db.utils.adt.elements.IElementEqualityTester;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.BiObjToIntFunction;
 import dev.jdata.db.utils.function.IntToByteFunction;
@@ -23,6 +23,37 @@ import dev.jdata.db.utils.function.IntToIntFunction;
 import dev.jdata.db.utils.scalars.Integers;
 
 public class Array {
+
+    public static <T> T[] of(T instance, IntFunction<T[]> createArray) {
+
+        Objects.requireNonNull(instance);
+        Objects.requireNonNull(createArray);
+
+        final T[] array = createArray.apply(1);
+
+        array[0] = instance;
+
+        return array;
+    }
+
+    public static boolean isArrayCapacity(long numElements) {
+
+        Checks.isLongNumElements(numElements);
+
+        return numElements <= Integer.MAX_VALUE;
+    }
+
+    public static int intCapacity(long numElements) {
+
+        Checks.isLongNumElements(numElements);
+
+        if (!isArrayCapacity(numElements)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return Integers.checkUnsignedLongToUnsignedInt(numElements);
+    }
 
     public static <T, P> long count(T[] array, P parameter, BiPredicate<T, P> predicate) {
 
@@ -259,6 +290,13 @@ public class Array {
         return Arrays.copyOf(toCopy, toCopy.length);
     }
 
+    public static char[] copyOf(char[] toCopy) {
+
+        Objects.requireNonNull(toCopy);
+
+        return Arrays.copyOf(toCopy, toCopy.length);
+    }
+
     public static int[] copyOf(int[] toCopy) {
 
         Objects.requireNonNull(toCopy);
@@ -286,12 +324,58 @@ public class Array {
     }
 
     @FunctionalInterface
-    public interface IntMapper<P> {
+    public interface IIntToByteMapper<P> {
+
+        byte apply(int element, P parameter);
+    }
+
+    public static <P> byte[] mapIntToByte(int[] array, P parameter, IIntToByteMapper<P> mapper) {
+
+        Objects.requireNonNull(array);
+        Objects.requireNonNull(mapper);
+
+        final int arrayLength = array.length;
+
+        final byte[] result = new byte[arrayLength];
+
+        for (int i = 0; i < arrayLength; ++ i) {
+
+            result[i] = mapper.apply(array[i], parameter);
+        }
+
+        return result;
+    }
+
+    @FunctionalInterface
+    public interface IIntToCharMapper<P> {
+
+        char apply(int element, P parameter);
+    }
+
+    public static <P> char[] mapIntToChar(int[] array, P parameter, IIntToCharMapper<P> mapper) {
+
+        Objects.requireNonNull(array);
+        Objects.requireNonNull(mapper);
+
+        final int arrayLength = array.length;
+
+        final char[] result = new char[arrayLength];
+
+        for (int i = 0; i < arrayLength; ++ i) {
+
+            result[i] = mapper.apply(array[i], parameter);
+        }
+
+        return result;
+    }
+
+    @FunctionalInterface
+    public interface IIntToIntMapper<P> {
 
         int apply(int element, P parameter);
     }
 
-    public static <P> int[] mapInt(int[] array, P parameter, IntMapper<P> mapper) {
+    public static <P> int[] mapIntToInt(int[] array, P parameter, IIntToIntMapper<P> mapper) {
 
         Objects.requireNonNull(array);
         Objects.requireNonNull(mapper);
@@ -310,7 +394,7 @@ public class Array {
 
     public static <P> int[] closureOrConstantMapInt(int[] array, IntToIntFunction mapper) {
 
-        return mapInt(array, mapper, (e, p) -> p.apply(e));
+        return mapIntToInt(array, mapper, (e, p) -> p.apply(e));
     }
 
     public static <T> int[] closureOrConstantMapToInt(T[] toMap, ToIntFunction<T> mapper) {
@@ -339,15 +423,30 @@ public class Array {
     }
 
     @FunctionalInterface
-    public interface IMapByIndexToIntFunction<T, P> {
+    public interface IMapByIndexToIntFunction<T> {
+
+        int apply(T byIndex, int index);
+    }
+
+    public static <T, P> int[] closureOrConstantMapToInt(T toMap, int toMapLength, IMapByIndexToIntFunction<T> mapper) {
+
+        Objects.requireNonNull(toMap);
+        Checks.isIntLengthAboveOrAtZero(toMapLength);
+        Objects.requireNonNull(mapper);
+
+        return mapToInt(toMap, toMapLength, mapper, (b, i, m) -> m.apply(b, i));
+    }
+
+    @FunctionalInterface
+    public interface IMapByIndexToIntWithParameterFunction<T, P> {
 
         int apply(T byIndex, int index, P parameter);
     }
 
-    public static <T, P> int[] mapToInt(T toMap, int toMapLength, P parameter, IMapByIndexToIntFunction<T, P> mapper) {
+    public static <T, P> int[] mapToInt(T toMap, int toMapLength, P parameter, IMapByIndexToIntWithParameterFunction<T, P> mapper) {
 
         Objects.requireNonNull(toMap);
-        Checks.isLengthAboveOrAtZero(toMapLength);
+        Checks.isIntLengthAboveOrAtZero(toMapLength);
         Objects.requireNonNull(mapper);
 
         final int[] mapped = new int[toMapLength];
@@ -398,10 +497,23 @@ public class Array {
 
     public static int[] checkToIntArray(long[] values) {
 
+        Objects.requireNonNull(values);
+
         return toIntArray(values, Integers::checkLongToInt);
     }
 
+    public static void checkToIntArray(long[] values, int[] dst) {
+
+        Objects.requireNonNull(values);
+        Objects.requireNonNull(dst);
+        Checks.areEqual(values.length, dst.length);
+
+        toIntArray(values, dst, Integers::checkLongToInt);
+    }
+
     public static int[] checkToUnsignedIntArray(long[] values) {
+
+        Objects.requireNonNull(values);
 
         return toIntArray(values, Integers::checkUnsignedLongToUnsignedInt);
     }
@@ -412,12 +524,19 @@ public class Array {
 
         final int[] result = new int[length];
 
-        for (int i = 0; i < length; ++ i) {
-
-            result[i] = longToIntFunction.applyAsInt(values[i]);
-        }
+        toIntArray(values, result, longToIntFunction);
 
         return result;
+    }
+
+    private static void toIntArray(long[] values, int[] dst, LongToIntFunction longToIntFunction) {
+
+        final int length = values.length;
+
+        for (int i = 0; i < length; ++ i) {
+
+            dst[i] = longToIntFunction.applyAsInt(values[i]);
+        }
     }
 
     public static long[] toLongArray(int[] values) {
@@ -434,13 +553,36 @@ public class Array {
         return result;
     }
 
-    public static void move(long[] array, int startIndex, int numElements, int delta) {
+    public static void move(int[] array, int startIndex, int numElements, int delta) {
 
-        Objects.requireNonNull(array);
-        Checks.isLengthAboveZero(numElements);
-        Checks.isNotZero(delta);
+        checkMoveParameters(array, array.length, startIndex, numElements, delta);
 
         System.arraycopy(array, startIndex, array, startIndex + delta, numElements);
+    }
+
+    public static void move(long[] array, int startIndex, int numElements, int delta) {
+
+        checkMoveParameters(array, array.length, startIndex, numElements, delta);
+
+        System.arraycopy(array, startIndex, array, startIndex + delta, numElements);
+    }
+
+    public static <T> void move(T[] array, int startIndex, int numElements, int delta) {
+
+        checkMoveParameters(array, array.length, startIndex, numElements, delta);
+
+        System.arraycopy(array, startIndex, array, startIndex + delta, numElements);
+    }
+
+    private static void checkMoveParameters(Object array, int arrayLength, int startIndex, int numElements, int delta) {
+
+        Objects.requireNonNull(array);
+        Checks.isAboveZero(arrayLength);
+        Checks.isIntLengthAboveZero(numElements);
+        Checks.isNotZero(delta);
+
+        Checks.checkFromIndexSize(startIndex, numElements, arrayLength);
+        Checks.checkFromIndexSize(startIndex + delta, numElements, arrayLength);
     }
 
     public static <T> boolean equals(T[] array1, int startIndex1, T[] array2, int startIndex2, int numElements) {
@@ -464,12 +606,8 @@ public class Array {
         return equals;
     }
 
-    @FunctionalInterface
-    public interface IArrayEqualityTester<T, P1, P2> extends IByIndexElementEqualityTester<T, P1, P2> {
-
-    }
-
-    public static <T, P1, P2> boolean equals(T[] array1, P1 parameter1, T[] array2, P2 parameter2, IArrayEqualityTester<T, P1, P2> equalityTester) {
+    public static <T, P1, P2, E extends Exception> boolean equals(T[] array1, P1 parameter1, T[] array2, P2 parameter2, IElementEqualityTester<T, P1, P2, E> equalityTester)
+            throws E {
 
         final boolean result;
 
@@ -486,8 +624,8 @@ public class Array {
         return result;
     }
 
-    public static <T, P1, P2> boolean equals(T[] array1, int startIndex1, P1 parameter1, T[] array2, int startIndex2, P2 parameter2, int numElements,
-            IArrayEqualityTester<T, P1, P2> equalityTester) {
+    public static <T, P1, P2, E extends Exception> boolean equals(T[] array1, int startIndex1, P1 parameter1, T[] array2, int startIndex2, P2 parameter2, int numElements,
+            IElementEqualityTester<T, P1, P2, E> equalityTester) throws E {
 
         return ByIndex.equals(array1, startIndex1, parameter1, array2, startIndex2, parameter2, numElements, equalityTester,
                 (a1, i1, p1, a2, i2, p2, t) -> t.equals(a1[(int)i1], p1, a2[(int)i2], p2));

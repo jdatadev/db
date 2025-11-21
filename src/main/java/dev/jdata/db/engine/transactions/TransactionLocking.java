@@ -10,9 +10,9 @@ import dev.jdata.db.data.locktable.LockTable.NotLockedException;
 import dev.jdata.db.dml.DMLInsertRows;
 import dev.jdata.db.dml.DMLUpdateRows;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.utils.adt.arrays.ILongArrayCommon;
-import dev.jdata.db.utils.adt.arrays.LargeIntArray;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
+import dev.jdata.db.utils.adt.arrays.IHeapMutableIntLargeArray;
+import dev.jdata.db.utils.adt.arrays.IHeapMutableLongLargeArray;
+import dev.jdata.db.utils.adt.elements.ILongByIndexOrderedElementsView;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
@@ -23,8 +23,8 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
 
     private static final boolean ASSERT = AssertionContants.ASSERT_TRANSACTION_LOCKING;
 
-    private final LargeLongArray lockedTableRows;
-    private final LargeIntArray lockStatements;
+    private final IHeapMutableLongLargeArray lockedTableRows;
+    private final IHeapMutableIntLargeArray lockStatements;
 
     private int transactionDescriptor;
 
@@ -32,11 +32,8 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
 
         Checks.isTransactionDescriptor(transactionDescriptor);
 
-        final int initialOuterCapacity = 1;
-        final int innerCapacity = 10000;
-
-        this.lockedTableRows = new LargeLongArray(initialOuterCapacity, innerCapacity);
-        this.lockStatements = new LargeIntArray(initialOuterCapacity, innerCapacity);
+        this.lockedTableRows = IHeapMutableLongLargeArray.create();
+        this.lockStatements = IHeapMutableIntLargeArray.create();
 
         init(transactionDescriptor);
     }
@@ -47,18 +44,21 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
     }
 
     @Override
-    public OperationResult insertRows(LockTable lockTable, Table table, int statementId, ILongArrayCommon rowIds, DMLInsertRows rows) {
+    public OperationResult insertRows(LockTable lockTable, Table table, int statementId, ILongByIndexOrderedElementsView rowIds, DMLInsertRows rows) {
+
+        Objects.requireNonNull(lockTable);
+        Objects.requireNonNull(table);
+        Checks.isStatementId(statementId);
+        Objects.requireNonNull(rowIds);
+        Objects.requireNonNull(rows);
 
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public OperationResult updateRows(LockTable lockTable, Table table, int statementId, ILongArrayCommon rowIds, DMLUpdateRows rows) {
+    public OperationResult updateRows(LockTable lockTable, Table table, int statementId, ILongByIndexOrderedElementsView rowIds, DMLUpdateRows rows) {
 
-        Objects.requireNonNull(lockTable);
-        Objects.requireNonNull(table);
-        Objects.requireNonNull(rowIds);
-        Objects.requireNonNull(rows);
+        checkParameters(lockTable, table, statementId, rowIds, rows);
 
         final boolean locksAquired = lockTable.tryLockRows(table.getId(), rowIds, transactionDescriptor, statementId, LockType.WRITE);
 
@@ -74,11 +74,9 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
     }
 
     @Override
-    public OperationResult deleteRows(LockTable lockTable, Table table, int statementId, ILongArrayCommon rowIds) {
+    public OperationResult deleteRows(LockTable lockTable, Table table, int statementId, ILongByIndexOrderedElementsView rowIds) {
 
-        Objects.requireNonNull(lockTable);
-        Objects.requireNonNull(table);
-        Objects.requireNonNull(rowIds);
+        checkParameters(lockTable, table, statementId, rowIds);
 
         final boolean locksAquired = lockTable.tryLockRows(table.getId(), rowIds, transactionDescriptor, statementId, LockType.WRITE);
 
@@ -91,13 +89,6 @@ final class TransactionLocking extends TransactionMechanism<LockTable> {
         checkParameters(lockTable, table, statementId);
 
         return lockTable(lockTable, table, statementId);
-    }
-
-    private static void checkParameters(LockTable lockTable, Table table, int statementId) {
-
-        Objects.requireNonNull(lockTable);
-        Objects.requireNonNull(table);
-        Checks.isStatementId(statementId);
     }
 
     private OperationResult lockTable(LockTable lockTable, Table table, int statementId) {

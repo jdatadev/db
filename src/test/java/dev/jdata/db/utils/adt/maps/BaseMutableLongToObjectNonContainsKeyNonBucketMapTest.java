@@ -3,14 +3,16 @@ package dev.jdata.db.utils.adt.maps;
 import java.util.List;
 
 import dev.jdata.db.utils.adt.IClearable;
+import dev.jdata.db.utils.adt.sets.IMutableLongSet;
+import dev.jdata.db.utils.adt.sets.IMutableSet;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseMutableLongToObjectNonContainsKeyNonBucketMapTest<T, M extends ILongToObjectStaticMapCommon<T> & IClearable & ILongToObjectCommonMapMutators<T>>
+abstract class BaseMutableLongToObjectNonContainsKeyNonBucketMapTest<V, M extends IMutableLongToObjectBaseStaticMap<V> & IClearable & ILongToObjectStoreMapMutators<V>>
 
-        extends BaseMutableLongToIntegerOrObjectNonBucketMapTest<T[], M> {
+        extends BaseMutableLongToIntegerOrObjectNonBucketMapTest<V[], IMutableSet<V>, M> {
 
-    abstract int objectToInt(T object);
-    abstract T intToObject(int integer);
+    abstract int objectToInt(V object);
+    abstract V intToObject(int integer);
 
     @Override
     final boolean supportsRemoveNonAdded() {
@@ -25,7 +27,7 @@ abstract class BaseMutableLongToObjectNonContainsKeyNonBucketMapTest<T, M extend
     }
 
     @Override
-    final int getValue(T[] values, int index) {
+    final int getValue(V[] values, int index) {
 
         return objectToInt(values[index]);
     }
@@ -37,8 +39,7 @@ abstract class BaseMutableLongToObjectNonContainsKeyNonBucketMapTest<T, M extend
     }
 
     @Override
-    final <P> void forEachKeyAndValue(M map, P parameter, List<Integer> keysDst, List<Integer> valuesDst,
-            List<P> parameters) {
+    final <P> void forEachKeyAndValue(M map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters) {
 
         map.forEachKeyAndValue(parameter, (k, v, p) -> {
 
@@ -49,9 +50,9 @@ abstract class BaseMutableLongToObjectNonContainsKeyNonBucketMapTest<T, M extend
     }
 
     @Override
-    final void keysAndValues(M map, long[] keysDst, T[] valuesDst) {
+    final void keysAndValues(M map, IMutableLongSet keysAddable, IMutableSet<V> valuesAddable) {
 
-        map.keysAndValues(keysDst, valuesDst);
+        map.keysAndValues(keysAddable, valuesAddable);
     }
 
     @Override

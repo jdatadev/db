@@ -104,4 +104,10 @@ public abstract class DBNamedIdentifiableObject extends DBNamedObject {
 
         sb.append(']');
     }
+
+    @Override
+    public String toString() {
+
+        return DBNamedIdentifiableObject.class.getSimpleName() + " [super=" + super.toString() + ", id=" + id + ']';
+    }
 }

@@ -9,49 +9,25 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.elements.IElementsToString;
-import dev.jdata.db.utils.adt.elements.IObjectIterableElements.IForEach;
-import dev.jdata.db.utils.adt.elements.IObjectIterableElements.IForEachWithResult;
+import dev.jdata.db.utils.adt.byindex.ByIndex;
+import dev.jdata.db.utils.adt.byindex.IObjectByIndexView;
+import dev.jdata.db.utils.adt.elements.IObjectElementsToString;
+import dev.jdata.db.utils.adt.elements.IObjectForEach;
+import dev.jdata.db.utils.adt.elements.IObjectForEachWithResult;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
-public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implements IElementsToString<T> {
-
-    BaseObjectArrayList(AllocationType allocationType) {
-        super(allocationType);
-    }
+public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implements IObjectElementsToString<T> {
 
     protected BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray) {
-        this(allocationType, createElementsArray, DEFAULT_INITIAL_CAPACITY);
+        super(allocationType, createElementsArray);
     }
 
-    BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, T[] instances) {
-        this(allocationType, createElementsArray, instances.length);
-
-        addTailElements(instances);
-    }
-
-    BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, T[] instances, int numElements) {
-        super(allocationType, createElementsArray, instances, numElements);
-
-        if (numElements > instances.length) {
-
-            throw new IllegalArgumentException();
-        }
+    protected BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, int initialCapacity) {
+        super(allocationType, createElementsArray, createElementsArray.apply(initialCapacity), 0);
     }
 
     protected BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, T instance) {
-        super(allocationType, createElementsArray);
-
-        Objects.requireNonNull(createElementsArray);
-        Objects.requireNonNull(instance);
-
-        final int numElements = 1;
-
-        this.elementsArray = createElementsArray.apply(numElements);
-        elementsArray[0] = instance;
-
-        this.numElements = numElements;
+        super(allocationType, createElementsArray, Array.of(instance, createElementsArray), 1);
     }
 
     protected BaseObjectArrayList(AllocationType allocationType, T[] instances) {
@@ -59,93 +35,48 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
     }
 
     protected <U> BaseObjectArrayList(AllocationType allocationType, BaseObjectArrayList<T> toCopy) {
-        super(allocationType, toCopy.createElementsArray);
-
-        copy(createElementsArray, toCopy);
+        this(allocationType, toCopy.createElementsArray, toCopy);
     }
 
-    BaseObjectArrayList(IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
-        this(AllocationType.HEAP, createElementsArray);
+    BaseObjectArrayList(AllocationType allocationType) {
+        super(allocationType);
     }
 
-    BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<T> toCopy) {
-        super(allocationType, createElementsArray);
-
-        if (toCopy instanceof BaseObjectArrayList<?>) {
-
-            @SuppressWarnings("unchecked")
-            final BaseObjectArrayList<T> indexList = (BaseObjectArrayList<T>)toCopy;
-
-            copy(createElementsArray, indexList);
-        }
-        else {
-            final int numElements = Integers.checkUnsignedLongToUnsignedInt(toCopy.getNumElements());
-
-            this.elementsArray = createElementsArray.apply(numElements);
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                elementsArray[i] = toCopy.get(i);
-            }
-
-            this.numElements = numElements;
-        }
+    BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, T[] instances) {
+        this(allocationType, createElementsArray, instances, instances.length);
     }
 
-    <U> BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<U> toCopy, Function<U, T> mapper) {
-        super(allocationType, createElementsArray);
-
-        if (toCopy instanceof BaseObjectArrayList<?>) {
-
-            @SuppressWarnings("unchecked")
-            final BaseObjectArrayList<U> indexList = (BaseObjectArrayList<U>)toCopy;
-
-            copy(createElementsArray, indexList, mapper);
-        }
-        else {
-            final int numElements = Integers.checkUnsignedLongToUnsignedInt(toCopy.getNumElements());
-
-            this.elementsArray = createElementsArray.apply(numElements);
-
-            for (int i = 0; i < numElements; ++ i) {
-
-                elementsArray[i] = mapper.apply(toCopy.get(i));
-            }
-
-            this.numElements = numElements;
-        }
+    BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, T[] instances, int numElements) {
+        super(allocationType, createElementsArray, instances, numElements);
     }
 
-    protected BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, int initialCapacity) {
-        super(allocationType, createElementsArray);
-
-        Objects.requireNonNull(createElementsArray);
-        Checks.isInitialCapacity(initialCapacity);
-
-        this.elementsArray = createElementsArray.apply(initialCapacity);
-        this.numElements = 0;
+    BaseObjectArrayList(AllocationType allocationType, T[] instances, int numElements) {
+        super(allocationType, instances, numElements);
     }
 
-    protected BaseObjectArrayList(BaseObjectArrayList<T> toCopy) {
-        super(AllocationType.HEAP, toCopy.createElementsArray);
-
-        Objects.requireNonNull(toCopy);
-
-        final int num = this.numElements = toCopy.numElements;
-        final T[] toCopyArray = toCopy.elementsArray;
-        final T[] thisArray = this.elementsArray = createElementsArray.apply(toCopyArray.length);
-
-        System.arraycopy(toCopyArray, 0, thisArray, 0, num);
+    <U> BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, BaseObjectArrayList<U> toCopy, Function<U, T> mapper) {
+        super(allocationType, createElementsArray, copy(createElementsArray, toCopy, mapper), toCopy.getIntNumElements());
     }
 
-    final void initialize(T[] values, int numElements) {
-
-        initialize(values, numElements, values.length);
+    BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IObjectByIndexView<T> toCopy, int numElements) {
+        super(allocationType, createElementsArray, copy(createElementsArray, toCopy, numElements), numElements);
     }
 
-    final void recreateArrays() {
+    <U> BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IObjectByIndexView<U> toCopy, int numElements, Function<U, T> mapper) {
+        super(allocationType, createElementsArray, copy(createElementsArray, toCopy, numElements, mapper), numElements);
+    }
 
-        recreateArrays(elementsArray.length);
+    private <U> BaseObjectArrayList(AllocationType allocationType, IntFunction<T[]> createElementsArray, BaseObjectArrayList<T> toCopy) {
+        super(allocationType, createElementsArray, copy(createElementsArray, toCopy), toCopy.getIntNumElements());
+    }
+
+    @Override
+    public final <P> void toString(StringBuilder sb, P parameter, IElementsToStringAdder<T, P> consumer) {
+
+        Objects.requireNonNull(sb);
+        Objects.requireNonNull(consumer);
+
+        ByIndex.toString(this, 0L, getNumElements(), sb, parameter, (l, i, b, p) -> consumer.addString(l.get(i), b, p));
     }
 
     public final T get(long index) {
@@ -154,46 +85,48 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
 
             throw new IndexOutOfBoundsException();
         }
-        else if (index >= numElements) {
+        else if (index >= getIntNumElements()) {
 
             throw new IndexOutOfBoundsException();
         }
 
-        return elementsArray[(int)index];
+        return getElementsArray()[(int)index];
     }
 
     public final T getHead() {
 
-        if (numElements == 0) {
+        if (getIntNumElements() == 0) {
 
             throw new IllegalStateException();
         }
 
-        return elementsArray[0];
+        return getElementsArray()[0];
     }
 
     public final T getTail() {
 
+        final int numElements = getIntNumElements();
+
         if (numElements == 0) {
 
             throw new IllegalStateException();
         }
 
-        return elementsArray[numElements - 1];
+        return getElementsArray()[numElements - 1];
     }
 
     public final <P> T findAtMostOne(P parameter, BiPredicate<T, P> predicate) {
 
         Objects.requireNonNull(predicate);
 
-        return Array.findAtMostOne(elementsArray, 0, numElements, parameter, predicate);
+        return Array.findAtMostOne(getElementsArray(), 0, getIntNumElements(), parameter, predicate);
     }
 
     public <P> T findExactlyOne(P parameter, BiPredicate<T, P> predicate) {
 
         Objects.requireNonNull(predicate);
 
-        return Array.findExactlyOne(elementsArray, 0, numElements, parameter, predicate);
+        return Array.findExactlyOne(getElementsArray(), 0, getIntNumElements(), parameter, predicate);
     }
 
     private long findAtMostOneInstanceIndex(T instance) {
@@ -202,7 +135,8 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
 
         int foundIndex = -1;
 
-        final int num = numElements;
+        final int num =  getIntNumElements();
+        final T[] elementsArray = getElementsArray();
 
         for (int i = 0; i < num; ++ i) {
 
@@ -220,90 +154,117 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         return foundIndex;
     }
 
-    protected final int getElementsArrayLength() {
+    @Override
+    protected final T[] copyValues(T[] elements, long startIndex, long numElements) {
 
-        return elementsArray.length;
+        checkIntCopyValuesParameters(elements, elements.length, startIndex, numElements);
+
+        return Arrays.copyOfRange(elements, intIndex(startIndex), intNumElements(numElements));
     }
 
-    final void addHeadElement(T instance) {
+    @Override
+    protected final void initializeWithValues(T[] values, long numElements) {
+
+        checkIntIntitializeWithValuesParameters(values, values.length, numElements);
+
+        initializeArrayList(values, intNumElements(numElements));
+    }
+
+    private void recreateArrays() {
+
+        recreateArray(getElementsArrayLength());
+    }
+
+    protected final int getElementsArrayLength() {
+
+        return getElementsArray().length;
+    }
+
+    private void addHeadElement(T instance) {
 
         if (instance == null) {
 
             throw new NullPointerException();
         }
 
-        T[] thisArray = elementsArray;
+        T[] thisArray = getElementsArray();
         final int arrayLength = thisArray.length;
 
-        final int num = numElements;
+        final int num = getIntNumElements();
 
-        if (num == arrayLength) {
+        final T[] dstArray = num == arrayLength ? recreateArray(increaseCapacity(arrayLength)) : thisArray;
 
-            final T[] newArray = createElementsArray.apply(increaseCapacity(arrayLength));
-
-            System.arraycopy(thisArray, 0, newArray, 1, arrayLength);
-
-            thisArray = this.elementsArray = newArray;
-        }
-        else {
-            System.arraycopy(thisArray, 0, thisArray, 1, num);
-        }
+        System.arraycopy(thisArray, 0, dstArray, 1, num);
 
         thisArray[0] = instance;
 
-        ++ numElements;
+        incrementNumElements();
     }
 
     protected final void addTailElement(T instance) {
 
-        if (instance == null) {
+        Objects.requireNonNull(instance);
 
-            throw new NullPointerException();
-        }
-
-        T[] thisArray = elementsArray;
+        final T[] thisArray = getElementsArray();
         final int arrayLength = thisArray.length;
+
+        final int numElements = getIntNumElements();
+
+        final T[] dstArray;
 
         if (numElements == arrayLength) {
 
-            final T[] newArray = createElementsArray.apply(allocateLength(arrayLength + 1));
+            dstArray = recreateArray(allocateLength(arrayLength + 1));
 
-            System.arraycopy(thisArray, 0, newArray, 0, arrayLength);
-
-            thisArray = this.elementsArray = newArray;
+            System.arraycopy(thisArray, 0, dstArray, 0, arrayLength);
+        }
+        else {
+            dstArray = thisArray;
         }
 
-        thisArray[numElements ++] = instance;
+        dstArray[numElements] = instance;
+
+        incrementNumElements();
     }
 
     final void addTail(BaseObjectArrayList<T> baseArrayList) {
 
-        final int thisNumElements = numElements;
-        final int toAddNumElements = baseArrayList.numElements;
+        Objects.requireNonNull(baseArrayList);
+
+        final int thisNumElements = getIntNumElements();
+        final int toAddNumElements = baseArrayList.getIntNumElements();
         final int requiredCapacity = thisNumElements + toAddNumElements;
 
-        T[] thisArray = elementsArray;
-        final int arrayLength = elementsArray.length;
+        final T[] thisArray = getElementsArray();
+        final int arrayLength = thisArray.length;
+
+        final T[] dstArray;
 
         if (requiredCapacity > arrayLength) {
 
-            final T[] newArray = createElementsArray.apply(allocateLength(requiredCapacity));
+            dstArray = recreateArray(allocateLength(requiredCapacity));
 
-            System.arraycopy(thisArray, 0, newArray, 0, thisNumElements);
-
-            thisArray = this.elementsArray = newArray;
+            System.arraycopy(thisArray, 0, dstArray, 0, thisNumElements);
+        }
+        else {
+            dstArray = thisArray;
         }
 
-        System.arraycopy(baseArrayList.elementsArray, 0, thisArray, thisNumElements, toAddNumElements);
+        System.arraycopy(baseArrayList.getElementsArray(), 0, thisArray, thisNumElements, toAddNumElements);
 
-        this.numElements += toAddNumElements;
+        increaseNumElements(toAddNumElements);
     }
 
     final void addTailElements(@SuppressWarnings("unchecked") T... instances) {
 
-        Checks.areElements(instances, Checks::checkIsNotNull);
+        addTailElements(instances, 0, instances.length);
+    }
 
-        switch (instances.length) {
+    final void addTailElements(T[] instances, int startIndex, int numElementsToAdd) {
+
+        Checks.checkIntAddFromArray(instances, startIndex, numElementsToAdd);
+
+        switch (numElementsToAdd) {
 
         case 0:
             throw new IllegalArgumentException();
@@ -313,26 +274,28 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
 
         default:
 
-            T[] dstArray = elementsArray;
-            final int arrayLength = dstArray.length;
-            final int numInstances = instances.length;
+            final T[] thisArray = getElementsArray();
+            final int arrayLength = thisArray.length;
 
-            final int requiredArrayLength = numElements + numInstances;
+            final int numListElementsBeforeAdd = getIntNumElements();
 
-            final int num = numElements;
+            final int requiredArrayLength = numListElementsBeforeAdd + numElementsToAdd;
+
+            final T[] dstArray;
 
             if (requiredArrayLength > arrayLength) {
 
-                final T[] newArray = createElementsArray.apply(requiredArrayLength << 1);
+                dstArray = recreateArray(increaseCapacity(requiredArrayLength));
 
-                System.arraycopy(dstArray, 0, newArray, 0, num);
-
-                this.elementsArray = dstArray = newArray;
+                System.arraycopy(thisArray, 0, dstArray, 0, numListElementsBeforeAdd);
+            }
+            else {
+                dstArray = thisArray;
             }
 
-            System.arraycopy(instances, 0, dstArray, num, numInstances);
+            System.arraycopy(instances, startIndex, dstArray, numListElementsBeforeAdd, numElementsToAdd);
 
-            this.numElements += numInstances;
+            increaseNumElements(numElementsToAdd);
             break;
         }
     }
@@ -340,55 +303,47 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
     public final void set(long index, T instance) {
 
         Objects.requireNonNull(instance);
-        Checks.checkIndex(index, numElements);
+        Checks.checkLongIndex(index, getIntNumElements());
 
-        elementsArray[(int)index] = instance;
+        getElementsArray()[(int)index] = instance;
     }
 
-    public final T removeHead() {
+    public final T removeHeadAndReturnValue() {
 
         return remove(0);
     }
 
-    public final void removeHead(long numElements) {
+    private void removeHead(int numToRemove) {
 
-        Checks.isNumElements(numElements);
+        if (numToRemove != 0L) {
 
-        if (numElements != 0L) {
-
-            if (numElements == 1) {
+            if (numToRemove == 1) {
 
                 remove(0);
             }
             else {
-                final int numToRemove = Integers.checkUnsignedLongToUnsignedInt(numElements);
-
-                final int num = this.numElements;
+                final int num = getIntNumElements();
 
                 if (numToRemove == num) {
 
-                    clear();
+                    clearElements();
                 }
                 else {
-                    final T[] a = elementsArray;
+                    Array.move(getElementsArray(), 0, numToRemove, - numToRemove);
 
-                    final int remaining = num - numToRemove;
-
-                    System.arraycopy(a, numToRemove, a, 0, remaining);
-
-                    this.numElements = remaining;
+                    decreaseNumElements(numToRemove);
                 }
             }
         }
     }
 
-    public final T remove(long index) {
+    private T remove(long index) {
 
-        final int num = numElements;
+        final int num = getIntNumElements();
 
-        Checks.checkIndex(index, num);
+        Checks.checkLongIndex(index, num);
 
-        final int intIndex = Integers.checkUnsignedLongToUnsignedInt(index);
+        final int intIndex = intIndex(index);
 
         final T result;
 
@@ -404,31 +359,31 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
                 throw new IllegalArgumentException();
             }
 
-            result = elementsArray[intIndex];
+            result = getElementsArray()[intIndex];
 
-            clear();
+            clearElements();
             break;
 
         default:
 
-            final T[] a = elementsArray;
+            final T[] elementsArray = getElementsArray();
 
-            result = a[intIndex];
+            result = elementsArray[intIndex];
 
             if (index == 0) {
 
-                System.arraycopy(a, 1, a, 0, num - 1);
+                Array.move(elementsArray, 0, num, -1);
             }
             else if (index == num - 1) {
 
             }
             else {
-                System.arraycopy(a, intIndex + 1, a, intIndex, num - intIndex - 1);
+                Array.move(elementsArray, intIndex + 1, num - intIndex - 1, -1);
             }
             break;
         }
 
-        -- numElements;
+        decrementNumElements();
 
         return result;
     }
@@ -456,12 +411,15 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
 
     public final void sort(Comparator<? super T> comparator) {
 
-        Arrays.sort(elementsArray, 0, numElements, comparator);
+        Objects.requireNonNull(comparator);
+
+        Arrays.sort(getElementsArray(), 0, getIntNumElements(), comparator);
     }
 
-    public final <P, E extends Exception> void forEach(P parameter, IForEach<T, P, E> forEach) throws E {
+    public final <P, E extends Exception> void forEach(P parameter, IObjectForEach<T, P, E> forEach) throws E {
 
-        final int num = numElements;
+        final int num = getIntNumElements();
+        final T[] elementsArray = getElementsArray();
 
         for (int i = 0; i < num; ++ i) {
 
@@ -469,13 +427,14 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         }
     }
 
-    public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<T, P1, P2, R, E> forEach) throws E {
+    public final <P1, P2, R, E extends Exception> R forEachWithResult(R defaultResult, P1 parameter1, P2 parameter2, IObjectForEachWithResult<T, P1, P2, R, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
         R result = defaultResult;
 
-        final int num = numElements;
+        final int num = getIntNumElements();
+        final T[] elementsArray = getElementsArray();
 
         for (int i = 0; i < num; ++ i) {
 
@@ -491,23 +450,18 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         return result;
     }
 
-    public final void clear() {
-
-        this.numElements = 0;
-    }
-
     public final T get(int index) {
 
         if (index < 0) {
 
             throw new IndexOutOfBoundsException();
         }
-        else if (index >= numElements) {
+        else if (index >= getIntNumElements()) {
 
             throw new IndexOutOfBoundsException();
         }
 
-        return elementsArray[index];
+        return getElementsArray()[index];
     }
 
     public final T set(int index, T element) {
@@ -516,7 +470,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
 
             throw new IndexOutOfBoundsException();
         }
-        else if (index >= numElements) {
+        else if (index >= getIntNumElements()) {
 
             throw new IndexOutOfBoundsException();
         }
@@ -525,23 +479,24 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
             throw new NullPointerException();
         }
 
-        elementsArray[index] = element;
+        getElementsArray()[index] = element;
 
         return element;
     }
 
+    @Override
     protected final int getElementsCapacity() {
 
-        return elementsArray.length;
+        return getElementsArrayLength();
     }
 
     final T[] elementsToArray(IntFunction<T[]> createArray) {
 
-        final int num = numElements;
+        final int num = getIntNumElements();
 
         final T[] result = createArray.apply(num);
 
-        final T[] a = elementsArray;
+        final T[] a = getElementsArray();
 
         for (int i = 0; i < num; ++ i) {
 
@@ -569,29 +524,29 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
             @Override
             public boolean hasNext() {
 
-                return index < numElements;
+                return index < getIntNumElements();
             }
 
             @Override
             public T next() {
 
-                if (index >= numElements) {
+                if (index >= getIndexLimit()) {
 
                     throw new IndexOutOfBoundsException();
                 }
 
-                return elementsArray[index ++];
+                return getElementsArray()[index ++];
             }
         };
     }
 
     protected final <E> E[] makeArray(E[] dst) {
 
-        final T[] a = elementsArray;
+        final T[] a = getElementsArray();
 
         Checks.checkFromIndexSize(0, dst.length, a.length);
 
-        final int num = numElements;
+        final int num = getIntNumElements();
 
         for (int i = 0; i < num; ++ i) {
 
@@ -604,65 +559,60 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         return dst;
     }
 
-    final int getIntNumElements() {
+    private static <T> T[] copy(IntFunction<T[]> createElementsArray, BaseObjectArrayList<T> toCopy) {
 
-        return numElements;
+        final int toCopyNumElements = toCopy.getIntNumElements();
+
+        final T[] elementsArray = createElementsArray.apply(toCopyNumElements);
+
+        System.arraycopy(toCopy.getElementsArray(), 0, elementsArray, 0, toCopyNumElements);
+
+        return elementsArray;
     }
 
-    private void copy(IntFunction<T[]> createElementsArray, BaseObjectArrayList<T> toCopy) {
+    private static <T, U> U[] copy(IntFunction<U[]> createElementsArray, BaseObjectArrayList<T> toCopy, Function<T, U> mapper) {
 
-        final int toCopyNumElements = numElements = toCopy.numElements;
+        final int toCopyNumElements = toCopy.getIntNumElements();
 
-        this.elementsArray = createElementsArray.apply(toCopyNumElements);
+        final U[] elementsArray = createElementsArray.apply(toCopyNumElements);
 
-        System.arraycopy(toCopy.elementsArray, 0, elementsArray, 0, toCopyNumElements);
-    }
-
-    private <U> void copy(IntFunction<T[]> createElementsArray, BaseObjectArrayList<U> toCopy, Function<U, T> mapper) {
-
-        final int toCopyNumElements = numElements = toCopy.numElements;
-
-        final T[] array = this.elementsArray = createElementsArray.apply(toCopyNumElements);
-
-        final U[] toCopyArray = toCopy.elementsArray;
+        final T[] toCopyArray = toCopy.getElementsArray();
 
         for (int i = 0; i < toCopyNumElements; ++ i) {
 
-            array[i] = mapper.apply(toCopyArray[i]);
+            elementsArray[i] = mapper.apply(toCopyArray[i]);
         }
+
+        return elementsArray;
     }
 
-    private static int increaseCapacity(int capacity) {
+    private static <T> T[] copy(IntFunction<T[]> createElementsArray, IObjectByIndexView<T> toCopy, int toCopyNumElements) {
 
-        return capacity << 1;
+        final T[] elementsArray = createElementsArray.apply(toCopyNumElements);
+
+        for (int i = 0; i < toCopyNumElements; ++ i) {
+
+            elementsArray[i] = toCopy.get(i);
+        }
+
+        return elementsArray;
+    }
+
+    private static <T, U> U[] copy(IntFunction<U[]> createElementsArray, IObjectByIndexView<T> toCopy, int toCopyNumElements, Function<T, U> mapper) {
+
+        final U[] elementsArray = createElementsArray.apply(toCopyNumElements);
+
+        for (int i = 0; i < toCopyNumElements; ++ i) {
+
+            elementsArray[i] = mapper.apply(toCopy.get(i));
+        }
+
+        return elementsArray;
     }
 
     private static int allocateLength(int requiredLength) {
 
         return requiredLength << 1;
-    }
-
-    @Override
-    public final <P> void toString(StringBuilder sb, P parameter, ElementsToStringAdder<T, P> elementsToStringAdder) {
-
-        Objects.requireNonNull(sb);
-        Objects.requireNonNull(elementsToStringAdder);
-
-        sb.append('[');
-
-        final int num = numElements;
-
-        for (int i = 0; i < num; ++ i) {
-
-            if (i > 0) {
-
-                sb.append(',');
-            }
-
-            elementsToStringAdder.addString(elementsArray[i], sb, parameter);
-        }
-
-        sb.append(']');
     }
 
     @Override
@@ -691,11 +641,17 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         else {
             final BaseObjectArrayList<?> other = (BaseObjectArrayList<?>)object;
 
-            final int num = numElements;
+            final int num = getIntNumElements();
 
-            result = num == other.numElements && Array.equals(elementsArray, 0, other.elementsArray, 0, num);
+            result = num == other.getIntNumElements() && Array.equals(getElementsArray(), 0, other.getElementsArray(), 0, num);
         }
 
         return result;
+    }
+
+    @Override
+    public String toString() {
+
+        return ByIndex.closureOrConstantToString(this, 0, getNumElements(), null, (e, i, b) -> b.append(e.get(i).toString()));
     }
 }

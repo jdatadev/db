@@ -3,8 +3,8 @@ package dev.jdata.db.schema.storage.sqloutputter;
 import java.nio.charset.CharsetEncoder;
 import java.util.Objects;
 
-import dev.jdata.db.utils.allocators.ByteArrayByteBufferAllocator;
-import dev.jdata.db.utils.allocators.CharBufferAllocator;
+import dev.jdata.db.utils.jdk.niobuffers.ByteArrayByteBufferAllocator;
+import dev.jdata.db.utils.jdk.niobuffers.CharBufferAllocator;
 
 public final class TextToByteOutputPrerequisites {
 

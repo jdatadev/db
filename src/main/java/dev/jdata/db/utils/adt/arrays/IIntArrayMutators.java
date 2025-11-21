@@ -1,6 +1,8 @@
 package dev.jdata.db.utils.adt.arrays;
 
-public interface IIntArrayMutators {
+import dev.jdata.db.utils.adt.marker.IMutators;
+
+interface IIntArrayMutators extends IMutators {
 
     void add(int value);
 

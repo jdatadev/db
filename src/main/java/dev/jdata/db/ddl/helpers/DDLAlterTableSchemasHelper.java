@@ -30,12 +30,11 @@ import dev.jdata.db.sql.ast.statements.table.SQLDropConstraintOperation;
 import dev.jdata.db.sql.ast.statements.table.SQLModifyColumn;
 import dev.jdata.db.sql.ast.statements.table.SQLModifyColumnsOperation;
 import dev.jdata.db.sql.ast.statements.table.SQLTableColumnDefinition;
-import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.lists.CachedIndexList;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.sets.IIntSet;
+import dev.jdata.db.utils.adt.lists.ICachedIndexList;
+import dev.jdata.db.utils.adt.lists.ICachedIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.ICachedIndexListBuilder;
+import dev.jdata.db.utils.adt.sets.ICachedIntSetAllocator;
+import dev.jdata.db.utils.adt.sets.ICachedIntSetBuilder;
 import dev.jdata.db.utils.debug.PrintDebug;
 
 public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
@@ -44,26 +43,27 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
     private static final Class<?> debugClass = DDLAlterTableSchemasHelper.class;
 
-    public static TableDiff processAlterTable(SQLAlterTableStatement sqlAlterTableStatement, DatabaseId databaseId, Table table, StringManagement stringManagement,
-            DDLSchemaScratchObjects ddlSchemaScratchObjects) throws SQLValidationException {
+    public static TableDiff processAlterTable(SQLAlterTableStatement sqlAlterTableStatement, DatabaseId databaseId, Table table, ICachedIntSetAllocator intSetAllocator,
+            StringManagement stringManagement, DDLSchemaScratchObjects ddlSchemaScratchObjects) throws SQLValidationException {
 
         Objects.requireNonNull(sqlAlterTableStatement);
         Objects.requireNonNull(databaseId);
         Objects.requireNonNull(table);
+        Objects.requireNonNull(intSetAllocator);
         Objects.requireNonNull(stringManagement);
         Objects.requireNonNull(ddlSchemaScratchObjects);
 
         if (DEBUG) {
 
             PrintDebug.enter(debugClass, b -> b.add("sqlAlterTableStatement", sqlAlterTableStatement).add("databaseId", databaseId).add("table", table)
-                    .add("stringManagement", stringManagement).add("ddlSchemaScratchObjects", ddlSchemaScratchObjects));
+                    .add("intSetAllocator", intSetAllocator).add("stringManagement", stringManagement).add("ddlSchemaScratchObjects", ddlSchemaScratchObjects));
         }
 
         final TableDiff result;
 
         final ProcessAlterTableScratchObject processAlterTableScratchObject = ddlSchemaScratchObjects.allocateProcessAlterTableScratchObject();
 
-        processAlterTableScratchObject.initialize(databaseId, stringManagement, table, ddlSchemaScratchObjects);
+        processAlterTableScratchObject.initialize(databaseId, stringManagement, table, intSetAllocator, ddlSchemaScratchObjects);
 
         try {
             result = sqlAlterTableStatement.getOperation().visit(alterTableOperationVisitor, processAlterTableScratchObject);
@@ -152,7 +152,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
         final TableDiff result;
 
         final DDLSchemaScratchObjects ddlSchemaScratchObjects = processAlterTableScratchObject.getDDLSchemaScratchObjects();
-        final CacheIndexListAllocator<Column> columnIndexListAllocator = ddlSchemaScratchObjects.getColumnIndexListAllocator();
+        final ICachedIndexListAllocator<Column> columnIndexListAllocator = ddlSchemaScratchObjects.getColumnIndexListAllocator();
 
         final ASTList<SQLAddColumnDefinition> sqlAddColumnDefinitions = sqlAddColumnsOperation.getColumnDefinitions();
 
@@ -160,9 +160,9 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         final Table table = processAlterTableScratchObject.getTable();
 
-        final CachedIndexListBuilder<Column> addedColumnsBuilder = IndexList.createBuilder(numAddedColumns, columnIndexListAllocator);
+        final ICachedIndexListBuilder<Column> addedColumnsBuilder = columnIndexListAllocator.createBuilder(numAddedColumns);
 
-        CachedIndexList<Column> addedColumns = null;
+        ICachedIndexList<Column> addedColumns = null;
 
         try {
             processAlterTableScratchObject.initialize(processAlterTableScratchObject.getStringManagement(), table.getMaxColumnId() + 1, addedColumnsBuilder);
@@ -188,7 +188,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
                 s.addColumn(addedColumn);
             });
 
-            addedColumns = addedColumnsBuilder.build();
+            addedColumns = addedColumnsBuilder.buildOrNull();
 
             result = TableDiff.ofAddedColumns(table, addedColumns.toHeapAllocated());
         }
@@ -196,10 +196,10 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
             if (addedColumns != null) {
 
-                columnIndexListAllocator.freeIndexList(addedColumns);
+                columnIndexListAllocator.freeImmutable(addedColumns);
             }
 
-            columnIndexListAllocator.freeIndexListBuilder(addedColumnsBuilder);
+            columnIndexListAllocator.freeBuilder(addedColumnsBuilder);
         }
 
         if (DEBUG) {
@@ -238,13 +238,13 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
         final TableDiff result;
 
         final DDLSchemaScratchObjects ddlSchemaScratchObjects = processAlterTableScratchObject.getDDLSchemaScratchObjects();
-        final CacheIndexListAllocator<Column> columnIndexListAllocator = ddlSchemaScratchObjects.getColumnIndexListAllocator();
+        final ICachedIndexListAllocator<Column> columnIndexListAllocator = ddlSchemaScratchObjects.getColumnIndexListAllocator();
 
         final ASTList<SQLModifyColumn> sqlModifyColumns = sqlModifyColumnsOperation.getColumns();
 
-        final CachedIndexListBuilder<Column> modifiedColumnsBuilder = IndexList.createBuilder(sqlModifyColumns.size(), columnIndexListAllocator);
+        final ICachedIndexListBuilder<Column> modifiedColumnsBuilder = columnIndexListAllocator.createBuilder(sqlModifyColumns.size());
 
-        CachedIndexList<Column> modifiedColumns = null;
+        ICachedIndexList<Column> modifiedColumns = null;
 
         try {
             processAlterTableScratchObject.initialize(processAlterTableScratchObject.getStringManagement(), -1, modifiedColumnsBuilder);
@@ -270,7 +270,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
                 s.addColumn(modifiedColumn);
             });
 
-            modifiedColumns = modifiedColumnsBuilder.build();
+            modifiedColumns = modifiedColumnsBuilder.buildOrNull();
 
             result = TableDiff.ofModifiedColumns(processAlterTableScratchObject.getTable(), modifiedColumns.toHeapAllocated());
         }
@@ -278,10 +278,10 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
             if (modifiedColumns != null) {
 
-                columnIndexListAllocator.freeIndexList(modifiedColumns);
+                columnIndexListAllocator.freeImmutable(modifiedColumns);
             }
 
-            columnIndexListAllocator.freeIndexListBuilder(modifiedColumnsBuilder);
+            columnIndexListAllocator.freeBuilder(modifiedColumnsBuilder);
         }
 
         if (DEBUG) {
@@ -314,34 +314,44 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
             PrintDebug.enter(debugClass, b -> b.add("sqlDropColumnsOperation", sqlDropColumnsOperation).add("processAlterTableScratchObject", processAlterTableScratchObject));
         }
 
+        final TableDiff result;
+
         validateDropColumns(sqlDropColumnsOperation, processAlterTableScratchObject);
 
         final SQLColumnNames sqlColumnNames = sqlDropColumnsOperation.getNames();
 
         final long numColumnNames = sqlColumnNames.getNumElements();
 
-        final IIntSet.Builder droppedColumnsBuilder = IIntSet.createBuilder(CapacityExponents.computeCapacityExponent(numColumnNames));
+        final ICachedIntSetAllocator intSetAllocator = processAlterTableScratchObject.getIntSetAllocator();
 
-        final Table table = processAlterTableScratchObject.getTable();
+        final ICachedIntSetBuilder droppedColumnsBuilder = intSetAllocator.createBuilder(numColumnNames);
 
-        for (int i = 0; i < numColumnNames; ++ i) {
+        try {
+            final Table table = processAlterTableScratchObject.getTable();
 
-            final long sqlColumnName = sqlColumnNames.get(i);
+            for (int i = 0; i < numColumnNames; ++ i) {
 
-            processAlterTableScratchObject.setParsedName(sqlColumnName);
+                final long sqlColumnName = sqlColumnNames.get(i);
 
-            final Column existingColumn = table.findAtMostOneColumn(processAlterTableScratchObject,
-                    (c, s) -> s.getStringManagement().parsedEqualsStored(s.getParsedName(), c.getParsedName(), false));
+                processAlterTableScratchObject.setParsedName(sqlColumnName);
 
-            if (existingColumn == null) {
+                final Column existingColumn = table.findAtMostOneColumn(processAlterTableScratchObject,
+                        (c, s) -> s.getStringManagement().parsedEqualsStored(s.getParsedName(), c.getParsedName(), false));
 
-                throw new ColumnDoesNotExistException(processAlterTableScratchObject.getDatabaseId(), sqlColumnName);
+                if (existingColumn == null) {
+
+                    throw new ColumnDoesNotExistException(processAlterTableScratchObject.getDatabaseId(), sqlColumnName);
+                }
+
+                droppedColumnsBuilder.addUnordered(existingColumn.getId());
             }
 
-            droppedColumnsBuilder.add(existingColumn.getId());
+            result = TableDiff.ofDroppedColumns(processAlterTableScratchObject.getTable(), droppedColumnsBuilder.buildHeapAllocatedNotEmpty());
         }
+        finally {
 
-        final TableDiff result = null; // TableDiff.ofDroppedColumns(processAlterTableScratchObject.getTable(), droppedColumnsBuilder.build().toHeapAllocated());
+            intSetAllocator.freeBuilder(droppedColumnsBuilder);
+        }
 
         if (DEBUG) {
 

@@ -5,7 +5,7 @@ import java.util.function.BiPredicate;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import dev.jdata.db.utils.scalars.Integers;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 
 public abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArrayList<String>> extends BaseObjectArrayListTest<T> {
 
@@ -173,7 +173,7 @@ public abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArra
 
     final void checkAddTailMany(U list, BiPredicate<U, String> listTailAdder) {
 
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(list.getNumElements());
+        final int numElements = IOnlyElementsView.intNumElements(list);
 
         final int numToAdd = 10 * 1000;
 

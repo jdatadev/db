@@ -7,16 +7,17 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.test.unit.BaseTest;
-import dev.jdata.db.utils.adt.elements.IIntIterableElements.IForEach;
-import dev.jdata.db.utils.adt.elements.IIntIterableElements.IForEachWithResult;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
+import dev.jdata.db.utils.adt.elements.IIntForEach;
+import dev.jdata.db.utils.adt.elements.IIntForEachWithResult;
 import dev.jdata.db.utils.jdk.adt.lists.Lists;
 
-abstract class BaseIntegerIndexListTest<T extends IMutableIntegerList> extends BaseTest {
+abstract class BaseIntegerIndexListTest<T extends IOnlyElementsView & IListTypeMutable> extends BaseTest {
 
     abstract T createArray(int initialCapacity);
 
-    abstract <P> void forEach(T list, P parameter, IForEach<P, RuntimeException> forEach);
-    abstract <P1, P2, R> R forEachWithResult(T list, R defaultResult, P1 parameter1, P2 parameter2, IForEachWithResult<P1, P2, R, RuntimeException> forEach);
+    abstract <P> void forEach(T list, P parameter, IIntForEach<P, RuntimeException> forEach);
+    abstract <P1, P2, R> R forEachWithResult(T list, R defaultResult, P1 parameter1, P2 parameter2, IIntForEachWithResult<P1, P2, R, RuntimeException> forEach);
     abstract int get(T list, int index);
     abstract void addTail(T list, int value);
     abstract boolean removeAtMostOne(T list, int value);

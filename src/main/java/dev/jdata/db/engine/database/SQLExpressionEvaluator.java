@@ -14,6 +14,7 @@ import org.jutils.ast.objects.list.IListGetters;
 import org.jutils.ast.operator.Arithmetic;
 import org.jutils.ast.operator.Operator;
 
+import dev.jdata.db.DBConstants;
 import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.schema.DBType;
 import dev.jdata.db.schema.types.SchemaDataType;
@@ -30,12 +31,12 @@ import dev.jdata.db.sql.ast.expressions.SQLParameterExpression;
 import dev.jdata.db.sql.ast.expressions.SQLStringLiteral;
 import dev.jdata.db.sql.ast.expressions.SQLSubSelectExpression;
 import dev.jdata.db.utils.adt.IClearable;
-import dev.jdata.db.utils.adt.decimals.MutableDecimal;
-import dev.jdata.db.utils.adt.integers.MutableLargeInteger;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
+import dev.jdata.db.utils.adt.numbers.decimals.IHeapMutableDecimal;
+import dev.jdata.db.utils.adt.numbers.integers.IHeapMutableLargeInteger;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
 public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressionEvaluatorParameter, Void, EvaluateException>
         implements SQLExpressionVisitor<SQLExpressionEvaluatorParameter, Void,  EvaluateException>, IClearable {
@@ -43,8 +44,8 @@ public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressio
     private static long HALF_LONG_MIN_VALUE = Long.MIN_VALUE / 2;
     private static long HALF_LONG_MAX_VALUE = Long.MAX_VALUE / 2;
 
-    private final MutableLargeInteger largeInteger;
-    private final MutableDecimal decimal;
+    private final IHeapMutableLargeInteger largeInteger;
+    private final IHeapMutableDecimal decimal;
 
     private DBType dbType;
     private long integer;
@@ -58,14 +59,14 @@ public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressio
 
     SQLExpressionEvaluator() {
 
-        this.largeInteger = MutableLargeInteger.newInstance();
-        this.decimal = new MutableDecimal();
+        this.largeInteger = IHeapMutableLargeInteger.create();
+        this.decimal = IHeapMutableDecimal.ofPrecision(DBConstants.MAX_DECIMAL_PRECISION);
     }
 
     public void setValue(ByteBuffer byteBuffer, int byteBufferOffset, JDBCType jdbcType, int referredNumBytes) {
 
         Objects.requireNonNull(byteBuffer);
-        Checks.isOffset(byteBufferOffset);
+        Checks.isIntOffset(byteBufferOffset);
         Objects.requireNonNull(jdbcType);
         Checks.isAboveZero(referredNumBytes);
 
@@ -1120,7 +1121,7 @@ public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressio
 
             final IListGetters<Operator> operators = expression.getOperators();
 
-            final long numOperators = operators.getNumElements();
+            final int numOperators = IOnlyElementsView.intNumElementsRenamed(operators.getNumElements());
 
             if (numExpressions - 1 != numOperators) {
 
@@ -1129,7 +1130,7 @@ public final class SQLExpressionEvaluator extends ExpressionAdapter<SQLExpressio
 
             this.parameter = parameter;
             this.operators = operators.toImmutableIndexList();
-            this.numOperators = Integers.checkUnsignedLongToUnsignedInt(numOperators);
+            this.numOperators = numOperators;
 
             expressions.forEachWithIndexAndParameter(this, (e, i, p) -> {
 

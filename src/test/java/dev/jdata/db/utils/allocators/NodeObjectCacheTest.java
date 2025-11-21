@@ -1,21 +1,29 @@
 package dev.jdata.db.utils.allocators;
 
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
 public final class NodeObjectCacheTest extends BaseAllocatorTest<NodeObjectCacheTest.TestObject, NodeObjectCache<NodeObjectCacheTest.TestObject>> {
 
     static final class TestObject extends ObjectCacheNode {
 
+        TestObject() {
+            super(AllocationType.HEAP);
+        }
     }
 
     @Test
     @Category(UnitTest.class)
     public void testConstructorArguments() {
 
-        assertThatThrownBy(() -> new NodeObjectCache<>(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> new NodeObjectCache<>((Supplier<TestObject>)null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> new NodeObjectCache<>((Function<AllocationType, TestObject>)null)).isInstanceOf(NullPointerException.class);
     }
 
     @Override

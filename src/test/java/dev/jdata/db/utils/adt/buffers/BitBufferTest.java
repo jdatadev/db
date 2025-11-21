@@ -5,6 +5,7 @@ import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.test.unit.BaseTest;
 import dev.jdata.db.utils.adt.CapacityExponents;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.math.Sign;
 import dev.jdata.db.utils.scalars.Integers;
@@ -15,7 +16,7 @@ public final class BitBufferTest extends BaseTest {
     @Category(UnitTest.class)
     public void testBitBufferAddUnsignedLongToCapacityExponent3() {
 
-        final BitBuffer buffer = new BitBuffer(3);
+        final BitBuffer buffer = createBitBuffer(3);
 
         buffer.addUnsignedLong(123L);
         assertThat(buffer.getBitOffset()).isEqualTo(8L * 8L);
@@ -33,7 +34,7 @@ public final class BitBufferTest extends BaseTest {
 
         final int innerBytesCapacityExponent = 20;
 
-        final BitBuffer buffer = new BitBuffer(innerBytesCapacityExponent);
+        final BitBuffer buffer = createBitBuffer(innerBytesCapacityExponent);
 
         final int innerBytesCapacity = CapacityExponents.computeIntCapacityFromExponent(innerBytesCapacityExponent);
 
@@ -69,7 +70,7 @@ public final class BitBufferTest extends BaseTest {
 
     private void checkBitBufferAddAndGetScalars(int capacityExponent, int numValues, Sign sign) {
 
-        final BitBuffer buffer = new BitBuffer(capacityExponent);
+        final BitBuffer buffer = createBitBuffer(capacityExponent);
 
         long bitOffset = 0L;
 
@@ -158,7 +159,7 @@ public final class BitBufferTest extends BaseTest {
 
     private void checkBitBufferAddBytesAndGetScalars(int capacityExponent, int numValues) {
 
-        final BitBuffer buffer = new BitBuffer(capacityExponent);
+        final BitBuffer buffer = createBitBuffer(capacityExponent);
 
         long bitOffset = 0L;
 
@@ -183,5 +184,10 @@ public final class BitBufferTest extends BaseTest {
 
             bitOffset += 10L * 8L;
         }
+    }
+
+    private static BitBuffer createBitBuffer(int innerBytesCapacityExponent) {
+
+        return new BitBuffer(AllocationType.HEAP, innerBytesCapacityExponent);
     }
 }

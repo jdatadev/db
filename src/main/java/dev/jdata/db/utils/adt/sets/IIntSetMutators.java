@@ -1,8 +1,6 @@
 package dev.jdata.db.utils.adt.sets;
 
-import dev.jdata.db.utils.adt.elements.IIntElementsMutators;
-
-public interface IIntSetMutators extends IIntElementsMutators, ISetMutators {
+interface IIntSetMutators extends ISetMutatorsMarker {
 
     boolean addToSet(int value);
 }

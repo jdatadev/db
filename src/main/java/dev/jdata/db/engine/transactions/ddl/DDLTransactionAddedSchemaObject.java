@@ -7,6 +7,10 @@ abstract class DDLTransactionAddedSchemaObject<T extends SchemaObject> extends D
 
     private T schemaObject;
 
+    DDLTransactionAddedSchemaObject(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     final void initialize(T schemaObject) {
 
         this.schemaObject = Initializable.checkNotYetInitialized(this.schemaObject, schemaObject);

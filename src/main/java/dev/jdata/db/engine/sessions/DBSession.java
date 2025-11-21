@@ -130,8 +130,8 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
 
     private int currentTransaction;
 
-    DBSession() {
-        super(SessionState.CREATED, DEBUG);
+    DBSession(AllocationType allocationType) {
+        super(allocationType, SessionState.CREATED, DEBUG);
 
         this.preparedStatements = new PreparedStatements();
     }

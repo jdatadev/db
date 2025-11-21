@@ -30,9 +30,9 @@ class LargeOneDimensionalArrayCapacityAlgorithm {
         Checks.isArrayLimit(limit);
         Checks.isArrayLimit(newLimit);
         Checks.isGreaterThan(newLimit, limit);
-        Checks.isLengthAboveOrAtZero(numOuterAllocatedInnerArrays);
-        Checks.isLengthAboveOrAtZero(numOuterUtilizedEntries);
-        Checks.isCapacityAboveZero(innerElementCapacity);
+        Checks.isIntLengthAboveOrAtZero(numOuterAllocatedInnerArrays);
+        Checks.isIntLengthAboveOrAtZero(numOuterUtilizedEntries);
+        Checks.isIntOrLongInnerElementCapacity(innerElementCapacity);
         Objects.requireNonNull(arrayCapacityOperations);
         Checks.areEqual(numOuterUtilizedEntries, limit != 0L ? ((limit - 1) / innerElementCapacity) + 1 : 0);
 
@@ -150,8 +150,8 @@ class LargeOneDimensionalArrayCapacityAlgorithm {
 
     private static int computeNumOuter(long numAdditional, long innerElementCapacity) {
 
-        Checks.isLengthAboveZero(numAdditional);
-        Checks.isLengthAboveZero(innerElementCapacity);
+        Checks.isIntOrLongLengthAboveZero(numAdditional);
+        Checks.isIntOrLongInnerElementCapacity(innerElementCapacity);
 
         if (DEBUG) {
 

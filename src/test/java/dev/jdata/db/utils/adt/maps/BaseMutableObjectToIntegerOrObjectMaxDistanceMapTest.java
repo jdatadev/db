@@ -1,14 +1,15 @@
 package dev.jdata.db.utils.adt.maps;
 
-import dev.jdata.db.utils.adt.IClearable;
-import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.marker.IAnyOrderAddable;
 
-abstract class BaseMutableObjectToIntegerOrObjectMaxDistanceMapTest<K, V, M extends IObjectContainsKeyMap<K> & IClearable & IObjectKeyDynamicMapRemovalMutators<K>>
+abstract class BaseMutableObjectToIntegerOrObjectMaxDistanceMapTest<
 
-            extends BaseMutableObjectToIntegerOrObjectMapTest<K, V[], M> {
+                KEY,
+                VALUES_ARRAY,
+                VALUES_ADDABLE extends IAnyOrderAddable,
+                MAP extends IMutableObjectKeyMap<KEY> & IObjectContainsKeyMapView<KEY> & IObjectKeyDynamicMapRemovalMutators<KEY>>
 
-    abstract K integerToKey(int key);
-    abstract int keyToInteger(K key);
+            extends BaseMutableObjectToIntegerOrObjectMapTest<KEY, VALUES_ARRAY, VALUES_ADDABLE, MAP> {
 
     @Override
     final boolean supportsContainsKey() {
@@ -23,28 +24,14 @@ abstract class BaseMutableObjectToIntegerOrObjectMaxDistanceMapTest<K, V, M exte
     }
 
     @Override
-    final boolean remove(M map, int key) {
+    final boolean remove(MAP map, int key) {
 
         return map.remove(integerToKey(key));
     }
 
     @Override
-    final boolean containsKey(M map, int key) {
+    final boolean containsKey(MAP map, int key) {
 
         return map.containsKey(integerToKey(key));
-    }
-
-    @Override
-    final int getKey(K[] keys, int index) {
-
-        return keyToInteger(keys[index]);
-    }
-
-    @Override
-    final int[] getKeys(M map) {
-
-        final K[] keys = map.keys();
-
-        return Array.mapToInt(keys, this, (e, i) -> i.keyToInteger(e));
     }
 }

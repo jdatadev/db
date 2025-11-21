@@ -30,7 +30,12 @@ public class PathIOUtil {
 
         final List<Path> result = new ArrayList<>();
 
-        listPaths(directoryPath, result, predicate, predicate != null ? (path, delegatePredicate) -> delegatePredicate.test(path) : null, (p, l) -> l.add(p));
+        listPaths(directoryPath, result, predicate, predicate != null ? (path, delegatePredicate) -> delegatePredicate.test(path) : null, (p, l) -> {
+
+            l.add(p);
+
+            return null;
+        });
 
         return result;
     }
@@ -70,9 +75,11 @@ public class PathIOUtil {
 
             while (iterator.hasNext()) {
 
-                if (predicate == null || predicate.test(iterator.next(), delegate)) {
+                final Path nextPath = iterator.next();
 
-                    result = pathVisitor.visit(iterator.next(), parameter);
+                if (predicate == null || predicate.test(nextPath, delegate)) {
+
+                    result = pathVisitor.visit(nextPath, parameter);
 
                     if (result != null) {
 

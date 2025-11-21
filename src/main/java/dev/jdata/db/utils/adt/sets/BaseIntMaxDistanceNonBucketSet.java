@@ -8,22 +8,22 @@ import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance.MaxDistanceIntSetOperations;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet implements IIntSetCommon {
+abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet implements IBaseIntSetCommon {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_MAX_DISTANCE_NON_BUCKET_SET;
 
     private byte[] maxDistances;
 
-    BaseIntMaxDistanceNonBucketSet(int initialCapacityExponent, float loadFactor) {
-        super(initialCapacityExponent, loadFactor);
+    BaseIntMaxDistanceNonBucketSet(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor);
     }
 
-    BaseIntMaxDistanceNonBucketSet(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
+    BaseIntMaxDistanceNonBucketSet(AllocationType allocationType, int[] values) {
+        super(allocationType, values);
     }
 
-    BaseIntMaxDistanceNonBucketSet(BaseIntMaxDistanceNonBucketSet toCopy) {
-        super(toCopy);
+    BaseIntMaxDistanceNonBucketSet(AllocationType allocationType, BaseIntMaxDistanceNonBucketSet toCopy) {
+        super(allocationType, toCopy);
     }
 
     @Override
@@ -111,7 +111,7 @@ abstract class BaseIntMaxDistanceNonBucketSet extends BaseIntNonBucketSet implem
         @Override
         public long getCapacity(BaseIntMaxDistanceNonBucketSet hashed) {
 
-            return hashed.getCapacity();
+            return hashed.getHashedCapacity();
         }
     };
 

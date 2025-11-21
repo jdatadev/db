@@ -2,10 +2,10 @@ package dev.jdata.db.dml;
 
 import java.util.Objects;
 
-import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class StorageRows<T> implements IElements {
+public abstract class StorageRows<T> implements IOnlyElementsView {
 
     private T rows;
     private int numRows;
@@ -13,7 +13,7 @@ public abstract class StorageRows<T> implements IElements {
     protected void initialize(T rows, int numRows) {
 
         this.rows = Objects.requireNonNull(rows);
-        this.numRows = Checks.isNumElements(numRows);
+        this.numRows = Checks.isIntNumElements(numRows);
     }
 
     @Override

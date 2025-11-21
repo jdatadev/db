@@ -2,37 +2,37 @@ package dev.jdata.db.schema.allocators;
 
 import java.util.Objects;
 
-import dev.jdata.db.schema.allocators.common.heap.HeapSchemaObjectIndexListAllocators;
 import dev.jdata.db.schema.allocators.databases.heap.HeapDatabasesSchemaManagerAllocator;
-import dev.jdata.db.schema.allocators.model.diff.dropped.heap.HeapDroppedSchemaObjectsAllocator;
-import dev.jdata.db.schema.allocators.schemas.DatabaseSchemasAllocator;
-import dev.jdata.db.schema.allocators.schemas.heap.HeapDatabaseSchemasAllocator;
-import dev.jdata.db.utils.adt.sets.MutableIntBucketSet;
-import dev.jdata.db.utils.adt.sets.MutableIntMaxDistanceNonBucketSet;
+import dev.jdata.db.schema.common.HeapSchemaObjectIndexListAllocators;
+import dev.jdata.db.schema.model.diff.dropped.HeapDroppedSchemaObjectsAllocator;
+import dev.jdata.db.schema.model.schemas.DatabaseSchemasAllocator;
+import dev.jdata.db.schema.model.schemas.HeapDatabaseSchemasAllocator;
+import dev.jdata.db.utils.adt.maps.ICachedMutableIntToObjectWithRemoveStaticMapAllocator;
+import dev.jdata.db.utils.adt.maps.IMutableIntToObjectWithRemoveStaticMapAllocator;
+import dev.jdata.db.utils.adt.sets.IMutableIntSet;
+import dev.jdata.db.utils.adt.sets.IMutableIntSetAllocator;
 import dev.jdata.db.utils.allocators.IAllocators;
 import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer.RefType;
-import dev.jdata.db.utils.allocators.IMutableIntSetAllocator;
-import dev.jdata.db.utils.allocators.IntToObjectMapAllocator;
 
 /**
  * Root allocator for schema management.
  */
 public final class SchemaManagementAllocators implements IAllocators {
 
-    private final IntToObjectMapAllocator<MutableIntMaxDistanceNonBucketSet> intToObjectMapAllocator;
+    private final IMutableIntToObjectWithRemoveStaticMapAllocator<? extends IMutableIntSet, ?> mutableIntToObjectMapAllocator;
     private final HeapSchemaObjectIndexListAllocators<?> schemaObjectIndexListAllocators;
     private final HeapDroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator;
     private final DatabaseSchemasAllocator databaseSchemasAllocator;
     private final HeapDatabasesSchemaManagerAllocator schemaManagerAllocator;
 
-    public SchemaManagementAllocators(IMutableIntSetAllocator<MutableIntMaxDistanceNonBucketSet> intSetAllocator) {
+    public SchemaManagementAllocators(IMutableIntSetAllocator<?> intSetAllocator) {
 
         Objects.requireNonNull(intSetAllocator);
 
-        this.intToObjectMapAllocator = new IntToObjectMapAllocator<>(MutableIntMaxDistanceNonBucketSet[]::new);
+        this.mutableIntToObjectMapAllocator = ICachedMutableIntToObjectWithRemoveStaticMapAllocator.create(IMutableIntSet[]::new);
 
         this.schemaObjectIndexListAllocators = HeapSchemaObjectIndexListAllocators.INSTANCE;
-        this.droppedSchemaObjectsAllocator = new HeapDroppedSchemaObjectsAllocator(intSetAllocator, intToObjectMapAllocator);
+        this.droppedSchemaObjectsAllocator = new HeapDroppedSchemaObjectsAllocator(intSetAllocator, mutableIntToObjectMapAllocator);
         this.databaseSchemasAllocator = new HeapDatabaseSchemasAllocator(droppedSchemaObjectsAllocator);
         this.schemaManagerAllocator = new HeapDatabasesSchemaManagerAllocator(droppedSchemaObjectsAllocator, databaseSchemasAllocator);
     }
@@ -42,7 +42,7 @@ public final class SchemaManagementAllocators implements IAllocators {
 
         Objects.requireNonNull(statisticsGatherer);
 
-        statisticsGatherer.addInstanceAllocator("intToObjectMapAllocator", RefType.INSTANTIATED, MutableIntBucketSet.class, intToObjectMapAllocator);
+        statisticsGatherer.addInstanceAllocator("muableIntToObjectMapAllocator", RefType.INSTANTIATED, IMutableIntSet.class, mutableIntToObjectMapAllocator);
         statisticsGatherer.addAllocators("schemaObjectIndexListAllocators", RefType.INSTANTIATED, schemaObjectIndexListAllocators);
         statisticsGatherer.addAllocators("droppedSchemaObjectsAllocator", RefType.INSTANTIATED, droppedSchemaObjectsAllocator);
         statisticsGatherer.addAllocators("databaseSchemasAllocator", RefType.INSTANTIATED, databaseSchemasAllocator);

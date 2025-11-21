@@ -6,58 +6,74 @@ import org.jutils.io.strings.StringRef;
 import org.jutils.io.strings.StringResolver;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.adt.arrays.LargeCharArray;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
+import dev.jdata.db.utils.adt.arrays.IHeapMutableLongLargeArray;
+import dev.jdata.db.utils.adt.arrays.IHeapMutableStringsCharLargeArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
+import dev.jdata.db.utils.adt.arrays.IMutableStringsCharLargeArray;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
+import dev.jdata.db.utils.adt.lists.IBaseMutableLongSinglyLinkedMultiHeadNodeList;
 import dev.jdata.db.utils.adt.lists.ILongNodeSetter;
-import dev.jdata.db.utils.adt.lists.LargeLists;
-import dev.jdata.db.utils.adt.lists.LargeLongMultiHeadSinglyLinkedList;
-import dev.jdata.db.utils.adt.maps.BaseLargeArrayKeysMap;
+import dev.jdata.db.utils.adt.lists.IMutableLongLargeSinglyLinkedMultiHeadNodeList;
+import dev.jdata.db.utils.adt.lists.LargeNodeLists;
 import dev.jdata.db.utils.adt.maps.IForEachKeyAndValueWithKeysAndValues;
+import dev.jdata.db.utils.adt.maps.InheritableLargeArrayKeysMap;
 import dev.jdata.db.utils.adt.maps.Maps;
 import dev.jdata.db.utils.adt.maps.Maps.ILongAppendEachValue;
 import dev.jdata.db.utils.adt.maps.Maps.ILongForEachAppendCaller;
-import dev.jdata.db.utils.adt.strings.CharSequences;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.CharMapper;
 import dev.jdata.db.utils.function.CharPredicate;
-import dev.jdata.db.utils.scalars.Integers;
+import dev.jdata.db.utils.jdk.adt.strings.CharSequences;
 
-public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> implements IStringStorer, StringResolver {
+final class StringStorer extends InheritableLargeArrayKeysMap<IMutableLongLargeArray> implements IStringStorer {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_STRING_STORER;
 
-    private static final long NO_NODE = LargeLists.NO_LONG_NODE;
+    private static final long NO_NODE = LargeNodeLists.NO_LONG_NODE;
 
     private static final ILongNodeSetter<StringStorer> headSetter = (i, h) -> i.scratchHashArray.set(i.scratchHashArrayIndex, h);
     private static final ILongNodeSetter<StringStorer> tailSetter = (i, t) -> { };
 
-    private final LargeCharArray charArray;
+    private final IHeapMutableStringsCharLargeArray charArray;
     private final LargeCharArrayCharSequence scratchLargeCharArrayCharSequence;
 
-    private LargeLongMultiHeadSinglyLinkedList<StringStorer> buckets;
+    private IMutableLongLargeSinglyLinkedMultiHeadNodeList<StringStorer> buckets;
 
     private final CharacterBuffers scratchCharacterBuffers;
 
     private long scratchHashArrayIndex;
-    private LargeLongArray scratchHashArray;
+    private IMutableLongLargeArray scratchHashArray;
     private CharSequence scratchCharSequence;
     private int scratchOffset;
     private int scratchLength;
 
-    public StringStorer(int initialOuterCapacityExponent, int innerCapacityExponent) {
-        this(initialOuterCapacityExponent, innerCapacityExponent, DEFAULT_LOAD_FACTOR);
-    }
-
-    public StringStorer(int initialOuterCapacityExponent, int innerCapacityExponent, float loadFactor) {
-        super(initialOuterCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, innerCapacityExponent, loadFactor, (o, i) -> createHashArray(o, i), LargeLongArray::clear);
+    StringStorer(AllocationType allocationType, int initialOuterCapacityExponent, int innerCapacityExponent) {
+        this(allocationType, initialOuterCapacityExponent, innerCapacityExponent, DEFAULT_LOAD_FACTOR);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialOuterCapacityExponent", initialOuterCapacityExponent).add("innerCapacityExponent", innerCapacityExponent).add("loadFactor", loadFactor));
+            enter(b -> b.add("allocationType", allocationType).add("initialOuterCapacityExponent", initialOuterCapacityExponent)
+                    .add("innerCapacityExponent", innerCapacityExponent));
         }
 
-        this.charArray = new LargeCharArray(initialOuterCapacityExponent, innerCapacityExponent);
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    public StringStorer(AllocationType allocationType, int initialOuterCapacityExponent, int innerCapacityExponent, float loadFactor) {
+        super(allocationType, initialOuterCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, innerCapacityExponent, loadFactor, StringStorer::createHashArray,
+                IMutableLongLargeArray::clear);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("allocationType", allocationType).add("initialOuterCapacityExponent", initialOuterCapacityExponent)
+                    .add("innerCapacityExponent", innerCapacityExponent).add("loadFactor", loadFactor));
+        }
+
+        this.charArray = IHeapMutableStringsCharLargeArray.create(initialOuterCapacityExponent, innerCapacityExponent);
         this.scratchLargeCharArrayCharSequence = new LargeCharArrayCharSequence();
         this.scratchCharacterBuffers = new CharacterBuffers();
 
@@ -107,7 +123,7 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
 
             final long hashArrayIndex = HashFunctions.longHashArrayIndex(hash, getKeyMask());
 
-            final LargeLongArray bucketHeadNodesHashArray = getHashed();
+            final IMutableLongLargeArray bucketHeadNodesHashArray = getHashed();
 
             if (hashArrayIndex >= bucketHeadNodesHashArray.getLimit()) {
 
@@ -144,7 +160,7 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
             enter(b -> b.add("stringRef", stringRef).add("predicate", predicate));
         }
 
-        final boolean result = charArray.containsOnly(stringRef, predicate);
+        final boolean result = charArray.containsOnlyCharacters(stringRef, predicate);
 
         if (DEBUG) {
 
@@ -166,7 +182,7 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
 
         this.scratchCharSequence = charSequence = scratchLargeCharArrayCharSequence;
 
-        final int length = Integers.checkUnsignedLongToUnsignedInt(charArray.getStringLength(stringRef));
+        final int length = IOnlyElementsView.intNumElementsRenamed(charArray.getStringLength(stringRef));
 
         charSequence.initialize(charArray, stringRef, length, (c, p) -> Character.toLowerCase(c));
 
@@ -194,7 +210,7 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
 
         this.scratchCharSequence = scratchLargeCharArrayCharSequence;
 
-        final int length = Integers.checkUnsignedLongToUnsignedInt(charArray.getStringLength(stringRef));
+        final int length = IOnlyElementsView.intNumElementsRenamed(charArray.getStringLength(stringRef));
 
         scratchLargeCharArrayCharSequence.initialize(charArray, stringRef, length, (c, p) -> Character.toLowerCase(c));
 
@@ -230,7 +246,7 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
     public long getOrAddStringRef(CharacterBuffer[] characterBuffers, int numCharacterBuffers) {
 
         Checks.isNotEmpty(characterBuffers);
-        Checks.isLengthAboveZero(numCharacterBuffers);
+        Checks.isIntNumElements(numCharacterBuffers);
 
         if (DEBUG) {
 
@@ -376,7 +392,7 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
 
     @Override
     public <P, R, E extends Exception> R makeString(long stringRef, P parameter, ICharactersBufferAllocator charactersBufferAllocator,
-            CharactersToString<P, R, E> charactersToString) throws E {
+            ICharactersToString<P, R, E> charactersToString) throws E {
 
         StringRef.checkIsString(stringRef);
         Objects.requireNonNull(charactersBufferAllocator);
@@ -400,12 +416,12 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
 
     private static final class LargeCharArrayCharSequence implements CharSequence {
 
-        private LargeCharArray charArray;
+        private IMutableStringsCharLargeArray charArray;
         private long charArrayOffset;
         private int length;
         private CharMapper<Void> charMapper;
 
-        void initialize(LargeCharArray charArray, long charArrayOffset, int length, CharMapper<Void> charMapper) {
+        void initialize(IMutableStringsCharLargeArray charArray, long charArrayOffset, int length, CharMapper<Void> charMapper) {
 
             Objects.requireNonNull(charArray);
             Checks.checkFromIndexSize(charArrayOffset, length, charArray.getLimit());
@@ -440,7 +456,7 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
     }
 
     @Override
-    protected LargeLongArray rehash(LargeLongArray bucketHeadNodesHashArray, long newCapacity, int newCapacityExponent, long newKeyMask) {
+    protected IMutableLongLargeArray rehash(IMutableLongLargeArray bucketHeadNodesHashArray, long newCapacity, int newCapacityExponent, long newKeyMask) {
 
         if (DEBUG) {
 
@@ -451,9 +467,9 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
         final int innerCapacityExponent = getInnerCapacityExponent();
 
         final int newOuterCapacityExponent = computeOuterCapacityExponent(newCapacityExponent, innerCapacityExponent);
-        final LargeLongArray newBucketHeadNodesHashArray = createHashArray(newOuterCapacityExponent, innerCapacityExponent);
+        final IMutableLongLargeArray newBucketHeadNodesHashArray = createHashArray(newOuterCapacityExponent, innerCapacityExponent);
 
-        final LargeLongMultiHeadSinglyLinkedList<StringStorer> newBuckets = createBuckets(newOuterCapacityExponent, innerCapacityExponent);
+        final IMutableLongLargeSinglyLinkedMultiHeadNodeList<StringStorer> newBuckets = createBuckets(newOuterCapacityExponent, innerCapacityExponent);
 
         clearHashArray(newBucketHeadNodesHashArray);
 
@@ -461,7 +477,7 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
 
         this.scratchCharSequence = scratchLargeCharArrayCharSequence;
 
-        final LargeLongMultiHeadSinglyLinkedList<StringStorer> existingBuckets = buckets;
+        final IBaseMutableLongSinglyLinkedMultiHeadNodeList<StringStorer> existingBuckets = buckets;
 
         final long noNode = NO_NODE;
 
@@ -471,7 +487,7 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
 
                 final long charArrayIndex = existingBuckets.getValue(node);
 
-                final int length = Integers.checkUnsignedLongToUnsignedInt(charArray.getStringLength(charArrayIndex));
+                final int length = IOnlyElementsView.intNumElementsRenamed(charArray.getStringLength(charArrayIndex));
 
                 scratchLargeCharArrayCharSequence.initialize(charArray, charArrayIndex, length, null);
 
@@ -494,8 +510,8 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
         return newBucketHeadNodesHashArray;
     }
 
-    private long getOrAdd(LargeLongArray bucketHeadNodesHashArray, LargeLongMultiHeadSinglyLinkedList<StringStorer> bucketsToAddTo, CharSequence charSequence, int offset,
-            int length) {
+    private long getOrAdd(IMutableLongLargeArray bucketHeadNodesHashArray, IBaseMutableLongSinglyLinkedMultiHeadNodeList<StringStorer> bucketsToAddTo,
+            CharSequence charSequence, int offset, int length) {
 
         if (DEBUG) {
 
@@ -538,7 +554,7 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
                 this.scratchLength = length;
 
                 charArrayIndex = bucketHeadNode != NO_NODE
-                        ? bucketsToAddTo.findValue(noValue, bucketHeadNode, this,
+                        ? bucketsToAddTo.findAtMostOneValue(noValue, bucketHeadNode, this,
                                 (v, i) -> i.charArray.matches(v, i.scratchCharSequence, i.scratchOffset, i.scratchLength, false))
                         : noValue;
             }
@@ -571,8 +587,8 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
         return result;
     }
 
-    private long addNotAlreadyAdded(LargeLongArray bucketHeadNodesHashArray, long hash, long keyMask, LargeLongMultiHeadSinglyLinkedList<StringStorer> buckets,
-            CharSequence charSequence, int offset, int length) {
+    private long addNotAlreadyAdded(IMutableLongLargeArray bucketHeadNodesHashArray, long hash, long keyMask,
+            IBaseMutableLongSinglyLinkedMultiHeadNodeList<StringStorer> buckets, CharSequence charSequence, int offset, int length) {
 
         if (DEBUG) {
 
@@ -595,8 +611,8 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
         return result;
     }
 
-    private void addNotAlreadyAddedToHash(LargeLongArray bucketHeadNodesHashArray, long hash, long keyMask, LargeLongMultiHeadSinglyLinkedList<StringStorer> buckets,
-            long stringRef) {
+    private void addNotAlreadyAddedToHash(IMutableLongLargeArray bucketHeadNodesHashArray, long hash, long keyMask,
+            IBaseMutableLongSinglyLinkedMultiHeadNodeList<StringStorer> buckets, long stringRef) {
 
         if (DEBUG) {
 
@@ -628,7 +644,7 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
     @FunctionalInterface
     public interface IForEachKeyAndValue<P> {
 
-        void each(long stringRef, LargeCharArray largeCharArray, P parameter);
+        void each(long stringRef, IMutableStringsCharLargeArray largeCharArray, P parameter);
     }
 
     private <P> void forEachKeyAndValue(P parameter, IForEachKeyAndValue<P> forEach) {
@@ -646,17 +662,18 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
         }
     }
 
-    private <P1, P2> void forEachKeyAndValue(P1 parameter1, P2 parameter2, IForEachKeyAndValueWithKeysAndValues<LargeLongArray, LargeCharArray, P1, P2> forEach) {
+    private <P1, P2> void forEachKeyAndValue(P1 parameter1, P2 parameter2, IForEachKeyAndValueWithKeysAndValues<IMutableLongLargeArray,
+            IMutableStringsCharLargeArray, P1, P2> forEach) {
 
         if (DEBUG) {
 
             enter(b -> b.add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
         }
 
-        final LargeLongArray bucketHeadNodesHashArray = getHashed();
+        final IMutableLongLargeArray bucketHeadNodesHashArray = getHashed();
         final long hashArrayLimit = bucketHeadNodesHashArray.getLimit();
 
-        final LargeCharArray chars = charArray;
+        final IMutableStringsCharLargeArray chars = charArray;
 
         final long noNode = NO_NODE;
 
@@ -679,20 +696,20 @@ public final class StringStorer extends BaseLargeArrayKeysMap<LargeLongArray> im
     @Override
     public final String toString() {
 
-        final ILongForEachAppendCaller<LargeCharArray, StringStorer> forEachAppendCaller
+        final ILongForEachAppendCaller<IMutableStringsCharLargeArray, StringStorer> forEachAppendCaller
                 = (b, i, f) -> i.forEachKeyAndValue(f, (stringRef, charArray, forEach) -> forEach.each(stringRef, charArray, b, i));
 
-        final ILongAppendEachValue<LargeCharArray, StringStorer> appendEachValue = (r, a, b, p) -> a.asString(r, b);
+        final ILongAppendEachValue<IMutableStringsCharLargeArray, StringStorer> appendEachValue = (r, a, b, p) -> a.asString(r, b);
 
         return Maps.longAppendToString(getClass().getSimpleName(), getNumElements(), this, forEachAppendCaller, appendEachValue);
     }
 
-    private static LargeLongArray createHashArray(int outerCapacity, int innerCapacityExponent) {
+    private static IMutableLongLargeArray createHashArray(int outerCapacity, int innerCapacityExponent) {
 
-        return new LargeLongArray(outerCapacity, innerCapacityExponent, NO_NODE);
+        return IHeapMutableLongLargeArray.create(outerCapacity, innerCapacityExponent, NO_NODE);
     }
 
-    private static void clearHashArray(LargeLongArray keys) {
+    private static void clearHashArray(IMutableLongLargeArray keys) {
 
     }
 }

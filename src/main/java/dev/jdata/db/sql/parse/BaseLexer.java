@@ -14,8 +14,8 @@ abstract class BaseLexer<TOKEN extends Enum<TOKEN> & IToken, E extends Exception
 
     private Lexer<TOKEN, E, INPUT> lexer;
 
-    BaseLexer() {
-
+    BaseLexer(AllocationType allocationType) {
+        super(allocationType);
     }
 
     final void initialize(Lexer<TOKEN, E, INPUT> lexer) {

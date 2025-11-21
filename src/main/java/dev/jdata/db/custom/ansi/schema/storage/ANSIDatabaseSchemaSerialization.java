@@ -10,20 +10,20 @@ import dev.jdata.db.schema.model.schemamaps.IAllCompleteSchemaMaps;
 import dev.jdata.db.schema.storage.BaseDatabaseSchemaSerialization;
 import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
+import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.IIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
 
 public abstract class ANSIDatabaseSchemaSerialization<
 
-                INDEX_LIST extends IndexList<BaseSQLStatement>,
-                INDEX_LIST_BUILDER extends IndexListBuilder<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER>,
-                INDEX_LIST_ALLOCATOR extends IndexListAllocator<BaseSQLStatement, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
+                INDEX_LIST extends IIndexList<BaseSQLStatement>,
+                INDEX_LIST_BUILDER extends IIndexListBuilder<BaseSQLStatement, INDEX_LIST, ?>,
+                INDEX_LIST_ALLOCATOR extends IIndexListAllocator<BaseSQLStatement, INDEX_LIST, ?, INDEX_LIST_BUILDER>,
                 COMPLETE_SCHEMA_MAPS extends IAllCompleteSchemaMaps>
 
         extends BaseDatabaseSchemaSerialization<INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, COMPLETE_SCHEMA_MAPS> {
 
-    protected ANSIDatabaseSchemaSerialization(ISQLAllocator sqlAllocator, IDDLSchemaSQLStatementsWorkerObjects<COMPLETE_SCHEMA_MAPS, ?> ddlSchemaSQLStatementsWorkerObjects,
+    protected ANSIDatabaseSchemaSerialization(ISQLAllocator sqlAllocator, IDDLSchemaSQLStatementsWorkerObjects<COMPLETE_SCHEMA_MAPS, ?, ?> ddlSchemaSQLStatementsWorkerObjects,
             DDLSchemaScratchObjects ddlSchemaScratchObjects, Function<IntFunction<BaseSQLStatement[]>, INDEX_LIST_ALLOCATOR> createIndexListAllocator) {
         super(ANSISQLParserFactory.INSTANCE, sqlAllocator, ddlSchemaSQLStatementsWorkerObjects, ddlSchemaScratchObjects, createIndexListAllocator);
     }

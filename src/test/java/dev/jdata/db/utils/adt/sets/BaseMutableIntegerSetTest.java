@@ -7,11 +7,12 @@ import java.util.function.ObjIntConsumer;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-abstract class BaseMutableIntegerSetTest<T extends IMutableSet> extends BaseIntegerSetTest<T> {
+abstract class BaseMutableIntegerSetTest<T extends IMutableSetType> extends BaseIntegerSetTest<T> {
 
     abstract T createSet(int initialCapacityExponent);
 
-    abstract void add(T set, int value);
+    abstract void addInAnyOrder(T set, int value);
+    abstract void addUnordered(T set, int value);
     abstract boolean addToSet(T set, int value);
 
     abstract boolean remove(T set, int value);
@@ -20,7 +21,7 @@ abstract class BaseMutableIntegerSetTest<T extends IMutableSet> extends BaseInte
     @Category(UnitTest.class)
     public final void testForEach() {
 
-        checkForEach(this::add);
+        checkForEach(this::addUnordered);
         checkForEach((s, e) -> assertThat(addToSet(s, e)).isTrue());
     }
 
@@ -76,9 +77,9 @@ abstract class BaseMutableIntegerSetTest<T extends IMutableSet> extends BaseInte
     @Category(UnitTest.class)
     public final void testAddAndContainsWithOverwrite() {
 
-        checkAddToSetAndContainsWithOverwrite(this::add, this::add);
-        checkAddToSetAndContainsWithOverwrite((s, e) -> assertThat(addToSet(s, e)).isTrue(), this::add);
-        checkAddToSetAndContainsWithOverwrite(this::add, (s, e) -> assertThat(addToSet(s, e)).isFalse());
+        checkAddToSetAndContainsWithOverwrite(this::addUnordered, this::addUnordered);
+        checkAddToSetAndContainsWithOverwrite((s, e) -> assertThat(addToSet(s, e)).isTrue(), this::addUnordered);
+        checkAddToSetAndContainsWithOverwrite(this::addUnordered, (s, e) -> assertThat(addToSet(s, e)).isFalse());
         checkAddToSetAndContainsWithOverwrite((s, e) -> assertThat(addToSet(s, e)).isTrue(), (s, e) -> assertThat(addToSet(s, e)).isFalse());
     }
 
@@ -129,7 +130,7 @@ abstract class BaseMutableIntegerSetTest<T extends IMutableSet> extends BaseInte
     @Category(UnitTest.class)
     public final void testAddContainsAndRemoveNewSet() {
 
-        checkAddContainsAndRemoveNewSet(this::add);
+        checkAddContainsAndRemoveNewSet(this::addUnordered);
         checkAddContainsAndRemoveNewSet(this::addToSet);
     }
 
@@ -183,7 +184,7 @@ abstract class BaseMutableIntegerSetTest<T extends IMutableSet> extends BaseInte
     @Category(UnitTest.class)
     public final void testAddAndContainsWithClear() {
 
-        checkAddAndContainsWithClear(this::add);
+        checkAddAndContainsWithClear(this::addUnordered);
         checkAddAndContainsWithClear(this::addToSet);
     }
 
@@ -223,7 +224,7 @@ abstract class BaseMutableIntegerSetTest<T extends IMutableSet> extends BaseInte
     @Category(UnitTest.class)
     public final void testIsEmpty() {
 
-        checkIsEmpty(this::add);
+        checkIsEmpty(this::addUnordered);
         checkIsEmpty(this::addToSet);
     }
 
@@ -242,7 +243,7 @@ abstract class BaseMutableIntegerSetTest<T extends IMutableSet> extends BaseInte
     @Category(UnitTest.class)
     public final void testGetNumElements() {
 
-        checkGetNumElements(this::add);
+        checkGetNumElements(this::addUnordered);
         checkGetNumElements(this::addToSet);
     }
 
@@ -264,7 +265,7 @@ abstract class BaseMutableIntegerSetTest<T extends IMutableSet> extends BaseInte
     @Category(UnitTest.class)
     public final void testClear() {
 
-        checkClear(this::add);
+        checkClear(this::addUnordered);
         checkClear(this::addToSet);
     }
 

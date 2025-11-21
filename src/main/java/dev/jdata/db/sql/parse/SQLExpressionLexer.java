@@ -14,6 +14,10 @@ public final class SQLExpressionLexer<E extends Exception, INPUT extends CharInp
     private StringResolver stringResolver;
     private SQLScratchExpressionValues scratchExpressionValues;
 
+    public SQLExpressionLexer(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     public void initialize(INPUT input, Function<String, E> createEOFException, ISQLAllocator allocator, StringResolver stringResolver,
             SQLScratchExpressionValues scratchExpressionValues) {
 

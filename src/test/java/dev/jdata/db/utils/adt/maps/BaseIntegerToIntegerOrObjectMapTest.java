@@ -3,38 +3,62 @@ package dev.jdata.db.utils.adt.maps;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.IntFunction;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.adt.hashed.BaseHashedTest;
+import dev.jdata.db.utils.adt.marker.IAnyOrderAddable;
+import dev.jdata.db.utils.adt.sets.IHeapMutableIntSet;
+import dev.jdata.db.utils.adt.sets.IHeapMutableLongSet;
+import dev.jdata.db.utils.adt.sets.IHeapMutableSet;
+import dev.jdata.db.utils.adt.sets.IMutableIntSet;
+import dev.jdata.db.utils.adt.sets.IMutableLongSet;
+import dev.jdata.db.utils.adt.sets.IMutableSet;
+import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & IClearable> extends BaseHashedTest {
+abstract class BaseIntegerToIntegerOrObjectMapTest<
+
+                KEYS_ARRAY,
+                VALUES_ARRAY,
+                KEYS_ADDABLE extends IAnyOrderAddable,
+                VALUES_ADDABLE extends IAnyOrderAddable,
+                MAP extends IMutableBaseMap<?>>
+
+        extends BaseHashedTest {
 
     static int value(int key) {
 
         return key + 1000;
     }
 
-    abstract M createMap(int[] keys, int[] values);
+    abstract MAP createMap(int[] keys, int[] values);
 
     abstract boolean supportsContainsKey();
 
-    abstract K createKeysArray(int length);
-    abstract V createValuesArray(int length);
+    abstract KEYS_ARRAY createKeysArray(int length);
+    abstract VALUES_ARRAY createValuesArray(int length);
 
-    abstract int getKey(K keys, int index);
-    abstract int getValue(V values, int index);
+    abstract KEYS_ADDABLE createKeysAddable(int initialCapacity);
+    abstract VALUES_ADDABLE createValuesAddable(int initialCapacity);
 
-    abstract boolean containsKey(M map, int key);
-    abstract int get(M map, int key);
-    abstract int getWithDefaultValue(M map, int key, int defaultValue);
-    abstract int[] getKeys(M map);
-    abstract <P> void forEachKeyAndValueWithNullFunction(M map, P parameter);
-    abstract <P> void forEachKeyAndValue(M map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters);
-    abstract void keysAndValues(M map, K keysDst, V valuesDst);
+    abstract KEYS_ARRAY keysToArray(KEYS_ADDABLE keysAddable);
+    abstract VALUES_ARRAY valuesToArray(VALUES_ADDABLE valuesAddable);
+
+    abstract int getKey(KEYS_ARRAY keys, int index);
+    abstract int getValue(VALUES_ARRAY values, int index);
+
+    abstract boolean containsKey(MAP map, int key);
+    abstract int get(MAP map, int key);
+    abstract int getWithDefaultValue(MAP map, int key, int defaultValue);
+    abstract void getKeys(MAP map, KEYS_ADDABLE keysAddable);
+    abstract <P> void forEachKeyAndValueWithNullFunction(MAP map, P parameter);
+    abstract <P> void forEachKeyAndValue(MAP map, P parameter, List<Integer> keysDst, List<Integer> valuesDst, List<P> parameters);
+    abstract void keysAndValues(MAP map, KEYS_ADDABLE keysAddable, VALUES_ADDABLE valuesAddable);
 
     @Test
     @Category(UnitTest.class)
@@ -45,7 +69,7 @@ abstract class BaseIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & 
             final int key = 123;
             final int value = 234;
 
-            final M map = createMap(new int[] { key }, new int[] { value });
+            final MAP map = createMap(new int[] { key }, new int[] { value });
 
             assertThat(map).hasNumElements(1L);
 
@@ -63,7 +87,7 @@ abstract class BaseIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & 
         final int key = 123;
         final int value = 234;
 
-        final M map = createMap(new int[] { key }, new int[] { value });
+        final MAP map = createMap(new int[] { key }, new int[] { value });
 
         assertThat(map).hasNumElements(1L);
 
@@ -82,7 +106,7 @@ abstract class BaseIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & 
             final int key = 123;
             final int value = 234;
 
-            final M map = createMap(new int[] { key }, new int[] { value });
+            final MAP map = createMap(new int[] { key }, new int[] { value });
 
             assertThat(map).hasNumElements(1L);
 
@@ -100,7 +124,7 @@ abstract class BaseIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & 
         final int[] keys = new int[] { 123, 234, 345 };
         final int[] values = Array.closureOrConstantMapInt(keys, e -> value(e));
 
-        final M map = createMap(keys, values);
+        final MAP map = createMap(keys, values);
 
         assertThat(getKeys(map)).containsExactlyInAnyOrder(123, 234, 345);
     }
@@ -115,7 +139,7 @@ abstract class BaseIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & 
 
     private void checkForEachKeysAndValues(boolean passParameter) {
 
-        final M map = createMap(new int[] { 123, 345, 567 }, new int[] { 234, 456, 678 });
+        final MAP map = createMap(new int[] { 123, 345, 567 }, new int[] { 234, 456, 678 });
 
         final int numElements = 3;
 
@@ -172,14 +196,14 @@ abstract class BaseIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & 
     @Category(UnitTest.class)
     public final void testKeysAndValues() {
 
-        final M map = createMap(new int[] { 123, 345, 567 }, new int[] { 234, 456, 678 });
+        final MAP map = createMap(new int[] { 123, 345, 567 }, new int[] { 234, 456, 678 });
 
         final int numElements = 3;
 
         assertThatThrownBy(() -> {
 
-            final K keysDst = createKeysArray(numElements + 1);
-            final V valuesDst = createValuesArray(numElements);
+            final KEYS_ARRAY keysDst = createKeysArray(numElements + 1);
+            final VALUES_ARRAY valuesDst = createValuesArray(numElements);
 
             keysAndValues(map, keysDst, valuesDst);
         })
@@ -187,15 +211,15 @@ abstract class BaseIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & 
 
         assertThatThrownBy(() -> {
 
-            final K keysDst = createKeysArray(numElements);
-            final V valuesDst = createValuesArray(numElements + 1);
+            final KEYS_ARRAY keysDst = createKeysArray(numElements);
+            final VALUES_ARRAY valuesDst = createValuesArray(numElements + 1);
 
             keysAndValues(map, keysDst, valuesDst);
         })
         .isInstanceOf(IllegalArgumentException.class);
 
-        final K keysDst = createKeysArray(numElements);
-        final V valuesDst = createValuesArray(numElements);
+        final KEYS_ARRAY keysDst = createKeysArray(numElements);
+        final VALUES_ARRAY valuesDst = createValuesArray(numElements);
 
         keysAndValues(map, keysDst, valuesDst);
 
@@ -232,10 +256,10 @@ abstract class BaseIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & 
     @Category(UnitTest.class)
     public final void testIsEmpty() {
 
-        final M emptyMap = createMapFromArrays(0);
+        final MAP emptyMap = createMapFromArrays(0);
         assertThat(emptyMap).isEmpty();
 
-        final M nonEmptyMap = createMapFromArrays(1);
+        final MAP nonEmptyMap = createMapFromArrays(1);
         assertThat(nonEmptyMap).isNotEmpty();
     }
 
@@ -243,13 +267,13 @@ abstract class BaseIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & 
     @Category(UnitTest.class)
     public final void testGetNumElements() {
 
-        final M zeroLengthMap = createMapFromArrays(0);
+        final MAP zeroLengthMap = createMapFromArrays(0);
 
         assertThat(zeroLengthMap).hasNumElements(0L);
 
         for (int numElements = 1; numElements < MAX_ELEMENTS; numElements *= 10) {
 
-            final M map = createMapFromArrays(numElements);
+            final MAP map = createMapFromArrays(numElements);
 
             assertThat(map).hasNumElements(numElements);
         }
@@ -260,7 +284,83 @@ abstract class BaseIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & 
         return supportsContainsKey();
     }
 
-    private M createMapFromArrays(int numElements) {
+    final IMutableIntSet createIntAddable(int initialCapacity) {
+
+        return IHeapMutableIntSet.create(initialCapacity);
+    }
+
+    final IMutableLongSet createLongAddable(int initialCapacity) {
+
+        Checks.isIntInitialCapacity(initialCapacity);
+
+        return IHeapMutableLongSet.create(initialCapacity);
+    }
+
+    final <T> IMutableSet<T> createObjectAddable(int initialCapacity, IntFunction<T[]> createHashed) {
+
+        Checks.isIntInitialCapacity(initialCapacity);
+        Objects.requireNonNull(createHashed);
+
+        return IHeapMutableSet.create(initialCapacity, createHashed);
+    }
+
+    final int[] toArray(IMutableIntSet intAddable) {
+
+        Objects.requireNonNull(intAddable);
+
+        return intAddable.toArray();
+    }
+
+    final long[] toArray(IMutableLongSet longAddable) {
+
+        Objects.requireNonNull(longAddable);
+
+        return longAddable.toArray();
+    }
+
+    final <T> T[] toArray(IMutableSet<T> objectAddable, IntFunction<T[]> createArray) {
+
+        Objects.requireNonNull(objectAddable);
+        Objects.requireNonNull(createArray);
+
+        return objectAddable.toArray(createArray);
+    }
+
+    final int[] getKeys(MAP map) {
+
+        final int numElements = IOnlyElementsView.intNumElements(map);
+
+        final KEYS_ADDABLE keysAddable = createKeysAddable(numElements);
+
+        getKeys(map, keysAddable);
+
+        final KEYS_ARRAY keysArray = keysToArray(keysAddable);
+
+        return keysToIntArray(keysArray, numElements);
+    }
+
+    private int[] keysToIntArray(KEYS_ARRAY keysArray, int numElements) {
+
+        return Array.mapToInt(keysArray, numElements, this, (a, i, t) -> t.getKey(a, i));
+    }
+
+    private void keysAndValues(MAP map, KEYS_ARRAY keysArrayDst, VALUES_ARRAY valuesArrayDst) {
+
+        final int numElements = IOnlyElementsView.intNumElements(map);
+
+        final KEYS_ADDABLE keysAddable = createKeysAddable(numElements);
+        final VALUES_ADDABLE valuesAddable = createValuesAddable(numElements);
+
+        keysAndValues(map, keysAddable, valuesAddable);
+
+        final KEYS_ARRAY keysArray = keysToArray(keysAddable);
+        final VALUES_ARRAY valuesArray = valuesToArray(valuesAddable);
+
+        System.arraycopy(keysArray, 0, keysArrayDst, 0, numElements);
+        System.arraycopy(valuesArray, 0, valuesArrayDst, 0, numElements);
+    }
+
+    private MAP createMapFromArrays(int numElements) {
 
         final int[] keys = new int[numElements];
         final int[] values = new int[numElements];

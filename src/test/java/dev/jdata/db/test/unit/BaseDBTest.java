@@ -13,23 +13,19 @@ import dev.jdata.db.custom.ansi.schema.storage.HeapANSIDatabaseSchemaSerializati
 import dev.jdata.db.ddl.allocators.DDLSchemaScratchObjects;
 import dev.jdata.db.ddl.helpers.SchemaObjectIdAllocators;
 import dev.jdata.db.ddl.helpers.buildschema.HeapDDLSchemaSQLStatementsWorkerObjects;
-import dev.jdata.db.engine.database.BucketsStringCache;
 import dev.jdata.db.engine.database.DatabaseStringManagement;
-import dev.jdata.db.engine.database.IStringCache;
+import dev.jdata.db.engine.database.IStringStorer;
 import dev.jdata.db.engine.database.StringManagement;
-import dev.jdata.db.engine.database.StringStorer;
+import dev.jdata.db.engine.database.strings.IStringCache;
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaManager;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.allocators.SchemaManagementAllocators;
-import dev.jdata.db.schema.model.databaseschema.CompleteDatabaseSchema;
+import dev.jdata.db.schema.model.databaseschema.IHeapGenericCompleteDatabaseSchema;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
-import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
-import dev.jdata.db.schema.model.schemamaps.HeapCompleteSchemaMapsBuilder;
-import dev.jdata.db.schema.model.schemamaps.ICompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMapsBuilder;
 import dev.jdata.db.schema.storage.sqloutputter.StringBuilderSQLOutputter;
 import dev.jdata.db.schema.storage.sqloutputter.TextSQLOutputter;
 import dev.jdata.db.schema.storage.sqloutputter.TextToByteOutputPrerequisites;
@@ -48,13 +44,14 @@ import dev.jdata.db.schema.types.TextObjectType;
 import dev.jdata.db.schema.types.TimeType;
 import dev.jdata.db.schema.types.TimestampType;
 import dev.jdata.db.schema.types.VarCharType;
+import dev.jdata.db.utils.adt.lists.IHeapIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.allocators.ByteArrayByteBufferAllocator;
-import dev.jdata.db.utils.allocators.CharBufferAllocator;
+import dev.jdata.db.utils.adt.sets.IHeapMutableIntSetAllocator;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
-import dev.jdata.db.utils.allocators.MutableIntMaxDistanceNonBucketSetAllocator;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.jdk.niobuffers.ByteArrayByteBufferAllocator;
+import dev.jdata.db.utils.jdk.niobuffers.CharBufferAllocator;
 
 public abstract class BaseDBTest extends BaseSQLTest {
 
@@ -65,9 +62,10 @@ public abstract class BaseDBTest extends BaseSQLTest {
 
     protected static final DatabaseSchemaVersion TEST_DATABASE_SCHEMA_VERSION = DatabaseSchemaVersion.of(DatabaseSchemaVersion.INITIAL_VERSION);
 
-    private static final String TEST_TABLE_NAME = "testtable";
+    protected static final String TEST_TABLE_NAME = "test_table";
+    protected static final String TEST_COLUMN_NAME = "test_column";
 
-    private static IIndexList<SchemaDataType> schemaDataTypes = IndexList.of(
+    private static IIndexList<SchemaDataType> schemaDataTypes = IHeapIndexList.of(
 
             BooleanType.INSTANCE,
             SmallIntType.INSTANCE,
@@ -84,7 +82,7 @@ public abstract class BaseDBTest extends BaseSQLTest {
             BlobType.INSTANCE,
             TextObjectType.INSTANCE);
 
-    protected static Table createTestTable(int tableId, StringStorer stringStorer) {
+    protected static Table createTestTable(int tableId, IStringStorer stringStorer) {
 
         Checks.isTableId(tableId);
         Objects.requireNonNull(stringStorer);
@@ -92,7 +90,7 @@ public abstract class BaseDBTest extends BaseSQLTest {
         return createTestTable(tableId, TEST_TABLE_NAME, stringStorer);
     }
 
-    protected static Table createTestTable(int tableId, String tableName, StringStorer stringStorer) {
+    protected static Table createTestTable(int tableId, String tableName, IStringStorer stringStorer) {
 
         Checks.isTableId(tableId);
         Checks.isTableName(tableName);
@@ -112,9 +110,9 @@ public abstract class BaseDBTest extends BaseSQLTest {
         return tableBuilder;
     }
 
-    protected static StringStorer createStringStorer() {
+    protected static IStringStorer createStringStorer() {
 
-        return new StringStorer(1, 0);
+        return IStringStorer.create(1, 0);
     }
 
     protected static DatabaseId getTestDatabaseId() {
@@ -122,14 +120,31 @@ public abstract class BaseDBTest extends BaseSQLTest {
         return TEST_DATABASE_ID;
     }
 
-    protected static IEffectiveDatabaseSchema createEffectiveDatabaseSchema(DatabaseId databaseId, StringStorer stringStorer,
+    private static final ToIntFunction<DDLObjectType> initialSchemaObjectIdAllocator = t -> DBConstants.INITIAL_SCHEMA_OBJECT_ID;
+
+    protected static IEffectiveDatabaseSchema createTestEffectiveDatabaseSchema(DatabaseId databaseId, IStringStorer stringStorer) {
+
+        return createTestEffectiveDatabaseSchema(databaseId, stringStorer, initialSchemaObjectIdAllocator);
+    }
+
+    protected static IEffectiveDatabaseSchema createTestEffectiveDatabaseSchema(DatabaseId databaseId, IStringStorer stringStorer,
+            ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
+
+        return createTestEffectiveDatabaseSchema(databaseId, TEST_TABLE_NAME, stringStorer, schemaObjectIdAllocator);
+    }
+
+    protected static IEffectiveDatabaseSchema createTestEffectiveDatabaseSchema(DatabaseId databaseId, String tableName, IStringStorer stringStorer) {
+
+        return createTestEffectiveDatabaseSchema(databaseId, tableName, stringStorer, initialSchemaObjectIdAllocator);
+    }
+
+    protected static IEffectiveDatabaseSchema createTestEffectiveDatabaseSchema(DatabaseId databaseId, String tableName, IStringStorer stringStorer,
             ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
 
         Objects.requireNonNull(databaseId);
+        Checks.isTableName(tableName);
         Objects.requireNonNull(stringStorer);
         Objects.requireNonNull(schemaObjectIdAllocator);
-
-        final String tableName = TEST_TABLE_NAME;
 
         return SchemaBuilder.create(databaseId, stringStorer, schemaObjectIdAllocator)
                 .addTable(tableName, b -> createTestTable(b))
@@ -150,14 +165,14 @@ public abstract class BaseDBTest extends BaseSQLTest {
         Objects.requireNonNull(parserStringResolver);
         Objects.requireNonNull(stringCache);
 
-        final StringManagement stringManagement = new StringManagement();
+        final StringManagement stringManagement = new StringManagement(AllocationType.HEAP);
 
         stringManagement.initialize(databaseStringManagement, parserStringResolver, stringCache);
 
         return stringManagement;
     }
 
-    protected static DatabaseStringManagement createDatabaseStringManagement(StringStorer stringStorer) {
+    protected static DatabaseStringManagement createDatabaseStringManagement(IStringStorer stringStorer) {
 
         Objects.requireNonNull(stringStorer);
 
@@ -168,7 +183,7 @@ public abstract class BaseDBTest extends BaseSQLTest {
 
     protected static IStringCache createStringCache() {
 
-        return new BucketsStringCache(0, 3);
+        return IStringCache.create(0, 3);
     }
 
     protected static DatabaseSchemaManager createDatabaseSchemaManager(DatabaseId databaseId) {
@@ -177,11 +192,11 @@ public abstract class BaseDBTest extends BaseSQLTest {
 
         final DatabaseSchemaVersion schemaVersion = DatabaseSchemaVersion.of(DatabaseSchemaVersion.INITIAL_VERSION);
 
-        final MutableIntMaxDistanceNonBucketSetAllocator intSetAllocator = new MutableIntMaxDistanceNonBucketSetAllocator();
+        final IHeapMutableIntSetAllocator intSetAllocator = IHeapMutableIntSetAllocator.create();
 
         final SchemaManagementAllocators schemaManagementAllocators = new SchemaManagementAllocators(intSetAllocator);
 
-        final CompleteDatabaseSchema databaseSchema = CompleteDatabaseSchema.empty(databaseId, schemaVersion);
+        final IHeapGenericCompleteDatabaseSchema databaseSchema = IHeapGenericCompleteDatabaseSchema.empty(databaseId, schemaVersion);
 
         return DatabaseSchemaManager.of(databaseId, databaseSchema, schemaManagementAllocators.getSchemaManagerAllocator());
     }
@@ -238,9 +253,9 @@ public abstract class BaseDBTest extends BaseSQLTest {
         return new TextToByteOutputPrerequisites(charsetEncoder, charBufferAllocator, byteBufferAllocator);
     }
 
-    protected static ICompleteSchemaMapsBuilder<SchemaObject, ?, HeapAllCompleteSchemaMaps> createCompleteSchemaMapsBuilder() {
+    protected static IHeapAllCompleteSchemaMapsBuilder createCompleteSchemaMapsBuilder() {
 
-        return new HeapCompleteSchemaMapsBuilder();
+        return IHeapAllCompleteSchemaMapsBuilder.create();
     }
 
     protected static HeapDDLSchemaSQLStatementsWorkerObjects createDDLSchemaSQLStatementsWorkerObjects() {

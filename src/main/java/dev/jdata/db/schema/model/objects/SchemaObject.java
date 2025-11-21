@@ -1,6 +1,8 @@
 package dev.jdata.db.schema.model.objects;
 
-public abstract class SchemaObject extends DBNamedIdentifiableObject {
+import dev.jdata.db.utils.adt.mutability.IImmutable;
+
+public abstract class SchemaObject extends DBNamedIdentifiableObject implements IImmutable {
 
     public abstract SchemaObject recreateWithNewShemaObjectId(int newSchemaObjectId);
     public abstract DDLObjectType getDDLObjectType();
@@ -16,5 +18,10 @@ public abstract class SchemaObject extends DBNamedIdentifiableObject {
 
     SchemaObject(SchemaObject toCopy, int newSchemaObjectId) {
         super(toCopy, newSchemaObjectId);
+    }
+
+    public final SchemaObject makeCopyOrImmutable() {
+
+        return this;
     }
 }

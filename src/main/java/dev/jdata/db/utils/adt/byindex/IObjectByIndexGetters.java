@@ -1,6 +1,8 @@
 package dev.jdata.db.utils.adt.byindex;
 
-public interface IObjectByIndexGetters<T> {
+interface IObjectByIndexGetters<T> extends IByIndexGettersMarker {
 
     T get(long index);
+
+    boolean containsInstance(T instance, long startIndex, long numElements);
 }

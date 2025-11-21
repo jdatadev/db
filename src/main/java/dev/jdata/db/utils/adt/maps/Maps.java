@@ -2,8 +2,8 @@ package dev.jdata.db.utils.adt.maps;
 
 import java.util.Objects;
 
+import dev.jdata.db.utils.adt.elements.IElementsView;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
 public class Maps {
 
@@ -264,6 +264,6 @@ public class Maps {
 
     private static StringBuilder createStringBuilder(long numElements) {
 
-        return new StringBuilder(Integers.checkUnsignedLongToUnsignedInt(numElements * 100));
+        return new StringBuilder(IElementsView.intNumElements(numElements * 100));
     }
 }

@@ -8,40 +8,43 @@ import java.util.function.IntFunction;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.CapacityExponents;
 import dev.jdata.db.utils.adt.hashed.helpers.IntBuckets;
-import dev.jdata.db.utils.adt.lists.BaseLargeSinglyLinkedList;
-import dev.jdata.db.utils.adt.lists.BaseValues;
-import dev.jdata.db.utils.adt.lists.LargeLists;
+import dev.jdata.db.utils.adt.lists.IIntegerNodeListValuesMarker;
+import dev.jdata.db.utils.adt.lists.IMultiHeadNodeListMutable;
+import dev.jdata.db.utils.adt.lists.ISinglyLinkedMultiHeadNodeListView;
+import dev.jdata.db.utils.adt.lists.LargeNodeLists;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.BiIntToObjectFunction;
 
 abstract class BaseIntegerKeyBucketMap<
+
                 KEYS,
                 LIST_T,
-                LIST extends BaseLargeSinglyLinkedList<MAP, LIST_T, LIST, VALUES>,
-                VALUES extends BaseValues<LIST_T, LIST, VALUES>,
+                LIST extends ISinglyLinkedMultiHeadNodeListView & IMultiHeadNodeListMutable<?>,
+                VALUES extends IIntegerNodeListValuesMarker,
                 MAP extends BaseIntegerKeyBucketMap<KEYS, LIST_T, LIST, VALUES, MAP>>
 
-        extends BaseIntCapacityExponentMap<KEYS> {
+        extends BaseIntCapacityExponentMap<KEYS, VALUES, MAP> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INTEGER_KEY_BUCKET_MAP;
 
-    static final long NO_LONG_NODE = LargeLists.NO_LONG_NODE;
+    static final long NO_LONG_NODE = LargeNodeLists.NO_LONG_NODE;
 
+    // remove?
     abstract LIST createBuckets(int outerInitialCapacity, int bucketsInnerCapacity);
 
     private LIST buckets;
 
-    BaseIntegerKeyBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent, IntFunction<KEYS> createHashed,
-            Consumer<KEYS> clearHashed, BiIntToObjectFunction<LIST> createBuckets) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createHashed, clearHashed);
+    BaseIntegerKeyBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent,
+            IntFunction<KEYS> createHashed, Consumer<KEYS> clearHashed, BiIntToObjectFunction<LIST> createBuckets) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createHashed, clearHashed);
 
         Checks.isIntCapacityExponent(bucketsInnerCapacityExponent);
         Objects.requireNonNull(createBuckets);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("bucketsInnerCapacityExponent", bucketsInnerCapacityExponent).add("clearHashed", clearHashed).add("createBuckets", createBuckets));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("bucketsInnerCapacityExponent", bucketsInnerCapacityExponent).add("clearHashed", clearHashed).add("createBuckets", createBuckets));
         }
 
         final int bucketsOuterCapacity = DEFAULT_BUCKETS_OUTER_INITIAL_CAPACITY;
@@ -58,12 +61,12 @@ abstract class BaseIntegerKeyBucketMap<
         }
     }
 
-    BaseIntegerKeyBucketMap(MAP toCopy, Function<KEYS, KEYS> copyHashed) {
-        super(toCopy, copyHashed);
+    BaseIntegerKeyBucketMap(AllocationType allocationType, MAP toCopy, Function<KEYS, KEYS> copyHashed) {
+        super(allocationType, toCopy, copyHashed);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy).add("copyHashed", copyHashed));
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy).add("copyHashed", copyHashed));
         }
 
         if (Boolean.TRUE) {
@@ -76,12 +79,12 @@ abstract class BaseIntegerKeyBucketMap<
             exit();
         }
     }
-
-    final int getBucketsInnerCapacity() {
+/*
+    private int getBucketsInnerCapacity() {
 
         return buckets.getInnerArrayCapacity();
     }
-
+*/
     final LIST getBuckets() {
         return buckets;
     }
@@ -97,4 +100,11 @@ abstract class BaseIntegerKeyBucketMap<
 
         buckets.clear();
     }
+
+    @SuppressWarnings("unchecked")
+    final LIST createBuckets() {
+
+        return (LIST)buckets.createEmptyWithCapacityExponentIncrease(getCapacityExponentIncrease());
+    }
+
 }

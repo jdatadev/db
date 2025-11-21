@@ -6,16 +6,16 @@ import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
 
-public final class MutableIntToObjectWithRemoveNonBucketMap<T> extends BaseIntToObjectWithRemoveNonBucketMap<T> implements IMutableIntToObjectStaticMap<T> {
+abstract class MutableIntToObjectWithRemoveNonBucketMap<V> extends BaseIntToObjectWithRemoveNonBucketMap<V> implements IMutableIntToObjectWithRemoveStaticMap<V> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_INT_TO_OBJECT_NON_BUCKET_MAP;
 
-    public MutableIntToObjectWithRemoveNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createValuesArray) {
-        super(initialCapacityExponent, createValuesArray);
+    MutableIntToObjectWithRemoveNonBucketMap(AllocationType allocationType, int initialCapacityExponent, IntFunction<V[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, createValuesArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
         }
 
         if (DEBUG) {
@@ -24,13 +24,14 @@ public final class MutableIntToObjectWithRemoveNonBucketMap<T> extends BaseIntTo
         }
     }
 
-    public MutableIntToObjectWithRemoveNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createValuesArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
+    MutableIntToObjectWithRemoveNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor,
+            IntFunction<V[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("createValuesArray", createValuesArray));
         }
 
         if (DEBUG) {
@@ -40,7 +41,29 @@ public final class MutableIntToObjectWithRemoveNonBucketMap<T> extends BaseIntTo
     }
 
     @Override
-    public T put(int key, T value, T defaultPreviousValue) {
+    public final long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
+    public final void clear() {
+
+        if (DEBUG) {
+
+            enter();
+        }
+
+        clearBaseIntToObjectNonBucketMap();
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public final V put(int key, V value, V defaultPreviousValue) {
 
         IntNonBucket.checkIsHashArrayElement(key);
 
@@ -49,7 +72,7 @@ public final class MutableIntToObjectWithRemoveNonBucketMap<T> extends BaseIntTo
             enter(b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
         }
 
-        final T result = putValue(key, value, defaultPreviousValue);
+        final V result = putValue(key, value, defaultPreviousValue);
 
         if (DEBUG) {
 
@@ -60,7 +83,7 @@ public final class MutableIntToObjectWithRemoveNonBucketMap<T> extends BaseIntTo
     }
 
     @Override
-    public T removeAndReturnPrevious(int key) {
+    public final V removeAndReturnPrevious(int key) {
 
         IntNonBucket.checkIsHashArrayElement(key);
 
@@ -69,13 +92,13 @@ public final class MutableIntToObjectWithRemoveNonBucketMap<T> extends BaseIntTo
             enter(b -> b.add("key", key));
         }
 
-        final T result;
+        final V result;
 
         final int indexToRemove = HashArray.removeAndReturnIndexScanEntire(getHashed(), key, getKeyMask());
 
         if (indexToRemove != NO_INDEX) {
 
-            final T[] values = getValues();
+            final V[] values = getValues();
 
             result = values[indexToRemove];
 
@@ -96,7 +119,7 @@ public final class MutableIntToObjectWithRemoveNonBucketMap<T> extends BaseIntTo
     }
 
     @Override
-    public void remove(int key) {
+    public final void remove(int key) {
 
         IntNonBucket.checkIsHashArrayElement(key);
 
@@ -120,22 +143,6 @@ public final class MutableIntToObjectWithRemoveNonBucketMap<T> extends BaseIntTo
         if (DEBUG) {
 
             exit(b -> b.add("key", key));
-        }
-    }
-
-    @Override
-    public void clear() {
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        clearBaseIntToObjectNonBucketMap();
-
-        if (DEBUG) {
-
-            exit();
         }
     }
 }

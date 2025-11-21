@@ -4,29 +4,33 @@ import java.util.Objects;
 
 import dev.jdata.db.utils.debug.PrintDebug;
 
-public abstract class BaseNumElements extends BaseElements implements PrintDebug {
+public abstract class BaseNumElements<T, U, V> extends BaseElements<T, U, V> implements IOnlyElementsView, PrintDebug {
 
     private static final boolean DEBUG = Boolean.FALSE;
 
     private long numElements;
 
-    protected BaseNumElements() {
+    protected BaseNumElements(AllocationType allocationType) {
+        super(allocationType);
 
         this.numElements = 0L;
     }
 
-    protected BaseNumElements(BaseNumElements toCopy) {
+    protected BaseNumElements(AllocationType allocationType, BaseNumElements<T, U, V> toCopy) {
+        super(allocationType);
 
         Objects.requireNonNull(toCopy);
 
         this.numElements = toCopy.numElements;
     }
 
+    @Override
     public final boolean isEmpty() {
 
         return numElements == 0;
     }
 
+    @Override
     public final long getNumElements() {
         return numElements;
     }
@@ -99,7 +103,7 @@ public abstract class BaseNumElements extends BaseElements implements PrintDebug
             result = false;
         }
         else {
-            final BaseNumElements other = (BaseNumElements)object;
+            final BaseNumElements<?, ?, ?> other = (BaseNumElements<?, ?, ?>)object;
 
             result = numElements == other.numElements;
         }

@@ -24,7 +24,7 @@ public class HashArray {
 
         Objects.requireNonNull(hashArray);
         IntNonBucket.checkIsHashArrayElement(key);
-        Checks.isLengthAboveZero(max);
+        Checks.isIntLengthAboveZero(max);
 
         if (DEBUG) {
 
@@ -47,8 +47,8 @@ public class HashArray {
 
         Objects.requireNonNull(hashArray);
         IntNonBucket.checkIsHashArrayElement(element);
-        Checks.isIndex(hashArrayIndex);
-        Checks.isLengthAboveOrAtZero(max);
+        Checks.isIntIndex(hashArrayIndex);
+        Checks.isIntLengthAboveOrAtZero(max);
 
         if (DEBUG) {
 
@@ -96,8 +96,8 @@ public class HashArray {
 
         Objects.requireNonNull(hashArray);
         Objects.requireNonNull(element);
-        Checks.isIndex(hashArrayIndex);
-        Checks.isLengthAboveOrAtZero(max);
+        Checks.isIntIndex(hashArrayIndex);
+        Checks.isIntLengthAboveOrAtZero(max);
 
         if (DEBUG) {
 
@@ -145,7 +145,7 @@ public class HashArray {
 
         Objects.requireNonNull(hashArray);
         LongNonBucket.checkIsHashArrayElement(key);
-        Checks.isLengthAboveZero(max);
+        Checks.isIntLengthAboveZero(max);
 
         if (DEBUG) {
 
@@ -168,8 +168,8 @@ public class HashArray {
 
         Objects.requireNonNull(hashArray);
         LongNonBucket.checkIsHashArrayElement(element);
-        Checks.isIndex(hashArrayIndex);
-        Checks.isLengthAboveOrAtZero(max);
+        Checks.isIntIndex(hashArrayIndex);
+        Checks.isIntLengthAboveOrAtZero(max);
 
         if (DEBUG) {
 
@@ -361,7 +361,7 @@ public class HashArray {
     public static long add(int[] hashArray, int value, int hashArrayIndex) {
 
         Checks.isNotEmpty(hashArray);
-        Checks.isIndex(hashArrayIndex);
+        Checks.isIntIndex(hashArrayIndex);
 
         if (DEBUG) {
 
@@ -446,7 +446,7 @@ public class HashArray {
             Assertions.areNotEqual(found, noIndex);
         }
 
-        final long result = IntPutResult.makePutResult(newAdded, found);
+        final long result = IntCapacityPutResult.makePutResult(newAdded, found);
 
         if (DEBUG) {
 
@@ -459,7 +459,7 @@ public class HashArray {
     public static long add(long[] hashArray, long value, int hashArrayIndex) {
 
         Checks.isNotEmpty(hashArray);
-        Checks.isIndex(hashArrayIndex);
+        Checks.isIntIndex(hashArrayIndex);
 
         if (DEBUG) {
 
@@ -544,7 +544,7 @@ public class HashArray {
             Assertions.areNotEqual(found, noIndex);
         }
 
-        final long result = IntPutResult.makePutResult(newAdded, found);
+        final long result = IntCapacityPutResult.makePutResult(newAdded, found);
 
         if (DEBUG) {
 
@@ -558,7 +558,7 @@ public class HashArray {
 
         Checks.isNotEmpty(hashArray);
         Objects.requireNonNull(value);
-        Checks.isIndex(hashArrayIndex);
+        Checks.isIntIndex(hashArrayIndex);
 
         if (DEBUG) {
 
@@ -566,7 +566,7 @@ public class HashArray {
         }
 
         @SuppressWarnings("unchecked")
-        final T noElement = (T)ObjectNonBucket.NO_KEY;
+        final T noElement = (T)ObjectNonBucket.NO_ELEMENT;
 
         final int hashArrayLength = hashArray.length;
 
@@ -644,7 +644,7 @@ public class HashArray {
             Assertions.areNotEqual(found, noIndex);
         }
 
-        final long result = IntPutResult.makePutResult(newAdded, found);
+        final long result = IntCapacityPutResult.makePutResult(newAdded, found);
 
         if (DEBUG) {
 

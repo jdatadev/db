@@ -2,16 +2,15 @@ package dev.jdata.db.utils.adt.maps;
 
 import java.util.List;
 
+import dev.jdata.db.utils.adt.sets.IMutableSet;
+
 abstract class BaseMutableObjectToObjectNonContainsKeyNonBucketMapTest<
 
                 K,
                 V,
-                M extends IMutableCommonMap<K, V, ?> & IObjectToObjectCommonMapMutators<K, V> & IObjectToObjectCommonMapGetters<K, V> & IObjectStaticMapGetters<K, V>>
+                M extends IMutableMap<K, V> & IObjectToObjectStoreMapMutators<K, V> & IObjectToObjectMapGetters<K, V> & IObjectToObjectBaseStaticMapGetters<K, V>>
 
-        extends BaseMutableIntegerToIntegerOrObjectMapTest<K[], V[], M> {
-
-    abstract int objectKeyToInt(K object);
-    abstract K intKeyToObject(int integer);
+        extends BaseMutableObjectToIntegerOrObjectMapTest<K, V[], IMutableSet<V>, M> {
 
     abstract int objectValueToInt(V object);
     abstract V intValueToObject(int integer);
@@ -45,22 +44,22 @@ abstract class BaseMutableObjectToObjectNonContainsKeyNonBucketMapTest<
 
         map.forEachKeyAndValue(parameter, (k, v, p) -> {
 
-            keysDst.add(objectKeyToInt(k));
+            keysDst.add(keyToInteger(k));
             valuesDst.add(objectValueToInt(v));
             parameters.add(p);
         });
     }
 
     @Override
-    final void keysAndValues(M map, K[] keysDst, V[] valuesDst) {
+    final void keysAndValues(M map, IMutableSet<K> keysAddable, IMutableSet<V> valuesAddable) {
 
-        map.keysAndValues(keysDst, valuesDst);
+        map.keysAndValues(keysAddable, valuesAddable);
     }
 
     @Override
     final int get(M map, int key) {
 
-        return objectValueToInt(map.get(intKeyToObject(key)));
+        return objectValueToInt(map.get(integerToKey(key)));
     }
 
     @Override
@@ -72,7 +71,7 @@ abstract class BaseMutableObjectToObjectNonContainsKeyNonBucketMapTest<
     @Override
     final int put(M map, int key, int value, int defaultPreviousValue) {
 
-        return objectValueToInt(map.put(intKeyToObject(key), intValueToObject(value), intValueToObject(defaultPreviousValue)));
+        return objectValueToInt(map.put(integerToKey(key), intValueToObject(value), intValueToObject(defaultPreviousValue)));
     }
 
     @Override

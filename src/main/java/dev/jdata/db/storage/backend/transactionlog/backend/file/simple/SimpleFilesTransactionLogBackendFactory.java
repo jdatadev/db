@@ -8,18 +8,28 @@ import dev.jdata.db.storage.backend.transactionlog.backend.file.BaseFileTransact
 import dev.jdata.db.storage.backend.transactionlog.backend.file.FileTransactionLogBackendConfiguration;
 import dev.jdata.db.storage.backend.transactionlog.backend.file.FileTransactionLogFile;
 import dev.jdata.db.storage.backend.transactionlog.backend.file.FileTransactionLogFiles;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CachedIndexListBuilder;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
+import dev.jdata.db.utils.adt.lists.ICachedIndexList;
+import dev.jdata.db.utils.adt.lists.ICachedIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.ICachedIndexListBuilder;
 import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IndexList;
 import dev.jdata.db.utils.file.access.AbsoluteDirectoryPath;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
-import dev.jdata.db.utils.scalars.Integers;
 
 public final class SimpleFilesTransactionLogBackendFactory
         extends BaseFileTransactionLogBackendFactory<FileTransactionLogBackendConfiguration, SimpleFilesTransactionLogBackend> {
+
+    private final ICachedIndexListAllocator<FileTransactionLogFile> logFileIndexListAllocator;
+    private final ICachedIndexListAllocator<RelativeFilePath> relativeFilePathIndexListAllocator;
+
+    public SimpleFilesTransactionLogBackendFactory(ICachedIndexListAllocator<FileTransactionLogFile> logFileIndexListAllocator,
+            ICachedIndexListAllocator<RelativeFilePath> relativeFilePathIndexListAllocator) {
+
+        this.logFileIndexListAllocator = Objects.requireNonNull(logFileIndexListAllocator);
+        this.relativeFilePathIndexListAllocator = Objects.requireNonNull(relativeFilePathIndexListAllocator);
+    }
 
     @Override
     public SimpleFilesTransactionLogBackend initialize(StorageTableSchemas storageTableSchemas, FileTransactionLogBackendConfiguration configuration) throws IOException {
@@ -27,45 +37,61 @@ public final class SimpleFilesTransactionLogBackendFactory
         Objects.requireNonNull(storageTableSchemas);
         Objects.requireNonNull(configuration);
 
+        final SimpleFilesTransactionLogBackend result;
+
         final AbsoluteDirectoryPath rootPath = configuration.getRootPath();
         final IRelativeFileSystemAccess fileSystemAccess = IRelativeFileSystemAccess.create(rootPath, configuration.getFileSystemAccess());
 
         final RelativeDirectoryPath relativeRootPath = RelativeDirectoryPath.ROOT;
 
-        final IIndexList<RelativeFilePath> transactionFilePaths;
+        ICachedIndexList<RelativeFilePath> transactionFilePaths = null;
 
-        final CacheIndexListAllocator<RelativeFilePath> indexListAllocator = null;
-
-        final CachedIndexListBuilder<RelativeFilePath> transactionFilePathsBuilder = IndexList.createBuilder(indexListAllocator);
+        final ICachedIndexListBuilder<RelativeFilePath> transactionFilePathsBuilder = relativeFilePathIndexListAllocator.createBuilder();
 
         try {
             fileSystemAccess.listFilePaths(relativeRootPath, transactionFilePathsBuilder, (p, b) -> b.addTail(p));
 
-            transactionFilePaths = transactionFilePathsBuilder.build();
+            transactionFilePaths = transactionFilePathsBuilder.buildOrEmpty();
+
+            ICachedIndexList<FileTransactionLogFile> fileTransactionLogFileList = null;
+
+            try {
+                fileTransactionLogFileList = readTransactionLogFiles(fileSystemAccess, transactionFilePaths, logFileIndexListAllocator);
+
+                final FileTransactionLogFiles fileTransactionLogFiles = new FileTransactionLogFiles(fileSystemAccess, relativeRootPath, fileTransactionLogFileList, null);
+
+                result = new SimpleFilesTransactionLogBackend(storageTableSchemas, fileTransactionLogFiles);
+            }
+            finally {
+
+                if (fileTransactionLogFileList != null) {
+
+                    logFileIndexListAllocator.freeImmutable(fileTransactionLogFileList);
+                }
+            }
         }
         finally {
 
-            indexListAllocator.freeIndexListBuilder(transactionFilePathsBuilder);
+            if (transactionFilePaths != null) {
+
+                relativeFilePathIndexListAllocator.freeImmutable(transactionFilePaths);
+            }
+
+            relativeFilePathIndexListAllocator.freeBuilder(transactionFilePathsBuilder);
         }
 
-        final IIndexList<FileTransactionLogFile> fileTransactionLogFileList = readTransactionLogFiles(fileSystemAccess, transactionFilePaths);
-
-        final FileTransactionLogFiles fileTransactionLogFiles = new FileTransactionLogFiles(fileSystemAccess, relativeRootPath, fileTransactionLogFileList, null);
-
-        return new SimpleFilesTransactionLogBackend(storageTableSchemas, fileTransactionLogFiles);
+        return result;
     }
 
-    private static IndexList<FileTransactionLogFile> readTransactionLogFiles(IRelativeFileSystemAccess fileSystemAccess, IIndexList<RelativeFilePath> transactionLogFilePaths)
-            throws IOException {
+    private static ICachedIndexList<FileTransactionLogFile> readTransactionLogFiles(IRelativeFileSystemAccess fileSystemAccess,
+            IIndexList<RelativeFilePath> transactionLogFilePaths, ICachedIndexListAllocator<FileTransactionLogFile> indexListAllocator) throws IOException {
 
         final long numElements = transactionLogFilePaths.getNumElements();
-        final int initialCapacity = Integers.checkUnsignedLongToUnsignedInt(numElements);
+        final int initialCapacity = IOnlyElementsView.intNumElements(transactionLogFilePaths);
 
-        final IndexList<FileTransactionLogFile> result;
+        final ICachedIndexList<FileTransactionLogFile> result;
 
-        final CacheIndexListAllocator<FileTransactionLogFile> indexListAllocator = null;
-
-        final CachedIndexListBuilder<FileTransactionLogFile> fileTransactionLogFileList = IndexList.createBuilder(initialCapacity, indexListAllocator);
+        final ICachedIndexListBuilder<FileTransactionLogFile> fileTransactionLogFileList = indexListAllocator.createBuilder(initialCapacity);
 
         try {
             for (long i = 0L; i < numElements; ++ i) {
@@ -77,11 +103,11 @@ public final class SimpleFilesTransactionLogBackendFactory
                 fileTransactionLogFileList.addTail(fileTransactionLogFile);
             }
 
-            result = fileTransactionLogFileList.build();
+            result = fileTransactionLogFileList.buildOrEmpty();
         }
         finally {
 
-            indexListAllocator.freeIndexListBuilder(fileTransactionLogFileList);
+            indexListAllocator.freeBuilder(fileTransactionLogFileList);
         }
 
         return result;

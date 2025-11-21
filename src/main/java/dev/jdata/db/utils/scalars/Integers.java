@@ -5,8 +5,25 @@ import java.util.Objects;
 import org.jutils.io.strings.StringParse;
 
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.jdk.adt.strings.StringBuilders;
 
 public class Integers {
+
+    public static void toHexUnsigned(int i, StringBuilder sb) {
+
+        Objects.requireNonNull(sb);
+
+        final long unsigned = Integer.toUnsignedLong(i);
+
+        StringBuilders.hexString(sb, unsigned, false, 16);
+    }
+
+    public static void toHexUnsigned(long l, StringBuilder sb) {
+
+        Objects.requireNonNull(sb);
+
+        StringBuilders.hexString(sb, l, false, 32);
+    }
 
     public static int parseUnsignedInt(String string) {
 
@@ -165,6 +182,18 @@ public class Integers {
         }
 
         return (int)value;
+    }
+
+    public static byte checkUnsignedLongToUnsignedByteAsByte(long value) {
+
+        Checks.isNotNegative(value);
+
+        if (value > 255) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return (byte)value;
     }
 
     public static short checkUnsignedLongToUnsignedShort(long value) {

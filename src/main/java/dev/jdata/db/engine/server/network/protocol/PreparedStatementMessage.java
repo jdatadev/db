@@ -6,6 +6,10 @@ abstract class PreparedStatementMessage extends ProtocolMessage {
 
     private int statementId;
 
+    PreparedStatementMessage(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     public int getStatementId() {
         return statementId;
     }

@@ -1,22 +1,25 @@
 package dev.jdata.db.utils.adt.maps;
 
+import java.util.Objects;
+
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.elements.IElementsView;
+import dev.jdata.db.utils.adt.elements.IIntAnyOrderAddable;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.helpers.IntBuckets;
-import dev.jdata.db.utils.adt.lists.BaseIntValues;
-import dev.jdata.db.utils.adt.lists.BaseLargeIntMultiHeadSinglyLinkedList;
+import dev.jdata.db.utils.adt.lists.IIntNodeListValuesMarker;
 import dev.jdata.db.utils.adt.lists.ILongNodeSetter;
+import dev.jdata.db.utils.adt.lists.IMutableIntSinglyLinkedMultiHeadNodeList;
 import dev.jdata.db.utils.function.BiIntToObjectFunction;
-import dev.jdata.db.utils.scalars.Integers;
 
 abstract class BaseIntKeyBucketMap<
-                LIST extends BaseLargeIntMultiHeadSinglyLinkedList<MAP, LIST, VALUES>,
-                VALUES extends BaseIntValues<LIST, VALUES>,
+                LIST extends IMutableIntSinglyLinkedMultiHeadNodeList<MAP>,
+                VALUES extends IIntNodeListValuesMarker,
                 MAP extends BaseIntKeyBucketMap<LIST, VALUES, MAP>>
 
         extends BaseIntegerKeyBucketMap<int[], int[], LIST, VALUES, MAP>
-        implements IIntKeyMap, IIntContainsKeyMap {
+        implements IIntKeyMapCommon, IIntContainsKeyMapGetters {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_BUCKET_MAP;
 
@@ -45,13 +48,15 @@ abstract class BaseIntKeyBucketMap<
 
     abstract void rehashPut(LIST oldBuckets, long oldNode, LIST newBuckets, long newNode);
 
-    BaseIntKeyBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent,
+    BaseIntKeyBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, int bucketsInnerCapacityExponent,
             BiIntToObjectFunction<LIST> createBuckets) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, bucketsInnerCapacityExponent, int[]::new, BaseIntKeyBucketMap::clearHashArray, createBuckets);
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, bucketsInnerCapacityExponent, int[]::new, BaseIntKeyBucketMap::clearHashArray,
+                createBuckets);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor));
         }
 
         if (DEBUG) {
@@ -85,18 +90,16 @@ abstract class BaseIntKeyBucketMap<
     }
 
     @Override
-    public final int[] keys() {
+    public final long keys(IIntAnyOrderAddable addable) {
+
+        Objects.requireNonNull(addable);
 
         if (DEBUG) {
 
-            enter();
+            enter(b -> b.add("addable", addable));
         }
 
-        final int numElements = Integers.checkUnsignedLongToUnsignedInt(getNumElements());
-
-        final int[] result = new int[numElements];
-
-        keys(result);
+        final long result = keysAndValues(addable, null, (srcIndex, kSrc, vSrc, dstIndex, kDst, vDst) -> kDst.addInAnyOrder(kSrc[srcIndex]));
 
         if (DEBUG) {
 
@@ -119,10 +122,12 @@ abstract class BaseIntKeyBucketMap<
         clearHashArray(newBucketHeadNodesHashArray);
 
         final LIST oldBuckets = getBuckets();
-
+/*
         final int newBucketsOuterCapacity = oldBuckets.getNumOuterAllocatedEntries();
 
         final LIST newBuckets = createBuckets(newBucketsOuterCapacity, getBucketsInnerCapacity());
+*/
+        final LIST newBuckets = createBuckets();
 
         setBuckets(newBuckets);
 
@@ -159,12 +164,7 @@ abstract class BaseIntKeyBucketMap<
         return newBucketHeadNodesHashArray;
     }
 
-    private void keys(int[] dst) {
-
-        keysAndValues(dst, null, null, null);
-    }
-
-    private <S, D> void keysAndValues(int[] keysDst, S src, D dst, IIntMapIndexValueSetter<S, D> valueSetter) {
+    private <S, D> void keysAndValues(int[] keysDst, S src, D dst, IIntCapacityMapIndexValueSetter<S, D> valueSetter) {
 
         if (DEBUG) {
 
@@ -219,7 +219,7 @@ abstract class BaseIntKeyBucketMap<
 
         final long noNode = NO_LONG_NODE;
 
-        final long result = bucketHeadNode != noNode ? getBuckets().findNodeWithValue(IntBuckets.nodeToInt(key), bucketHeadNode) : noNode;
+        final long result = bucketHeadNode != noNode ? getBuckets().findAtMostOneNode(IntBuckets.intToNode(key), bucketHeadNode) : noNode;
 
         if (DEBUG) {
 
@@ -330,7 +330,7 @@ abstract class BaseIntKeyBucketMap<
 
         final long result;
 
-        final long previousNode = buckets.findNodeWithValue(key, bucketHeadNode);
+        final long previousNode = buckets.findAtMostOneNode(key, bucketHeadNode);
 
         final long noNode = NO_LONG_NODE;
 
@@ -372,7 +372,7 @@ abstract class BaseIntKeyBucketMap<
     @Override
     public String toString() {
 
-        final StringBuilder sb = new StringBuilder(Integers.checkUnsignedLongToUnsignedInt(getNumElements() * 10));
+        final StringBuilder sb = new StringBuilder(IElementsView.intNumElements(getNumElements() * 10));
 
         sb.append(getClass().getSimpleName()).append(" [elements=");
 

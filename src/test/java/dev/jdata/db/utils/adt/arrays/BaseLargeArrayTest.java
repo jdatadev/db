@@ -5,7 +5,7 @@ import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.utils.adt.IClearable;
 
-abstract class BaseLargeArrayTest<O, I, T extends LargeExponentArray<O, I> & IOneDimensionalArrayCommon & IClearable> extends BaseArrayTest<T> {
+abstract class BaseLargeArrayTest<O, I, T extends ExponentLargeArray<O, I> & IOneDimensionalArrayCommon & IClearable> extends BaseArrayTest<T> {
 
     private static final int INITIAL_OUTER_CAPACITY = 0;
     private static final int INNER_CAPACITY_EXPONENT = 3;

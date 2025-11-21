@@ -2,29 +2,60 @@ package dev.jdata.db.utils.adt.sets;
 
 import dev.jdata.db.DebugConstants;
 
-public final class MutableLongBucketSet extends BaseLongBucketSet implements IMutableLongSet {
+abstract class MutableLongBucketSet extends BaseLongBucketSet implements IMutableLongSet {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_LONG_BUCKET_SET;
 
-    public static MutableLongBucketSet of(long ... values) {
+    MutableLongBucketSet(AllocationType allocationType) {
+        this(allocationType, DEFAULT_INITIAL_CAPACITY_EXPONENT);
 
-        return new MutableLongBucketSet(values);
+        if (DEBUG) {
+
+            enter(b -> b.add("allocationType", allocationType));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    public MutableLongBucketSet() {
-        this(DEFAULT_INITIAL_CAPACITY_EXPONENT);
+    MutableLongBucketSet(AllocationType allocationType, int initialCapacityExponent) {
+        this(allocationType, initialCapacityExponent, DEFAULT_LOAD_FACTOR);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    public MutableLongBucketSet(int initialCapacityExponent) {
-        this(initialCapacityExponent, DEFAULT_LOAD_FACTOR);
+    MutableLongBucketSet(AllocationType allocationType, int initialCapacityExponent, float loadFactor) {
+        super(allocationType, initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, loadFactor, DEFAULT_BUCKETS_INNER_CAPACITY_EXPONENT);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("loadFactor", loadFactor));
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
-    public MutableLongBucketSet(int initialCapacityExponent, float loadFactor) {
-        super(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, loadFactor, DEFAULT_BUCKETS_INNER_CAPACITY_EXPONENT);
+    private MutableLongBucketSet(AllocationType allocationType, long[] values) {
+        super(allocationType, values);
     }
 
-    private MutableLongBucketSet(long[] values) {
-        super(values);
+    @Override
+    public long getCapacity() {
+
+        return getHashedCapacity();
     }
 
     @Override
@@ -44,7 +75,7 @@ public final class MutableLongBucketSet extends BaseLongBucketSet implements IMu
     }
 
     @Override
-    public void add(long value) {
+    public void addUnordered(long value) {
 
         if (DEBUG) {
 

@@ -2,27 +2,48 @@ package dev.jdata.db.schema.model.schemamaps;
 
 import java.util.function.IntFunction;
 
-import dev.jdata.db.schema.model.SchemaMap;
-import dev.jdata.db.schema.model.SchemaMap.SchemaMapBuilder;
 import dev.jdata.db.schema.model.objects.SchemaObject;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
+import dev.jdata.db.schema.model.schemamap.ISchemaMap;
+import dev.jdata.db.schema.model.schemamap.ISchemaMapBuilder;
+import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.IIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
 
-public abstract class CompleteSchemaMapsBuilder<
+abstract class CompleteSchemaMapsBuilder<
 
-                INDEX_LIST extends IndexList<SchemaObject>,
-                INDEX_LIST_BUILDER extends IndexListBuilder<SchemaObject, INDEX_LIST, INDEX_LIST_BUILDER>,
-                INDEX_LIST_ALLOCATOR extends IndexListAllocator<SchemaObject, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
-                SCHEMA_MAP extends SchemaMap<SchemaObject, INDEX_LIST, SCHEMA_MAP>,
-                SCHEMA_MAP_BUILDER extends SchemaMapBuilder<SchemaObject, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER>,
-                COMPLETE_SCHEMA_MAPS extends IAllCompleteSchemaMaps,
-                HEAP_COMPLETE_SCHEMA_MAPS extends IHeapAllCompleteSchemaMaps>
+                SCHEMA_OBJECT extends SchemaObject,
+                INDEX_LIST extends IIndexList<SCHEMA_OBJECT>,
+                INDEX_LIST_BUILDER extends IIndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, ?>,
+                INDEX_LIST_ALLOCATOR extends IIndexListAllocator<SCHEMA_OBJECT, INDEX_LIST, ?, INDEX_LIST_BUILDER>,
+                SCHEMA_MAP extends ISchemaMap<SCHEMA_OBJECT>,
+                SCHEMA_MAP_BUILDER extends ISchemaMapBuilder<SCHEMA_OBJECT, SCHEMA_MAP, ?>,
+                COMPLETE_SCHEMA_MAPS extends ICompleteSchemaMaps,
+                HEAP_COMPLETE_SCHEMA_MAPS extends ICompleteSchemaMaps & IHeapSchemaMapsMarker,
+/*
+                SCHEMA_MAP_BUILDERS extends IImmutable,
+                HEAP_SCHEMA_MAP_BUILDERS extends IImmutable & IHeapTypeMarker,
+*/
+                COMPLETE_SCHEMA_MAPS_BUILDER extends ICompleteSchemaMapsBuilder<SCHEMA_OBJECT, COMPLETE_SCHEMA_MAPS, HEAP_COMPLETE_SCHEMA_MAPS, COMPLETE_SCHEMA_MAPS_BUILDER>>
 
-        extends SchemaMapsBuilder<INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER, COMPLETE_SCHEMA_MAPS, HEAP_COMPLETE_SCHEMA_MAPS>
-        implements ICompleteSchemaMapsBuilder<SchemaObject, COMPLETE_SCHEMA_MAPS, HEAP_COMPLETE_SCHEMA_MAPS> {
+        extends SchemaMapsBuilder<
 
-    protected CompleteSchemaMapsBuilder(IntFunction<SCHEMA_MAP_BUILDER[]> createSchemaMapBuildersArray) {
-        super(createSchemaMapBuildersArray);
+                        SCHEMA_OBJECT,
+                        INDEX_LIST,
+                        INDEX_LIST_BUILDER,
+                        INDEX_LIST_ALLOCATOR,
+                        SCHEMA_MAP,
+                        SCHEMA_MAP_BUILDER,
+                        COMPLETE_SCHEMA_MAPS,
+                        HEAP_COMPLETE_SCHEMA_MAPS,
+/*
+                        SCHEMA_MAP_BUILDERS,
+                        HEAP_SCHEMA_MAP_BUILDERS,
+*/
+                        COMPLETE_SCHEMA_MAPS_BUILDER>
+
+        implements ICompleteSchemaMapsBuilder<SCHEMA_OBJECT, COMPLETE_SCHEMA_MAPS, HEAP_COMPLETE_SCHEMA_MAPS, COMPLETE_SCHEMA_MAPS_BUILDER> {
+
+    protected CompleteSchemaMapsBuilder(AllocationType allocationType, IntFunction<SCHEMA_MAP_BUILDER[]> createSchemaMapBuildersArray) {
+        super(allocationType, createSchemaMapBuildersArray);
     }
 }

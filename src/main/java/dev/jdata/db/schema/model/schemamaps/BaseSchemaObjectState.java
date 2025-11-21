@@ -2,8 +2,8 @@ package dev.jdata.db.schema.model.schemamaps;
 
 import java.util.Objects;
 
-import dev.jdata.db.schema.model.SchemaMap;
 import dev.jdata.db.schema.model.objects.SchemaObject;
+import dev.jdata.db.schema.model.schemamap.SchemaMap;
 
 abstract class BaseSchemaObjectState {
 

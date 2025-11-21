@@ -2,14 +2,14 @@ package dev.jdata.db.schema.allocators.databases.cache;
 
 import java.util.Objects;
 
+import dev.jdata.db.review.CachedAllCompleteSchemaMaps;
+import dev.jdata.db.review.CachedAllSimpleCompleteSchemaBuilder;
+import dev.jdata.db.review.CachedCompleteSchemaMapsBuilderAllocator;
 import dev.jdata.db.schema.allocators.databases.DatabasesSchemaManagerAllocator;
-import dev.jdata.db.schema.allocators.model.diff.dropped.DroppedSchemaObjectsAllocator;
-import dev.jdata.db.schema.allocators.model.schemamaps.cache.CacheCompleteSchemaMapsBuilderAllocator;
-import dev.jdata.db.schema.allocators.schemas.IDatabaseSchemasAllocator;
-import dev.jdata.db.schema.model.cache.CachedSchemaMap;
+import dev.jdata.db.schema.model.diff.dropped.SchemaDroppedElementsAllocators;
 import dev.jdata.db.schema.model.objects.SchemaObject;
-import dev.jdata.db.schema.model.schemamaps.cache.CachedAllCompleteSchemaMaps;
-import dev.jdata.db.schema.model.schemamaps.cache.CachedAllSimpleCompleteSchemaBuilder;
+import dev.jdata.db.schema.model.schemamap.CachedSchemaMap;
+import dev.jdata.db.schema.model.schemas.IDatabaseSchemasAllocator;
 import dev.jdata.db.utils.allocators.IAllocators;
 import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer.RefType;
 
@@ -21,8 +21,8 @@ final class CacheDatabasesSchemaManagerAllocator
 
     private final SchemaMapBuildersCache schemaMapBuildersCache;
 
-    CacheDatabasesSchemaManagerAllocator(DroppedSchemaObjectsAllocator droppedSchemaObjectsAllocator, IDatabaseSchemasAllocator databaseSchemasAllocator,
-            CacheCompleteSchemaMapsBuilderAllocator completeSchemaMapsBuilderAllocator) {
+    CacheDatabasesSchemaManagerAllocator(SchemaDroppedElementsAllocators droppedSchemaObjectsAllocator, IDatabaseSchemasAllocator databaseSchemasAllocator,
+            CachedCompleteSchemaMapsBuilderAllocator completeSchemaMapsBuilderAllocator) {
         super(droppedSchemaObjectsAllocator, databaseSchemasAllocator, completeSchemaMapsBuilderAllocator);
 
         this.schemaMapBuildersCache = null; // new SchemaMapBuildersCache(completeSchemaMapsBuilderAllocator);

@@ -16,6 +16,10 @@ class DDLSchemaParameter extends ObjectCacheNode implements IResettable {
     private DDLSchemaScratchObjects ddlSchemaScratchObjects;
     private ToIntFunction<DDLObjectType> schemaObjectIdAllocator;
 
+    DDLSchemaParameter(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     final void initialize(StringManagement stringManagement, DDLSchemaScratchObjects ddlSchemaScratchObjects, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
 
         this.stringManagement = Initializable.checkNotYetInitialized(this.stringManagement, stringManagement);

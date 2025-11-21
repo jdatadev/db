@@ -1,14 +1,17 @@
 package dev.jdata.db.utils.adt.elements;
 
-public abstract class BaseElements {
+import java.util.Objects;
 
-    protected static int intIndex(long index) {
+public abstract class BaseElements<T, U, V> extends BaseADTElements<T, U, V> {
 
-        return IElements.intIndex(index);
+    protected static int intNumElements(IOnlyElementsView elements) {
+
+        Objects.requireNonNull(elements);
+
+        return IOnlyElementsView.intNumElements(elements);
     }
 
-    protected static int intNumElements(long numElements) {
-
-        return IElements.intNumElements(numElements);
+    protected BaseElements(AllocationType allocationType) {
+        super(allocationType);
     }
 }

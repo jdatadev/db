@@ -15,14 +15,14 @@ import dev.jdata.db.common.storagebits.BaseMaxNumStorageBitsAdapter;
 import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.common.storagebits.NumStorageBitsParameters;
 import dev.jdata.db.custom.ansi.sql.parser.ANSISQLParserFactory;
-import dev.jdata.db.engine.database.BucketsStringCache;
 import dev.jdata.db.engine.database.DatabaseParameters;
 import dev.jdata.db.engine.database.DatabaseStringManagement;
 import dev.jdata.db.engine.database.Databases;
 import dev.jdata.db.engine.database.DatabasesAllocators;
 import dev.jdata.db.engine.database.ExecuteException;
-import dev.jdata.db.engine.database.StringStorer;
+import dev.jdata.db.engine.database.IStringStorer;
 import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.ISelectResultWriter;
+import dev.jdata.db.engine.database.strings.IStringCache;
 import dev.jdata.db.engine.server.DatabaseServer;
 import dev.jdata.db.engine.server.SQLDatabaseServer;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
@@ -35,6 +35,7 @@ import dev.jdata.db.schema.types.SchemaCustomType;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.sql.parse.SQLParserFactory;
 import dev.jdata.db.test.unit.BaseDBTest;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.checks.Checks;
 
 public class SQLDatabaseServerTest extends BaseDBTest {
@@ -45,10 +46,10 @@ public class SQLDatabaseServerTest extends BaseDBTest {
 
         final SQLParserFactory parserFactory = ANSISQLParserFactory.INSTANCE;
 
-        final BucketsStringCache stringCache = new BucketsStringCache(0, 0);
+        final IStringCache stringCache = IStringCache.create(0, 0);
         final boolean cacheStatements = false;
 
-        final Databases databases = new Databases(stringCache, cacheStatements);
+        final Databases databases = new Databases(AllocationType.HEAP, stringCache, cacheStatements);
         final DatabaseServer databaseServer = new DatabaseServer(databases);
 
         final SQLDatabaseServer sqlDatabaseServer = new SQLDatabaseServer(databaseServer, parserFactory);
@@ -115,13 +116,13 @@ public class SQLDatabaseServerTest extends BaseDBTest {
         final INumStorageBitsGetter numStorageBitsGetter = makeNumStorageBitsGetter();
         final DatabasesAllocators databasesAllocators = new DatabasesAllocators(numStorageBitsGetter);
 
-        final StringStorer stringStorer = createStringStorer();
+        final IStringStorer stringStorer = createStringStorer();
 
         final DatabaseStringManagement databaseStringManagement = createDatabaseStringManagement(stringStorer);
 
         final LargeObjectStorer<IOException> largeObjectStorer = makeLargeObjectStorer();
 
-        final TransactionFactory transactionFactory = makeTransactionFactory();
+        final TransactionFactory transactionFactory = makeTransactionFactory(AllocationType.HEAP);
 
         parameters.initializeStatic(databasesAllocators, databaseStringManagement, largeObjectStorer, transactionFactory);
 
@@ -183,8 +184,8 @@ public class SQLDatabaseServerTest extends BaseDBTest {
         };
     }
 
-    private static TransactionFactory makeTransactionFactory() {
+    private static TransactionFactory makeTransactionFactory(AllocationType allocationType) {
 
-        return () -> new Transaction(new MVCCTransaction());
+        return () -> new Transaction(allocationType, new MVCCTransaction());
     }
 }

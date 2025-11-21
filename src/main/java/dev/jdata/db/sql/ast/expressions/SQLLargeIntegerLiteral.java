@@ -6,21 +6,33 @@ import org.jutils.ast.objects.ASTIterator;
 import org.jutils.ast.objects.ASTRecurseMode;
 import org.jutils.parse.context.Context;
 
-import dev.jdata.db.utils.adt.integers.ILargeInteger;
-import dev.jdata.db.utils.adt.integers.MutableLargeInteger;
+import dev.jdata.db.sql.ast.ISQLAllocator;
+import dev.jdata.db.sql.ast.ISQLFreeable;
+import dev.jdata.db.utils.adt.numbers.integers.ICachedMutableLargeInteger;
+import dev.jdata.db.utils.adt.numbers.integers.ILargeIntegerView;
 
-public final class SQLLargeIntegerLiteral extends SQLLiteral {
+public final class SQLLargeIntegerLiteral extends SQLLiteral implements ISQLFreeable {
 
-    private final MutableLargeInteger largeInteger;
+    private ICachedMutableLargeInteger largeInteger;
 
-    public SQLLargeIntegerLiteral(Context context, MutableLargeInteger largeInteger) {
+    public SQLLargeIntegerLiteral(Context context, ICachedMutableLargeInteger largeInteger) {
         super(context);
 
         this.largeInteger = Objects.requireNonNull(largeInteger);
     }
 
-    public ILargeInteger getLargeInteger() {
+    public ILargeIntegerView getLargeInteger() {
         return largeInteger;
+    }
+
+    @Override
+    public void free(ISQLAllocator allocator) {
+
+        Objects.requireNonNull(allocator);
+
+        allocator.freeLargeInteger(largeInteger);
+
+        this.largeInteger = null;
     }
 
     @Override

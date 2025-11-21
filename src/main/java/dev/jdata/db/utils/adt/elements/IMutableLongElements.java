@@ -1,5 +1,5 @@
 package dev.jdata.db.utils.adt.elements;
 
-public interface IMutableLongElements extends ILongElementsMutators, ILongElements, IMutableElements {
+public interface IMutableLongElements extends IMutableIntegerElements, ILongElementsCommon, IOnlyElementsMutable {
 
 }

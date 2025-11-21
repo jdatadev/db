@@ -12,7 +12,7 @@ public interface IAllocators extends IAllocator {
             INSTANTIATED
         }
 
-        <T> void addInstanceAllocator(String name, RefType refType, Class<?> objectType, IInstanceAllocator<T> instanceAllocator);
+        <T> void addInstanceAllocator(String name, RefType refType, Class<?> objectType, ITypedInstanceAllocator<T> instanceAllocator);
 
         void addAllocators(String name, RefType refType, IAllocators cache);
         void addAllocators(String name, RefType refType, Class<?> objectTye, IAllocators cache);

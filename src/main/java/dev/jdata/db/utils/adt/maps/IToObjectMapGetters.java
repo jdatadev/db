@@ -1,14 +1,6 @@
 package dev.jdata.db.utils.adt.maps;
 
-public interface IToObjectMapGetters<T, M extends IKeyMap<?> & IToObjectMapGetters<T, M>> extends IToValueMapGetters {
+interface IToObjectMapGetters<V> extends IToValueMapGettersMarker {
 
-    @FunctionalInterface
-    public interface IForEachValue<T, P> {
-
-        void each(T value, P parameter);
-    }
-
-    <P> void forEachValue(P parameter, IForEachValue<T, P> forEach);
-
-    <P1, P2> boolean equals(P1 thisParameter, M other, P2 otherParameter, IObjectValueMapEqualityTester<T, P1, P2> equalityTester);
+    <P, E extends Exception> void forEachValue(P parameter, IObjectForEachMapValue<V, P, E> forEach) throws E;
 }

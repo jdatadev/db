@@ -12,8 +12,8 @@ public abstract class BaseDescriptorable<T extends Enum<T> & State> extends Stat
 
     private int descriptor;
 
-    public BaseDescriptorable(T initialState, boolean debug) {
-        super(initialState, debug);
+    public BaseDescriptorable(AllocationType allocationType, T initialState, boolean debug) {
+        super(allocationType, initialState, debug);
 
         this.initialState = Objects.requireNonNull(initialState);
     }

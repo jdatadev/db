@@ -28,7 +28,7 @@ import dev.jdata.db.sql.ast.statements.table.SQLTableColumnDefinition;
 import dev.jdata.db.sql.parse.SQLExpressionLexer;
 import dev.jdata.db.sql.parse.SQLStatementParser;
 import dev.jdata.db.sql.parse.SQLToken;
-import dev.jdata.db.utils.adt.lists.LongIndexList;
+import dev.jdata.db.utils.adt.lists.IHeapLongIndexList;
 
 public class SQLAlterTableParser extends SQLStatementParser {
 
@@ -289,7 +289,7 @@ public class SQLAlterTableParser extends SQLStatementParser {
 
         final boolean hasParenthesis = lexer.lex(SQLToken.LPAREN);
 
-        final LongIndexList constraintNames = parseNames(lexer, lexer.getAllocator());
+        final IHeapLongIndexList constraintNames = parseNames(lexer, lexer.getAllocator());
 
         if (hasParenthesis) {
 
@@ -304,7 +304,7 @@ public class SQLAlterTableParser extends SQLStatementParser {
 
         final boolean hasParenthesis = lexer.lex(SQLToken.LPAREN);
 
-        final LongIndexList names;
+        final IHeapLongIndexList names;
 
         if (hasParenthesis) {
 
@@ -313,7 +313,7 @@ public class SQLAlterTableParser extends SQLStatementParser {
             lexer.lexExpect(SQLToken.RPAREN);
         }
         else {
-            names = LongIndexList.of(lexer.lexName(), lexer.getAllocator());
+            names = IHeapLongIndexList.of(lexer.lexName());
         }
 
         final SQLColumnNames dropColumnNames = new SQLColumnNames(makeContext(), names);

@@ -4,14 +4,15 @@ import java.util.Objects;
 
 import org.assertj.core.api.AbstractAssert;
 
+import dev.jdata.db.utils.classes.Classes;
+
 public abstract class BaseAssert<S extends BaseAssert<S, A>, A> extends AbstractAssert<S, A> {
 
-    @SuppressWarnings("unchecked")
     protected static <S extends BaseAssert<S, A>, A> Class<S> castAssertClass(Class<?> assertClass) {
 
         Objects.requireNonNull(assertClass);
 
-        return (Class<S>)assertClass;
+        return Classes.genericClass(assertClass);
     }
 
     BaseAssert(A actual, Class<S> assertClass) {

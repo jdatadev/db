@@ -11,16 +11,17 @@ import dev.jdata.db.dml.DMLUpdateRows;
 import dev.jdata.db.dml.DMLUpdateRows.UpdateRow;
 import dev.jdata.db.engine.database.SQLExpressionEvaluator;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
-import dev.jdata.db.utils.allocators.IArrayAllocator;
-import dev.jdata.db.utils.allocators.IByteArrayByteBufferAllocator;
+import dev.jdata.db.utils.adt.arrays.IArrayAllocator;
+import dev.jdata.db.utils.adt.arrays.ICachedMutableLongLargeArray;
+import dev.jdata.db.utils.adt.arrays.ICachedMutableLongLargeArrayAllocator;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.jdk.niobuffers.IByteArrayByteBufferAllocator;
 
 abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParameter {
 
     private final INumStorageBitsGetter numStorageBitsGetter;
     private final IByteArrayByteBufferAllocator byteArrayByteBufferAllocator;
-    private final ILargeLongArrayAllocator largeLongArrayAllocator;
+    private final ICachedMutableLongLargeArrayAllocator mutableLongLargeArrayAllocator;
 
     private final RowDataNumBits rowDataNumBits;
 
@@ -40,13 +41,13 @@ abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParamet
 
     abstract void evaluateParameterByIndex(int parameterIndex, SQLExpressionEvaluator dst);
 
-    BaseDMLUpdatingEvaluatorParameter(IArrayAllocator<SQLExpressionEvaluator> arrayAllocator, INumStorageBitsGetter numStorageBitsGetter,
-            IByteArrayByteBufferAllocator byteArrayByteBufferAllocator, ILargeLongArrayAllocator largeLongArrayAllocator) {
-        super(arrayAllocator);
+    BaseDMLUpdatingEvaluatorParameter(AllocationType allocationType, IArrayAllocator<SQLExpressionEvaluator> arrayAllocator, INumStorageBitsGetter numStorageBitsGetter,
+            IByteArrayByteBufferAllocator byteArrayByteBufferAllocator, ICachedMutableLongLargeArrayAllocator mutableLongLargeArrayAllocator) {
+        super(allocationType, arrayAllocator);
 
         this.numStorageBitsGetter = Objects.requireNonNull(numStorageBitsGetter);
         this.byteArrayByteBufferAllocator = Objects.requireNonNull(byteArrayByteBufferAllocator);
-        this.largeLongArrayAllocator = Objects.requireNonNull(largeLongArrayAllocator);
+        this.mutableLongLargeArrayAllocator = Objects.requireNonNull(mutableLongLargeArrayAllocator);
 
         this.rowDataNumBits = new RowDataNumBits(DBConstants.MAX_COLUMNS);
 
@@ -65,7 +66,7 @@ abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParamet
 
     final ByteBuffer allocateByteArrayByteBuffer(int minimumCapacity) {
 
-        Checks.isCapacity(minimumCapacity);
+        Checks.isIntMinimumCapacity(minimumCapacity);
 
         return byteArrayByteBufferAllocator.allocateByteArrayByteBuffer(minimumCapacity);
     }
@@ -77,18 +78,20 @@ abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParamet
         byteArrayByteBufferAllocator.freeByteBuffer(byteArrayByteBuffer);
     }
 
-    final LargeLongArray allocateLargeLongArray() {
+    final ICachedMutableLongLargeArray allocateLargeLongArray(long minimumCapacity) {
 
-        return largeLongArrayAllocator.allocateLargeLongArray();
+        Checks.isLongMinimumCapacity(minimumCapacity);
+
+        return mutableLongLargeArrayAllocator.createMutable(minimumCapacity);
     }
 
-    final void freeLargeLongArray(LargeLongArray largeLongArray) {
+    final void freeMutableLargeLongArray(ICachedMutableLongLargeArray mutableLongLargeArray) {
 
-        Objects.requireNonNull(largeLongArray);
+        Objects.requireNonNull(mutableLongLargeArray);
 
-        largeLongArray.clear();
+        mutableLongLargeArray.clear();
 
-        largeLongArrayAllocator.freeLargeLongArray(largeLongArray);
+        mutableLongLargeArrayAllocator.freeMutable(mutableLongLargeArray);
     }
 
     final void initializeForDMLUpdateOperation(Table table) {

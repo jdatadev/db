@@ -3,18 +3,17 @@ package dev.jdata.db.utils.adt.arrays;
 import java.util.Arrays;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.scalars.Integers;
 
 abstract class BaseIntArray extends BaseIntegerArray<int[]> implements IIntArrayCommon {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_ARRAY;
 
-    BaseIntArray(int initialCapacity, boolean hasClearValue) {
-        super(new int[initialCapacity], 0, initialCapacity, hasClearValue);
+    BaseIntArray(AllocationType allocationType, int initialCapacity, boolean hasClearValue) {
+        super(allocationType, new int[initialCapacity], 0, initialCapacity, hasClearValue, int[]::new);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacity", initialCapacity).add("hasClearValue", hasClearValue));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacity", initialCapacity).add("hasClearValue", hasClearValue));
         }
 
         if (DEBUG) {
@@ -23,15 +22,15 @@ abstract class BaseIntArray extends BaseIntegerArray<int[]> implements IIntArray
         }
     }
 
-    BaseIntArray(int[] elements, int limit, boolean hasClearValue) {
-        super(elements, limit, elements.length, hasClearValue);
+    BaseIntArray(AllocationType allocationType, int[] elements, int limit, boolean hasClearValue) {
+        super(allocationType, elements, limit, elements.length, hasClearValue, int[]::new);
 
         if (DEBUG) {
 
-            enter(b -> b.add("elements", elements).add("limit", limit).add("hasClearValue", hasClearValue));
+            enter(b -> b.add("allocationType", allocationType).add("elements", elements).add("limit", limit).add("hasClearValue", hasClearValue));
         }
 
-        this.elements = Array.copyOf(elements);
+        setElementsArray(Array.copyOf(elements));
 
         if (DEBUG) {
 
@@ -39,15 +38,15 @@ abstract class BaseIntArray extends BaseIntegerArray<int[]> implements IIntArray
         }
     }
 
-    BaseIntArray(BaseIntArray toCopy) {
-        super(toCopy, Array::copyOf);
+    BaseIntArray(AllocationType allocationType, BaseIntArray toCopy) {
+        super(allocationType, toCopy, Array::copyOf);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy));
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy));
         }
 
-        this.elements = Array.copyOf(toCopy.elements);
+        setElementsArray(Array.copyOf(toCopy.getElementsArray()));
 
         if (DEBUG) {
 
@@ -58,18 +57,14 @@ abstract class BaseIntArray extends BaseIntegerArray<int[]> implements IIntArray
     @Override
     public final int get(long index) {
 
-        return elements[Integers.checkUnsignedLongToUnsignedInt(index)];
+        return getElementsArray()[intIndex(index)];
     }
 
     @Override
-    public final void toString(long index, StringBuilder sb) {
+    protected final int[] copyValues(int[] values, long startIndex, long numElements) {
 
-        sb.append(get(index));
-    }
+        checkIntCopyValuesParameters(values, values.length, startIndex, numElements);
 
-    @Override
-    public final String toString() {
-
-        return getClass().getSimpleName() + " [elements=" + Arrays.toString(elements) + "]";
+        return Arrays.copyOfRange(values, intIndex(startIndex), intIndex(startIndex + numElements));
     }
 }

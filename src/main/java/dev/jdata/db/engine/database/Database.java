@@ -79,9 +79,9 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
 
     private final Transactions transactions;
 
-    Database(String name, DatabaseParameters parameters, DMLEvaluatorParameterAllocator dmlEvaluatorParameterAllocator,
+    Database(AllocationType allocationType, String name, DatabaseParameters parameters, DMLEvaluatorParameterAllocator dmlEvaluatorParameterAllocator,
             DMLPreparedStatementEvaluatorParameterAllocator dmlPreparedStatementEvaluatorParameterAllocator) {
-        super(DatabaseState.CREATED, false);
+        super(allocationType, DatabaseState.CREATED, false);
 
         Checks.isDatabaseName(name);
         Objects.requireNonNull(parameters);
@@ -248,7 +248,7 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
         Checks.isPreparedStatementId(preparedStatementId);
         Checks.isLargeObjectRef(largeObjectRef);
         Objects.requireNonNull(byteBuffer);
-        Checks.isOffset(offset);
+        Checks.isIntOffset(offset);
         Checks.isNumBytes(length);
 
         getSession(sessionId).storePreparedStatementLargeObjectPart(preparedStatementId, largeObjectRef, isFinal, byteBuffer, offset, length);

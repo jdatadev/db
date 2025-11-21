@@ -2,8 +2,8 @@ package dev.jdata.db.ddl.helpers.buildschema;
 
 import java.util.function.Supplier;
 
-import dev.jdata.db.schema.allocators.model.SchemaMapBuilderAllocators;
 import dev.jdata.db.schema.model.schemamaps.CompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.schemamaps.SchemaMapBuilderAllocators;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 
 @Deprecated

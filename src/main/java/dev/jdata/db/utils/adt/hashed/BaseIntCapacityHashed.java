@@ -5,20 +5,22 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.allocators.BaseCapacityInstanceAllocator.CapacityMax;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseIntCapacityHashed<T> extends BaseCapacityHashed<T> {
+abstract class BaseIntCapacityHashed<T, U, V> extends BaseCapacityHashed<T, U, V> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_CAPACITY_HASHED;
 
     protected abstract T rehash(T hashed, int newCapacity);
 
-    BaseIntCapacityHashed(int initialCapacity, float loadFactor, Supplier<T> createHashed, Consumer<T> clearHashed) {
-        super(initialCapacity, loadFactor, false, createHashed, clearHashed);
+    BaseIntCapacityHashed(AllocationType allocationType, int initialCapacity, float loadFactor, Supplier<T> createHashed, Consumer<T> clearHashed, Supplier<T> recreateHashed) {
+        super(allocationType, initialCapacity, loadFactor, CapacityMax.INT, createHashed, clearHashed, recreateHashed);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacity", initialCapacity).add("loadFactor", loadFactor).add("createHashed", createHashed).add("clearHashed", clearHashed));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacity", initialCapacity).add("loadFactor", loadFactor).add("createHashed", createHashed)
+                    .add("clearHashed", clearHashed).add("recreateHashed", recreateHashed));
         }
 
         if (DEBUG) {
@@ -27,12 +29,12 @@ abstract class BaseIntCapacityHashed<T> extends BaseCapacityHashed<T> {
         }
     }
 
-    BaseIntCapacityHashed(BaseIntCapacityHashed<T> toCopy, Function<T, T> copyHashed) {
-        super(toCopy, copyHashed);
+    BaseIntCapacityHashed(AllocationType allocationType, BaseIntCapacityHashed<T, U, V> toCopy, Function<T, T> copyHashed) {
+        super(allocationType, toCopy, copyHashed);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy).add("copyHashed", copyHashed));
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy).add("copyHashed", copyHashed));
         }
 
         if (DEBUG) {
@@ -41,7 +43,7 @@ abstract class BaseIntCapacityHashed<T> extends BaseCapacityHashed<T> {
         }
     }
 
-    protected final int getCapacity() {
+    protected final int getHashedCapacity() {
 
         return getIntCapacity();
     }
@@ -76,5 +78,10 @@ abstract class BaseIntCapacityHashed<T> extends BaseCapacityHashed<T> {
 
             exit();
         }
+    }
+
+    protected final int getMakeFromElementsNumElements() {
+
+        return getHashedCapacity();
     }
 }

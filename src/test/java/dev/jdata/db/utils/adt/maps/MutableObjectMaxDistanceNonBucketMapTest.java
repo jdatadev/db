@@ -2,14 +2,17 @@ package dev.jdata.db.utils.adt.maps;
 
 import java.util.List;
 
+import dev.jdata.db.utils.adt.sets.IMutableSet;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
+
 public final class MutableObjectMaxDistanceNonBucketMapTest
 
-        extends BaseMutableObjectToIntegerOrObjectMaxDistanceMapTest<Integer, String, MutableObjectMaxDistanceNonBucketMap<Integer, String>> {
+        extends BaseMutableObjectToIntegerOrObjectMaxDistanceMapTest<Integer, String[], IMutableSet<String>, MutableObjectMaxDistanceNonBucketMap<Integer, String>> {
 
     @Override
     MutableObjectMaxDistanceNonBucketMap<Integer, String> createMap(int initialCapacityExponent) {
 
-        return new MutableObjectMaxDistanceNonBucketMap<>(initialCapacityExponent, Integer[]::new, String[]::new);
+        return new HeapMutableObjectMaxDistanceNonBucketMap<>(AllocationType.HEAP, initialCapacityExponent, Integer[]::new, String[]::new);
     }
 
     @Override
@@ -22,6 +25,30 @@ public final class MutableObjectMaxDistanceNonBucketMapTest
     String[] createValuesArray(int length) {
 
         return new String[length];
+    }
+
+    @Override
+    IMutableSet<Integer> createKeysAddable(int initialCapacity) {
+
+        return createObjectAddable(initialCapacity, Integer[]::new);
+    }
+
+    @Override
+    IMutableSet<String> createValuesAddable(int initialCapacity) {
+
+        return createObjectAddable(initialCapacity, String[]::new);
+    }
+
+    @Override
+    Integer[] keysToArray(IMutableSet<Integer> keysAddable) {
+
+        return toArray(keysAddable, Integer[]::new);
+    }
+
+    @Override
+    String[] valuesToArray(IMutableSet<String> valuesAddable) {
+
+        return toArray(valuesAddable, String[]::new);
     }
 
     @Override
@@ -62,9 +89,9 @@ public final class MutableObjectMaxDistanceNonBucketMapTest
     }
 
     @Override
-    void keysAndValues(MutableObjectMaxDistanceNonBucketMap<Integer, String> map, Integer[] keysDst, String[] valuesDst) {
+    void keysAndValues(MutableObjectMaxDistanceNonBucketMap<Integer, String> map, IMutableSet<Integer> keysAddable, IMutableSet<String> valuesAddable) {
 
-        map.keysAndValues(keysDst, valuesDst);
+        map.keysAndValues(keysAddable, valuesAddable);
     }
 
     @Override

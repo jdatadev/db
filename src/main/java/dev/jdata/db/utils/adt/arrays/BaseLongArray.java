@@ -3,18 +3,17 @@ package dev.jdata.db.utils.adt.arrays;
 import java.util.Arrays;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.scalars.Integers;
 
 abstract class BaseLongArray extends BaseIntegerArray<long[]> implements ILongArrayCommon {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_ARRAY;
 
-    BaseLongArray(long[] elements, int limit, boolean hasClearValue) {
-        super(elements, limit, elements.length, hasClearValue);
+    BaseLongArray(AllocationType allocationType, long[] elementsArray, int limit, boolean hasClearValue) {
+        super(allocationType, elementsArray, limit, elementsArray.length, hasClearValue, long[]::new);
 
         if (DEBUG) {
 
-            enter(b -> b.add("elements", elements).add("limit", limit).add("hasClearValue", hasClearValue));
+            enter(b -> b.add("allocationType", allocationType).add("elementsArray", elementsArray).add("limit", limit).add("hasClearValue", hasClearValue));
         }
 
         if (DEBUG) {
@@ -23,12 +22,12 @@ abstract class BaseLongArray extends BaseIntegerArray<long[]> implements ILongAr
         }
     }
 
-    BaseLongArray(BaseLongArray toCopy) {
-        super(toCopy, Array::copyOf);
+    BaseLongArray(AllocationType allocationType, BaseLongArray toCopy) {
+        super(allocationType, toCopy, Array::copyOf);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy));
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy));
         }
 
         if (DEBUG) {
@@ -40,18 +39,14 @@ abstract class BaseLongArray extends BaseIntegerArray<long[]> implements ILongAr
     @Override
     public final long get(long index) {
 
-        return elements[Integers.checkUnsignedLongToUnsignedInt(index)];
+        return getElementsArray()[intIndex(index)];
     }
 
     @Override
-    public final void toString(long index, StringBuilder sb) {
+    protected final long[] copyValues(long[] values, long startIndex, long numElements) {
 
-        sb.append(get(index));
-    }
+        checkIntCopyValuesParameters(values, values.length, startIndex, numElements);
 
-    @Override
-    public final String toString() {
-
-        return getClass().getSimpleName() + " [elements=" + Arrays.toString(elements) + "]";
+        return Arrays.copyOfRange(values, intIndex(startIndex), intIndex(startIndex + numElements));
     }
 }

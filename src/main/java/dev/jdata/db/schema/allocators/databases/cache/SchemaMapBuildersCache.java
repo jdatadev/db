@@ -3,9 +3,9 @@ package dev.jdata.db.schema.allocators.databases.cache;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import dev.jdata.db.schema.model.cache.CachedSchemaMapBuilder;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
+import dev.jdata.db.schema.model.schemamap.CachedSchemaMapBuilder;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 
 @Deprecated // currently not in use

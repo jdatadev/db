@@ -119,4 +119,8 @@ public abstract class FileStorage extends ObjectCacheNode {
 
         return sb;
     }
+
+    protected FileStorage(AllocationType allocationType) {
+        super(allocationType);
+    }
 }

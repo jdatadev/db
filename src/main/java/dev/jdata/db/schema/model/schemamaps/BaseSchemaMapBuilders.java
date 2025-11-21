@@ -1,67 +1,66 @@
 package dev.jdata.db.schema.model.schemamaps;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.schema.allocators.model.SchemaMapBuilderAllocator;
-import dev.jdata.db.schema.allocators.model.SchemaMapBuilderAllocators;
 import dev.jdata.db.schema.model.ISchemaObjects;
-import dev.jdata.db.schema.model.SchemaMap;
-import dev.jdata.db.schema.model.SchemaMap.SchemaMapBuilder;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
+import dev.jdata.db.schema.model.schemamap.ISchemaMap;
+import dev.jdata.db.schema.model.schemamap.ISchemaMapBuilder;
 import dev.jdata.db.utils.Initializable;
-import dev.jdata.db.utils.adt.elements.IObjectIterableElements;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
-import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
+import dev.jdata.db.utils.adt.contains.IContainsView;
+import dev.jdata.db.utils.adt.elements.IObjectIterableElementsView;
+import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.lists.IIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
+import dev.jdata.db.utils.scalars.Integers;
 
 abstract class BaseSchemaMapBuilders<
 
                 SCHEMA_OBJECT extends SchemaObject,
-                INDEX_LIST extends IndexList<SCHEMA_OBJECT>,
-                INDEX_LIST_BUILDER extends IndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER>,
-                INDEX_LIST_ALLOCATOR extends IndexListAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, ?>,
-                SCHEMA_MAP extends SchemaMap<SCHEMA_OBJECT, INDEX_LIST, SCHEMA_MAP>,
-                SCHEMA_MAP_BUILDER extends SchemaMapBuilder<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER>>
+                INDEX_LIST extends IIndexList<SCHEMA_OBJECT>,
+                INDEX_LIST_BUILDER extends IIndexListBuilder<SCHEMA_OBJECT, INDEX_LIST, ?>,
+                INDEX_LIST_ALLOCATOR extends IIndexListAllocator<SCHEMA_OBJECT, INDEX_LIST, ?, INDEX_LIST_BUILDER>,
+                SCHEMA_MAP extends ISchemaMap<SCHEMA_OBJECT>,
+                SCHEMA_MAP_BUILDER extends ISchemaMapBuilder<SCHEMA_OBJECT, SCHEMA_MAP, ?>,
+                SCHEMA_MAPS extends ISchemaMaps,
+                HEAP_SCHEMA_MAPS extends ISchemaMaps & IHeapSchemaMapsMarker,
+                BUILDER>
 
-        extends ObjectCacheNode
-        implements ISchemaMapBuilders<SCHEMA_OBJECT> {
-
-    private final SCHEMA_MAP_BUILDER[] schemaMapBuilders;
+        extends BaseSchemaMapsMutableBuilder<SCHEMA_MAPS, HEAP_SCHEMA_MAPS, SCHEMA_MAP_BUILDER[]>
+        implements ISchemaMapBuilders<SCHEMA_OBJECT, BUILDER> {
 
     private boolean initialized;
 
-    BaseSchemaMapBuilders(IntFunction<SCHEMA_MAP_BUILDER[]> createSchemaMapBuildersArray) {
+    BaseSchemaMapBuilders(AllocationType allocationType, IntFunction<SCHEMA_MAP_BUILDER[]> createSchemaMapBuildersArray) {
+        super(allocationType, DDLObjectType.getNumObjectTypes(), createSchemaMapBuildersArray, (a, n, c) -> c.apply(Integers.checkUnsignedLongToUnsignedInt(n)));
 
         Objects.requireNonNull(createSchemaMapBuildersArray);
-
-        this.schemaMapBuilders = createSchemaMapBuildersArray.apply(DDLObjectType.getNumObjectTypes());
     }
 
-    public final void initialize(SchemaMapBuilderAllocators schemaMapBuilderAllocators) {
+    public final void initialize(ISchemaMapBuilderAllocators schemaMapBuilderAllocators) {
 
         Objects.requireNonNull(schemaMapBuilderAllocators);
 
-        checkIsAllocated();
+        checkIsAllocatedRenamed();
 
         this.initialized = Initializable.checkNotYetInitialized(initialized);
 
         for (DDLObjectType ddlObjectType : DDLObjectType.values()) {
 
-            final SchemaMapBuilderAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER> schemaMapBuilderAllocator
-            = schemaMapBuilderAllocators.getAllocator(ddlObjectType);
+            final ISchemaMapBuilderAllocator<SCHEMA_OBJECT, SCHEMA_MAP, SCHEMA_MAP_BUILDER> schemaMapBuilderAllocator = schemaMapBuilderAllocators.getAllocator(ddlObjectType);
 
-            schemaMapBuilders[ddlObjectType.ordinal()] = SchemaMap.createBuilder(1, schemaMapBuilderAllocator);
+            getMutable()[ddlObjectType.ordinal()] = schemaMapBuilderAllocator.createBuilder(1);
         }
     }
 
-    public final void reset(SchemaMapBuilderAllocators schemaMapBuilderAllocators) {
+    public final void reset(ISchemaMapBuilderAllocators schemaMapBuilderAllocators) {
 
         Objects.requireNonNull(schemaMapBuilderAllocators);
 
-        checkIsAllocated();
+        checkIsAllocatedRenamed();
 
         this.initialized = Initializable.checkResettable(initialized);
 
@@ -69,31 +68,34 @@ abstract class BaseSchemaMapBuilders<
 
             final int index = ddlObjectType.ordinal();
 
-            final SchemaMapBuilderAllocator<SCHEMA_OBJECT, INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR, SCHEMA_MAP, SCHEMA_MAP_BUILDER> schemaMapBuilderAllocator
-                    = schemaMapBuilderAllocators.getAllocator(ddlObjectType);
+            final ISchemaMapBuilderAllocator<SCHEMA_OBJECT, SCHEMA_MAP, SCHEMA_MAP_BUILDER> schemaMapBuilderAllocator = schemaMapBuilderAllocators.getAllocator(ddlObjectType);
+
+            final SCHEMA_MAP_BUILDER[] schemaMapBuilders = getMutable();
 
             final SCHEMA_MAP_BUILDER schemaMapBuilder = schemaMapBuilders[index];
 
-            schemaMapBuilderAllocator.freeSchemaMapBuilder(schemaMapBuilder);
+            schemaMapBuilderAllocator.freeBuilder(schemaMapBuilder);
 
             schemaMapBuilders[index] = null;
         }
     }
 
     @Override
-    public final void addSchemaObject(SCHEMA_OBJECT schemaObject) {
+    public final BUILDER addSchemaObject(SCHEMA_OBJECT schemaObject) {
 
         Objects.requireNonNull(schemaObject);
 
         Initializable.checkIsInitialized(initialized);
 
-        final SCHEMA_MAP_BUILDER tableSchemaMapBuilder = schemaMapBuilders[schemaObject.getDDLObjectType().ordinal()];
+        final SCHEMA_MAP_BUILDER schemaMapBuilder = getMutable()[schemaObject.getDDLObjectType().ordinal()];
 
-        tableSchemaMapBuilder.add(schemaObject);
+        schemaMapBuilder.addUnordered(schemaObject);
+
+        return getThis();
     }
 
     @Override
-    public final void addSchemaObjects(ISchemaObjects schemaObjects) {
+    public final BUILDER addSchemaObjects(ISchemaObjects schemaObjects) {
 
         Objects.requireNonNull(schemaObjects);
 
@@ -103,31 +105,51 @@ abstract class BaseSchemaMapBuilders<
 
             addSchemaObjects(ddlObjectType, schemaObjects.getSchemaObjects(ddlObjectType));
         }
+
+        return getThis();
     }
 
-    protected final <T extends SchemaMap<?, ?, ?>> T buildSchemaMap(DDLObjectType ddlObjectType) {
+    @Override
+    public final boolean isEmpty() {
+
+        return IContainsView.isNullOrEmpty(getMutable());
+    }
+
+    protected final <T extends ISchemaMap<?>> T buildSchemaMap(DDLObjectType ddlObjectType) {
 
         Objects.requireNonNull(ddlObjectType);
 
         Initializable.checkIsInitialized(initialized);
 
-        final SCHEMA_MAP_BUILDER schemaMapBuilder = schemaMapBuilders[ddlObjectType.ordinal()];
+        final SCHEMA_MAP_BUILDER schemaMapBuilder = getMutable()[ddlObjectType.ordinal()];
 
         @SuppressWarnings("unchecked")
-        final T result = (T) schemaMapBuilder.buildOrNull();
+        final T result = (T)schemaMapBuilder.buildOrNull();
 
         return result;
     }
 
-    private void addSchemaObjects(DDLObjectType ddlObjectType, IObjectIterableElements<SCHEMA_OBJECT> schemaObjects) {
+    private void addSchemaObjects(DDLObjectType ddlObjectType, IObjectIterableElementsView<SCHEMA_OBJECT> schemaObjects) {
 
         Objects.requireNonNull(ddlObjectType);
         Objects.requireNonNull(schemaObjects);
 
         Initializable.checkIsInitialized(initialized);
 
-        final SCHEMA_MAP_BUILDER tableSchemaMapBuilder = schemaMapBuilders[ddlObjectType.ordinal()];
+        final SCHEMA_MAP_BUILDER tableSchemaMapBuilder = getMutable()[ddlObjectType.ordinal()];
 
-        tableSchemaMapBuilder.add(schemaObjects);
+        tableSchemaMapBuilder.addUnordered(schemaObjects);
+    }
+
+    @Override
+    public final String toString() {
+
+        return getClass().getSimpleName() + " [schemaMapBuilders=" + Arrays.toString(getMutable()) + ", initialized=" + initialized + "]";
+    }
+
+    @SuppressWarnings("unchecked")
+    private BUILDER getThis() {
+
+        return (BUILDER)this;
     }
 }

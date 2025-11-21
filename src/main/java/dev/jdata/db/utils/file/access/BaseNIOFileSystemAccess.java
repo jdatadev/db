@@ -228,6 +228,10 @@ public abstract class BaseNIOFileSystemAccess implements IAbsoluteFileSystemAcce
         private Object parameter;
         private BiConsumer<AbsoluteFilePath, ?> consumer;
 
+        ListPathParameters(AllocationType allocationType) {
+            super(allocationType);
+        }
+
         <P> void initialize(P parameter, BiConsumer<AbsoluteFilePath, P> consumer) {
 
             Objects.requireNonNull(consumer);

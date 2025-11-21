@@ -23,6 +23,8 @@ public abstract class SQLParserFactory {
     private static final SQLToken STATEMENT_TOKENS[] = new SQLToken[] {
 
             SQLToken.CREATE,
+            SQLToken.ALTER,
+            SQLToken.DROP,
             SQLToken.SELECT,
             SQLToken.INSERT,
             SQLToken.UPDATE,

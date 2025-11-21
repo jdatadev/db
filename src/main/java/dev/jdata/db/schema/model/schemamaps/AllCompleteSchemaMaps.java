@@ -2,7 +2,6 @@ package dev.jdata.db.schema.model.schemamaps;
 
 import java.util.function.IntFunction;
 
-import dev.jdata.db.schema.model.SchemaMap;
 import dev.jdata.db.schema.model.objects.DBFunction;
 import dev.jdata.db.schema.model.objects.Index;
 import dev.jdata.db.schema.model.objects.Procedure;
@@ -10,15 +9,16 @@ import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.model.objects.Trigger;
 import dev.jdata.db.schema.model.objects.View;
+import dev.jdata.db.schema.model.schemamap.ISchemaMap;
 
-public abstract class AllCompleteSchemaMaps<T extends SchemaMap<? extends SchemaObject, ?, ?>> extends CompleteSchemaMaps<T> implements IAllCompleteSchemaMaps {
+abstract class AllCompleteSchemaMaps<T extends ISchemaMap<? extends SchemaObject>> extends CompleteSchemaMaps<T> implements IAllCompleteSchemaMaps {
 
-    protected AllCompleteSchemaMaps(IntFunction<T[]> createSchemaMapsArray, SchemaMap<Table, ?, ?> tables, SchemaMap<View, ?, ?> views, SchemaMap<Index, ?, ?> indices,
-            SchemaMap<Trigger, ?, ?> triggers, SchemaMap<DBFunction, ?, ?> functions, SchemaMap<Procedure, ?, ?> procedures) {
-        super(createSchemaMapsArray, tables, views, indices, triggers, functions, procedures);
+    AllCompleteSchemaMaps(AllocationType allocationType, IntFunction<T[]> createSchemaMapsArray) {
+        super(allocationType, createSchemaMapsArray);
     }
 
-    protected AllCompleteSchemaMaps(IntFunction<T[]> createSchemaMapsArray) {
-        super(createSchemaMapsArray);
+    AllCompleteSchemaMaps(AllocationType allocationType, IntFunction<T[]> createSchemaMapsArray, ISchemaMap<Table>tables, ISchemaMap<View> views,
+            ISchemaMap<Index> indices, ISchemaMap<Trigger> triggers, ISchemaMap<DBFunction> functions, ISchemaMap<Procedure> procedures) {
+        super(allocationType, createSchemaMapsArray, tables, views, indices, triggers, functions, procedures);
     }
 }

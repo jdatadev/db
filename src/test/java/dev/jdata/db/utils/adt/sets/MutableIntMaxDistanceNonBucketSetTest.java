@@ -1,17 +1,18 @@
 package dev.jdata.db.utils.adt.sets;
 
-import dev.jdata.db.utils.adt.elements.IIntIterableElements.IForEach;
+import dev.jdata.db.utils.adt.elements.IIntForEach;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 
 public final class MutableIntMaxDistanceNonBucketSetTest extends BaseMutableIntegerSetTest<MutableIntMaxDistanceNonBucketSet> {
 
     @Override
     MutableIntMaxDistanceNonBucketSet createSet(int initialCapacityExponent) {
 
-        return new MutableIntMaxDistanceNonBucketSet(initialCapacityExponent);
+        return new HeapMutableIntMaxDistanceNonBucketSet(AllocationType.HEAP, initialCapacityExponent);
     }
 
     @Override
-    <P> void forEach(MutableIntMaxDistanceNonBucketSet set, P parameter, IForEach<P, RuntimeException> forEach) {
+    <P> void forEach(MutableIntMaxDistanceNonBucketSet set, P parameter, IIntForEach<P, RuntimeException> forEach) {
 
         set.forEach(parameter, forEach);
     }
@@ -23,9 +24,15 @@ public final class MutableIntMaxDistanceNonBucketSetTest extends BaseMutableInte
     }
 
     @Override
-    void add(MutableIntMaxDistanceNonBucketSet set, int value) {
+    void addInAnyOrder(MutableIntMaxDistanceNonBucketSet set, int value) {
 
-        set.add(value);
+        set.addInAnyOrder(value);
+    }
+
+    @Override
+    void addUnordered(MutableIntMaxDistanceNonBucketSet set, int value) {
+
+        set.addUnordered(value);
     }
 
     @Override
@@ -37,6 +44,6 @@ public final class MutableIntMaxDistanceNonBucketSetTest extends BaseMutableInte
     @Override
     boolean remove(MutableIntMaxDistanceNonBucketSet set, int value) {
 
-        return set.remove(value);
+        return set.removeAtMostOne(value);
     }
 }

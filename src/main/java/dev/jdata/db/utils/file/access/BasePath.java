@@ -6,9 +6,9 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.strings.Strings;
-import dev.jdata.db.utils.allocators.IArrayAllocator;
+import dev.jdata.db.utils.adt.arrays.IArrayAllocator;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.jdk.adt.strings.Strings;
 import dev.jdata.db.utils.paths.PathUtil;
 
 abstract class BasePath {

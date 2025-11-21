@@ -5,16 +5,16 @@ import java.util.function.IntFunction;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
 
-public final class MutableIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntToObjectMaxDistanceNonBucketMap<T> implements IMutableIntToObjectDynamicMap<T> {
+abstract class MutableIntToObjectMaxDistanceNonBucketMap<V> extends BaseIntToObjectMaxDistanceNonBucketMap<V> implements IMutableIntToObjectDynamicMap<V> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_INT_TO_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP;
 
-    public MutableIntToObjectMaxDistanceNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createValuesArray) {
-        super(initialCapacityExponent, createValuesArray);
+    MutableIntToObjectMaxDistanceNonBucketMap(AllocationType allocationType, int initialCapacityExponent, IntFunction<V[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, createValuesArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
         }
 
         if (DEBUG) {
@@ -23,13 +23,14 @@ public final class MutableIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntT
         }
     }
 
-    public MutableIntToObjectMaxDistanceNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createValuesArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
+    MutableIntToObjectMaxDistanceNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor,
+            IntFunction<V[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("createValuesArray", createValuesArray));
         }
 
         if (DEBUG) {
@@ -39,7 +40,29 @@ public final class MutableIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntT
     }
 
     @Override
-    public T put(int key, T value, T defaultPreviousValue) {
+    public final long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
+    public final void clear() {
+
+        if (DEBUG) {
+
+            enter();
+        }
+
+        clearBaseIntToObjectNonBucketMap();
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public final V put(int key, V value, V defaultPreviousValue) {
 
         IntNonBucket.checkIsHashArrayElement(key);
 
@@ -48,7 +71,7 @@ public final class MutableIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntT
             enter(b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue));
         }
 
-        final T result = putMaxDistance(key, value, defaultPreviousValue);
+        final V result = putMaxDistance(key, value, defaultPreviousValue);
 
         if (DEBUG) {
 
@@ -59,7 +82,7 @@ public final class MutableIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntT
     }
 
     @Override
-    public T removeAndReturnPrevious(int key, T defaultValue) {
+    public final V removeAndReturnPrevious(int key, V defaultValue) {
 
         IntNonBucket.checkIsHashArrayElement(key);
 
@@ -70,11 +93,11 @@ public final class MutableIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntT
 
         final int indexToRemove = removeMaxDistance(key);
 
-        final T result;
+        final V result;
 
         if (indexToRemove != NO_INDEX) {
 
-            final T[] values = getValues();
+            final V[] values = getValues();
 
             result = values[indexToRemove];
 
@@ -93,7 +116,7 @@ public final class MutableIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntT
     }
 
     @Override
-    public boolean remove(int key) {
+    public final boolean remove(int key) {
 
         IntNonBucket.checkIsHashArrayElement(key);
 
@@ -122,21 +145,5 @@ public final class MutableIntToObjectMaxDistanceNonBucketMap<T> extends BaseIntT
         }
 
         return result;
-    }
-
-    @Override
-    public void clear() {
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        clearBaseIntToObjectNonBucketMap();
-
-        if (DEBUG) {
-
-            exit();
-        }
     }
 }

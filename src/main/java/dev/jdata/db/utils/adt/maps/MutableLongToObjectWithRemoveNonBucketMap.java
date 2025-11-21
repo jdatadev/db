@@ -6,16 +6,16 @@ import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 
-public final class MutableLongToObjectWithRemoveNonBucketMap<T> extends BaseLongToObjectWithRemoveNonBucketMap<T> implements IMutableLongToObjectStaticMap<T> {
+abstract class MutableLongToObjectWithRemoveNonBucketMap<T> extends BaseLongToObjectWithRemoveNonBucketMap<T> implements IMutableLongToObjectWithRemoveStaticMap<T> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_LONG_TO_OBJECT_WITH_REMOVE_NON_BUCKET_MAP;
 
-    public MutableLongToObjectWithRemoveNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createValuesArray) {
-        super(initialCapacityExponent, createValuesArray);
+    MutableLongToObjectWithRemoveNonBucketMap(AllocationType allocationType, int initialCapacityExponent, IntFunction<T[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, createValuesArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
         }
 
         if (DEBUG) {
@@ -24,13 +24,14 @@ public final class MutableLongToObjectWithRemoveNonBucketMap<T> extends BaseLong
         }
     }
 
-    public MutableLongToObjectWithRemoveNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createValuesArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
+    MutableLongToObjectWithRemoveNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor,
+            IntFunction<T[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("createValuesArray", createValuesArray));
         }
 
         if (DEBUG) {
@@ -40,7 +41,29 @@ public final class MutableLongToObjectWithRemoveNonBucketMap<T> extends BaseLong
     }
 
     @Override
-    public T put(long key, T value, T defaultPreviousValue) {
+    public final long getCapacity() {
+
+        return getHashedCapacity();
+    }
+
+    @Override
+    public final void clear() {
+
+        if (DEBUG) {
+
+            enter();
+        }
+
+        clearBaseLongToObjectNonBucketMap();
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public final T put(long key, T value, T defaultPreviousValue) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -60,7 +83,7 @@ public final class MutableLongToObjectWithRemoveNonBucketMap<T> extends BaseLong
     }
 
     @Override
-    public T removeAndReturnPrevious(long key) {
+    public final T removeAndReturnPrevious(long key) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -96,7 +119,7 @@ public final class MutableLongToObjectWithRemoveNonBucketMap<T> extends BaseLong
     }
 
     @Override
-    public void remove(long key) {
+    public final void remove(long key) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -117,22 +140,6 @@ public final class MutableLongToObjectWithRemoveNonBucketMap<T> extends BaseLong
         if (DEBUG) {
 
             exit(b -> b.add("key", key));
-        }
-    }
-
-    @Override
-    public void clear() {
-
-        if (DEBUG) {
-
-            enter();
-        }
-
-        clearBaseLongToObjectNonBucketMap();
-
-        if (DEBUG) {
-
-            exit();
         }
     }
 }

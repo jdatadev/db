@@ -28,8 +28,8 @@ public abstract class MapOfCollection<K, V, C extends Collection<V>, M extends M
 
     protected MapOfCollection(int initialCapacity, int collectionInitialCapacity, IntFunction<M> createMap) {
 
-        Checks.isInitialCapacity(initialCapacity);
-        Checks.isInitialCapacity(collectionInitialCapacity);
+        Checks.isIntInitialCapacity(initialCapacity);
+        Checks.isIntInitialCapacity(collectionInitialCapacity);
         Objects.requireNonNull(createMap);
 
         this.map = createMap.apply(initialCapacity);

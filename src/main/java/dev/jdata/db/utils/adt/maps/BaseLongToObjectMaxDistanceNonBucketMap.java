@@ -10,18 +10,21 @@ import dev.jdata.db.utils.adt.hashed.helpers.LongNonBucket;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance.MaxDistanceLongMapOperations;
 
-abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObjectNonBucketMap<T, ILongToObjectDynamicMapCommon<T>> implements ILongToObjectDynamicMapCommon<T> {
+abstract class BaseLongToObjectMaxDistanceNonBucketMap<V>
+
+        extends BaseLongToObjectNonBucketMap<V, BaseLongToObjectMaxDistanceNonBucketMap<V>>
+        implements ILongToObjectDynamicMapCommon<V> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_TO_OBJECT_MAX_DISTANCE_NON_BUCKET_MAP;
 
     private byte[] maxDistances;
 
-    BaseLongToObjectMaxDistanceNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createValuesArray) {
-        super(initialCapacityExponent, createValuesArray);
+    BaseLongToObjectMaxDistanceNonBucketMap(AllocationType allocationType, int initialCapacityExponent, IntFunction<V[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, createValuesArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
         }
 
         initialize();
@@ -32,13 +35,14 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObje
         }
     }
 
-    BaseLongToObjectMaxDistanceNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createValuesArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
+    BaseLongToObjectMaxDistanceNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor,
+            IntFunction<V[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("createValuesArray", createValuesArray));
         }
 
         initialize();
@@ -49,12 +53,12 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObje
         }
     }
 
-    BaseLongToObjectMaxDistanceNonBucketMap(BaseLongToObjectMaxDistanceNonBucketMap<T> toCopy) {
-        super(toCopy);
+    BaseLongToObjectMaxDistanceNonBucketMap(AllocationType allocationType, BaseLongToObjectMaxDistanceNonBucketMap<V> toCopy) {
+        super(allocationType, toCopy);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy));
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy));
         }
 
         this.maxDistances = MaxDistance.copyMaxDistances(toCopy.maxDistances);
@@ -67,7 +71,7 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObje
 
     private void initialize() {
 
-        this.maxDistances = new byte[getCapacity()];
+        this.maxDistances = new byte[getHashedCapacity()];
     }
 
     @Override
@@ -89,7 +93,7 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObje
     }
 
     @Override
-    public final T get(long key, T defaultValue) {
+    public final V get(long key, V defaultValue) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -100,7 +104,7 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObje
 
         final int index = scanHashArrayForIndex(key, getKeyMask());
 
-        final T result = index != NO_INDEX ? getValues()[index] : defaultValue;
+        final V result = index != NO_INDEX ? getValues()[index] : defaultValue;
 
         if (DEBUG) {
 
@@ -108,6 +112,32 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObje
         }
 
         return result;
+    }
+
+    @Override
+    protected final <P, R> R makeFromElements(AllocationType allocationType, P parameter,
+            IMakeFromElementsFunction<long[], BaseLongToObjectMaxDistanceNonBucketMap<V>, P, R> makeFromElements) {
+
+        Objects.requireNonNull(allocationType);
+        Objects.requireNonNull(makeFromElements);
+
+        return makeFromElements.apply(allocationType, long[]::new, this, getMakeFromElementsNumElements(), parameter);
+    }
+
+    @Override
+    protected final void recreateElements() {
+
+        super.recreateElements();
+
+        initialize();
+    }
+
+    @Override
+    protected final void resetToNull() {
+
+        super.resetToNull();
+
+        this.maxDistances = null;
     }
 
     @Override
@@ -150,59 +180,59 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObje
         return result;
     }
 
-    private final MaxDistanceLongMapOperations<BaseLongToObjectMaxDistanceNonBucketMap<T>, T[]> maxDistanceOperations
-            = new MaxDistanceLongMapOperations<BaseLongToObjectMaxDistanceNonBucketMap<T>, T[]>() {
+    private final MaxDistanceLongMapOperations<BaseLongToObjectMaxDistanceNonBucketMap<V>, V[]> maxDistanceOperations
+            = new MaxDistanceLongMapOperations<BaseLongToObjectMaxDistanceNonBucketMap<V>, V[]>() {
 
         @Override
-        public long put(BaseLongToObjectMaxDistanceNonBucketMap<T> hashed, long[] hashArray, long key, int hashArrayIndex) {
+        public long put(BaseLongToObjectMaxDistanceNonBucketMap<V> hashed, long[] hashArray, long key, int hashArrayIndex) {
 
             return hashed.put(hashArray, key, hashArrayIndex);
         }
 
         @Override
-        public void incrementNumElements(BaseLongToObjectMaxDistanceNonBucketMap<T> hashed) {
+        public void incrementNumElements(BaseLongToObjectMaxDistanceNonBucketMap<V> hashed) {
 
             hashed.incrementNumElements();
         }
 
         @Override
-        public void increaseCapacityAndRehash(BaseLongToObjectMaxDistanceNonBucketMap<T> hashed) {
+        public void increaseCapacityAndRehash(BaseLongToObjectMaxDistanceNonBucketMap<V> hashed) {
 
             hashed.increaseCapacityAndRehash();
         }
 
         @Override
-        public T[] getValues(BaseLongToObjectMaxDistanceNonBucketMap<T> hashed) {
+        public V[] getValues(BaseLongToObjectMaxDistanceNonBucketMap<V> hashed) {
 
             return hashed.getValues();
         }
 
         @Override
-        public byte[] getMaxDistances(BaseLongToObjectMaxDistanceNonBucketMap<T> hashed) {
+        public byte[] getMaxDistances(BaseLongToObjectMaxDistanceNonBucketMap<V> hashed) {
 
             return hashed.maxDistances;
         }
 
         @Override
-        public int getKeyMask(BaseLongToObjectMaxDistanceNonBucketMap<T> hashed) {
+        public int getKeyMask(BaseLongToObjectMaxDistanceNonBucketMap<V> hashed) {
 
             return hashed.getKeyMask();
         }
 
         @Override
-        public long[] getHashArray(BaseLongToObjectMaxDistanceNonBucketMap<T> hashed) {
+        public long[] getHashArray(BaseLongToObjectMaxDistanceNonBucketMap<V> hashed) {
 
             return hashed.getHashed();
         }
 
         @Override
-        public long getCapacity(BaseLongToObjectMaxDistanceNonBucketMap<T> hashed) {
+        public long getCapacity(BaseLongToObjectMaxDistanceNonBucketMap<V> hashed) {
 
-            return hashed.getCapacity();
+            return hashed.getHashedCapacity();
         }
     };
 
-    final T putMaxDistance(long key, T value, T defaultPreviousValue) {
+    final V putMaxDistance(long key, V value, V defaultPreviousValue) {
 
         LongNonBucket.checkIsHashArrayElement(key);
 
@@ -213,7 +243,7 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObje
 
         checkCapacity(1);
 
-        final T result = MaxDistance.putMaxDistance(this, key, value, defaultPreviousValue, maxDistanceOperations);
+        final V result = MaxDistance.putMaxDistance(this, key, value, defaultPreviousValue, maxDistanceOperations);
 
         if (DEBUG) {
 
@@ -248,7 +278,8 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObje
     }
 
     @Override
-    public final <P1, P2> boolean equals(P1 thisParameter, ILongToObjectDynamicMapCommon<T> other, P2 otherParameter, IObjectValueMapEqualityTester<T, P1, P2> equalityTester) {
+    public final <P1, P2, E extends Exception> boolean equals(P1 thisParameter, ILongToObjectDynamicMapView<V> other, P2 otherParameter,
+            IObjectValueMapEqualityTester<V, P1, P2, E> equalityTester) throws E {
 
         Objects.requireNonNull(other);
         Objects.requireNonNull(equalityTester);
@@ -263,7 +294,7 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObje
         if (other instanceof BaseLongToObjectNonBucketMap) {
 
             @SuppressWarnings("unchecked")
-            final BaseLongToObjectNonBucketMap<T, ILongToObjectDynamicMapCommon<T>> otherMap = (BaseLongToObjectNonBucketMap<T, ILongToObjectDynamicMapCommon<T>>)other;
+            final BaseLongToObjectNonBucketMap<V, ?> otherMap = (BaseLongToObjectNonBucketMap<V, ?>)other;
 
             result = equalsLongToObjectNonBucketMap(thisParameter, otherMap, otherParameter, equalityTester);
         }
@@ -280,7 +311,8 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObje
     }
 
     @Override
-    public final <P1, P2> boolean equalsParameters(ObjectValueMapScratchEqualsParameter<T, ILongToObjectDynamicMapCommon<T>, P1, P2> scratchEqualsParameter) {
+    public final <P1, P2, E extends Exception> boolean equalsParameters(ObjectValueMapScratchEqualsParameter<V, ILongToObjectDynamicMapView<V>, P1, P2, E> scratchEqualsParameter)
+            throws E {
 
         Objects.requireNonNull(scratchEqualsParameter);
 
@@ -291,12 +323,12 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<T> extends BaseLongToObje
 
         final boolean result;
 
-        final ILongToObjectDynamicMapCommon<T> other = scratchEqualsParameter.getOther();
+        final ILongToObjectDynamicMapView<V> other = scratchEqualsParameter.getOther();
 
         if (other instanceof BaseLongToObjectNonBucketMap) {
 
             @SuppressWarnings("unchecked")
-            final BaseLongToObjectNonBucketMap<T, ILongToObjectDynamicMapCommon<T>> otherMap = (BaseLongToObjectNonBucketMap<T, ILongToObjectDynamicMapCommon<T>>)other;
+            final BaseLongToObjectNonBucketMap<V, ?> otherMap = (BaseLongToObjectNonBucketMap<V, ?>)other;
 
             result = equalsLongToObjectNonBucketMap(scratchEqualsParameter.getThisParameter(), otherMap, scratchEqualsParameter.getOtherParameter(),
                     scratchEqualsParameter.getEqualityTester());

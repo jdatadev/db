@@ -12,7 +12,7 @@ import dev.jdata.db.schema.model.schemamaps.IAllCompleteSchemaMaps;
 import dev.jdata.db.schema.model.schemamaps.ICompleteSchemaMapsBuilder;
 import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMaps;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.utils.adt.lists.IndexList;
+import dev.jdata.db.utils.adt.lists.IIndexList;
 
 public class DDLCompleteSchemasHelper extends DDLSchemasHelper {
 
@@ -20,8 +20,8 @@ public class DDLCompleteSchemasHelper extends DDLSchemasHelper {
 
     public static <COMPLETE_SCHEMA_MAPS extends IAllCompleteSchemaMaps, HEAP_COMPLETE_SCHEMA_MAPS extends IHeapAllCompleteSchemaMaps>
     COMPLETE_SCHEMA_MAPS createSchemasFromSQLStatements(
-            IndexList<BaseSQLStatement> sqlStatements, StringManagement stringManagement,
-            IDDLSchemaSQLStatementsWorkerObjects<COMPLETE_SCHEMA_MAPS, HEAP_COMPLETE_SCHEMA_MAPS> ddlSchemaSQLStatementsWorkerObjects,
+            IIndexList<BaseSQLStatement> sqlStatements, StringManagement stringManagement,
+            IDDLSchemaSQLStatementsWorkerObjects<COMPLETE_SCHEMA_MAPS, HEAP_COMPLETE_SCHEMA_MAPS, ?> ddlSchemaSQLStatementsWorkerObjects,
             DDLSchemaScratchObjects ddlSchemaScratchObjects, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
 
         Objects.requireNonNull(sqlStatements);
@@ -32,8 +32,8 @@ public class DDLCompleteSchemasHelper extends DDLSchemasHelper {
 
         final long numSQLStatements = sqlStatements.getNumElements();
 
-        final ICompleteSchemaMapsBuilder<SchemaObject, COMPLETE_SCHEMA_MAPS, HEAP_COMPLETE_SCHEMA_MAPS> completeSchemaMapsBuilder
-                = ddlSchemaSQLStatementsWorkerObjects.allocateCompleteSchemaMapBuilders();
+        final ICompleteSchemaMapsBuilder<SchemaObject, COMPLETE_SCHEMA_MAPS, HEAP_COMPLETE_SCHEMA_MAPS, ?> completeSchemaMapsBuilder
+                = ddlSchemaSQLStatementsWorkerObjects.allocateCompleteSchemaMapsBuilder();
 
         final DDLSchemaSQLStatementsParameter ddlSchemaSQLStatementsParameter = ddlSchemaSQLStatementsWorkerObjects.allocateDDLSchemaSQLStatementsParameter();
 
@@ -53,7 +53,7 @@ public class DDLCompleteSchemasHelper extends DDLSchemasHelper {
         }
         finally {
 
-            ddlSchemaSQLStatementsWorkerObjects.freeCompleteSchemaMapBuilders(completeSchemaMapsBuilder);
+            ddlSchemaSQLStatementsWorkerObjects.freeCompleteSchemaMapsBuilder(completeSchemaMapsBuilder);
 
             ddlSchemaSQLStatementsWorkerObjects.freeDDLSchemaSQLStatementsParameter(ddlSchemaSQLStatementsParameter);
         }

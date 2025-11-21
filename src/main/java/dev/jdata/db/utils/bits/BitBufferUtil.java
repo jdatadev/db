@@ -27,8 +27,8 @@ public class BitBufferUtil {
 
     public static int numBytes(long startBitOffset, long endBitOffset) {
 
-        Checks.isOffset(startBitOffset);
-        Checks.isOffset(endBitOffset);
+        Checks.isBufferBitsOffset(startBitOffset);
+        Checks.isBufferBitsOffset(endBitOffset);
 
         if (endBitOffset <= startBitOffset) {
 

@@ -1,14 +1,16 @@
 package dev.jdata.db.engine.transactions.ddl;
 
 import dev.jdata.db.ddl.helpers.DDLSchemasHelper;
-import dev.jdata.db.schema.model.diff.schemamaps.HeapDiffSchemaMaps;
-import dev.jdata.db.schema.model.diff.schemamaps.HeapDiffSchemaMaps.HeapDiffSchemaMapsBuilder;
-import dev.jdata.db.schema.model.schemamaps.HeapAllSimpleCompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.diff.schemamaps.IHeapDiffSchemaMaps;
+import dev.jdata.db.schema.model.diff.schemamaps.IHeapDiffSchemaMapsBuilder;
+import dev.jdata.db.schema.model.objects.SchemaObject;
+import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMapsBuilder;
 
 @Deprecated // currently not in use
 class DDLDiffSchemasHelper extends DDLSchemasHelper {
 
-    private static HeapDiffSchemaMaps buildDiffSchemaMaps(HeapAllSimpleCompleteSchemaMapsBuilder diffSchemaMapsBuilder, HeapDiffSchemaMapsBuilder[] schemaMapBuilders) {
+    private static IHeapDiffSchemaMaps buildDiffSchemaMaps(IHeapAllCompleteSchemaMapsBuilder diffSchemaMapsBuilder,
+            IHeapDiffSchemaMapsBuilder<SchemaObject>[] schemaMapBuilders) {
 
         throw new UnsupportedOperationException();
 /*

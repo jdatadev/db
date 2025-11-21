@@ -6,6 +6,10 @@ abstract class InstanceNodeAllocator<T, N extends InstanceNodeAllocator.Instance
 
         T instance;
 
+        InstanceAllocatorNode(AllocationType allocationType) {
+            super(allocationType);
+        }
+
         void init(N next, boolean setAllocated , boolean allocated, T instance) {
 
             super.init(next, setAllocated, allocated);

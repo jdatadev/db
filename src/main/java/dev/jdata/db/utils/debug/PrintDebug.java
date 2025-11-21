@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import dev.jdata.db.utils.adt.strings.Strings;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.jdk.adt.strings.Strings;
 
 public interface PrintDebug {
 

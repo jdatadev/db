@@ -4,26 +4,35 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.utils.adt.CapacityExponents;
-import dev.jdata.db.utils.adt.IClearable;
-import dev.jdata.db.utils.adt.sets.MutableIntBucketSet;
+import dev.jdata.db.utils.adt.marker.IAnyOrderAddable;
+import dev.jdata.db.utils.adt.sets.IHeapIntSet;
+import dev.jdata.db.utils.adt.sets.IIntSet;
 import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMap<K> & IClearable> extends BaseIntegerToIntegerOrObjectMapTest<K, V, M> {
+abstract class BaseMutableIntegerToIntegerOrObjectMapTest<
 
-    abstract M createMap(int initialCapacityExponent);
+                KEYS_ARRAY,
+                VALUES_ARRAY,
+                KEYS_ADDABLE extends IAnyOrderAddable,
+                VALUES_ADDABLE extends IAnyOrderAddable,
+                MAP extends IMutableBaseMap<?>>
+
+        extends BaseIntegerToIntegerOrObjectMapTest<KEYS_ARRAY, VALUES_ARRAY, KEYS_ADDABLE, VALUES_ADDABLE, MAP> {
+
+    abstract MAP createMap(int initialCapacityExponent);
 
     abstract boolean supportsRemoveNonAdded();
 
-    abstract int put(M map, int key, int value, int defaultPreviousValue);
+    abstract int put(MAP map, int key, int value, int defaultPreviousValue);
 
-    abstract boolean remove(M map, int key);
-    abstract int removeWithDefaultValue(M map, int key, int defaultValue);
+    abstract boolean remove(MAP map, int key);
+    abstract int removeWithDefaultValue(MAP map, int key, int defaultValue);
 
     @Test
     @Category(UnitTest.class)
     public final void testPutAndGetWithOverwrite() {
 
-        final M map = createMap(0);
+        final MAP map = createMap(0);
 
         assertThat(map).isEmpty();
         assertThat(map).hasNumElements(0L);
@@ -77,7 +86,7 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
 
         for (int numElements = 1; numElements <= MAX_ELEMENTS; numElements *= 10) {
 
-            final M map = createMap(0);
+            final MAP map = createMap(0);
 
             assertThat(map).isEmpty();
             assertThat(map).hasNumElements(0);
@@ -138,7 +147,7 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
     @Category(UnitTest.class)
     public final void testPutAndGetWithClear() {
 
-        final M map = createMap(0);
+        final MAP map = createMap(0);
 
         assertThat(map).isEmpty();
         assertThat(map).hasNumElements(0L);
@@ -178,7 +187,7 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
     @Category(UnitTest.class)
     public final void testMutableGetNumElements() {
 
-        final M map = createMap(0);
+        final MAP map = createMap(0);
 
         assertThat(map).hasNumElements(0L);
 
@@ -200,7 +209,7 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
 
     private void checkPutPutRemovePut(int key1, int key2, int removeKey) {
 
-        final M map = createMap(0);
+        final MAP map = createMap(0);
 
         assertThat(map).isEmpty();
 
@@ -244,7 +253,7 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
 
         if (supportsRemoveNonAdded()) {
 
-            final M map = createMap(0);
+            final MAP map = createMap(0);
 
             assertThat(map).isEmpty();
 
@@ -266,7 +275,7 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
     @Category(UnitTest.class)
     public final void testClear() {
 
-        final M map = createMap(0);
+        final MAP map = createMap(0);
 
         assertThat(map).isEmpty();
 
@@ -283,13 +292,13 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
     }
 
     @Override
-    final M createMap(int[] keys, int[] values) {
+    final MAP createMap(int[] keys, int[] values) {
 
         Checks.areSameLength(keys, values);
 
         final int keysLength = keys.length;
 
-        final M map = createMap(CapacityExponents.computeCapacityExponent(keysLength));
+        final MAP map = createMap(CapacityExponents.computeIntCapacityExponent(keysLength));
 
         final int defaultValue = -1;
         final boolean supportsContainsKey = supportsContainsKey();
@@ -307,12 +316,12 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
         return map;
     }
 
-    private void put(M map, int integer) {
+    private void put(MAP map, int integer) {
 
         put(map, integer, false);
     }
 
-    private void put(M map, int integer, boolean alreadyContainsValue) {
+    private void put(MAP map, int integer, boolean alreadyContainsValue) {
 
         final int defaultValue = -1;
 
@@ -325,13 +334,13 @@ abstract class BaseMutableIntegerToIntegerOrObjectMapTest<K, V, M extends IKeyMa
         assertThat(previousValue).isEqualTo(alreadyContainsValue ? value : defaultValue);
     }
 
-    private void checkGetKeys(M map, int numElements) {
+    private void checkGetKeys(MAP map, int numElements) {
 
         final int[] keys = getKeys(map);
 
         assertThat(keys.length).isEqualTo(numElements);
 
-        final MutableIntBucketSet values = MutableIntBucketSet.of(keys);
+        final IIntSet values = IHeapIntSet.of(keys);
 
         for (int i = 0; i < numElements; ++ i) {
 

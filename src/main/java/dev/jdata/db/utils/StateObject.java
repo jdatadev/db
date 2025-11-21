@@ -16,7 +16,8 @@ public abstract class StateObject<T extends Enum<T> & State> extends ObjectCache
 
     private T state;
 
-    protected StateObject(T initialState, boolean debug) {
+    protected StateObject(AllocationType allocationType, T initialState, boolean debug) {
+        super(allocationType);
 
         this.state = Objects.requireNonNull(initialState);
         this.debug = debug;

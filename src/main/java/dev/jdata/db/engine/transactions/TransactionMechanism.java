@@ -3,25 +3,41 @@ package dev.jdata.db.engine.transactions;
 import java.util.Objects;
 
 import dev.jdata.db.data.BaseRowMap;
-import dev.jdata.db.data.locktable.LockTable;
 import dev.jdata.db.dml.DMLInsertUpdateRows;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.utils.adt.arrays.ILongArray;
+import dev.jdata.db.utils.adt.elements.ILongByIndexOrderedElementsView;
 import dev.jdata.db.utils.checks.Checks;
 
 public abstract class TransactionMechanism<T> extends BaseRowMap implements TransactionOperations<T> {
 
-    static void checkParameters(LockTable lockTable, Table table, int statementId, ILongArray rowIds, DMLInsertUpdateRows<?> rows) {
+    protected static void checkParameters(ITransactionSharedStateMarker sharedState, Table table, int statementId, ILongByIndexOrderedElementsView rowIds,
+            DMLInsertUpdateRows<?> rows) {
 
-        checkParameters(lockTable, table, statementId, rows);
-        Objects.requireNonNull(rowIds);
+        checkParameters(sharedState, table, statementId, rows);
+        checkParameter(rowIds);
     }
 
-    static void checkParameters(LockTable lockTable, Table table, int statementId, DMLInsertUpdateRows<?> rows) {
+    protected static void checkParameters(ITransactionSharedStateMarker sharedState, Table table, int statementId, ILongByIndexOrderedElementsView rowIds) {
 
-        Objects.requireNonNull(lockTable);
-        Objects.requireNonNull(table);
-        Objects.requireNonNull(rows);
+        checkParameters(sharedState, table, statementId, rowIds);
+        checkParameter(rowIds);
+    }
+
+    protected static void checkParameters(ITransactionSharedStateMarker sharedState, Table table, int statementId, DMLInsertUpdateRows<?> rows) {
+
+        checkParameters(sharedState, table, statementId);
         Checks.isExactlyOne(rows.getNumElements());
+    }
+
+    protected static void checkParameters(ITransactionSharedStateMarker sharedState, Table table, int statementId) {
+
+        Objects.requireNonNull(sharedState);
+        Objects.requireNonNull(table);
+        Checks.isStatementId(statementId);
+    }
+
+    private static void checkParameter(ILongByIndexOrderedElementsView rowIds) {
+
+        Checks.isNotEmpty(rowIds);
     }
 }

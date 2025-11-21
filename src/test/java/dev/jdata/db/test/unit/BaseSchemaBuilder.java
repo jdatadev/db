@@ -4,37 +4,35 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
 
-import dev.jdata.db.engine.database.StringStorer;
-import dev.jdata.db.schema.model.HeapSchemaMap;
+import dev.jdata.db.engine.database.IStringStorer;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.allocators.ILongToObjectMaxDistanceMapAllocator;
-import dev.jdata.db.utils.allocators.LongToObjectMaxDistanceMapAllocator;
+import dev.jdata.db.schema.model.schemamap.IHeapSchemaMap;
+import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMaps;
+import dev.jdata.db.utils.adt.lists.IHeapIndexListBuilder;
+import dev.jdata.db.utils.adt.maps.IHeapMutableLongToObjectDynamicMapAllocator;
 import dev.jdata.db.utils.checks.Checks;
 
 abstract class BaseSchemaBuilder<T extends BaseSchemaBuilder<T>> {
 
-    private final StringStorer stringStorer;
-    private final ILongToObjectMaxDistanceMapAllocator<Table> longToObjectMapAllocator;
+    private final IStringStorer stringStorer;
+    private final IHeapMutableLongToObjectDynamicMapAllocator<Table> longToObjectMapAllocator;
     private final ToIntFunction<DDLObjectType> schemaObjectIdAllocator;
 
-    private final HeapIndexListBuilder<Table> tablesBuilder;
+    private final IHeapIndexListBuilder<Table> tablesBuilder;
 
-    BaseSchemaBuilder(StringStorer stringStorer, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
-        this(stringStorer, new LongToObjectMaxDistanceMapAllocator<>(Table[]::new), schemaObjectIdAllocator);
+    BaseSchemaBuilder(IStringStorer stringStorer, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
+        this(stringStorer, IHeapMutableLongToObjectDynamicMapAllocator.create(Table[]::new), schemaObjectIdAllocator);
     }
 
-    private BaseSchemaBuilder(StringStorer stringStorer, ILongToObjectMaxDistanceMapAllocator<Table> longToObjectMapAllocator,
+    private BaseSchemaBuilder(IStringStorer stringStorer, IHeapMutableLongToObjectDynamicMapAllocator<Table> longToObjectMapAllocator,
             ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
 
         this.stringStorer = Objects.requireNonNull(stringStorer);
         this.longToObjectMapAllocator = Objects.requireNonNull(longToObjectMapAllocator);
         this.schemaObjectIdAllocator = Objects.requireNonNull(schemaObjectIdAllocator);
 
-        this.tablesBuilder = IndexList.createBuilder(Table[]::new);
+        this.tablesBuilder = IHeapIndexListBuilder.create(Table[]::new);
     }
 
     private int allocateSchemaObjectId(DDLObjectType ddlObjectType) {
@@ -58,11 +56,12 @@ abstract class BaseSchemaBuilder<T extends BaseSchemaBuilder<T>> {
         return getThis();
     }
 
-    final HeapAllCompleteSchemaMaps buildCompleteSchemaMaps() {
+    final IHeapAllCompleteSchemaMaps buildCompleteSchemaMaps() {
 
-        final HeapSchemaMap<Table> tableSchemaMap = HeapSchemaMap.of(tablesBuilder.build(), Table[]::new, longToObjectMapAllocator);
+        final IHeapSchemaMap<Table> tableSchemaMap = IHeapSchemaMap.of(tablesBuilder.buildOrNull(), Table[]::new, longToObjectMapAllocator);
 
-        return new HeapAllCompleteSchemaMaps(tableSchemaMap, HeapSchemaMap.empty(), HeapSchemaMap.empty(), HeapSchemaMap.empty(), HeapSchemaMap.empty(), HeapSchemaMap.empty());
+        return IHeapAllCompleteSchemaMaps.of(tableSchemaMap, IHeapSchemaMap.empty(), IHeapSchemaMap.empty(), IHeapSchemaMap.empty(), IHeapSchemaMap.empty(),
+                IHeapSchemaMap.empty());
     }
 
     @SuppressWarnings("unchecked")

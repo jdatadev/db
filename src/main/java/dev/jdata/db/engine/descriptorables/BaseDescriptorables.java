@@ -8,18 +8,18 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.State;
-import dev.jdata.db.utils.adt.IContains;
 import dev.jdata.db.utils.adt.arrays.Array;
+import dev.jdata.db.utils.adt.contains.IContainsView;
 import dev.jdata.db.utils.adt.elements.BaseNumElements;
 import dev.jdata.db.utils.allocators.IFreeing;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends BaseDescriptorable<T>, V extends IFreeing<U> & IContains> extends BaseNumElements {
+abstract class BaseDescriptorables<T extends Enum<T> & State, U extends BaseDescriptorable<T>, V extends IFreeing<U> & IContainsView> extends BaseNumElements<Void, Void, Void> {
 
     @FunctionalInterface
-    protected interface DescriptorableFactory<T, R> {
+    protected interface IDescriptorableFactory<T, R> {
 
-        R create(T parameter);
+        R create(AllocationType allocationType, T parameter);
     }
 
     public static final int NO_DESCRIPTOR = -1;
@@ -30,13 +30,47 @@ public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends B
 
     private int numArrayElements;
 
-    BaseDescriptorables(V freeList, IntFunction<U[]> createArray) {
+    BaseDescriptorables(AllocationType allocationType, V freeList, IntFunction<U[]> createArray) {
+        super(allocationType);
 
         this.freeList = Objects.requireNonNull(freeList);
 
         this.descriptorables = createArray.apply(10);
 
         this.numArrayElements = 0;
+    }
+
+    @Override
+    protected final <P, R> R makeFromElements(AllocationType allocationType, P parameter, IMakeFromElementsFunction<Void, Void, P, R> makeFromElements) {
+
+        Objects.requireNonNull(allocationType);
+        Objects.requireNonNull(makeFromElements);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected final void recreateElements() {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected final void resetToNull() {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected final Void copyValues(Void elements, long startIndex, long numElements) {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected final void initializeWithValues(Void values, long numElements) {
+
+        throw new UnsupportedOperationException();
     }
 
     protected final U getDescriptorable(int descriptor) {
@@ -70,7 +104,7 @@ public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends B
         }
     }
 
-    final <F, A> U addDescriptorable(F factoryParameter, A allocateParameter, DescriptorableFactory<F, U> descriptorableFactory, BiFunction<V, A, U> freeListAllocator) {
+    final <F, A> U addDescriptorable(F factoryParameter, A allocateParameter, IDescriptorableFactory<F, U> descriptorableFactory, BiFunction<V, A, U> freeListAllocator) {
 
         Objects.requireNonNull(descriptorableFactory);
 
@@ -93,7 +127,7 @@ public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends B
             result = freeListAllocator.apply(freeList, allocateParameter);
         }
         else {
-            result = descriptorableFactory.create(factoryParameter);
+            result = descriptorableFactory.create(AllocationType.CACHING_ALLOCATOR, factoryParameter);
         }
 
         Objects.requireNonNull(result);

@@ -15,17 +15,16 @@ import org.jutils.parse.ParserException;
 
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.ddl.helpers.buildschema.HeapDDLSchemaSQLStatementsWorkerObjects;
-import dev.jdata.db.engine.database.BucketsStringCache;
 import dev.jdata.db.engine.database.DatabaseStringManagement;
-import dev.jdata.db.engine.database.IStringCache;
+import dev.jdata.db.engine.database.IStringStorer;
 import dev.jdata.db.engine.database.StringManagement;
-import dev.jdata.db.engine.database.StringStorer;
-import dev.jdata.db.schema.model.effective.EffectiveDatabaseSchema;
+import dev.jdata.db.engine.database.strings.IStringCache;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
+import dev.jdata.db.schema.model.effective.IHeapEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMaps;
 import dev.jdata.db.schema.storage.sqloutputter.StringBuilderSQLOutputter;
 import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
@@ -36,13 +35,14 @@ import dev.jdata.db.sql.parse.SQLParserFactory;
 import dev.jdata.db.sql.parse.SQLParserHelper;
 import dev.jdata.db.sql.parse.expression.SQLScratchExpressionValues;
 import dev.jdata.db.test.unit.BaseDBTest;
-import dev.jdata.db.utils.adt.lists.CachedIndexList.CacheIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.ICachedIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.allocators.AddableListAllocator;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
 import dev.jdata.db.utils.allocators.IAddableListAllocator;
 
-public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSchemaSerialization<?, ?, ?, HeapAllCompleteSchemaMaps>> extends BaseDBTest {
+public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSchemaSerialization<?, ?, ?, IHeapAllCompleteSchemaMaps>> extends BaseDBTest {
 
     protected abstract SQLParserFactory getSQLParserFactory();
     protected abstract T createDatabaseSchemaSerializer(ISQLAllocator sqlAllocator, HeapDDLSchemaSQLStatementsWorkerObjects ddlSchemaSQLStatementsWorkerObjects);
@@ -51,8 +51,8 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
     @Category(UnitTest.class)
     public final void testSerializeSchemaObjectsSameStringStorer() throws ParserException {
 
-        final StringStorer builderStringStorer = createStringStorer();
-        final StringStorer deserializeStringStorer = builderStringStorer;
+        final IStringStorer builderStringStorer = createStringStorer();
+        final IStringStorer deserializeStringStorer = builderStringStorer;
 
         checkSerializeSchemaObjects(builderStringStorer, deserializeStringStorer, (a, e) -> {
 
@@ -65,8 +65,8 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
     @Category(UnitTest.class)
     public final void testSerializeSchemaObjectsDifferentStringStorer() throws ParserException {
 
-        final StringStorer builderStringStorer = createStringStorer();
-        final StringStorer deserializeStringStorer = createStringStorer();
+        final IStringStorer builderStringStorer = createStringStorer();
+        final IStringStorer deserializeStringStorer = createStringStorer();
 
         checkSerializeSchemaObjects(builderStringStorer, deserializeStringStorer, (a, e) -> {
 
@@ -75,7 +75,7 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
         });
     }
 
-    private void checkSerializeSchemaObjects(StringStorer builderStringStorer, StringStorer deserializeStringStorer,
+    private void checkSerializeSchemaObjects(IStringStorer builderStringStorer, IStringStorer deserializeStringStorer,
             BiConsumer<IEffectiveDatabaseSchema, IEffectiveDatabaseSchema> compareDatabaseSchemas) throws ParserException {
 
         final SQLParserFactory sqlParserFactory = getSQLParserFactory();
@@ -85,7 +85,7 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
 
         final ToIntFunction<DDLObjectType> schemaObjectIdAllocator = t -> DBConstants.INITIAL_SCHEMA_OBJECT_ID;
 
-        final IEffectiveDatabaseSchema effectiveDatabaseSchema = createEffectiveDatabaseSchema(getTestDatabaseId(), deserializeStringStorer, schemaObjectIdAllocator);
+        final IEffectiveDatabaseSchema effectiveDatabaseSchema = createTestEffectiveDatabaseSchema(getTestDatabaseId(), deserializeStringStorer, schemaObjectIdAllocator);
 
         final String serializedSQL = serialize(effectiveDatabaseSchema, builderStringStorer, databaseSchemaSerializer);
 
@@ -94,8 +94,8 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
         checkDeserialize(effectiveDatabaseSchema, serializedSQL, databaseSchemaSerializer, deserializeStringStorer, schemaObjectIdAllocator, compareDatabaseSchemas);
     }
 
-    private static String serialize(IEffectiveDatabaseSchema effectiveDatabaseSchema, StringStorer stringStorer,
-            BaseDatabaseSchemaSerialization<?, ?, ?, HeapAllCompleteSchemaMaps> databaseSchemaSerializer) {
+    private static String serialize(IEffectiveDatabaseSchema effectiveDatabaseSchema, IStringStorer stringStorer,
+            BaseDatabaseSchemaSerialization<?, ?, ?, IHeapAllCompleteSchemaMaps> databaseSchemaSerializer) {
 
         final StringBuilderSQLOutputter sqlOutputter = new StringBuilderSQLOutputter();
 
@@ -117,9 +117,9 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
         final LoadStream<RuntimeException> loadStream = new StringLoadStream(serializedSQL);
         final LoadStreamStringBuffers<RuntimeException> stringBuffers = new LoadStreamStringBuffers<>(loadStream);
 
-        final SQLScratchExpressionValues sqlScratchExpressionValues = new SQLScratchExpressionValues();
+        final SQLScratchExpressionValues sqlScratchExpressionValues = new SQLScratchExpressionValues(AllocationType.HEAP);
         final IAddableListAllocator addableListAllocator = new AddableListAllocator();
-        final CacheIndexListAllocator<BaseSQLStatement> indexListAllocator = new CacheIndexListAllocator<BaseSQLStatement>(BaseSQLStatement[]::new);
+        final ICachedIndexListAllocator<BaseSQLStatement> indexListAllocator = ICachedIndexListAllocator.create(BaseSQLStatement[]::new);
 
         final IIndexList<BaseSQLStatement> sqlStatements = SQLParserHelper.parse(sqlParser, stringBuffers, RuntimeException::new, sqlScratchExpressionValues, sqlAllocator,
                 addableListAllocator, indexListAllocator);
@@ -147,18 +147,18 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
         });
     }
 
-    private static <T extends BaseDatabaseSchemaSerialization<?, ?, ?, HeapAllCompleteSchemaMaps>> void checkDeserialize(IEffectiveDatabaseSchema effectiveDatabaseSchema,
-            String serializedSQL, T databaseSchemaSerializer, StringStorer stringStorer, ToIntFunction<DDLObjectType> schemaObjectIdAllocator,
+    private static <T extends BaseDatabaseSchemaSerialization<?, ?, ?, IHeapAllCompleteSchemaMaps>> void checkDeserialize(IEffectiveDatabaseSchema effectiveDatabaseSchema,
+            String serializedSQL, T databaseSchemaSerializer, IStringStorer stringStorer, ToIntFunction<DDLObjectType> schemaObjectIdAllocator,
             BiConsumer<IEffectiveDatabaseSchema, IEffectiveDatabaseSchema> compareDatabaseSchemas) throws ParserException {
 
-        final EffectiveDatabaseSchema deserializedDatabaseSchema = deserialize(effectiveDatabaseSchema, serializedSQL, databaseSchemaSerializer, stringStorer,
+        final IEffectiveDatabaseSchema deserializedDatabaseSchema = deserialize(effectiveDatabaseSchema, serializedSQL, databaseSchemaSerializer, stringStorer,
                 schemaObjectIdAllocator);
 
         compareDatabaseSchemas.accept(effectiveDatabaseSchema, deserializedDatabaseSchema);
     }
 
-    private static <T extends BaseDatabaseSchemaSerialization<?, ?, ?, HeapAllCompleteSchemaMaps>> EffectiveDatabaseSchema deserialize(
-            IEffectiveDatabaseSchema effectiveDatabaseSchema, String serializedSQL, T databaseSchemaSerializer, StringStorer stringStorer,
+    private static <T extends BaseDatabaseSchemaSerialization<?, ?, ?, IHeapAllCompleteSchemaMaps>> IEffectiveDatabaseSchema deserialize(
+            IEffectiveDatabaseSchema effectiveDatabaseSchema, String serializedSQL, T databaseSchemaSerializer, IStringStorer stringStorer,
             ToIntFunction<DDLObjectType> schemaObjectIdAllocator) throws ParserException {
 
         final LoadStream<RuntimeException> loadStream = new StringLoadStream(serializedSQL);
@@ -166,14 +166,14 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
 
         final CharacterBuffersAllocator characterBuffersAllocator = new CharacterBuffersAllocator();
         final DatabaseStringManagement databaseStringManagement = new DatabaseStringManagement(characterBuffersAllocator, stringStorer);
-        final IStringCache stringCache = new BucketsStringCache(0, 0);
-        final StringManagement stringManagement = new StringManagement();
+        final IStringCache stringCache = IStringCache.create(0, 0);
+        final StringManagement stringManagement = new StringManagement(AllocationType.HEAP);
 
         stringManagement.initialize(databaseStringManagement, stringBuffers, stringCache);
 
-        final HeapAllCompleteSchemaMaps completeSchemaMaps = databaseSchemaSerializer.deserialize(stringBuffers, RuntimeException::new, stringManagement, schemaObjectIdAllocator);
+        final IHeapAllCompleteSchemaMaps completeSchemaMaps = databaseSchemaSerializer.deserialize(stringBuffers, RuntimeException::new, stringManagement, schemaObjectIdAllocator);
 
-        final EffectiveDatabaseSchema deserializedDatabaseSchema = EffectiveDatabaseSchema.of(effectiveDatabaseSchema.getDatabaseId(), effectiveDatabaseSchema.getVersion(),
+        final IEffectiveDatabaseSchema deserializedDatabaseSchema = IHeapEffectiveDatabaseSchema.of(effectiveDatabaseSchema.getDatabaseId(), effectiveDatabaseSchema.getVersion(),
                 completeSchemaMaps);
 
         return deserializedDatabaseSchema;

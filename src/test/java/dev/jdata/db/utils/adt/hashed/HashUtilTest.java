@@ -10,29 +10,47 @@ public final class HashUtilTest extends BaseTest {
 
     @Test
     @Category(UnitTest.class)
+    public void testComputeHashCapacityExponent() {
+
+        checkComputeCapacityExponent(HashUtil::computeHashCapacityExponent);
+    }
+
+    @Test
+    @Category(UnitTest.class)
     public void testComputeRehashCapacityExponent() {
 
-        assertThatThrownBy(() -> HashUtil.computeRehashCapacityExponent(-1, 0.75f)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> HashUtil.computeRehashCapacityExponent(1, -0.001f)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> HashUtil.computeRehashCapacityExponent(1, 0.0f)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> HashUtil.computeRehashCapacityExponent(1, 1.001f)).isInstanceOf(IllegalArgumentException.class);
+        checkComputeCapacityExponent(HashUtil::computeRehashCapacityExponent);
+    }
 
-        assertThat(HashUtil.computeRehashCapacityExponent(0, 0.1f)).isEqualTo(0);
-        assertThat(HashUtil.computeRehashCapacityExponent(0, 0.9f)).isEqualTo(0);
+    @FunctionalInterface
+    private interface CapacityExponentComputer {
 
-        assertThat(HashUtil.computeRehashCapacityExponent(10, 0.5f)).isEqualTo(5);
-        assertThat(HashUtil.computeRehashCapacityExponent(50, 0.5f)).isEqualTo(7);
-        assertThat(HashUtil.computeRehashCapacityExponent(100, 0.5f)).isEqualTo(8);
+        int compute(long numElements, float loadFactor);
+    }
 
-        assertThat(HashUtil.computeRehashCapacityExponent(10, 0.9f)).isEqualTo(4);
-        assertThat(HashUtil.computeRehashCapacityExponent(50, 0.9f)).isEqualTo(6);
-        assertThat(HashUtil.computeRehashCapacityExponent(100, 0.9f)).isEqualTo(7);
+    private static void checkComputeCapacityExponent(CapacityExponentComputer capacityExponentComputer) {
 
-        assertThat(HashUtil.computeRehashCapacityExponent(4, 0.5f)).isEqualTo(3);
-        assertThat(HashUtil.computeRehashCapacityExponent(5, 0.5f)).isEqualTo(4);
+        assertThatThrownBy(() -> capacityExponentComputer.compute(-1, 0.75f)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> capacityExponentComputer.compute(1, -0.001f)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> capacityExponentComputer.compute(1, 0.0f)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> capacityExponentComputer.compute(1, 1.001f)).isInstanceOf(IllegalArgumentException.class);
 
-        assertThat(HashUtil.computeRehashCapacityExponent(1024, 0.5f)).isEqualTo(11);
-        assertThat(HashUtil.computeRehashCapacityExponent(1025, 0.5f)).isEqualTo(12);
+        assertThat(capacityExponentComputer.compute(0, 0.1f)).isEqualTo(0);
+        assertThat(capacityExponentComputer.compute(0, 0.9f)).isEqualTo(0);
+
+        assertThat(capacityExponentComputer.compute(10, 0.5f)).isEqualTo(5);
+        assertThat(capacityExponentComputer.compute(50, 0.5f)).isEqualTo(7);
+        assertThat(capacityExponentComputer.compute(100, 0.5f)).isEqualTo(8);
+
+        assertThat(capacityExponentComputer.compute(10, 0.9f)).isEqualTo(4);
+        assertThat(capacityExponentComputer.compute(50, 0.9f)).isEqualTo(6);
+        assertThat(capacityExponentComputer.compute(100, 0.9f)).isEqualTo(7);
+
+        assertThat(capacityExponentComputer.compute(4, 0.5f)).isEqualTo(3);
+        assertThat(capacityExponentComputer.compute(5, 0.5f)).isEqualTo(4);
+
+        assertThat(capacityExponentComputer.compute(1024, 0.5f)).isEqualTo(11);
+        assertThat(capacityExponentComputer.compute(1025, 0.5f)).isEqualTo(12);
     }
 
     @Test

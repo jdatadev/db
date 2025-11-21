@@ -1,6 +1,8 @@
 package dev.jdata.db.utils.adt.arrays;
 
-public interface ILongArrayMutators {
+import dev.jdata.db.utils.adt.marker.IMutators;
+
+interface ILongArrayMutators extends IMutators {
 
     void add(long value);
 

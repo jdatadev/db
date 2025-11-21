@@ -6,19 +6,27 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.Capacity;
 import dev.jdata.db.utils.adt.CapacityExponents;
+import dev.jdata.db.utils.allocators.BaseCapacityInstanceAllocator.CapacityMax;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseCapacityHashed<T> extends BaseHashed<T> {
+abstract class BaseCapacityHashed<T, U, V> extends BaseHashed<T, U, V> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_CAPACITY_HASHED;
 
     private static final boolean ASSERT = AssertionContants.ASSERT_BASE_CAPACITY_HASHED;
 
     protected static final float DEFAULT_LOAD_FACTOR = HashedConstants.DEFAULT_LOAD_FACTOR;
+    protected static final int DEFAULT_INITIAL_CAPACITY_EXPONENT = HashedConstants.DEFAULT_INITIAL_CAPACITY_EXPONENT;
+    protected static final int DEFAULT_CAPACITY_EXPONENT_INCREASE = HashedConstants.DEFAULT_CAPACITY_EXPONENT_INCREASE;
+    protected static final int DEFAULT_INNER_CAPACITY_EXPONENT = HashedConstants.DEFAULT_INNER_CAPACITY_EXPONENT;
+
+    private static final int DEFAULT_NON_BUCKET_OUTER_INITIAL_CAPACITY_EXPONENT = 0;
+    protected static final int DEFAULT_NON_BUCKET_OUTER_INITIAL_CAPACITY = CapacityExponents.computeIntCapacityFromExponent(DEFAULT_NON_BUCKET_OUTER_INITIAL_CAPACITY_EXPONENT);
 
     private static final int DEFAULT_BUCKETS_OUTER_INITIAL_CAPACITY_EXPONENT = 0;
     protected static final int DEFAULT_BUCKETS_OUTER_INITIAL_CAPACITY = CapacityExponents.computeIntCapacityFromExponent(DEFAULT_BUCKETS_OUTER_INITIAL_CAPACITY_EXPONENT);
@@ -38,22 +46,24 @@ abstract class BaseCapacityHashed<T> extends BaseHashed<T> {
 
     abstract long adjustNewCapacity(long requiredCapacity);
 
-    BaseCapacityHashed(long initialCapacity, float loadFactor, boolean isLargeHashed, Supplier<T> createHashed, Consumer<T> clearHashed) {
-        super(createHashed, clearHashed);
+    BaseCapacityHashed(AllocationType allocationType, long initialCapacity, float loadFactor, CapacityMax capacityMax, Supplier<T> createHashed, Consumer<T> clearHashed,
+            Supplier<T> recreateHashed) {
+        super(allocationType, createHashed, clearHashed, recreateHashed);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacity", initialCapacity).add("loadFactor", loadFactor).add("isLargeHashed", isLargeHashed).add("createHashed", createHashed)
-                    .add("clearHashed", clearHashed));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacity", initialCapacity).add("loadFactor", loadFactor).add("capacityMax", capacityMax)
+                    .add("createHashed", createHashed).add("clearHashed", clearHashed).add("recreateHashed", recreateHashed));
         }
 
-        Checks.isInitialCapacity(initialCapacity);
+        Checks.isIntInitialCapacity(initialCapacity);
         Checks.isLoadFactor(loadFactor);
+        Objects.requireNonNull(capacityMax);
         Objects.requireNonNull(createHashed);
         Objects.requireNonNull(clearHashed);
 
         this.loadFactor = loadFactor;
-        this.isLargeHashed = isLargeHashed;
+        this.isLargeHashed = capacityMax == CapacityMax.LONG;
 
         this.capacity = initialCapacity;
 
@@ -63,16 +73,26 @@ abstract class BaseCapacityHashed<T> extends BaseHashed<T> {
         }
     }
 
-    BaseCapacityHashed(BaseCapacityHashed<T> toCopy, Function<T, T> copyHashed) {
-        super(toCopy, copyHashed);
+    BaseCapacityHashed(AllocationType allocationType, BaseCapacityHashed<T, U, V> toCopy, Function<T, T> copyHashed) {
+        super(allocationType, toCopy, copyHashed);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy).add("copyHashed", copyHashed));
+        }
 
         this.loadFactor = toCopy.loadFactor;
         this.isLargeHashed = toCopy.isLargeHashed;
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     final int getIntCapacity() {
 
-        return Integers.checkUnsignedLongToUnsignedInt(capacity);
+        return Capacity.intCapacityRenamed(capacity);
     }
 
     final long getLongCapacity() {
@@ -103,7 +123,7 @@ abstract class BaseCapacityHashed<T> extends BaseHashed<T> {
         return result;
     }
 
-    private <P> long increaseCapacityAndRehash(P parameter, Rehasher<T, P> rehasher) {
+    final <P> long increaseCapacityAndRehash(P parameter, Rehasher<T, P> rehasher) {
 
         if (DEBUG) {
 
@@ -124,7 +144,7 @@ abstract class BaseCapacityHashed<T> extends BaseHashed<T> {
 
     private <P> long increaseCapacityAndRehash(long capacity, P parameter, Rehasher<T, P> rehasher) {
 
-        Checks.isCapacity(capacity);
+        Checks.isLongCapacity(capacity);
         Objects.requireNonNull(rehasher);
 
         if (DEBUG) {
@@ -151,7 +171,7 @@ abstract class BaseCapacityHashed<T> extends BaseHashed<T> {
 
     final <P> void checkCapacity(long numAdditionalElements, P parameter, Rehasher<T, P> rehasher) {
 
-        Checks.isNumElementsAboveZero(numAdditionalElements);
+        Checks.isLongNumElementsAboveZero(numAdditionalElements);
         Objects.requireNonNull(rehasher);
 
         if (DEBUG) {

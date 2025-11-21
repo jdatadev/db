@@ -5,12 +5,11 @@ import java.util.Objects;
 
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.storage.backend.file.BaseStorageFiles;
+import dev.jdata.db.utils.adt.arrays.IByteArrayAllocator;
 import dev.jdata.db.utils.adt.lists.IIndexList;
-import dev.jdata.db.utils.adt.lists.IIndexListGetters;
+import dev.jdata.db.utils.adt.lists.IIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IIndexListView;
 import dev.jdata.db.utils.adt.lists.IMutableIndexList;
-import dev.jdata.db.utils.adt.lists.IndexList;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListAllocator;
-import dev.jdata.db.utils.allocators.IByteArrayAllocator;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RandomFileAccess;
@@ -24,7 +23,7 @@ public final class FileTableStorageFiles extends BaseStorageFiles<RandomFileAcce
     private int sequenceNoAllocator;
 
     FileTableStorageFiles(IRelativeFileSystemAccess fileSystemAccess, RelativeDirectoryPath tableDirectoryPath, IIndexList<FileTableStorageFile> files,
-            IndexListAllocator<FileTableStorageFile, ? extends IndexList<FileTableStorageFile>, ?, ? extends IMutableIndexList<FileTableStorageFile>> indexListAllocator) {
+            IIndexListAllocator<FileTableStorageFile, ? extends IIndexList<FileTableStorageFile>, ? extends IMutableIndexList<FileTableStorageFile>, ?> indexListAllocator) {
         super(fileSystemAccess, tableDirectoryPath, files, indexListAllocator);
 
         this.sequenceNoAllocator = files.maxInt(INITIAL_SEQUENCE_NO, FileTableStorageFile::getSequenceNo);
@@ -135,7 +134,7 @@ public final class FileTableStorageFiles extends BaseStorageFiles<RandomFileAcce
         }
     }
 
-    private static <T> T binarySearch(IIndexListGetters<T> list, long toFind, RangeGetter<T> rangeGetter) {
+    private static <T> T binarySearch(IIndexListView<T> list, long toFind, RangeGetter<T> rangeGetter) {
 
         final T result;
 
@@ -158,7 +157,7 @@ public final class FileTableStorageFiles extends BaseStorageFiles<RandomFileAcce
         return result;
     }
 
-    private static <T> T binarySearch(IIndexListGetters<T> list, long beginIndex, long numElements, long toFind, RangeGetter<T> rangeGetter) {
+    private static <T> T binarySearch(IIndexListView<T> list, long beginIndex, long numElements, long toFind, RangeGetter<T> rangeGetter) {
 
         if (numElements < 2) {
 

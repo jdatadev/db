@@ -19,10 +19,10 @@ import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.sql.ast.clauses.SQLWhereClause;
 import dev.jdata.db.sql.ast.statements.dml.SQLColumnValueUpdateValue;
 import dev.jdata.db.sql.ast.statements.table.SQLColumnNames;
-import dev.jdata.db.utils.adt.arrays.LargeLongArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
 class ColumnStoreUtil {
 
@@ -54,7 +54,7 @@ class ColumnStoreUtil {
         }
     }
 
-    static long selectUpdateOrDeleteRows(SQLWhereClause whereClause, BaseDMLUpdatingEvaluatorParameter evaluatorParameter, LargeLongArray rowIdsDst) {
+    static long selectUpdateOrDeleteRows(SQLWhereClause whereClause, BaseDMLUpdatingEvaluatorParameter evaluatorParameter, IMutableLongLargeArray rowIdsDst) {
 
         final Transaction transaction = evaluatorParameter.getTransaction();
         final Table table = evaluatorParameter.getTable();
@@ -65,7 +65,7 @@ class ColumnStoreUtil {
     static <T extends InsertUpdateRow> int setTableColumns(int tableId, SQLColumnNames sqlcolumnNames, DMLInsertUpdateRows<T> insertUpdateRows, T[] rows,
             RowDataNumBits rowDataNumBits, TableAndColumnNames columnNames, INumStorageBitsGetter numStorageBitsGetter) {
 
-        final int numColumnNames = Integers.checkUnsignedLongToUnsignedInt(sqlcolumnNames.getNumElements());
+        final int numColumnNames = IOnlyElementsView.intNumElements(sqlcolumnNames);
 
         return setTableColumnsByIndex(tableId, sqlcolumnNames, numColumnNames, insertUpdateRows, rows, rowDataNumBits, columnNames, numStorageBitsGetter, SQLColumnNames::get);
     }

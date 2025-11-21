@@ -4,6 +4,10 @@ import dev.jdata.db.schema.model.objects.ColumnsObject;
 
 final class DDLTransactionAddedColumnsSchemaObject extends DDLTransactionAddedSchemaObject<ColumnsObject> {
 
+    DDLTransactionAddedColumnsSchemaObject(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     @Override
     <P, R> R visit(DDLTransactionObjectVisitor<P, R> visitor, P parameter) {
 

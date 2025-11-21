@@ -5,22 +5,20 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.elements.ILongAnyOrderAddable;
+import dev.jdata.db.utils.adt.elements.IObjectAnyOrderAddable;
 import dev.jdata.db.utils.adt.maps.Maps.ILongForEachAppend;
-import dev.jdata.db.utils.checks.Checks;
 
-abstract class BaseLongToObjectNonBucketMap<T, M extends IBaseLongToObjectMapCommon<T, M>>
-
-        extends BaseLongArrayKeysNonBucketMap<T[]>
-        implements IBaseLongToObjectMapCommon<T, M> {
+abstract class BaseLongToObjectNonBucketMap<V, M extends BaseLongToObjectNonBucketMap<V, M>> extends BaseLongArrayKeysNonBucketMap<V[], M> implements ILongToObjectMapCommon<V> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_LONG_TO_OBJECT_NON_BUCKET_MAP;
 
-    BaseLongToObjectNonBucketMap(int initialCapacityExponent, IntFunction<T[]> createValuesArray) {
-        this(initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, DEFAULT_LOAD_FACTOR, createValuesArray);
+    BaseLongToObjectNonBucketMap(AllocationType allocationType, int initialCapacityExponent, IntFunction<V[]> createValuesArray) {
+        this(allocationType, initialCapacityExponent, DEFAULT_CAPACITY_EXPONENT_INCREASE, DEFAULT_LOAD_FACTOR, createValuesArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("createValuesArray", createValuesArray));
         }
 
         if (DEBUG) {
@@ -29,13 +27,13 @@ abstract class BaseLongToObjectNonBucketMap<T, M extends IBaseLongToObjectMapCom
         }
     }
 
-    BaseLongToObjectNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<T[]> createValuesArray) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
+    BaseLongToObjectNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor, IntFunction<V[]> createValuesArray) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor, createValuesArray);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor)
-                    .add("createValuesArray", createValuesArray));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor).add("createValuesArray", createValuesArray));
         }
 
         if (DEBUG) {
@@ -44,12 +42,12 @@ abstract class BaseLongToObjectNonBucketMap<T, M extends IBaseLongToObjectMapCom
         }
     }
 
-    BaseLongToObjectNonBucketMap(BaseLongToObjectNonBucketMap<T, M> toCopy) {
-        super(toCopy, (a1, a2) -> System.arraycopy(a1, 0, a2, 0, a1.length));
+    BaseLongToObjectNonBucketMap(AllocationType allocationType, BaseLongToObjectNonBucketMap<V, M> toCopy) {
+        super(allocationType, toCopy, (a1, a2) -> System.arraycopy(a1, 0, a2, 0, a1.length));
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy));
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy));
         }
 
         if (DEBUG) {
@@ -59,7 +57,7 @@ abstract class BaseLongToObjectNonBucketMap<T, M extends IBaseLongToObjectMapCom
     }
 
     @Override
-    public final <P> void forEachValue(P parameter, IForEachValue<T, P> forEach) {
+    public final <P, E extends Exception> void forEachValue(P parameter, IObjectForEachMapValue<V, P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -77,7 +75,7 @@ abstract class BaseLongToObjectNonBucketMap<T, M extends IBaseLongToObjectMapCom
     }
 
     @Override
-    public final <P> void forEachKeyAndValue(P parameter, IForEachKeyAndValue<T, P> forEach) {
+    public final <P, E extends Exception> void forEachKeyAndValue(P parameter, ILongToObjectForEachMapKeyAndValue<V, P, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
@@ -90,61 +88,88 @@ abstract class BaseLongToObjectNonBucketMap<T, M extends IBaseLongToObjectMapCom
 
         if (DEBUG) {
 
-            enter(b -> b.add("parameter", parameter).add("forEach", forEach));
+            exit(b -> b.add("parameter", parameter).add("forEach", forEach));
         }
     }
 
     @Override
-    public final <P, DELEGATE, R> R forEachKeyAndValueWithResult(R defaultResult, P parameter, DELEGATE delegate, IForEachKeyAndValueWithResult<T, P, DELEGATE, R> forEach) {
+    public final <P1, P2, E extends Exception> void forEachKeyAndValue(P1 parameter1, P2 parameter2, ILongToObjectForEachMapKeyAndValue2<V, P1, P2, E> forEach) throws E {
 
         Objects.requireNonNull(forEach);
 
         if (DEBUG) {
 
-            enter(b -> b.add("defaultResult", defaultResult).add("parameter", parameter).add("delegate", delegate).add("forEach", forEach));
+            enter(b -> b.add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
         }
 
-        final R result = forEachKeyAndValueWithResult(defaultResult, parameter, forEach, delegate,
-                (keys, keyIndex, values, valueIndex, p1, p2, d) -> p2.each(keys[keyIndex], values[valueIndex], p1, d));
+        forEachKeyAndValueWithResult(null, parameter1, parameter2, forEach, (keys, keyIndex, values, valueIndex, p1, p2, d) -> {
+
+            d.each(keys[keyIndex], values[valueIndex], p1, p2);
+
+            return null;
+        });
 
         if (DEBUG) {
 
-            exit(result, b -> b.add("defaultResult", defaultResult).add("parameter", parameter).add("delegate", delegate).add("forEach", forEach));
+            exit(b -> b.add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
+        }
+    }
+
+    @Override
+    public final <P1, P2, R, E extends Exception> R forEachKeyAndValueWithResult(R defaultResult, P1 parameter1, P2 parameter2,
+            ILongToObjectForEachMapKeyAndValueWithResult<V, P1, P2, R, E> forEach) throws E {
+
+        Objects.requireNonNull(forEach);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("defaultResult", defaultResult).add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
+        }
+
+        final R result = forEachKeyAndValueWithResult(defaultResult, parameter1, parameter2, forEach,
+                (keys, keyIndex, values, valueIndex, p1, p2, d) -> d.each(keys[keyIndex], values[valueIndex], p1, p2));
+
+        if (DEBUG) {
+
+            exit(result, b -> b.add("defaultResult", defaultResult).add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
         }
 
         return result;
     }
 
     @Override
-    public final void keysAndValues(long[] keysDst, T[] valuesDst) {
+    public final long keysAndValues(ILongAnyOrderAddable keysDst, IObjectAnyOrderAddable<V> valuesDst) {
 
-        final long numElements = getNumElements();
-
-        Checks.isGreaterThanOrEqualTo(keysDst.length, numElements);
-        Checks.isGreaterThanOrEqualTo(valuesDst.length, numElements);
-        Checks.areEqual(keysDst.length, valuesDst.length);
+        Objects.requireNonNull(keysDst);
+        Objects.requireNonNull(valuesDst);
 
         if (DEBUG) {
 
-            enter();
+            enter(b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst));
         }
 
-        keysAndValues(keysDst, getValues(), valuesDst, (src, srcIndex, dst, dstIndex) -> dst[dstIndex] = src[srcIndex]);
+        final long result = keysAndValues(keysDst, valuesDst, (srcIndex, kSrc, vSrc, dstIndex, kDst, vDst) -> {
+
+            kDst.addInAnyOrder(kSrc[srcIndex]);
+            vDst.addInAnyOrder(vSrc[srcIndex]);
+        });
 
         if (DEBUG) {
 
-            exit(b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst));
+            exit(result, b -> b.add("keysDst", keysDst).add("valuesDst", valuesDst));
         }
+
+        return result;
     }
 
     @Override
-    protected final void put(T[] values, int index, T[] newValues, int newIndex) {
+    protected final void put(V[] values, int index, V[] newValues, int newIndex) {
 
         newValues[newIndex] = values[index];
     }
 
     @Override
-    protected final void clearValues(T[] values) {
+    protected final void clearValues(V[] values) {
 
         Arrays.fill(values, null);
     }
@@ -164,8 +189,8 @@ abstract class BaseLongToObjectNonBucketMap<T, M extends IBaseLongToObjectMapCom
         }
     }
 
-    final <P1, P2, DELEGATE> boolean equalsLongToObjectNonBucketMap(P1 parameter1, BaseLongToObjectNonBucketMap<T, M> other, P2 parameter2,
-            IObjectValueMapEqualityTester<T, P1, P2> equalityTester) {
+    final <P1, P2, DELEGATE, E extends Exception> boolean equalsLongToObjectNonBucketMap(P1 parameter1, BaseLongToObjectNonBucketMap<V, ?> other, P2 parameter2,
+            IObjectValueMapEqualityTester<V, P1, P2, E> equalityTester) throws E {
 
         Objects.requireNonNull(other);
         Objects.requireNonNull(equalityTester);
@@ -205,7 +230,7 @@ abstract class BaseLongToObjectNonBucketMap<T, M extends IBaseLongToObjectMapCom
         }
         else {
             @SuppressWarnings("unchecked")
-            final BaseLongToObjectNonBucketMap<T, M> other = (BaseLongToObjectNonBucketMap<T, M>)object;
+            final BaseLongToObjectNonBucketMap<V, ?> other = (BaseLongToObjectNonBucketMap<V, ?>)object;
 
             result = equalsLongKeyNonBucketMapWithIndex(null, other, null, null, (v1, i1, p1, v2, i2, p2, d) -> Objects.equals(v1[i1], v2[i2]));
         }
@@ -217,7 +242,7 @@ abstract class BaseLongToObjectNonBucketMap<T, M extends IBaseLongToObjectMapCom
     public final String toString() {
 
         return Maps.longToObjectMapToString(getClass().getSimpleName(), getNumElements(), this,
-                (StringBuilder b, BaseLongToObjectNonBucketMap<T, M> i, ILongForEachAppend<T, BaseLongToObjectNonBucketMap<T, M>> f)
+                (StringBuilder b, BaseLongToObjectNonBucketMap<V, M> i, ILongForEachAppend<V, BaseLongToObjectNonBucketMap<V, M>> f)
                         -> i.forEachKeyAndValue(b, (key, value, stringBuilder) -> f.each(key, value, stringBuilder, null)));
     }
 }

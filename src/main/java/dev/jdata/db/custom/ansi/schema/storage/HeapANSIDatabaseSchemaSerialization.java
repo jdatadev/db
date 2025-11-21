@@ -5,28 +5,29 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.ddl.allocators.DDLSchemaScratchObjects;
 import dev.jdata.db.ddl.helpers.buildschema.IDDLSchemaSQLStatementsWorkerObjects;
-import dev.jdata.db.schema.model.schemamaps.HeapAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMaps;
 import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.utils.adt.lists.HeapIndexList;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListAllocator;
-import dev.jdata.db.utils.adt.lists.HeapIndexList.HeapIndexListBuilder;
+import dev.jdata.db.utils.adt.lists.IHeapIndexList;
+import dev.jdata.db.utils.adt.lists.IHeapIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IHeapIndexListBuilder;
 
 public final class HeapANSIDatabaseSchemaSerialization
 
                 extends ANSIDatabaseSchemaSerialization<
-                                HeapIndexList<BaseSQLStatement>,
-                                HeapIndexListBuilder<BaseSQLStatement>,
-                                HeapIndexListAllocator<BaseSQLStatement>,
-                                HeapAllCompleteSchemaMaps> {
+                                IHeapIndexList<BaseSQLStatement>,
+                                IHeapIndexListBuilder<BaseSQLStatement>,
+                                IHeapIndexListAllocator<BaseSQLStatement>,
+                                IHeapAllCompleteSchemaMaps> {
 
-    public HeapANSIDatabaseSchemaSerialization(ISQLAllocator sqlAllocator, IDDLSchemaSQLStatementsWorkerObjects<HeapAllCompleteSchemaMaps, ?> ddlSchemaSQLStatementsWorkerObjects,
-            DDLSchemaScratchObjects ddlSchemaScratchObjects) {
-        super(sqlAllocator, ddlSchemaSQLStatementsWorkerObjects, ddlSchemaScratchObjects, HeapIndexListAllocator::new);
+    public HeapANSIDatabaseSchemaSerialization(ISQLAllocator sqlAllocator,
+            IDDLSchemaSQLStatementsWorkerObjects<IHeapAllCompleteSchemaMaps, ?, ?> ddlSchemaSQLStatementsWorkerObjects, DDLSchemaScratchObjects ddlSchemaScratchObjects) {
+        super(sqlAllocator, ddlSchemaSQLStatementsWorkerObjects, ddlSchemaScratchObjects, IHeapIndexListAllocator::create);
     }
 
-    public HeapANSIDatabaseSchemaSerialization(ISQLAllocator sqlAllocator, IDDLSchemaSQLStatementsWorkerObjects<HeapAllCompleteSchemaMaps, ?> ddlSchemaSQLStatementsWorkerObjects,
-            DDLSchemaScratchObjects ddlSchemaScratchObjects, Function<IntFunction<BaseSQLStatement[]>, HeapIndexListAllocator<BaseSQLStatement>> createIndexListAllocator) {
+    public HeapANSIDatabaseSchemaSerialization(ISQLAllocator sqlAllocator,
+            IDDLSchemaSQLStatementsWorkerObjects<IHeapAllCompleteSchemaMaps, ?, ?> ddlSchemaSQLStatementsWorkerObjects,
+            DDLSchemaScratchObjects ddlSchemaScratchObjects, Function<IntFunction<BaseSQLStatement[]>, IHeapIndexListAllocator<BaseSQLStatement>> createIndexListAllocator) {
         super(sqlAllocator, ddlSchemaSQLStatementsWorkerObjects, ddlSchemaScratchObjects, createIndexListAllocator);
     }
 }

@@ -1,21 +1,21 @@
 package dev.jdata.db.utils.adt.lists;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.adt.elements.BaseNumElements;
-import dev.jdata.db.utils.adt.elements.IElements;
+import dev.jdata.db.utils.adt.maps.IHeapMutableNonRemoveStaticMap;
+import dev.jdata.db.utils.adt.maps.IMutableNonRemoveStaticMap;
 import dev.jdata.db.utils.allocators.IFreeing;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class MultiTypeFreeList<T> extends BaseNumElements implements IFreeing<T>, IElements {
+public final class MultiTypeFreeList<T> extends BaseNumElements<IMutableNonRemoveStaticMap<Class<?>, FreeList<T>>, Void, Void> implements IFreeing<T> {
 
-    private final Map<Class<?>, FreeList<T>> freeListsByType;
+    private final IHeapMutableNonRemoveStaticMap<Class<?>, FreeList<T>> freeListsByType;
 
     @SafeVarargs
-    public MultiTypeFreeList(IntFunction<T[]> createArray, Class<? extends T> ... typesToAllocate) {
+    public MultiTypeFreeList(AllocationType allocationType, IntFunction<T[]> createArray, Class<? extends T> ... typesToAllocate) {
+        super(allocationType);
 
         Objects.requireNonNull(createArray);
         Checks.isNotEmpty(typesToAllocate);
@@ -23,14 +23,14 @@ public final class MultiTypeFreeList<T> extends BaseNumElements implements IFree
 
         final int numTypesToAllocate = typesToAllocate.length;
 
-        this.freeListsByType = new HashMap<>(numTypesToAllocate);
+        this.freeListsByType = IHeapMutableNonRemoveStaticMap.create(numTypesToAllocate, Class[]::new, FreeList[]::new);
 
         for (Class<? extends T> typeToAllocate : typesToAllocate) {
 
             freeListsByType.put(typeToAllocate, new FreeList<>(createArray));
         }
 
-        if (freeListsByType.size() != numTypesToAllocate) {
+        if (freeListsByType.getNumElements() != numTypesToAllocate) {
 
             throw new IllegalArgumentException();
         }
@@ -41,11 +41,6 @@ public final class MultiTypeFreeList<T> extends BaseNumElements implements IFree
         Objects.requireNonNull(typeToAllocate);
 
         final FreeList<T> freeList = freeListsByType.get(typeToAllocate);
-
-        if (freeList == null) {
-
-            throw new IllegalArgumentException();
-        }
 
         final T result = freeList.allocate();
 
@@ -69,5 +64,43 @@ public final class MultiTypeFreeList<T> extends BaseNumElements implements IFree
         freeList.free(instance);
 
         incrementNumElements();
+    }
+
+    @Override
+    protected <P, R> R makeFromElements(AllocationType allocationType, P parameter,
+            IMakeFromElementsFunction<IMutableNonRemoveStaticMap<Class<?>, FreeList<T>>, Void, P, R> makeFromElements) {
+
+        Objects.requireNonNull(allocationType);
+        Objects.requireNonNull(makeFromElements);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void recreateElements() {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void resetToNull() {
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected Void copyValues(Void values, long startIndex, long numElements) {
+
+        checkIntCopyValuesParameters(values, 0L, startIndex, numElements);
+
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void initializeWithValues(Void values, long numElements) {
+
+        checkIntIntitializeWithValuesParameters(values, 0L, numElements);
+
+        throw new UnsupportedOperationException();
     }
 }

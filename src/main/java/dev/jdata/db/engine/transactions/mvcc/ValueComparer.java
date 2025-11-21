@@ -2,22 +2,24 @@ package dev.jdata.db.engine.transactions.mvcc;
 
 import java.util.Objects;
 
+import dev.jdata.db.DBConstants;
 import dev.jdata.db.engine.transactions.RowValue;
 import dev.jdata.db.engine.transactions.RowValueType;
 import dev.jdata.db.engine.transactions.SelectColumn;
 import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.buffers.BitBuffer;
-import dev.jdata.db.utils.adt.decimals.MutableDecimal;
+import dev.jdata.db.utils.adt.numbers.decimals.IHeapMutableDecimal;
+import dev.jdata.db.utils.adt.numbers.decimals.IMutableDecimal;
 import dev.jdata.db.utils.checks.Checks;
 
 final class ValueComparer implements IClearable {
 
-    private final MutableDecimal scratchMutableDecimal;
+    private final IHeapMutableDecimal scratchMutableDecimal;
 
     ValueComparer() {
 
-        this.scratchMutableDecimal = new MutableDecimal();
+        this.scratchMutableDecimal = IHeapMutableDecimal.ofPrecision(DBConstants.MAX_DECIMAL_PRECISION);
     }
 
     static boolean computeMatches(SelectColumn selectColumn, int compareResult) {
@@ -87,7 +89,7 @@ final class ValueComparer implements IClearable {
 
         case DECIMAL:
 
-            final MutableDecimal bufferDecimal = mvccBitBuffer.getDecimal(bufferColumnBitOffset, scratchMutableDecimal);
+            final IMutableDecimal bufferDecimal = mvccBitBuffer.getDecimal(bufferColumnBitOffset, scratchMutableDecimal);
 
             compareResult = rowValue.getDecimal().compareTo(bufferDecimal);
             break;

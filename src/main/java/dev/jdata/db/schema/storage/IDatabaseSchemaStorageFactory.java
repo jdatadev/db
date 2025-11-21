@@ -8,6 +8,7 @@ import dev.jdata.db.schema.storage.sqloutputter.ISQLOutputter;
 import dev.jdata.db.sql.ast.statements.BaseSQLDDLOperationStatement;
 import dev.jdata.db.sql.parse.ISQLString;
 import dev.jdata.db.utils.adt.IResettable;
+import dev.jdata.db.utils.adt.elements.IIntAnyOrderAddable;
 
 public interface IDatabaseSchemaStorageFactory<E extends Exception> {
 
@@ -19,5 +20,13 @@ public interface IDatabaseSchemaStorageFactory<E extends Exception> {
                 ISQLOutputter<E> sqlOutputter) throws E;
     }
 
+    public interface IDatabaseSchemaRetrieval<E extends Exception> extends IResettable {
+
+    }
+
     IDatabaseSchemaStorage<E> createSchemaDiffStorage(DatabaseSchemaVersion databaseSchemaVersion) throws E;
+
+    void listVersions(IIntAnyOrderAddable dst);
+
+    IDatabaseSchemaRetrieval<E> createSchemaDiffRetrieval(DatabaseSchemaVersion databaseSchemaVersion) throws E;
 }

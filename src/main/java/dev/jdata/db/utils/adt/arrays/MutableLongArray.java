@@ -1,44 +1,21 @@
 package dev.jdata.db.utils.adt.arrays;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.debug.PrintDebug;
 
-public final class MutableLongArray extends BaseLongArray implements IMutableLongArray {
+abstract class MutableLongArray extends BaseLongArray implements IMutableLongArray {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MUTABLE_LONG_ARRAY;
 
-    private static final Class<?> debugClass = MutableLongArray.class;
-
-    public static MutableLongArray copyOf(MutableLongArray toCopy) {
-
-        Objects.requireNonNull(toCopy);
-
-        if (DEBUG) {
-
-            PrintDebug.enter(debugClass, b -> b.add("toCopy", toCopy));
-        }
-
-        final MutableLongArray result = new MutableLongArray(toCopy);
-
-        if (DEBUG) {
-
-            PrintDebug.exit(debugClass, result);
-        }
-
-        return result;
-    }
-
     private final long clearValue;
 
-    public MutableLongArray(int initialCapacity) {
-        this(initialCapacity, 0L, false);
+    MutableLongArray(AllocationType allocationType, int initialCapacity) {
+        this(allocationType, initialCapacity, 0L, false);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacity", initialCapacity));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacity", initialCapacity));
         }
 
         if (DEBUG) {
@@ -47,12 +24,12 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
         }
     }
 
-    public MutableLongArray(int initialCapacity, long clearValue) {
-        this(initialCapacity, clearValue, true);
+    MutableLongArray(AllocationType allocationType, int initialCapacity, long clearValue) {
+        this(allocationType, initialCapacity, clearValue, true);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacity", initialCapacity).add("clearValue", clearValue));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacity", initialCapacity).add("clearValue", clearValue));
         }
 
         if (DEBUG) {
@@ -61,8 +38,8 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
         }
     }
 
-    private MutableLongArray(int initialCapacity, long clearValue, boolean hasClearValue) {
-        super(createArray(initialCapacity, clearValue, hasClearValue), 0, hasClearValue);
+    private MutableLongArray(AllocationType allocationType, int initialCapacity, long clearValue, boolean hasClearValue) {
+        super(allocationType, createArray(initialCapacity, clearValue, hasClearValue), 0, hasClearValue);
 
         this.clearValue = clearValue;
     }
@@ -79,20 +56,30 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
         return array;
     }
 
-    private MutableLongArray(MutableLongArray toCopy) {
-        super(toCopy);
+    MutableLongArray(AllocationType allocationType, MutableLongArray toCopy) {
+        super(allocationType, toCopy);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy));
+        }
 
         this.clearValue = toCopy.clearValue;
+
+        if (DEBUG) {
+
+            exit();
+        }
     }
 
     @Override
-    public long getCapacity() {
+    public final long getCapacity() {
 
-        return elements.length;
+        return getElementsArray().length;
     }
 
     @Override
-    public void clear() {
+    public final void clear() {
 
         if (DEBUG) {
 
@@ -103,7 +90,7 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
 
         if (hasClearValue()) {
 
-            Arrays.fill(elements, clearValue);
+            Arrays.fill(getElementsArray(), clearValue);
         }
 
         if (DEBUG) {
@@ -113,7 +100,7 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
     }
 
     @Override
-    public void add(long value) {
+    public final void add(long value) {
 
         if (DEBUG) {
 
@@ -122,7 +109,7 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
 
         final int index = ensureAddIndex();
 
-        elements[index] = value;
+        getElementsArray()[index] = value;
 
         if (DEBUG) {
 
@@ -131,7 +118,7 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
     }
 
     @Override
-    public void set(long index, long value) {
+    public final void set(long index, long value) {
 
         if (DEBUG) {
 
@@ -140,7 +127,7 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
 
         final int intIndex = ensureIndex(index);
 
-        elements[intIndex] = value;
+        getElementsArray()[intIndex] = value;
 
         if (DEBUG) {
 
@@ -149,15 +136,18 @@ public final class MutableLongArray extends BaseLongArray implements IMutableLon
     }
 
     @Override
-    long[] reallocate(long[] elements, int newCapacity) {
+    final long[] reallocate(long[] elementsArray, int newCapacity) {
 
-        final long[] array = Arrays.copyOf(elements, newCapacity);
+        checkReallocateParameters(elementsArray, elementsArray.length, newCapacity);
 
-        if (hasClearValue()) {
+        return Arrays.copyOf(elementsArray, newCapacity);
+    }
 
-            Arrays.fill(array, elements.length, array.length, clearValue);
-        }
+    @Override
+    final void clearElementsArray(long[] elementsArray, int startIndex, int numElements) {
 
-        return array;
+        checkClearElementsArrayParameters(elementsArray, elementsArray.length, startIndex, numElements);
+
+        Arrays.fill(elementsArray, startIndex, numElements, clearValue);
     }
 }

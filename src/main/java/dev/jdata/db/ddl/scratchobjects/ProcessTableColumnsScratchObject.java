@@ -5,18 +5,22 @@ import java.util.Objects;
 import dev.jdata.db.engine.database.StringManagement;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.utils.Initializable;
-import dev.jdata.db.utils.adt.lists.IndexList.IndexListBuilder;
+import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
 
 public abstract class ProcessTableColumnsScratchObject extends ProcessTableColumnsIdScratchObject {
 
-    private IndexListBuilder<Column, ?, ?> columnsBuilder;
+    private IIndexListBuilder<Column, ?, ?> columnsBuilder;
 
-    final void initialize(StringManagement stringManagement, IndexListBuilder<Column, ?, ?> columnsBuilder) {
+    ProcessTableColumnsScratchObject(AllocationType allocationType) {
+        super(allocationType);
+    }
+
+    final void initialize(StringManagement stringManagement, IIndexListBuilder<Column, ?, ?> columnsBuilder) {
 
         initialize(stringManagement, -1, columnsBuilder);
     }
 
-    public final void initialize(StringManagement stringManagement, int initialColumnIdSequenceNo, IndexListBuilder<Column, ?, ?> columnsBuilder) {
+    public final void initialize(StringManagement stringManagement, int initialColumnIdSequenceNo, IIndexListBuilder<Column, ?, ?> columnsBuilder) {
 
         initialize(stringManagement, initialColumnIdSequenceNo);
 

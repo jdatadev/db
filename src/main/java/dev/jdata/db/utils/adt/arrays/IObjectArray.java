@@ -1,5 +1,5 @@
 package dev.jdata.db.utils.adt.arrays;
 
-public interface IObjectArray<T> extends IImmutableArray, IObjectArrayCommon<T> {
+public interface IObjectArray<T> extends IAnyDimensionalArray, IObjectArrayCommon<T> {
 
 }

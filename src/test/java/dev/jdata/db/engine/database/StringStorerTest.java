@@ -6,6 +6,7 @@ import org.jutils.io.strings.StringResolver.CharacterBuffer;
 import org.jutils.io.strings.StringResolver.ICharactersBufferAllocator;
 
 import dev.jdata.db.utils.adt.arrays.BaseLargeCharArrayAndStringStorerTest;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
 import dev.jdata.db.utils.function.BiObjToLongFunction;
 import dev.jdata.db.utils.function.CharPredicate;
@@ -43,7 +44,7 @@ public final class StringStorerTest extends BaseLargeCharArrayAndStringStorerTes
         final ICharactersBufferAllocator charactersBufferAllocator = new CharacterBuffersAllocator();
         final StringBuilder sb = new StringBuilder();
 
-        StringStoreTestUtil.checkStore(StringStorer::new, StringStorer::contains, StringStorer::getOrAddStringRef,
+        StringStoreTestUtil.checkStore((i, o) -> new StringStorer(AllocationType.HEAP, i, o), StringStorer::contains, StringStorer::getOrAddStringRef,
                 (getOrAddResult, expectedCharArrayIndex) ->
         {
             if (getOrAddResult != expectedCharArrayIndex) {
@@ -97,7 +98,7 @@ public final class StringStorerTest extends BaseLargeCharArrayAndStringStorerTes
     @Override
     protected StringStorer create() {
 
-        return new StringStorer(0, 0);
+        return new StringStorer(AllocationType.HEAP, 0, 0);
     }
 
     @Override

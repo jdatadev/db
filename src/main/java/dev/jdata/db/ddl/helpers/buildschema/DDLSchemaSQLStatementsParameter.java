@@ -13,6 +13,10 @@ final class DDLSchemaSQLStatementsParameter extends DDLSchemaParameter {
 
     private ICompleteSchemaMapsBuilder<SchemaObject,?, ?> completeSchemaMapsBuilder;
 
+    DDLSchemaSQLStatementsParameter(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     final void initialize(StringManagement stringManagement,DDLSchemaScratchObjects ddlSchemaScratchObjects, ToIntFunction<DDLObjectType> schemaObjectIdAllocator,
             ICompleteSchemaMapsBuilder<SchemaObject, ?, ?> completeSchemaMapsBuilder) {
 

@@ -2,19 +2,30 @@ package dev.jdata.db.utils.adt.maps;
 
 import java.util.List;
 
-import dev.jdata.db.utils.adt.IClearable;
+import dev.jdata.db.utils.adt.sets.IMutableIntSet;
+import dev.jdata.db.utils.adt.sets.IMutableLongSet;
 import dev.jdata.db.utils.scalars.Integers;
 
-abstract class BaseMutableIntToLongNonContainsKeyNonBucketMapTest<
+abstract class BaseMutableIntToLongNonContainsKeyNonBucketMapTest<M extends IMutableIntToLongMap & IIntToLongBaseStaticMapCommon & IIntToLongStoreMapMutators>
 
-                M extends IIntToLongStaticMapCommon & IClearable & IIntToLongCommonMapMutators>
-
-        extends BaseMutableIntToIntegerOrObjectNonBucketMapTest<long[], M> {
+        extends BaseMutableIntToIntegerOrObjectNonBucketMapTest<long[], IMutableLongSet, M> {
 
     @Override
     final long[] createValuesArray(int length) {
 
         return new long[length];
+    }
+
+    @Override
+    final IMutableLongSet createValuesAddable(int initialCapacity) {
+
+        return createLongAddable(initialCapacity);
+    }
+
+    @Override
+    final long[] valuesToArray(IMutableLongSet valuesAddable) {
+
+        return toArray(valuesAddable);
     }
 
     @Override
@@ -65,9 +76,9 @@ abstract class BaseMutableIntToLongNonContainsKeyNonBucketMapTest<
     }
 
     @Override
-    final void keysAndValues(M map, int[] keysDst, long[] valuesDst) {
+    final void keysAndValues(M map, IMutableIntSet keysAddable, IMutableLongSet valuesAddable) {
 
-        map.keysAndValues(keysDst, valuesDst);
+        map.keysAndValues(keysAddable, valuesAddable);
     }
 
     @Override

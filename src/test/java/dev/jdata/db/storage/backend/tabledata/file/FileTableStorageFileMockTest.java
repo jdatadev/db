@@ -12,7 +12,8 @@ import org.mockito.Mockito;
 
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema;
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;
-import dev.jdata.db.utils.adt.maps.OrderedIntCountMap;
+import dev.jdata.db.utils.adt.maps.IHeapMutableOrderedIntCountMap;
+import dev.jdata.db.utils.adt.maps.IMutableOrderedIntCountMap;
 import dev.jdata.db.utils.file.access.IFileSystemAccess.OpenMode;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RandomFileAccess;
@@ -247,7 +248,7 @@ public final class FileTableStorageFileMockTest extends BaseFileTableStorageFile
 
         inOrder.verify(randomFileAccess).writeInt(eq(numColumns));
 
-        final OrderedIntCountMap countMap = new OrderedIntCountMap(numColumns);
+        final IMutableOrderedIntCountMap countMap = IHeapMutableOrderedIntCountMap.create(numColumns);
 
         countMap.add(numColumnBits);
 

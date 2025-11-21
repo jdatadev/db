@@ -6,9 +6,9 @@ import java.util.Objects;
 import dev.jdata.db.data.BaseRows;
 import dev.jdata.db.data.RowDataNumBitsGetter;
 import dev.jdata.db.data.cache.DataCache;
-import dev.jdata.db.utils.adt.lists.LargeLongDoublyLinkedList;
-import dev.jdata.db.utils.adt.lists.LargeLongSinglyLinkedList;
-import dev.jdata.db.utils.adt.maps.MutableLongToLongWithRemoveNonBucketMap;
+import dev.jdata.db.utils.adt.lists.IMutableLongLargeDoublyLinkedNodeList;
+import dev.jdata.db.utils.adt.lists.IMutableLongLargeSinglyLinkedNodeList;
+import dev.jdata.db.utils.adt.maps.IHeapMutableLongToLongWithRemoveStaticMap;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class RowCache extends BaseRows implements DataCache {
@@ -17,33 +17,33 @@ public final class RowCache extends BaseRows implements DataCache {
 
     private static final int BYTE_ARRAY_SIZE = 1000 * 1000;
 
-    private final MutableLongToLongWithRemoveNonBucketMap indexByRow;
-    private final MutableLongToLongWithRemoveNonBucketMap insertionOrderNodeByRow;
+    private final IHeapMutableLongToLongWithRemoveStaticMap indexByRow;
+    private final IHeapMutableLongToLongWithRemoveStaticMap insertionOrderNodeByRow;
 
     private final RowLargeByteArray cache;
     private final long[] numBits;
 
-    private final LargeLongDoublyLinkedList insertionOrderList;
-    private final LargeLongSinglyLinkedList insertionOrderFreeList;
+    private final IMutableLongLargeDoublyLinkedNodeList insertionOrderList;
+    private final IMutableLongLargeSinglyLinkedNodeList insertionOrderFreeList;
 
     public RowCache() {
 
-        final int initialCapacityExponent = 0;
+        final int initialMapCapacity = 0;
 
-        this.indexByRow = new MutableLongToLongWithRemoveNonBucketMap(initialCapacityExponent);
-        this.insertionOrderNodeByRow = new MutableLongToLongWithRemoveNonBucketMap(initialCapacityExponent);
+        this.indexByRow = IHeapMutableLongToLongWithRemoveStaticMap.create(initialMapCapacity);
+        this.insertionOrderNodeByRow = IHeapMutableLongToLongWithRemoveStaticMap.create(initialMapCapacity);
 
         final int initialCapacity = 1000;
 
         this.cache = new RowLargeByteArray(initialCapacity);
         this.numBits = new long[initialCapacity];
 
-        final int initialInsertionOrderListCapacity = 1000;
+        final int initialInsertionOrderListOuterCapacity = 1000;
 
         final int insertOrderListInnerCapacity = 1000 * 1000;
 
-        this.insertionOrderList = new LargeLongDoublyLinkedList(initialInsertionOrderListCapacity, insertOrderListInnerCapacity);
-        this.insertionOrderFreeList = new LargeLongSinglyLinkedList(initialInsertionOrderListCapacity, insertOrderListInnerCapacity);
+        this.insertionOrderList = IMutableLongLargeDoublyLinkedNodeList.create(initialInsertionOrderListOuterCapacity, insertOrderListInnerCapacity);
+        this.insertionOrderFreeList = IMutableLongLargeSinglyLinkedNodeList.create(initialInsertionOrderListOuterCapacity, insertOrderListInnerCapacity);
     }
 
     @Override
@@ -135,14 +135,14 @@ public final class RowCache extends BaseRows implements DataCache {
 
     private void addToInsertionOrderList(long rowKey) {
 
-        final long node = insertionOrderList.addHead(rowKey);
+        final long node = insertionOrderList.addHeadAndReturnNode(rowKey);
 
         insertionOrderNodeByRow.put(rowKey, node);
     }
 
     private long removeFromInsertionOrderList() {
 
-        final long rowKey = insertionOrderList.removeTail();
+        final long rowKey = insertionOrderList.removeTailAndReturnValue();
 
         insertionOrderNodeByRow.remove(rowKey);
 
@@ -153,7 +153,7 @@ public final class RowCache extends BaseRows implements DataCache {
 
         final long node = insertionOrderNodeByRow.get(rowKey);
 
-        insertionOrderList.removeNode(node);
+        insertionOrderList.removeNodeAndReturnValue(node);
 
         addToInsertionOrderList(rowKey);
     }

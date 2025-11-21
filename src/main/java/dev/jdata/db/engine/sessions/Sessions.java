@@ -6,28 +6,28 @@ import java.util.Objects;
 
 import dev.jdata.db.engine.descriptorables.BaseSingleTypeDescriptorables;
 import dev.jdata.db.engine.sessions.DBSession.LargeObjectStorer;
-import dev.jdata.db.utils.adt.lists.HeapMutableIndexList;
+import dev.jdata.db.utils.adt.lists.IHeapMutableIndexList;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class Sessions extends BaseSingleTypeDescriptorables<DBSession.SessionState, DBSession> {
 
     private final LargeObjectStorer<IOException> largeObjectStorer;
 
-    private final HeapMutableIndexList<DBSession> sessions;
+    private final IHeapMutableIndexList<DBSession> sessions;
 
     public Sessions(LargeObjectStorer<IOException> largeObjectStorer) {
-        super(DBSession[]::new);
+        super(AllocationType.HEAP, DBSession[]::new);
 
         this.largeObjectStorer = Objects.requireNonNull(largeObjectStorer);
 
-        this.sessions = new HeapMutableIndexList<>(DBSession[]::new, 0);
+        this.sessions = IHeapMutableIndexList.create(DBSession[]::new, 0);
     }
 
     public Session addSession(Charset charset) {
 
         Objects.requireNonNull(charset);
 
-        final DBSession session = addDescriptorable(null, p -> new DBSession());
+        final DBSession session = addDescriptorable(null, (a, p) -> new DBSession(a));
 
         session.initialize(charset, largeObjectStorer);
 

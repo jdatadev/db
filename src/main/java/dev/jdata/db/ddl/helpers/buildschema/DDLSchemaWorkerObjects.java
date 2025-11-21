@@ -3,18 +3,19 @@ package dev.jdata.db.ddl.helpers.buildschema;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import dev.jdata.db.schema.allocators.model.SchemaMapBuilderAllocators;
-import dev.jdata.db.schema.model.schemamaps.CompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.schemamaps.ICompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.schemamaps.ISchemaMapBuilderAllocators;
+import dev.jdata.db.utils.allocators.IAllocators;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 
 @Deprecated
-class DDLSchemaWorkerObjects<T extends CompleteSchemaMapsBuilder<?, ?, ?, ?, ?, ?, ?>> {
+class DDLSchemaWorkerObjects<T extends ICompleteSchemaMapsBuilder<?, ?, ?, ?>> implements IAllocators {
 
-    private final SchemaMapBuilderAllocators schemaMapBuilderAllocators;
+    private final ISchemaMapBuilderAllocators schemaMapBuilderAllocators;
 
     private final NodeObjectCache<T> completeSchemaMapsBuilderCache;
 
-    DDLSchemaWorkerObjects(SchemaMapBuilderAllocators schemaMapBuilderAllocators, Supplier<T> createSchemaMapBuilders) {
+    DDLSchemaWorkerObjects(ISchemaMapBuilderAllocators schemaMapBuilderAllocators, Supplier<T> createSchemaMapBuilders) {
 
         Objects.requireNonNull(schemaMapBuilderAllocators);
         Objects.requireNonNull(createSchemaMapBuilders);

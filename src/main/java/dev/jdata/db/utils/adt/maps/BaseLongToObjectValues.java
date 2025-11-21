@@ -4,23 +4,18 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
-import dev.jdata.db.utils.adt.lists.BaseLongValues;
+import dev.jdata.db.utils.adt.lists.InheritableLongInnerOuterNodeListValues;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseLongToObjectValues<
+abstract class BaseLongToObjectValues<T>
 
-                INSTANCE,
-                T,
-                LIST extends BaseLongToObjectBucketMapMultiHeadSinglyLinkedList<INSTANCE, T, LIST, VALUES>,
-                VALUES extends BaseLongToObjectValues<INSTANCE, T, LIST, VALUES>>
-
-        extends BaseLongValues<LIST, VALUES> {
+        extends InheritableLongInnerOuterNodeListValues {
 
     private final IntFunction<T[]> createInnerArray;
 
     private T[][] objectValues;
 
-    protected BaseLongToObjectValues(int initialOuterCapacity, IntFunction<T[][]> createOuterArray, IntFunction<T[]> createInnerArray) {
+    BaseLongToObjectValues(int initialOuterCapacity, IntFunction<T[][]> createOuterArray, IntFunction<T[]> createInnerArray) {
         super(initialOuterCapacity);
 
         Objects.requireNonNull(createOuterArray);
@@ -65,8 +60,8 @@ public abstract class BaseLongToObjectValues<
     @Override
     protected final void allocateInner(int outerIndex, int innerCapacity) {
 
-        Checks.isIndex(outerIndex);
-        Checks.isCapacity(innerCapacity);
+        Checks.isOuterIndex(outerIndex);
+        Checks.isIntCapacity(innerCapacity);
 
         super.allocateInner(outerIndex, innerCapacity);
 

@@ -2,15 +2,15 @@ package dev.jdata.db.utils.adt.maps;
 
 abstract class BaseIntToIntNonRemoveNonBucketMap extends BaseIntToIntNonContainsKeyNonBucketMap {
 
-    BaseIntToIntNonRemoveNonBucketMap(int initialCapacityExponent) {
-        super(initialCapacityExponent);
+    BaseIntToIntNonRemoveNonBucketMap(AllocationType allocationType, int initialCapacityExponent) {
+        super(allocationType, initialCapacityExponent);
     }
 
-    BaseIntToIntNonRemoveNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
+    BaseIntToIntNonRemoveNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor);
     }
 
-    BaseIntToIntNonRemoveNonBucketMap(BaseIntToIntNonRemoveNonBucketMap toCopy) {
-        super(toCopy);
+    BaseIntToIntNonRemoveNonBucketMap(AllocationType allocationType, BaseIntToIntNonRemoveNonBucketMap toCopy) {
+        super(allocationType, toCopy);
     }
 }

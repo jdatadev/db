@@ -1,97 +1,15 @@
 package dev.jdata.db.utils.adt.lists;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.allocators.BaseArrayAllocator;
-import dev.jdata.db.utils.allocators.ElementAllocator;
-import dev.jdata.db.utils.allocators.IAllocators;
-import dev.jdata.db.utils.allocators.IAllocators.IAllocatorsStatisticsGatherer.RefType;
-import dev.jdata.db.utils.scalars.Integers;
+import dev.jdata.db.utils.adt.elements.ElementsExceptions;
+import dev.jdata.db.utils.checks.Checks;
 
-public final class MutableLongIndexList extends BaseLongIndexList implements IMutableLongIndexList {
+abstract class MutableLongIndexList extends BaseLongIndexList implements IMutableLongIndexList {
 
-    static abstract class MutableLongIndexListAllocator extends ElementAllocator {
-
-        abstract MutableLongIndexList allocateMutableLongIndexList(int minimumCapacity);
-        abstract void freeMutableLongIndexList(MutableLongIndexList list);
-    }
-
-    static final class HeapMutableLongIndexListAllocator extends MutableLongIndexListAllocator {
-
-        static final HeapMutableLongIndexListAllocator INSTANCE = new HeapMutableLongIndexListAllocator();
-
-        private HeapMutableLongIndexListAllocator() {
-
-        }
-
-        @Override
-        MutableLongIndexList allocateMutableLongIndexList(int minimumCapacity) {
-
-            return new MutableLongIndexList(AllocationType.HEAP_ALLOCATOR, minimumCapacity);
-        }
-
-        @Override
-        public void freeMutableLongIndexList(MutableLongIndexList list) {
-
-            Objects.requireNonNull(list);
-        }
-    }
-
-    private static final class MutableLongIndexListArrayAllocator extends BaseArrayAllocator<MutableLongIndexList> {
-
-        MutableLongIndexListArrayAllocator(AllocationType allocationType) {
-            super(c -> new MutableLongIndexList(allocationType, c), l -> Integers.checkUnsignedLongToUnsignedInt(l.getNumElements()));
-        }
-
-        MutableLongIndexList allocateMutableLongIndexList(int minimumCapacity) {
-
-            return allocateArrayInstance(minimumCapacity);
-        }
-
-        void freeMutableLongIndexList(MutableLongIndexList list) {
-
-            Objects.requireNonNull(list);
-
-            freeArrayInstance(list);
-        }
-    }
-
-    public static final class CacheMutableLongIndexListAllocator<T> extends MutableLongIndexListAllocator implements IAllocators {
-
-        private static final AllocationType ALLOCATION_TYPE = AllocationType.CACHING_ALLOCATOR;
-
-        private final MutableLongIndexListArrayAllocator mutableLongIndexListArrayAllocator;
-
-        public CacheMutableLongIndexListAllocator() {
-
-            this.mutableLongIndexListArrayAllocator = new MutableLongIndexListArrayAllocator(ALLOCATION_TYPE);
-        }
-
-        @Override
-        public void gatherStatistics(IAllocatorsStatisticsGatherer statisticsGatherer) {
-
-            Objects.requireNonNull(statisticsGatherer);
-
-            statisticsGatherer.addInstanceAllocator("mutableLongIndexListArrayAllocator", RefType.INSTANTIATED, MutableIndexList.class, mutableLongIndexListArrayAllocator);
-        }
-
-        @Override
-        MutableLongIndexList allocateMutableLongIndexList(int minimumCapacity) {
-
-            return mutableLongIndexListArrayAllocator.allocateMutableLongIndexList(minimumCapacity);
-        }
-
-        @Override
-        public void freeMutableLongIndexList(MutableLongIndexList list) {
-
-            mutableLongIndexListArrayAllocator.freeMutableLongIndexList(list);
-        }
-    }
-
-    public MutableLongIndexList(int initialCapacity) {
-        this(AllocationType.HEAP, initialCapacity);
+    MutableLongIndexList(AllocationType allocationType) {
+        super(allocationType, DEFAULT_INITIAL_CAPACITY);
     }
 
     MutableLongIndexList(AllocationType allocationType, int initialCapacity) {
@@ -99,62 +17,111 @@ public final class MutableLongIndexList extends BaseLongIndexList implements IMu
     }
 
     @Override
-    public void clear() {
+    public final long getCapacity() {
+
+        return getElementsCapacity();
+    }
+
+    @Override
+    public final void clear() {
 
         clearElements();
     }
 
     @Override
-    public long getCapacity() {
+    public final void addTail(long value) {
 
-        return elementsArray.length;
-    }
-
-    @Override
-    public void addTail(long value) {
-
+        final long[] elementsArray = getElementsArray();
         final int arrayLength = elementsArray.length;
+        final int numElements = getIntNumElements();
+
+        final long[] dstArray;
 
         if (numElements == arrayLength) {
 
-            this.elementsArray = Arrays.copyOf(elementsArray, arrayLength * DEFAULT_CAPACITY_MULTIPLICATOR);
+            dstArray = Arrays.copyOf(elementsArray, increaseCapacity(arrayLength));
+
+            setArray(dstArray);
+        }
+        else {
+            dstArray = elementsArray;
         }
 
-        elementsArray[numElements ++] = value;
+        dstArray[numElements] = value;
+
+        incrementNumElements();
     }
 
-    public void addTail(long ... values) {
+    @Override
+    public final void addTail(long ... values) {
 
-        final int num = numElements;
+        Checks.isNotEmpty(values);
+
+        final int num = getIntNumElements();
         final int numValues = values.length;
 
         final int numTotal = num + numValues;
 
-        long[] a = elementsArray;
+        final long[] elementsArray = getElementsArray();
 
-        if (numTotal > a.length) {
+        final long[] dstArray;
 
-            a = this.elementsArray = Arrays.copyOf(elementsArray, numTotal * DEFAULT_CAPACITY_MULTIPLICATOR);
+        if (numTotal > elementsArray.length) {
+
+            dstArray = Arrays.copyOf(elementsArray, increaseCapacity(numTotal));
+
+            setArray(dstArray);
+        }
+        else {
+            dstArray = elementsArray;
         }
 
-        System.arraycopy(values, 0, a, num, numValues);
-
-        this.numElements = numTotal;
+        setNumElements(numTotal);
     }
 
+    @Override
+    public final long setAndReturnPrevious(long index, long value) {
+
+        Checks.checkLongIndex(index, getNumElements());
+
+        final int intIndex = intIndex(index);
+
+        final long[] elementsArray = getElementsArray();
+
+        final long result = elementsArray[intIndex];
+
+        elementsArray[intIndex] = value;
+
+        return result;
+    }
 
     @Override
-    public boolean removeAtMostOne(long value) {
+    public final long removeTailAndReturnValue() {
+
+        if (isEmpty()) {
+
+            throw new IllegalStateException();
+        }
+
+        final long result = getTail();
+
+        decrementNumElements();
+
+        return result;
+    }
+
+    private boolean removeAtMostOne(long value) {
 
         final boolean result;
 
-        final int num = numElements;
+        final int num = getIntNumElements();
+        final long[] elementsArray = getElementsArray();
 
         if (num == 1) {
 
             if (elementsArray[0] == value) {
 
-                this.numElements = 0;
+                clearElements();
 
                 result = true;
             }
@@ -178,7 +145,7 @@ public final class MutableLongIndexList extends BaseLongIndexList implements IMu
                     Array.move(elementsArray, index + 1, num - index - 1, -1);
                 }
 
-                -- numElements;
+                decrementNumElements();
 
                 result = true;
             }
@@ -192,19 +159,18 @@ public final class MutableLongIndexList extends BaseLongIndexList implements IMu
 
     private int findAtMostOne(long value) {
 
-        final int num = numElements;
-
-        final long[] a = elementsArray;
+        final int num = getIntNumElements();
+        final long[] elementsArray = getElementsArray();
 
         int foundIndex = -1;
 
         for (int i = 0; i < num; ++ i) {
 
-            if (a[i] == value) {
+            if (elementsArray[i] == value) {
 
                 if (foundIndex != -1) {
 
-                    throw new IllegalStateException();
+                    throw ElementsExceptions.moreThanOneFoundException();
                 }
 
                 foundIndex = i;

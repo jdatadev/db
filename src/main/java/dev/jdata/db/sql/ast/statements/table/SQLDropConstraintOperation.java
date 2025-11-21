@@ -8,16 +8,20 @@ import org.jutils.parse.context.Context;
 
 import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.ISQLFreeable;
-import dev.jdata.db.utils.adt.lists.LongIndexList;
+import dev.jdata.db.utils.adt.lists.ICachedLongIndexList;
 
 public final class SQLDropConstraintOperation extends SQLAlterTableConstraintOperation implements ISQLFreeable {
 
-    private final LongIndexList names;
+    private ICachedLongIndexList names;
 
-    public SQLDropConstraintOperation(Context context, long dropKeyword, long constraintKeyword, LongIndexList names) {
+    public SQLDropConstraintOperation(Context context, long dropKeyword, long constraintKeyword, ICachedLongIndexList names) {
         super(context, dropKeyword, constraintKeyword);
 
         this.names = Objects.requireNonNull(names);
+    }
+
+    public ICachedLongIndexList getNames() {
+        return names;
     }
 
     @Override
@@ -26,6 +30,8 @@ public final class SQLDropConstraintOperation extends SQLAlterTableConstraintOpe
         Objects.requireNonNull(allocator);
 
         allocator.freeLongIndexList(names);
+
+        this.names = null;
     }
 
     @Override

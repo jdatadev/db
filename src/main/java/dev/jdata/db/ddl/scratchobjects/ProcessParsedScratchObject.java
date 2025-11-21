@@ -9,6 +9,10 @@ abstract class ProcessParsedScratchObject extends ObjectCacheNode implements IRe
 
     private StringManagement stringManagement;
 
+    ProcessParsedScratchObject(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     final void initialize(StringManagement stringManagement) {
 
         this.stringManagement = Initializable.checkNotYetInitialized(this.stringManagement, stringManagement);

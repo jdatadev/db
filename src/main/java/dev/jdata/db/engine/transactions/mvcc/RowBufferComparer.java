@@ -13,8 +13,8 @@ import dev.jdata.db.engine.transactions.TransactionSelect;
 import dev.jdata.db.engine.transactions.TransactionSelect.ConditionOperator;
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.buffers.BitBuffer;
-import dev.jdata.db.utils.adt.maps.MutableIntToIntNonRemoveNonBucketMap;
-import dev.jdata.db.utils.adt.sets.IMutableLongSet;
+import dev.jdata.db.utils.adt.maps.IHeapMutableIntToIntNonRemoveStaticMap;
+import dev.jdata.db.utils.adt.sets.IBaseMutableLongSet;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
@@ -28,7 +28,7 @@ final class RowBufferComparer implements IClearable, PrintDebug {
 
     private static final int NO_VALUE = -1;
 
-    private final MutableIntToIntNonRemoveNonBucketMap scratchRowDataColumnIndexByTableColumn;
+    private final IHeapMutableIntToIntNonRemoveStaticMap scratchRowDataColumnIndexByTableColumn;
     private final int[] scratchTableColumnsKeysArray;
     private final RowDataNumBitsAndOffsets scratchDataNumBitsAndOffsets;
 
@@ -41,7 +41,7 @@ final class RowBufferComparer implements IClearable, PrintDebug {
             enter();
         }
 
-        this.scratchRowDataColumnIndexByTableColumn = new MutableIntToIntNonRemoveNonBucketMap(0);
+        this.scratchRowDataColumnIndexByTableColumn = IHeapMutableIntToIntNonRemoveStaticMap.create(0);
         this.scratchTableColumnsKeysArray = new int[DBConstants.MAX_COLUMNS];
         this.scratchDataNumBitsAndOffsets = new RowDataNumBitsAndOffsets(DBConstants.MAX_COLUMNS);
 
@@ -71,7 +71,7 @@ final class RowBufferComparer implements IClearable, PrintDebug {
         }
     }
 
-    long compareRowForInsertOperation(TransactionSelect select, BitBuffer mvccBitBuffer, long startBufferBitOffset, IMutableLongSet addedRowIdsDst) {
+    long compareRowForInsertOperation(TransactionSelect select, BitBuffer mvccBitBuffer, long startBufferBitOffset, IBaseMutableLongSet addedRowIdsDst) {
 
         Objects.requireNonNull(select);
         Objects.requireNonNull(mvccBitBuffer);
@@ -83,7 +83,7 @@ final class RowBufferComparer implements IClearable, PrintDebug {
             enter(b -> b.add("select", select).add("mvccBitBuffer", mvccBitBuffer).add("startBufferBitOffset", startBufferBitOffset).add("addedRowIdsDst", addedRowIdsDst));
         }
 
-        final long result = compareRowsForInsertOperation(select, mvccBitBuffer, startBufferBitOffset, addedRowIdsDst, IMutableLongSet::add);
+        final long result = compareRowsForInsertOperation(select, mvccBitBuffer, startBufferBitOffset, addedRowIdsDst, IBaseMutableLongSet::addUnordered);
 
         if (DEBUG) {
 
@@ -93,8 +93,8 @@ final class RowBufferComparer implements IClearable, PrintDebug {
         return result;
     }
 
-    long compareRowForUpdateOperation(TransactionSelect select, BitBuffer mvccBitBuffer, long startBufferBitOffset, BufferedRows commitedRows, IMutableLongSet addedRowIdsDst,
-            IMutableLongSet removedRowIdsDst) {
+    long compareRowForUpdateOperation(TransactionSelect select, BitBuffer mvccBitBuffer, long startBufferBitOffset, BufferedRows commitedRows, IBaseMutableLongSet addedRowIdsDst,
+            IBaseMutableLongSet removedRowIdsDst) {
 
         Objects.requireNonNull(select);
         Objects.requireNonNull(mvccBitBuffer);
@@ -109,8 +109,8 @@ final class RowBufferComparer implements IClearable, PrintDebug {
                     .add("addedRowIdsDst", addedRowIdsDst).add("removedRowIdsDst", removedRowIdsDst));
         }
 
-        final long result = compareRowsForUpdateOperation(select, mvccBitBuffer, startBufferBitOffset, commitedRows, addedRowIdsDst, IMutableLongSet::add, removedRowIdsDst,
-                IMutableLongSet::add);
+        final long result = compareRowsForUpdateOperation(select, mvccBitBuffer, startBufferBitOffset, commitedRows, addedRowIdsDst, IBaseMutableLongSet::addUnordered,
+                removedRowIdsDst, IBaseMutableLongSet::addUnordered);
 
         if (DEBUG) {
 
@@ -458,8 +458,8 @@ final class RowBufferComparer implements IClearable, PrintDebug {
         return matchesValue;
     }
 
-    long compareRowForUpdateAllOperation(TransactionSelect select, BitBuffer mvccBitBuffer, long startBufferBitOffset, BufferedRows commitedRows, IMutableLongSet addedRowIdsDst,
-            IMutableLongSet removedRowIdsDst) {
+    long compareRowForUpdateAllOperation(TransactionSelect select, BitBuffer mvccBitBuffer, long startBufferBitOffset, BufferedRows commitedRows,
+            IBaseMutableLongSet addedRowIdsDst, IBaseMutableLongSet removedRowIdsDst) {
 
         Objects.requireNonNull(select);
         Objects.requireNonNull(mvccBitBuffer);

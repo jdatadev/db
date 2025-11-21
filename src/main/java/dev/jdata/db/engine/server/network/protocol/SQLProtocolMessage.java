@@ -4,14 +4,18 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 
-import dev.jdata.db.engine.server.network.protocol.ProtocolMessage.ProtocolMessageFreeable;
+import dev.jdata.db.engine.server.network.protocol.ProtocolMessage.IProtocolMessageFreeable;
 
-public abstract class SQLProtocolMessage extends ProtocolMessage implements ProtocolMessageFreeable {
+public abstract class SQLProtocolMessage extends ProtocolMessage implements IProtocolMessageFreeable {
 
     private CharBuffer sql;
 
+    SQLProtocolMessage(AllocationType allocationType) {
+        super(allocationType);
+    }
+
     @Override
-    public final void free(ProtocolAllocator allocator) {
+    public final void free(IProtocolAllocator allocator) {
 
         if (sql != null) {
 
@@ -25,12 +29,12 @@ public abstract class SQLProtocolMessage extends ProtocolMessage implements Prot
         return sql;
     }
 
-    final void decodeSQL(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, ProtocolAllocator allocator) throws ProtocolDecodeException {
+    final void decodeSQL(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, IProtocolAllocator allocator) throws ProtocolDecodeException {
 
         this.sql = decodeCharBufferFromByteBuffer(byteBuffer, offset, length, charsetDecoder, allocator);
     }
 
-    private static CharBuffer decodeCharBufferFromByteBuffer(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, ProtocolAllocator allocator)
+    private static CharBuffer decodeCharBufferFromByteBuffer(ByteBuffer byteBuffer, int offset, int length, CharsetDecoder charsetDecoder, IProtocolAllocator allocator)
             throws ProtocolDecodeException {
 
         final CharBuffer charBuffer = allocator.allocateForDecodeBytes(length);

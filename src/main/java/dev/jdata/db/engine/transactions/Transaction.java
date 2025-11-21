@@ -12,8 +12,8 @@ import dev.jdata.db.engine.transactions.TransactionDMLOperations.OperationResult
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.State;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.arrays.ILongArrayCommon;
-import dev.jdata.db.utils.adt.sets.MutableLargeLongBucketSet;
+import dev.jdata.db.utils.adt.elements.ILongByIndexOrderedElementsView;
+import dev.jdata.db.utils.adt.sets.IMutableLongLargeSet;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -62,8 +62,8 @@ public final class Transaction extends BaseDescriptorable<TransactionState> {
 
     private final TransactionMechanism<?>[] transactionMechanisms;
 
-    public Transaction(TransactionMechanism<?> ... transactionMechanisms) {
-        super(TransactionState.CREATED, DEBUG);
+    public Transaction(AllocationType allocationType, TransactionMechanism<?> ... transactionMechanisms) {
+        super(allocationType, TransactionState.CREATED, DEBUG);
 
         this.transactionMechanisms = Array.copyOf(transactionMechanisms);
     }
@@ -78,7 +78,7 @@ public final class Transaction extends BaseDescriptorable<TransactionState> {
         this.globalTransactionId = globalTransactionId;
     }
 
-    public boolean select(TransactionSelect select, MutableLargeLongBucketSet addedRowIdsDst, MutableLargeLongBucketSet removedRowIdsDst) {
+    public boolean select(TransactionSelect select, IMutableLongLargeSet addedRowIdsDst, IMutableLongLargeSet removedRowIdsDst) {
 
         throw new UnsupportedOperationException();
     }
@@ -93,12 +93,12 @@ public final class Transaction extends BaseDescriptorable<TransactionState> {
         throw new UnsupportedOperationException();
     }
 
-    public OperationResult insertRows(Table table, ILongArrayCommon rowIds, DMLInsertRows rows) {
+    public OperationResult insertRows(Table table, ILongByIndexOrderedElementsView rowIds, DMLInsertRows rows) {
 
         return executeTransactionMechanisms(getSharedState(), table, generateStatementId(), rowIds, rows, (m, s, t, i, p1, p2) -> m.insertRows(s, t, i, p1, p2));
     }
 
-    public OperationResult updateRows(Table table, ILongArrayCommon rowIds, DMLUpdateRows rows) {
+    public OperationResult updateRows(Table table, ILongByIndexOrderedElementsView rowIds, DMLUpdateRows rows) {
 
         return executeTransactionMechanisms(getSharedState(), table, generateStatementId(), rowIds, rows, (m, s, t, i, p1, p2) -> m.updateRows(s, t, i, p1, p2));
     }
@@ -108,7 +108,7 @@ public final class Transaction extends BaseDescriptorable<TransactionState> {
         return executeTransactionMechanisms(getSharedState(), table, generateStatementId(), row, null, (m, s, t, i, p1, p2) -> m.updateAllRows(s, t, i, p1));
     }
 
-    public OperationResult deleteRows(Table table, ILongArrayCommon rowIds) {
+    public OperationResult deleteRows(Table table, ILongByIndexOrderedElementsView rowIds) {
 
         return executeTransactionMechanisms(getSharedState(), table, generateStatementId(), rowIds, null, (m, s, t, i, p1, p2) -> m.deleteRows(s, t, i, p1));
     }

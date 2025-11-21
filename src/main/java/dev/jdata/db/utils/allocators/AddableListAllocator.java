@@ -8,10 +8,10 @@ import org.jutils.ast.objects.list.IImmutableIndexList;
 
 import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.adt.lists.BaseObjectArrayList;
+import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.scalars.Integers;
 
-public final class AddableListAllocator extends BaseArrayAllocator<AddableListAllocator.AddableList<?>> implements IAddableListAllocator {
+public final class AddableListAllocator extends BaseCapacityInstanceAllocator<AddableListAllocator.AddableList<?>> implements IAddableListAllocator {
 
     public static final class AddableList<T> extends BaseObjectArrayList<T> implements IAddableList<T>, IImmutableIndexList<T>, IResettable {
 
@@ -92,7 +92,7 @@ public final class AddableListAllocator extends BaseArrayAllocator<AddableListAl
                 throw new IllegalStateException();
             }
 
-            clear();
+            clearElements();
 
             this.initialized = false;
         }
@@ -104,14 +104,14 @@ public final class AddableListAllocator extends BaseArrayAllocator<AddableListAl
     }
 
     public AddableListAllocator() {
-        super(c -> new AddableList<>(Object[]::new, c), l -> Integers.checkUnsignedLongToUnsignedInt(l.getCapacity()));
+        super(CapacityMax.INT, null, (c, p) -> new AddableList<>(AllocationType.CACHING_ALLOCATOR, Object[]::new, c), l -> l.getCapacity());
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <T> IAddableList<T> allocateList(int minimumCapacity) {
 
-        final AddableList<T> result = (AddableList<T>)allocateArrayInstance(minimumCapacity);
+        final AddableList<T> result = (AddableList<T>)allocateFromFreeListOrCreateCapacityInstance(minimumCapacity);
 
         result.initialize();
 

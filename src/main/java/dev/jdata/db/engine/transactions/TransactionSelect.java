@@ -4,9 +4,10 @@ import java.util.Objects;
 
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.arrays.IObjectArray;
-import dev.jdata.db.utils.adt.maps.MutableIntToObjectMaxDistanceNonBucketMap;
-import dev.jdata.db.utils.adt.sets.ILongSetGetters;
-import dev.jdata.db.utils.adt.sets.IMutableLongSet;
+import dev.jdata.db.utils.adt.maps.IHeapMutableIntToObjectDynamicMap;
+import dev.jdata.db.utils.adt.maps.IMutableIntToObjectDynamicMap;
+import dev.jdata.db.utils.adt.sets.IBaseMutableLongSet;
+import dev.jdata.db.utils.adt.sets.ILongSetView;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -18,7 +19,7 @@ public final class TransactionSelect extends ObjectCacheNode implements IClearab
         OR;
     }
 
-    public interface TransactionSelectAllocator {
+    public interface ITransactionSelectAllocator {
 
         TransactionSelect allocateTransactionSelect();
 
@@ -28,16 +29,17 @@ public final class TransactionSelect extends ObjectCacheNode implements IClearab
     private int tableId;
     private ConditionOperator conditionOperator;
     private IObjectArray<SelectColumn> selectColumns;
-    private ILongSetGetters rowIdsToFilter;
+    private ILongSetView rowIdsToFilter;
     private StringLookup stringLookup;
-    private final MutableIntToObjectMaxDistanceNonBucketMap<SelectColumn> selectColumnsMap;
+    private final IMutableIntToObjectDynamicMap<SelectColumn> selectColumnsMap;
 
-    public TransactionSelect() {
+    public TransactionSelect(AllocationType allocationType) {
+        super(allocationType);
 
-        this.selectColumnsMap = new MutableIntToObjectMaxDistanceNonBucketMap<>(0, SelectColumn[]::new);
+        this.selectColumnsMap = IHeapMutableIntToObjectDynamicMap.create(0, SelectColumn[]::new);
     }
 
-    public void initialize(int tableId, ConditionOperator conditionOperator, IObjectArray<SelectColumn> selectColumns, IMutableLongSet rowIdsToFilter,
+    public void initialize(int tableId, ConditionOperator conditionOperator, IObjectArray<SelectColumn> selectColumns, IBaseMutableLongSet rowIdsToFilter,
             StringLookup stringLookup) {
 
         this.tableId = Checks.isTableId(tableId);
@@ -93,7 +95,7 @@ public final class TransactionSelect extends ObjectCacheNode implements IClearab
 
     public SelectColumn getSelectColumn(int index) {
 
-        Checks.isIndex(index);
+        Checks.isIntIndex(index);
 
         return selectColumns.get(index);
     }
@@ -103,7 +105,7 @@ public final class TransactionSelect extends ObjectCacheNode implements IClearab
         return (int)selectColumns.getLimit();
     }
 
-    public ILongSetGetters getRowIdsToFilter() {
+    public ILongSetView getRowIdsToFilter() {
         return rowIdsToFilter;
     }
 

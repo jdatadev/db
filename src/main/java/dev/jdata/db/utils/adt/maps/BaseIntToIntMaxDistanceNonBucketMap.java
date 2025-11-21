@@ -9,18 +9,18 @@ import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance;
 import dev.jdata.db.utils.adt.hashed.helpers.MaxDistance.MaxDistanceIntMapOperations;
 
-abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucketMap<IIntToIntDynamicMapCommon> implements IIntToIntDynamicMapCommon {
+abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucketMap<BaseIntToIntMaxDistanceNonBucketMap> implements IIntToIntDynamicMapCommon {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_INT_TO_INT_MAX_DISTANCE_NON_BUCKET_MAP;
 
     private byte[] maxDistances;
 
-    BaseIntToIntMaxDistanceNonBucketMap(int initialCapacityExponent) {
-        super(initialCapacityExponent);
+    BaseIntToIntMaxDistanceNonBucketMap(AllocationType allocationType, int initialCapacityExponent) {
+        super(allocationType, initialCapacityExponent);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent));
         }
 
         initialize();
@@ -31,12 +31,13 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
         }
     }
 
-    BaseIntToIntMaxDistanceNonBucketMap(int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
-        super(initialCapacityExponent, capacityExponentIncrease, loadFactor);
+    BaseIntToIntMaxDistanceNonBucketMap(AllocationType allocationType, int initialCapacityExponent, int capacityExponentIncrease, float loadFactor) {
+        super(allocationType, initialCapacityExponent, capacityExponentIncrease, loadFactor);
 
         if (DEBUG) {
 
-            enter(b -> b.add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease).add("loadFactor", loadFactor));
+            enter(b -> b.add("allocationType", allocationType).add("initialCapacityExponent", initialCapacityExponent).add("capacityExponentIncrease", capacityExponentIncrease)
+                    .add("loadFactor", loadFactor));
         }
 
         initialize();
@@ -47,12 +48,12 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
         }
     }
 
-    BaseIntToIntMaxDistanceNonBucketMap(BaseIntToIntMaxDistanceNonBucketMap toCopy) {
-        super(toCopy);
+    BaseIntToIntMaxDistanceNonBucketMap(AllocationType allocationType, BaseIntToIntMaxDistanceNonBucketMap toCopy) {
+        super(allocationType, toCopy);
 
         if (DEBUG) {
 
-            enter(b -> b.add("toCopy", toCopy));
+            enter(b -> b.add("allocationType", allocationType).add("toCopy", toCopy));
         }
 
         this.maxDistances = MaxDistance.copyMaxDistances(toCopy.maxDistances);
@@ -65,7 +66,7 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
 
     private void initialize() {
 
-        this.maxDistances = new byte[getCapacity()];
+        this.maxDistances = new byte[getHashedCapacity()];
     }
 
     @Override
@@ -106,6 +107,32 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
         }
 
         return result;
+    }
+
+    @Override
+    protected final <P, R> R makeFromElements(AllocationType allocationType, P parameter,
+            IMakeFromElementsFunction<int[], BaseIntToIntMaxDistanceNonBucketMap, P, R> makeFromElements) {
+
+        Objects.requireNonNull(allocationType);
+        Objects.requireNonNull(makeFromElements);
+
+        return makeFromElements.apply(allocationType, int[]::new, this, getMakeFromElementsNumElements(), parameter);
+    }
+
+    @Override
+    protected final void recreateElements() {
+
+        super.recreateElements();
+
+        initialize();
+    }
+
+    @Override
+    protected final void resetToNull() {
+
+        super.resetToNull();
+
+        this.maxDistances = null;
     }
 
     @Override
@@ -198,7 +225,7 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
         @Override
         public long getCapacity(BaseIntToIntMaxDistanceNonBucketMap hashed) {
 
-            return hashed.getCapacity();
+            return hashed.getHashedCapacity();
         }
     };
 
@@ -248,7 +275,8 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
     }
 
     @Override
-    public final <P1, P2> boolean equals(P1 thisParameter, IIntToIntDynamicMapCommon other, P2 otherParameter, IIntValueMapEqualityTester<P1, P2> equalityTester) {
+    public final <P1, P2, E extends Exception> boolean equals(P1 thisParameter, IIntToIntDynamicMapView other, P2 otherParameter,
+            IIntValueMapEqualityTester<P1, P2, E> equalityTester) throws E {
 
         Objects.requireNonNull(other);
         Objects.requireNonNull(equalityTester);
@@ -262,8 +290,7 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
 
         if (other instanceof BaseIntToIntNonBucketMap) {
 
-            @SuppressWarnings("unchecked")
-            final BaseIntToIntNonBucketMap<IIntToIntDynamicMapCommon> otherMap = (BaseIntToIntNonBucketMap<IIntToIntDynamicMapCommon>)other;
+            final BaseIntToIntNonBucketMap<?> otherMap = (BaseIntToIntNonBucketMap<?>)other;
 
             result = equalsIntToIntNonBucketMap(thisParameter, otherMap, otherParameter, equalityTester);
         }
@@ -280,7 +307,7 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
     }
 
     @Override
-    public final <P1, P2> boolean equalsParameters(IntValueMapScratchEqualsParameter<IIntToIntDynamicMapCommon, P1, P2> scratchEqualsParameter) {
+    public final <P1, P2, E extends Exception> boolean equalsParameters(IntValueMapScratchEqualsParameter<IIntToIntDynamicMapView, P1, P2, E> scratchEqualsParameter) throws E {
 
         Objects.requireNonNull(scratchEqualsParameter);
 
@@ -291,12 +318,11 @@ abstract class BaseIntToIntMaxDistanceNonBucketMap extends BaseIntToIntNonBucket
 
         final boolean result;
 
-        final IIntToIntDynamicMapCommon other = scratchEqualsParameter.getOther();
+        final IIntToIntDynamicMapView other = scratchEqualsParameter.getOther();
 
         if (other instanceof BaseIntToIntNonBucketMap) {
 
-            @SuppressWarnings("unchecked")
-            final BaseIntToIntNonBucketMap<IIntToIntDynamicMapCommon> otherMap = (BaseIntToIntNonBucketMap<IIntToIntDynamicMapCommon>)other;
+            final BaseIntToIntNonBucketMap<?> otherMap = (BaseIntToIntNonBucketMap<?>)other;
 
             result = equalsIntToIntNonBucketMap(scratchEqualsParameter.getThisParameter(), otherMap, scratchEqualsParameter.getOtherParameter(),
                     scratchEqualsParameter.getEqualityTester());
