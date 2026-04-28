@@ -12,7 +12,6 @@ import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.IntCapacityPutResult;
 import dev.jdata.db.utils.adt.hashed.helpers.ObjectNonBucket;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.debug.PrintDebug;
 
 abstract class BaseObjectKeyNonBucketMap<KEY, VALUES, MAP extends BaseObjectKeyNonBucketMap<KEY, VALUES, MAP>>
 
@@ -317,21 +316,21 @@ abstract class BaseObjectKeyNonBucketMap<KEY, VALUES, MAP extends BaseObjectKeyN
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
         final int hashArrayIndex = HashFunctions.objectHashArrayIndex(key, keyMask);
 
         if (DEBUG) {
 
-            PrintDebug.debugFormatln(debugClass, "lookup hashArrayIndex=%d key=%s keyMask=0x%08x", hashArrayIndex, key, keyMask);
+            debugFormatln(debugClass, "lookup hashArrayIndex=%d key=%s keyMask=0x%08x", hashArrayIndex, key, keyMask);
         }
 
         final long result = putKeyWithHashArrayIndex(hashArray, key, hashArrayIndex);
 
         if (DEBUG) {
 
-            PrintDebug.exitWithHex(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            exitWithHex(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
         return result;
@@ -345,14 +344,14 @@ abstract class BaseObjectKeyNonBucketMap<KEY, VALUES, MAP extends BaseObjectKeyN
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
         }
 
         final long result = HashArray.add(hashArray, key, hashArrayIndex);
 
         if (DEBUG) {
 
-            PrintDebug.exitWithHex(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
+            exitWithHex(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
         }
 
         return result;

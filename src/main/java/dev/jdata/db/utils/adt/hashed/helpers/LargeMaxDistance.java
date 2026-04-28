@@ -10,7 +10,6 @@ import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
 import dev.jdata.db.utils.adt.arrays.IMutableObjectLargeArray;
 import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.scalars.Integers;
 
 public class LargeMaxDistance extends BaseMaxDistance {
@@ -61,7 +60,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("set", set).add("value", value).add("operations", operations));
+            enter(debugClass, b -> b.add("set", set).add("value", value).add("operations", operations));
         }
 
         boolean result;
@@ -91,7 +90,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("set", set).add("value", value).add("operations", operations));
+            exit(debugClass, result, b -> b.add("set", set).add("value", value).add("operations", operations));
         }
 
         return result;
@@ -104,7 +103,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
+            enter(debugClass, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
         }
 
         final long putResult = putMaxDistance(hashed, key, operations);
@@ -118,7 +117,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
+            exit(debugClass, result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
         }
 
         return result;
@@ -131,7 +130,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
+            enter(debugClass, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
         }
 
         final long putResult = putMaxDistance(hashed, key, operations);
@@ -145,7 +144,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
+            exit(debugClass, result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
         }
 
         return result;
@@ -158,7 +157,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("operations", operations));
+            enter(debugClass, b -> b.add("key", key).add("operations", operations));
         }
 
         long result = LongCapacityPutResult.makePutResult(false, LargeHashArray.NO_INDEX);
@@ -193,7 +192,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("key", key).add("operations", operations));
+            exit(debugClass, result, b -> b.add("key", key).add("operations", operations));
         }
 
         return result;
@@ -206,7 +205,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("set", set).add("value", value).add("operations", operations));
+            enter(debugClass, b -> b.add("set", set).add("value", value).add("operations", operations));
         }
 
         boolean result;
@@ -236,7 +235,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("set", set).add("value", value).add("operations", operations));
+            exit(debugClass, result, b -> b.add("set", set).add("value", value).add("operations", operations));
         }
 
         return result;
@@ -249,7 +248,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
+            enter(debugClass, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
         }
 
         final long putResult = putMaxDistance(hashed, key, operations);
@@ -263,7 +262,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
+            exit(debugClass, result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
         }
 
         return result;
@@ -276,7 +275,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
+            enter(debugClass, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
         }
 
         final long putResult = putMaxDistance(hashed, key, operations);
@@ -290,7 +289,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
+            exit(debugClass, result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
         }
 
         return result;
@@ -303,7 +302,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("operations", operations));
+            enter(debugClass, b -> b.add("key", key).add("operations", operations));
         }
 
         long result = LongCapacityPutResult.makePutResult(false, LargeHashArray.NO_INDEX);
@@ -338,7 +337,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("key", key).add("operations", operations));
+            exit(debugClass, result, b -> b.add("key", key).add("operations", operations));
         }
 
         return result;
@@ -353,7 +352,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
+            enter(debugClass, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
         }
 
         final long putResult = putMaxDistance(hashed, key, operations);
@@ -367,7 +366,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
+            exit(debugClass, result, b -> b.add("key", key).add("value", value).add("defaultPreviousValue", defaultPreviousValue).add("operations", operations));
         }
 
         return result;
@@ -381,7 +380,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("operations", operations));
+            enter(debugClass, b -> b.add("key", key).add("operations", operations));
         }
 
         long result = LongCapacityPutResult.makePutResult(false, LargeHashArray.NO_INDEX);
@@ -417,7 +416,7 @@ public class LargeMaxDistance extends BaseMaxDistance {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("key", key).add("operations", operations));
+            exit(debugClass, result, b -> b.add("key", key).add("operations", operations));
         }
 
         return result;

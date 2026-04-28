@@ -4,8 +4,9 @@ import java.util.Objects;
 
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.debug.PrintDebug;
 
-public abstract class Allocatable {
+public abstract class Allocatable extends PrintDebug {
 
     public static enum AllocationMechanism {
 

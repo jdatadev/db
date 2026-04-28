@@ -22,7 +22,7 @@ import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class LockTable extends BaseRows implements PrintDebug, ITransactionSharedStateMarker {
+public final class LockTable extends BaseRows implements  ITransactionSharedStateMarker {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_LOCK_TABLE;
 
@@ -451,7 +451,7 @@ public final class LockTable extends BaseRows implements PrintDebug, ITransactio
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("transactionDescriptor", transactionDescriptor).add("lockType", lockType).add("numReadLocks", numReadLocks)
+            enter(debugClass, b -> b.add("transactionDescriptor", transactionDescriptor).add("lockType", lockType).add("numReadLocks", numReadLocks)
                     .add("numWriteLocks", numWriteLocks).binary("lockInfoListsHeadNode", lockInfoListsHeadNode));
         }
 
@@ -499,7 +499,7 @@ public final class LockTable extends BaseRows implements PrintDebug, ITransactio
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, canLock);
+            exit(debugClass, canLock);
         }
 
         return canLock;
@@ -517,7 +517,7 @@ public final class LockTable extends BaseRows implements PrintDebug, ITransactio
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("tableId", tableId).add("rowId", rowId).add("transactionDescriptor", transactionDescriptor).add("statementId", statementId)
+            enter(debugClass, b -> b.add("tableId", tableId).add("rowId", rowId).add("transactionDescriptor", transactionDescriptor).add("statementId", statementId)
                     .add("lockType", lockType).add("lockIndex", lockIndex));
         }
 
@@ -577,7 +577,7 @@ public final class LockTable extends BaseRows implements PrintDebug, ITransactio
 
         if (DEBUG) {
 
-            PrintDebug.debug(debugClass, "add lockInfo", b -> b.add("numReadLocks", numReadLocks).add("numWriteLocks", numWriteLocks).binary("lockInfoValue", lockInfoValue)
+            debug(debugClass, "add lockInfo", b -> b.add("numReadLocks", numReadLocks).add("numWriteLocks", numWriteLocks).binary("lockInfoValue", lockInfoValue)
                     .add("addLockInfo", addLockInfo).add("updatedNumReadLocks", updatedNumReadLocks).add("updatedNumWriteLocks", updatedNumWriteLocks)
                     .add("lockInfoListsHeadNode", lockInfoListsHeadNode).add("lockInfoListsTailNode", lockInfoListsTailNode));
         }
@@ -599,7 +599,7 @@ public final class LockTable extends BaseRows implements PrintDebug, ITransactio
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass);
+            exit(debugClass);
         }
     }
 
@@ -632,7 +632,7 @@ public final class LockTable extends BaseRows implements PrintDebug, ITransactio
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("tableId", tableId).add("rowId", rowId).add("transactionDescriptor", transactionDescriptor).add("statementId", statementId)
+            enter(debugClass, b -> b.add("tableId", tableId).add("rowId", rowId).add("transactionDescriptor", transactionDescriptor).add("statementId", statementId)
                     .add("lockType", lockType).add("lockIndex", lockIndex).add("numReadLocks", numReadLocks).add("numWriteLocks", numWriteLocks));
         }
 
@@ -669,7 +669,7 @@ public final class LockTable extends BaseRows implements PrintDebug, ITransactio
 
         if (DEBUG) {
 
-            PrintDebug.debug(debugClass, "find lockInfo node", b -> b.binary("lockInfoValue", lockInfoValue).add("lockInfoListsHeadNode", lockInfoListsHeadNode));
+            debug(debugClass, "find lockInfo node", b -> b.binary("lockInfoValue", lockInfoValue).add("lockInfoListsHeadNode", lockInfoListsHeadNode));
         }
 
         final long lockInfoNode = lockTable.lockInfoLists.findAtMostOneNode(lockInfoValue, lockInfoListsHeadNode);
@@ -696,7 +696,7 @@ public final class LockTable extends BaseRows implements PrintDebug, ITransactio
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass);
+            exit(debugClass);
         }
     }
 
@@ -872,7 +872,7 @@ public final class LockTable extends BaseRows implements PrintDebug, ITransactio
         return result;
     }
 
-    private static abstract class TableLockBitsGetter implements LockBitsGetter {
+    private static abstract class TableLockBitsGetter extends PrintDebug implements LockBitsGetter {
 
         @Override
         public long getNumReadLocks(LockTable lockTable, long lockIndex) {
@@ -887,7 +887,7 @@ public final class LockTable extends BaseRows implements PrintDebug, ITransactio
         }
     }
 
-    private static final class TableLockSetter extends TableLockBitsGetter implements LockSetter, PrintDebug {
+    private static final class TableLockSetter extends TableLockBitsGetter implements LockSetter {
 
         @Override
         public long getLockInfoListsHeadNode(LockTable lockTable, long lockIndex) {

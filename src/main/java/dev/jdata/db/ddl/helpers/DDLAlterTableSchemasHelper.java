@@ -35,7 +35,6 @@ import dev.jdata.db.utils.adt.lists.ICachedIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.ICachedIndexListBuilder;
 import dev.jdata.db.utils.adt.sets.ICachedIntSetAllocator;
 import dev.jdata.db.utils.adt.sets.ICachedIntSetBuilder;
-import dev.jdata.db.utils.debug.PrintDebug;
 
 public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
@@ -55,7 +54,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("sqlAlterTableStatement", sqlAlterTableStatement).add("databaseId", databaseId).add("table", table)
+            enter(debugClass, b -> b.add("sqlAlterTableStatement", sqlAlterTableStatement).add("databaseId", databaseId).add("table", table)
                     .add("intSetAllocator", intSetAllocator).add("stringManagement", stringManagement).add("ddlSchemaScratchObjects", ddlSchemaScratchObjects));
         }
 
@@ -75,7 +74,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;
@@ -144,7 +143,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("sqlAddColumnsOperation", sqlAddColumnsOperation).add("processAlterTableScratchObject", processAlterTableScratchObject));
+            enter(debugClass, b -> b.add("sqlAddColumnsOperation", sqlAddColumnsOperation).add("processAlterTableScratchObject", processAlterTableScratchObject));
         }
 
         validateAddColumns(sqlAddColumnsOperation, processAlterTableScratchObject);
@@ -204,7 +203,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;
@@ -229,7 +228,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("sqlModifyColumnsOperation", sqlModifyColumnsOperation)
+            enter(debugClass, b -> b.add("sqlModifyColumnsOperation", sqlModifyColumnsOperation)
                     .add("processAlterTableScratchObject", processAlterTableScratchObject));
         }
 
@@ -286,7 +285,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;
@@ -311,7 +310,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("sqlDropColumnsOperation", sqlDropColumnsOperation).add("processAlterTableScratchObject", processAlterTableScratchObject));
+            enter(debugClass, b -> b.add("sqlDropColumnsOperation", sqlDropColumnsOperation).add("processAlterTableScratchObject", processAlterTableScratchObject));
         }
 
         final TableDiff result;
@@ -355,7 +354,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;
@@ -387,7 +386,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("sqlAddPrimaryKeyConstraintOperation", sqlAddPrimaryKeyConstraintOperation)
+            enter(debugClass, b -> b.add("sqlAddPrimaryKeyConstraintOperation", sqlAddPrimaryKeyConstraintOperation)
                     .add("processAlterTableScratchObject", processAlterTableScratchObject));
         }
 
@@ -397,7 +396,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;

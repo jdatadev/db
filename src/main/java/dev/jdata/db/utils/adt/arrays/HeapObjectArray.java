@@ -1,7 +1,6 @@
 package dev.jdata.db.utils.adt.arrays;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.debug.PrintDebug;
 
 final class HeapObjectArray<T> extends ObjectArray<T> implements IHeapObjectArray<T> {
 
@@ -16,14 +15,14 @@ final class HeapObjectArray<T> extends ObjectArray<T> implements IHeapObjectArra
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("allocationType", allocationType).add("instances", instances));
+            enter(debugClass, b -> b.add("allocationType", allocationType).add("instances", instances));
         }
 
         final HeapObjectArray<T> result = new HeapObjectArray<>(allocationType, instances);
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;
@@ -35,14 +34,14 @@ final class HeapObjectArray<T> extends ObjectArray<T> implements IHeapObjectArra
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("allocationType", allocationType).add("toCopy", toCopy));
+            enter(debugClass, b -> b.add("allocationType", allocationType).add("toCopy", toCopy));
         }
 
         final HeapObjectArray<T> result = new HeapObjectArray<>(AllocationType.HEAP, (BaseObjectArray<T>)toCopy);
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;

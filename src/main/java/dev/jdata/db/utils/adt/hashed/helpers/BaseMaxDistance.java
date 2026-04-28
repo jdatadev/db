@@ -1,6 +1,8 @@
 package dev.jdata.db.utils.adt.hashed.helpers;
 
-abstract class BaseMaxDistance {
+import dev.jdata.db.utils.debug.PrintDebug;
+
+abstract class BaseMaxDistance extends PrintDebug {
 
     interface BaseMaxDistanceHashedOperations<T, U, M> {
 

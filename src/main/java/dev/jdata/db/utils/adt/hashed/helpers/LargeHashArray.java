@@ -11,7 +11,7 @@ import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 
-public class LargeHashArray {
+public class LargeHashArray extends PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_LARGE_HASH_ARRAY;
 
@@ -30,7 +30,7 @@ public class LargeHashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         int remaining = max + 1;
@@ -64,7 +64,7 @@ public class LargeHashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            exit(debugClass, found, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         return found;
@@ -79,7 +79,7 @@ public class LargeHashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         int remaining = max + 1;
@@ -113,7 +113,7 @@ public class LargeHashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            exit(debugClass, found, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         return found;
@@ -126,7 +126,7 @@ public class LargeHashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
         final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
@@ -165,7 +165,7 @@ public class LargeHashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
         return found;
@@ -178,7 +178,7 @@ public class LargeHashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
         final long hashArrayIndex = HashFunctions.longHashArrayIndex(key, keyMask);
@@ -217,7 +217,7 @@ public class LargeHashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
         return found;
@@ -230,7 +230,7 @@ public class LargeHashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
         final long noElement = LongNonBucket.NO_ELEMENT;
@@ -251,7 +251,7 @@ public class LargeHashArray {
 
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "add to map new foundIndex=" + i);
+                    debug(debugClass, "add to map new foundIndex=" + i);
                 }
 
                 hashArray.set(i, value);
@@ -265,7 +265,7 @@ public class LargeHashArray {
 
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "add to map existing foundIndex=" + i);
+                    debug(debugClass, "add to map existing foundIndex=" + i);
                 }
 
                 found = i;
@@ -283,7 +283,7 @@ public class LargeHashArray {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
+                        debug(debugClass, "add to map foundIndex=" + i);
                     }
 
                     hashArray.set(i, value);
@@ -297,7 +297,7 @@ public class LargeHashArray {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
+                        debug(debugClass, "add to map foundIndex=" + i);
                     }
 
                     found = i;
@@ -315,7 +315,7 @@ public class LargeHashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exitWithBinary(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+            exitWithBinary(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
         return result;
@@ -328,7 +328,7 @@ public class LargeHashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
         final long noElement = LongNonBucket.NO_ELEMENT;
@@ -349,7 +349,7 @@ public class LargeHashArray {
 
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "add to map new foundIndex=" + i);
+                    debug(debugClass, "add to map new foundIndex=" + i);
                 }
 
                 hashArray.set(i, value);
@@ -363,7 +363,7 @@ public class LargeHashArray {
 
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "add to map existing foundIndex=" + i);
+                    debug(debugClass, "add to map existing foundIndex=" + i);
                 }
 
                 found = i;
@@ -381,7 +381,7 @@ public class LargeHashArray {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
+                        debug(debugClass, "add to map foundIndex=" + i);
                     }
 
                     hashArray.set(i, value);
@@ -395,7 +395,7 @@ public class LargeHashArray {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
+                        debug(debugClass, "add to map foundIndex=" + i);
                     }
 
                     found = i;
@@ -413,7 +413,7 @@ public class LargeHashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exitWithBinary(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+            exitWithBinary(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
         return result;

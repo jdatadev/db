@@ -16,7 +16,6 @@ import dev.jdata.db.sql.ast.statements.table.SQLCreateTableStatement;
 import dev.jdata.db.sql.ast.statements.table.SQLTableColumnDefinition;
 import dev.jdata.db.utils.adt.lists.ICachedIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.ICachedIndexListBuilder;
-import dev.jdata.db.utils.debug.PrintDebug;
 
 public class DDLCreateTableSchemasHelper extends DDLTableSchemasHelper {
 
@@ -34,7 +33,7 @@ public class DDLCreateTableSchemasHelper extends DDLTableSchemasHelper {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("sqlCreateTableStatement", sqlCreateTableStatement).add("stringManagement", stringManagement)
+            enter(debugClass, b -> b.add("sqlCreateTableStatement", sqlCreateTableStatement).add("stringManagement", stringManagement)
                     .add("ddlSchemaScrathObjects", ddlSchemaScratchObjects).add("allocateTableIdFunction", allocateTableIdFunction));
         }
 
@@ -69,7 +68,7 @@ public class DDLCreateTableSchemasHelper extends DDLTableSchemasHelper {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;

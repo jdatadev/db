@@ -2,9 +2,7 @@ package dev.jdata.db.utils.adt.elements;
 
 import java.util.Objects;
 
-import dev.jdata.db.utils.debug.PrintDebug;
-
-public abstract class BaseNumElements<T, U, V> extends BaseElements<T, U, V> implements IOnlyElementsView, PrintDebug {
+public abstract class BaseNumElements<T, U, V> extends BaseElements<T, U, V> implements IOnlyElementsView {
 
     private static final boolean DEBUG = Boolean.FALSE;
 

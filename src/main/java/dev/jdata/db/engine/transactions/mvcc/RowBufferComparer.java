@@ -20,7 +20,7 @@ import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 
-final class RowBufferComparer implements IClearable, PrintDebug {
+final class RowBufferComparer extends PrintDebug implements IClearable {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MVCC_ROW_BUFFER_COMPARER;
 

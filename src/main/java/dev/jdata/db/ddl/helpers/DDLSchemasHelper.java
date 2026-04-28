@@ -1,5 +1,7 @@
 package dev.jdata.db.ddl.helpers;
 
-public class DDLSchemasHelper {
+import dev.jdata.db.utils.debug.PrintDebug;
+
+public class DDLSchemasHelper extends PrintDebug {
 
 }

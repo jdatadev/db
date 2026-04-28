@@ -5,7 +5,6 @@ import java.util.Objects;
 import dev.jdata.db.storage.backend.file.BaseStorageFile;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
@@ -25,7 +24,7 @@ public abstract class FileStorage extends ObjectCacheNode {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("fileName", fileName).add("fileNamePrefix", fileNamePrefix));
+            enter(debugClass, b -> b.add("fileName", fileName).add("fileNamePrefix", fileNamePrefix));
         }
 
         final int fileNameLength = fileName.length();
@@ -69,7 +68,7 @@ public abstract class FileStorage extends ObjectCacheNode {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;

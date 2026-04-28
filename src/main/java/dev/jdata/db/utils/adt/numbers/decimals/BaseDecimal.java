@@ -9,7 +9,6 @@ import dev.jdata.db.utils.adt.buffers.BitBuffer;
 import dev.jdata.db.utils.adt.numbers.BaseNumber;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.debug.PrintDebug;
 
 abstract class BaseDecimal<T extends BaseDecimal<T>> extends BaseNumber<T> implements IDecimalView {
 
@@ -84,7 +83,7 @@ abstract class BaseDecimal<T extends BaseDecimal<T>> extends BaseNumber<T> imple
 
         if (DEBUG) {
 
-            PrintDebug.debug(debugClass, "constructor " + integer + ' ' + integerNumBits + ' ' + decimalsUnscaled + ' ' + decimalsNumBits);
+            debug(debugClass, "constructor " + integer + ' ' + integerNumBits + ' ' + decimalsUnscaled + ' ' + decimalsNumBits);
         }
 
         for (int i = integerNumBits - 1; i >= 0; -- i) {
@@ -132,7 +131,7 @@ abstract class BaseDecimal<T extends BaseDecimal<T>> extends BaseNumber<T> imple
 
         if (DEBUG) {
 
-            PrintDebug.debug(debugClass, "get value " + integerPart + ' ' + numBitsBeforeDecimalPoint + ' ' + decimalPart + ' ' + numBitsAfterDecimalPoint);
+            debug(debugClass, "get value " + integerPart + ' ' + numBitsBeforeDecimalPoint + ' ' + decimalPart + ' ' + numBitsAfterDecimalPoint);
         }
 
         final BigDecimal integerDecimal = new BigDecimal(integerPart);
@@ -151,7 +150,7 @@ abstract class BaseDecimal<T extends BaseDecimal<T>> extends BaseNumber<T> imple
 
         if (DEBUG) {
 
-            PrintDebug.debug(debugClass, "get bits " + startBitOffset + ' ' + numBits);
+            debug(debugClass, "get bits " + startBitOffset + ' ' + numBits);
         }
 
         final int numBytes = BitBufferUtil.numBytes(numBits);
@@ -166,7 +165,7 @@ abstract class BaseDecimal<T extends BaseDecimal<T>> extends BaseNumber<T> imple
 
             if (DEBUG) {
 
-                PrintDebug.debug(debugClass, "num bytes " + numBytes + ' ' + i + ' ' + (startBitOffset + i) + ' ' + isSet + ' ' + dstBitOffset);
+                debug(debugClass, "num bytes " + numBytes + ' ' + i + ' ' + (startBitOffset + i) + ' ' + isSet + ' ' + dstBitOffset);
             }
 
             BitBufferUtil.setBitValue(byteArray, isSet, dstBitOffset ++);

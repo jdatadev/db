@@ -8,10 +8,11 @@ import dev.jdata.db.test.unit.assertj.CustomAssertJAssertions;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.debug.IPrintDebug;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
 
-public abstract class BaseTest extends CustomAssertJAssertions {
+public abstract class BaseTest extends CustomAssertJAssertions implements IPrintDebug {
 
     public interface UnitTest {
 

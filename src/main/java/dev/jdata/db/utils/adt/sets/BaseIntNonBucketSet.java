@@ -15,7 +15,6 @@ import dev.jdata.db.utils.adt.hashed.helpers.HashArray;
 import dev.jdata.db.utils.adt.hashed.helpers.IntCapacityPutResult;
 import dev.jdata.db.utils.adt.hashed.helpers.IntNonBucket;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.debug.PrintDebug;
 
 abstract class BaseIntNonBucketSet extends BaseNonBucketSet<int[]> implements IBaseIntSetCommon, IIntUnorderedAddable {
 
@@ -252,21 +251,21 @@ abstract class BaseIntNonBucketSet extends BaseNonBucketSet<int[]> implements IB
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).hex("keyMask", keyMask));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).hex("keyMask", keyMask));
         }
 
         final int hashArrayIndex = HashFunctions.hashArrayIndex(value, keyMask);
 
         if (DEBUG) {
 
-            PrintDebug.debugFormatln(debugClass, "lookup hashArrayIndex=%d key=%d keyMask=0x%08x", hashArrayIndex, value, keyMask);
+            debugFormatln(debugClass, "lookup hashArrayIndex=%d key=%d keyMask=0x%08x", hashArrayIndex, value, keyMask);
         }
 
         final long result = addWithHashArrayIndex(hashArray, value, hashArrayIndex);
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, b -> b.add("hashArray", hashArray).add("value", value).hex("keyMask", keyMask));
+            exit(debugClass, b -> b.add("hashArray", hashArray).add("value", value).hex("keyMask", keyMask));
         }
 
         return result;
@@ -278,14 +277,14 @@ abstract class BaseIntNonBucketSet extends BaseNonBucketSet<int[]> implements IB
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
         final long result = HashArray.add(hashArray, value, hashArrayIndex);
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+            exit(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
         return result;

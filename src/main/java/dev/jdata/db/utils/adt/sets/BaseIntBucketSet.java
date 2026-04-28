@@ -16,7 +16,6 @@ import dev.jdata.db.utils.adt.lists.ILongNodeSetter;
 import dev.jdata.db.utils.adt.lists.IMutableIntLargeSinglyLinkedMultiHeadNodeList;
 import dev.jdata.db.utils.adt.lists.IMutableIntSinglyLinkedMultiHeadNodeList;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.jdk.adt.strings.StringBuilders;
 
 @Deprecated // large list or int capacity?
@@ -52,7 +51,7 @@ abstract class BaseIntBucketSet
 
         Array.toString(intBucketSet.scratchHashArray, 0, intBucketSet.scratchHashArray.length, sb, i -> true, (a, i, b) -> StringBuilders.hexString(b, a[i], true));
 
-        PrintDebug.formatln(debugClass, "set bucketHeadnode=0x%016x integer=0x%08x scratchHashArrayIndex=%d %s", bucketHeadNode, integer, intBucketSet.scratchHashArrayIndex,
+        formatln(debugClass, "set bucketHeadnode=0x%016x integer=0x%08x scratchHashArrayIndex=%d %s", bucketHeadNode, integer, intBucketSet.scratchHashArrayIndex,
                 sb.toString());
     }
 

@@ -13,7 +13,6 @@ import dev.jdata.db.utils.adt.hashed.HashFunctions;
 import dev.jdata.db.utils.adt.hashed.helpers.LongBuckets;
 import dev.jdata.db.utils.adt.lists.ILongNodeSetter;
 import dev.jdata.db.utils.adt.lists.IMutableLongLargeSinglyLinkedMultiHeadNodeList;
-import dev.jdata.db.utils.debug.PrintDebug;
 
 abstract class BaseLongBucketLargeSet
 
@@ -30,7 +29,7 @@ abstract class BaseLongBucketLargeSet
 
                 if (DEBUG) {
 
-                    PrintDebug.formatln(debugClass, "set bucketHeadNode=0x%016x scratchHashArrayIndex=%d", h, i.scratchHashArrayIndex);
+                    formatln(debugClass, "set bucketHeadNode=0x%016x scratchHashArrayIndex=%d", h, i.scratchHashArrayIndex);
                 }
 
                 i.scratchHashArray.set(i.scratchHashArrayIndex, h);

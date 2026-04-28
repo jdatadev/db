@@ -33,10 +33,9 @@ import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTransactionState> implements PrintDebug {
+public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTransactionState> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_MVCC_TRANSACTION;
 
@@ -634,14 +633,14 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("mvccBitBuffer", mvccBitBuffer).add("rowIds", rowIds).add("rows", rows).add("numRows", numRows));
+            enter(debugClass, b -> b.add("mvccBitBuffer", mvccBitBuffer).add("rowIds", rowIds).add("rows", rows).add("numRows", numRows));
         }
 
         final int numTableColumns = rows.getNumTableColumns();
 
         if (DEBUG) {
 
-            PrintDebug.debug(debugClass, "add columns", b -> b.add("numTableColumns", numTableColumns));
+            debug(debugClass, "add columns", b -> b.add("numTableColumns", numTableColumns));
         }
 
         mvccBitBuffer.addUnsignedShort(numTableColumns);
@@ -657,7 +656,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
             if (DEBUG) {
 
-                PrintDebug.debug(debugClass, "add column", b -> b.add("i", closureI).add("tableColumn", tableColumn).add("numBits", numBits));
+                debug(debugClass, "add column", b -> b.add("i", closureI).add("tableColumn", tableColumn).add("numBits", numBits));
             }
 
             mvccBitBuffer.addUnsignedShort(tableColumn);
@@ -666,7 +665,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
         if (DEBUG) {
 
-            PrintDebug.debug(debugClass, "add rows", b -> b.add("numRows", numRows));
+            debug(debugClass, "add rows", b -> b.add("numRows", numRows));
         }
 
         mvccBitBuffer.addUnsignedLong(numRows);
@@ -681,7 +680,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "add rowId", b -> b.add("i", closureI).add("rowId", rowId));
+                    debug(debugClass, "add rowId", b -> b.add("i", closureI).add("rowId", rowId));
                 }
 
                 mvccBitBuffer.addUnsignedLong(rowId);
@@ -696,7 +695,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
                     final int closureJ = j;
 
-                    PrintDebug.debug(debugClass, "add row column", b -> b.add("i", closureI).add("j", closureJ).add("rowBuffer", BufferUtil.toString(rowBuffer))
+                    debug(debugClass, "add row column", b -> b.add("i", closureI).add("j", closureJ).add("rowBuffer", BufferUtil.toString(rowBuffer))
                             .add("rowBufferBitOffset", rowBufferBitOffset));
                 }
 
@@ -706,7 +705,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass);
+            exit(debugClass);
         }
     }
 
@@ -716,7 +715,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("mvccTransaction", mvccTransaction).add("tableId", tableId).add("dmlOperation", dmlOperation)
+            enter(debugClass, b -> b.add("mvccTransaction", mvccTransaction).add("tableId", tableId).add("dmlOperation", dmlOperation)
                     .add("operationSequenceNo", operationSequenceNo).add("rowOperationBySequenceNo", rowOperationBySequenceNo).add("value", value));
         }
 
@@ -743,7 +742,7 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
         if (DEBUG) {
 
-            PrintDebug.exitWithBinary(debugClass, encoded);
+            exitWithBinary(debugClass, encoded);
         }
 
         return encoded;

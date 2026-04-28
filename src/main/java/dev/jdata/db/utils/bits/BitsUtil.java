@@ -6,7 +6,7 @@ import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 
-public class BitsUtil {
+public class BitsUtil extends PrintDebug {
 
     private static final boolean DEBUG = Boolean.FALSE;
 
@@ -84,7 +84,7 @@ public class BitsUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.format("value", "0x%016x", value).format("signed", "%b", signed).add("numBitsToScan", numBitsToScan));
+            enter(debugClass, b -> b.format("value", "0x%016x", value).format("signed", "%b", signed).add("numBitsToScan", numBitsToScan));
         }
 
         int numBits;
@@ -116,7 +116,7 @@ public class BitsUtil {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, numBits);
+            exit(debugClass, numBits);
         }
 
         return numBits;
@@ -144,7 +144,7 @@ public class BitsUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.binary("value", value).add("highBit", highBit).add("numBits", numBits));
+            enter(debugClass, b -> b.binary("value", value).add("highBit", highBit).add("numBits", numBits));
         }
 
         final long mask = ((1L << numBits) - 1);
@@ -155,7 +155,7 @@ public class BitsUtil {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, PrintDebug.binaryString(result));
+            exit(debugClass, binaryString(result));
         }
 
         return result;

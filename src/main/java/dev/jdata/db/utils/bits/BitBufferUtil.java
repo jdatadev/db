@@ -9,7 +9,7 @@ import dev.jdata.db.utils.function.ByteGetter;
 import dev.jdata.db.utils.math.Sign;
 import dev.jdata.db.utils.scalars.Integers;
 
-public class BitBufferUtil {
+public class BitBufferUtil extends PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BIT_BUFFER_UTIL;
 
@@ -106,14 +106,14 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("buffer.length", buffer.length).add("signed", signed).add("bufferBitOffset", bufferBitOffset).add("numBits", numBits));
+            enter(debugClass, b -> b.add("buffer.length", buffer.length).add("signed", signed).add("bufferBitOffset", bufferBitOffset).add("numBits", numBits));
         }
 
         final int result = (int)getLongValue(buffer, signed, bufferBitOffset, numBits, 16);
 
         if (DEBUG) {
 
-            PrintDebug.exitWithBinary(debugClass, result);
+            exitWithBinary(debugClass, result);
         }
 
         return result;
@@ -123,7 +123,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("buffer.length", buffer.length).binary("value", value).add("signed", signed).add("bufferBitOffset", bufferBitOffset)
+            enter(debugClass, b -> b.add("buffer.length", buffer.length).binary("value", value).add("signed", signed).add("bufferBitOffset", bufferBitOffset)
                     .add("numBits", numBits));
         }
 
@@ -131,7 +131,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;
@@ -141,14 +141,14 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("buffer.length", buffer.length).add("signed", signed).add("bufferBitOffset", bufferBitOffset).add("numBits", numBits));
+            enter(debugClass, b -> b.add("buffer.length", buffer.length).add("signed", signed).add("bufferBitOffset", bufferBitOffset).add("numBits", numBits));
         }
 
         final int result = (int)getLongValue(buffer, signed, bufferBitOffset, numBits, 32);
 
         if (DEBUG) {
 
-            PrintDebug.exitWithBinary(debugClass, result);
+            exitWithBinary(debugClass, result);
         }
 
         return result;
@@ -158,7 +158,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("buffer.length", buffer.length).binary("value", value).add("signed", signed).add("bufferBitOffset", bufferBitOffset)
+            enter(debugClass, b -> b.add("buffer.length", buffer.length).binary("value", value).add("signed", signed).add("bufferBitOffset", bufferBitOffset)
                     .add("numBits", numBits));
         }
 
@@ -166,7 +166,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;
@@ -176,14 +176,14 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("buffer.length", buffer.length).add("signed", signed).add("bufferBitOffset", bufferBitOffset).add("numBits", numBits));
+            enter(debugClass, b -> b.add("buffer.length", buffer.length).add("signed", signed).add("bufferBitOffset", bufferBitOffset).add("numBits", numBits));
         }
 
         final long result = getLongValue(buffer, signed, bufferBitOffset, numBits, 64);
 
         if (DEBUG) {
 
-            PrintDebug.exitWithBinary(debugClass, result);
+            exitWithBinary(debugClass, result);
         }
 
         return result;
@@ -195,7 +195,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("buffer.length", buffer.length).add("signed", signed).add("bufferBitOffset", bufferBitOffset).add("numBits", numBits)
+            enter(debugClass, b -> b.add("buffer.length", buffer.length).add("signed", signed).add("bufferBitOffset", bufferBitOffset).add("numBits", numBits)
                     .add("numBitsToScan", numBitsToScan));
         }
 
@@ -227,7 +227,7 @@ public class BitBufferUtil {
             final int r = remainingBitsOfInputByte;
             final int o = bufferByteOffset;
 
-            PrintDebug.debug(debugClass, "at start of loop", b -> b.add("bufferByteOffset", o).add("remainingBitsOfInputByte", r));
+            debug(debugClass, "at start of loop", b -> b.add("bufferByteOffset", o).add("remainingBitsOfInputByte", r));
         }
 
         do {
@@ -240,7 +240,7 @@ public class BitBufferUtil {
                 final int r2 = remainingBitsOfInputByte;
                 final long u = unsignedValue;
 
-                PrintDebug.debug(debugClass, b -> b.add("bufferByteOffset", o).binary("existingByte", existingByte).add("remainingBits", r1).add("remainingBitsOfInputByte", r2)
+                debug(debugClass, b -> b.add("bufferByteOffset", o).binary("existingByte", existingByte).add("remainingBits", r1).add("remainingBitsOfInputByte", r2)
                         .binary("unsignedValue", u));
             }
 
@@ -272,7 +272,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.exitWithBinary(debugClass, result);
+            exitWithBinary(debugClass, result);
         }
 
         return result;
@@ -282,7 +282,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("buffer.length", buffer.length).binary("value", value).add("signed", signed).add("bufferBitOffset", bufferBitOffset)
+            enter(debugClass, b -> b.add("buffer.length", buffer.length).binary("value", value).add("signed", signed).add("bufferBitOffset", bufferBitOffset)
                     .add("numBits", numBits));
         }
 
@@ -290,7 +290,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;
@@ -302,7 +302,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("buffer.length", buffer.length).binary("value", value).add("signed", signed).add("bufferBitOffset", bufferBitOffset)
+            enter(debugClass, b -> b.add("buffer.length", buffer.length).binary("value", value).add("signed", signed).add("bufferBitOffset", bufferBitOffset)
                     .add("numBits", numBits).add("numBitsToScan", numBitsToScan));
         }
 
@@ -339,7 +339,7 @@ public class BitBufferUtil {
             final int r = remainingBitsOfOutputByte;
             final int o = bufferByteOffset;
 
-            PrintDebug.debug(debugClass, "at start of loop", b -> b.add("bufferByteOffset", o).add("remainingBitsOfOutputByte", r));
+            debug(debugClass, "at start of loop", b -> b.add("bufferByteOffset", o).add("remainingBitsOfOutputByte", r));
         }
 
         do {
@@ -392,7 +392,7 @@ public class BitBufferUtil {
                 final int r1 = remainingBits;
                 final int r2 = remainingBitsOfOutputByte;
 
-                PrintDebug.debug(debugClass, "computed updated byte", b -> b.add("remainingBits", r1).add("numBitsToUpdate", numBitsToUpdate)
+                debug(debugClass, "computed updated byte", b -> b.add("remainingBits", r1).add("numBitsToUpdate", numBitsToUpdate)
                         .add("remainingBitsOfOutputByte", r2).binary("bitsFromValue", bitsFromValue).binary("existingByte", existingByte).binary("updatedByte", updatedByte));
             }
 
@@ -402,7 +402,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, valueNumBits);
+            exit(debugClass, valueNumBits);
         }
 
         return valueNumBits;
@@ -435,7 +435,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("buffer.length", buffer.length).add("set", set).add("bufferBitOffset", bufferBitOffset).add("numBits", numBits));
+            enter(debugClass, b -> b.add("buffer.length", buffer.length).add("set", set).add("bufferBitOffset", bufferBitOffset).add("numBits", numBits));
         }
 
         long remaining = numBits;
@@ -486,7 +486,7 @@ public class BitBufferUtil {
                 final int r2 = remainingBitsOfOutputByte;
                 final int o = bitOffsetIntoByte;
 
-                PrintDebug.debug(debugClass, b -> b.add("remaining", r1).add("remainingBitsOfOutputByte", r2).binary("existingByte", existingByte).add("bitOffsetIntoByte", o)
+                debug(debugClass, b -> b.add("remaining", r1).add("remainingBitsOfOutputByte", r2).binary("existingByte", existingByte).add("bitOffsetIntoByte", o)
                         .add("numBitsToUpdate", numBitsToUpdate).add("updateLeftShift", updateLeftShift).binary("mask", mask).binary("updatedByte", updatedByte));
             }
 
@@ -499,7 +499,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass);
+            exit(debugClass);
         }
     }
 
@@ -509,7 +509,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("buffer.length", buffer.length).add("bufferBitOffset", bufferBitOffset).add("numBits", numBits));
+            enter(debugClass, b -> b.add("buffer.length", buffer.length).add("bufferBitOffset", bufferBitOffset).add("numBits", numBits));
         }
 
         long remaining = numBits;
@@ -548,7 +548,7 @@ public class BitBufferUtil {
                 final int r2 = remainingBitsOfOutputByte;
                 final int o = bitOffsetIntoByte;
 
-                PrintDebug.debug(debugClass, b -> b.add("remaining", r1).add("remainingBitsOfOutputByte", r2).binary("existingByte", existingByte).add("bitOffsetIntoByte", o)
+                debug(debugClass, b -> b.add("remaining", r1).add("remainingBitsOfOutputByte", r2).binary("existingByte", existingByte).add("bitOffsetIntoByte", o)
                         .add("bitsToClear", bitsToClear).add("clearLeftShift", clearLeftShift).binary("clearMask", clearMask).binary("updatedByte", updatedByte));
             }
 
@@ -561,7 +561,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass);
+            exit(debugClass);
         }
     }
 
@@ -575,7 +575,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("inputBuffer.length", lengthGetter.applyAsInt(inputBuffer)).add("inputBufferBitOffset", inputBufferBitOffset)
+            enter(debugClass, b -> b.add("inputBuffer.length", lengthGetter.applyAsInt(inputBuffer)).add("inputBufferBitOffset", inputBufferBitOffset)
                     .add("numInputBits", numInputBits).add("outputBuffer.length", outputBuffer.length).add("outputBufferBitOffset", outputBufferBitOffset)
                     .add("numOutputBits", numOutputBits));
         }
@@ -615,7 +615,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass);
+            exit(debugClass);
         }
     }
 
@@ -624,7 +624,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("inputBuffer.length", lengthGetter.applyAsInt(inputBuffer)).add("inputBitOffset", inputBitOffset)
+            enter(debugClass, b -> b.add("inputBuffer.length", lengthGetter.applyAsInt(inputBuffer)).add("inputBitOffset", inputBitOffset)
                     .add("outputBuffer.length", outputBuffer.length).add("outputBitOffset", outputBitOffset).add("totalNumBits", totalNumBits));
         }
 
@@ -652,7 +652,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.debug(debugClass, b -> b.add("totalNumBits", totalNumBits).add("numInputBits1", numInputBits1).add("numOutputBits1", numOutputBits1)
+            debug(debugClass, b -> b.add("totalNumBits", totalNumBits).add("numInputBits1", numInputBits1).add("numOutputBits1", numOutputBits1)
                     .binary("inputBits", inputBits));
         }
 
@@ -668,7 +668,7 @@ public class BitBufferUtil {
 
             if (DEBUG) {
 
-                PrintDebug.debug(debugClass, "update one byte", b -> b.binary("existingByte", existingByte).add("inputLeftShift", inputLeftShift).binary("clearMask", clearMask)
+                debug(debugClass, "update one byte", b -> b.binary("existingByte", existingByte).add("inputLeftShift", inputLeftShift).binary("clearMask", clearMask)
                         .binary("updatedByte", updatedByte));
             }
         }
@@ -694,7 +694,7 @@ public class BitBufferUtil {
 
             if (DEBUG) {
 
-                PrintDebug.debug(debugClass, "update two bytes", b -> b.binary("existingByte1", existingByte1).binary("clearMask1", clearMask1)
+                debug(debugClass, "update two bytes", b -> b.binary("existingByte1", existingByte1).binary("clearMask1", clearMask1)
                         .binary("updatedByte1", updatedByte1).add("numOutputBits2", numOutputBits2).add("outputBufferByteOffset2", outputBufferByteOffset2)
                         .add("inputRightShift2", inputRightShift2).binary("mask2Shifted", mask2Shifted).binary("clearMask2", clearMask2).binary("updatedByte2", updatedByte2));
             }
@@ -702,7 +702,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass);
+            exit(debugClass);
         }
     }
 
@@ -711,7 +711,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("inputBuffer.length", lengthGetter.applyAsInt(inputBuffer)).add("startInputBitOffset", startInputBitOffset)
+            enter(debugClass, b -> b.add("inputBuffer.length", lengthGetter.applyAsInt(inputBuffer)).add("startInputBitOffset", startInputBitOffset)
                     .add("outputBuffer.length", outputBuffer.length).add("startInputBitOffset", startInputBitOffset).add("totalNumBits", totalNumBits));
         }
 
@@ -737,7 +737,7 @@ public class BitBufferUtil {
                 final int r2 = remainingBitsOfInputByte;
                 final int r3 = remainingBitsOfOutputByte;
 
-                PrintDebug.debug(debugClass, "start of loop", b -> b.add("inputBitOffset", inputBitOffset).add("outputBitOffset", outputBitOffset)
+                debug(debugClass, "start of loop", b -> b.add("inputBitOffset", inputBitOffset).add("outputBitOffset", outputBitOffset)
                         .add("remainingBits", r1).add("inputBufferByteOffset", i).add("outputBufferByteOffset", o)
                         .add("remainingBitsOfInputByte", r2).add("remainingBitsOfOutputByte", r3)
                         .binary("existingByte", existingByte));
@@ -749,7 +749,7 @@ public class BitBufferUtil {
 
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "remainingBits <= remainingBitsInputByte");
+                    debug(debugClass, "remainingBits <= remainingBitsInputByte");
                 }
 
                 if (remainingBits <= remainingBitsOfOutputByte) {
@@ -768,7 +768,7 @@ public class BitBufferUtil {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "remainingBits <= remainingBitsOfInputByte", b -> b.add("bitsToCopy", bitsToCopy).add("inputRightShift", inputRightShift)
+                        debug(debugClass, "remainingBits <= remainingBitsOfInputByte", b -> b.add("bitsToCopy", bitsToCopy).add("inputRightShift", inputRightShift)
                                 .binary("inputBits", inputBits).add("inputLeftShift", inputLeftShift).binary("mask", mask).binary("updatedByte", updatedByte));
                     }
                 }
@@ -802,7 +802,7 @@ public class BitBufferUtil {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "remainingBits > remainingBitsOfOutputByte", b -> b.add("bitsToCopy1", bitsToCopy1)
+                        debug(debugClass, "remainingBits > remainingBitsOfOutputByte", b -> b.add("bitsToCopy1", bitsToCopy1)
                                 .add("inputRightShift1", inputRightShift1).binary("inputBits1", inputBits1).add("inputLeftShift1", inputLeftShift1).binary("mask1", mask1)
                                 .binary("updatedByte1", updatedByte1).add("bitsToCopy2", bitsToCopy2).add("inputRightShift2", inputRightShift2).binary("inputBits2", inputBits2)
                                 .add("outputBufferByteOffset2", outputBufferByteOffset2).binary("existingByte2", existingByte2).add("inputLeftShift2", inputLeftShift2)
@@ -815,7 +815,7 @@ public class BitBufferUtil {
             else {
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "remainingBits > remainingBitsOfInputByte");
+                    debug(debugClass, "remainingBits > remainingBitsOfInputByte");
                 }
 
                 if (remainingBitsOfInputByte < remainingBitsOfOutputByte) {
@@ -839,7 +839,7 @@ public class BitBufferUtil {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "remainingBitsOfInputByte < remainingBitsOfOutputByte", b -> b.add("bitsToCopy", bitsToCopy).binary("inputBits", inputBits)
+                        debug(debugClass, "remainingBitsOfInputByte < remainingBitsOfOutputByte", b -> b.add("bitsToCopy", bitsToCopy).binary("inputBits", inputBits)
                                 .add("inputLeftShift", inputLeftShift).binary("mask", mask).binary("updatedByte", updatedByte));
                     }
                 }
@@ -865,7 +865,7 @@ public class BitBufferUtil {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "remainingBitsOfInputByte == remainingBitsOfOutputByte", b -> b.add("bitsToCopy", bitsToCopy).binary("inputBits", inputBits)
+                        debug(debugClass, "remainingBitsOfInputByte == remainingBitsOfOutputByte", b -> b.add("bitsToCopy", bitsToCopy).binary("inputBits", inputBits)
                                 .add("inputLeftShift", inputLeftShift).binary("mask", mask).binary("updatedByte", updatedByte));
                     }
                 }
@@ -890,7 +890,7 @@ public class BitBufferUtil {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "remainingBitsOfInputByte > remainingBitsOfOutputByte", b -> b.add("bitsToCopy", bitsToCopy)
+                        debug(debugClass, "remainingBitsOfInputByte > remainingBitsOfOutputByte", b -> b.add("bitsToCopy", bitsToCopy)
                                 .add("inputRightShift", inputRightShift).binary("inputBits", inputBits)
                                 .binary("mask", mask).binary("updatedByte", updatedByte));
                     }
@@ -901,7 +901,7 @@ public class BitBufferUtil {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass);
+            exit(debugClass);
         }
     }
 

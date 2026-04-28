@@ -10,10 +10,9 @@ import org.mockito.Mockito;
 import dev.jdata.db.test.unit.BaseTest;
 import dev.jdata.db.utils.adt.arrays.LargeOneDimensionalArrayCapacityAlgorithm.OneDimensionalArrayCapacityOperations;
 import dev.jdata.db.utils.checks.Assertions;
-import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class LargeOneDimensionalArrayCapacityAlgorithmTest extends BaseTest implements PrintDebug {
+public final class LargeOneDimensionalArrayCapacityAlgorithmTest extends BaseTest {
 
     private static final boolean DEBUG = false;
 

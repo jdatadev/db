@@ -8,9 +8,8 @@ import dev.jdata.db.DebugConstants;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.debug.PrintDebug;
 
-abstract class BaseAnyDimensionalLargeArray<O, I> extends BaseAnyDimensionalArray<Void, Void, Void> implements PrintDebug {
+abstract class BaseAnyDimensionalLargeArray<O, I> extends BaseAnyDimensionalArray<Void, Void, Void> {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_ANY_LARGE_ARRAY;
 

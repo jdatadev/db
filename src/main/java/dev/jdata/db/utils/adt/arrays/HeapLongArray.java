@@ -3,7 +3,6 @@ package dev.jdata.db.utils.adt.arrays;
 import java.util.Objects;
 
 import dev.jdata.db.DebugConstants;
-import dev.jdata.db.utils.debug.PrintDebug;
 
 final class HeapLongArray extends LongArray implements IHeapLongArray {
 
@@ -17,14 +16,14 @@ final class HeapLongArray extends LongArray implements IHeapLongArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("allocationType", allocationType).add("values", values));
+            enter(debugClass, b -> b.add("allocationType", allocationType).add("values", values));
         }
 
         final HeapLongArray result = new HeapLongArray(allocationType, values);
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;
@@ -38,14 +37,14 @@ final class HeapLongArray extends LongArray implements IHeapLongArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("allocationType", allocationType).add("toCopy", toCopy));
+            enter(debugClass, b -> b.add("allocationType", allocationType).add("toCopy", toCopy));
         }
 
         final HeapLongArray result = new HeapLongArray(allocationType, (BaseLongArray)toCopy);
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;

@@ -15,12 +15,11 @@ import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.function.ByteGetter;
 import dev.jdata.db.utils.math.Sign;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class BitBuffer extends BaseByteLargeArray implements IMutableOneDimensionalArray, PrintDebug {
+public final class BitBuffer extends BaseByteLargeArray implements IMutableOneDimensionalArray {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BIT_BUFFER;
 

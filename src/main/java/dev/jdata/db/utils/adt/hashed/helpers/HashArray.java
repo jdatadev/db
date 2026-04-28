@@ -10,7 +10,7 @@ import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.scalars.Integers;
 
-public class HashArray {
+public class HashArray extends PrintDebug {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_HASH_ARRAY;
 
@@ -28,7 +28,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask).add("max", max));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask).add("max", max));
         }
 
         final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
@@ -37,7 +37,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask).add("max", max));
+            exit(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask).add("max", max));
         }
 
         return result;
@@ -52,7 +52,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         int remaining = max + 1;
@@ -86,7 +86,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            exit(debugClass, found, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         return found;
@@ -101,7 +101,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         int remaining = max + 1;
@@ -135,7 +135,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            exit(debugClass, found, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         return found;
@@ -149,7 +149,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask).add("max", max));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask).add("max", max));
         }
 
         final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
@@ -158,7 +158,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask).add("max", max));
+            exit(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask).add("max", max));
         }
 
         return result;
@@ -173,7 +173,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("element", element).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         int remaining = max + 1;
@@ -207,7 +207,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("element", element));
+            exit(debugClass, found, b -> b.add("hashArray", hashArray).add("element", element));
         }
 
         return found;
@@ -220,7 +220,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
         final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
@@ -229,7 +229,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            exit(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
         return result;
@@ -242,7 +242,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
         }
 
         final int hashArrayLength = hashArray.length;
@@ -279,7 +279,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
+            exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
         }
 
         return found;
@@ -292,7 +292,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
         final int hashArrayIndex = HashFunctions.objectHashArrayIndex(key, keyMask);
@@ -301,7 +301,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            exit(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
         return result;
@@ -315,7 +315,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
         }
 
         final int hashArrayLength = hashArray.length;
@@ -352,7 +352,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
+            exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
         }
 
         return found;
@@ -365,7 +365,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
         final int noElement = IntNonBucket.NO_ELEMENT;
@@ -386,7 +386,7 @@ public class HashArray {
 
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "add to map new foundIndex=" + i);
+                    debug(debugClass, "add to map new foundIndex=" + i);
                 }
 
                 hashArray[i] = value;
@@ -400,7 +400,7 @@ public class HashArray {
 
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "add to map existing foundIndex=" + i);
+                    debug(debugClass, "add to map existing foundIndex=" + i);
                 }
 
                 found = i;
@@ -418,7 +418,7 @@ public class HashArray {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
+                        debug(debugClass, "add to map foundIndex=" + i);
                     }
 
                     hashArray[i] = value;
@@ -432,7 +432,7 @@ public class HashArray {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
+                        debug(debugClass, "add to map foundIndex=" + i);
                     }
 
                     found = i;
@@ -450,7 +450,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exitWithBinary(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+            exitWithBinary(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
         return result;
@@ -463,7 +463,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
         final long noElement = LongNonBucket.NO_ELEMENT;
@@ -484,7 +484,7 @@ public class HashArray {
 
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "add to map new foundIndex=" + i);
+                    debug(debugClass, "add to map new foundIndex=" + i);
                 }
 
                 hashArray[i] = value;
@@ -498,7 +498,7 @@ public class HashArray {
 
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "add to map existing foundIndex=" + i);
+                    debug(debugClass, "add to map existing foundIndex=" + i);
                 }
 
                 found = i;
@@ -516,7 +516,7 @@ public class HashArray {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
+                        debug(debugClass, "add to map foundIndex=" + i);
                     }
 
                     hashArray[i] = value;
@@ -530,7 +530,7 @@ public class HashArray {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
+                        debug(debugClass, "add to map foundIndex=" + i);
                     }
 
                     found = i;
@@ -548,7 +548,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exitWithBinary(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+            exitWithBinary(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
         return result;
@@ -562,7 +562,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
         @SuppressWarnings("unchecked")
@@ -584,7 +584,7 @@ public class HashArray {
 
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "add to map new foundIndex=" + i);
+                    debug(debugClass, "add to map new foundIndex=" + i);
                 }
 
                 hashArray[i] = value;
@@ -598,7 +598,7 @@ public class HashArray {
 
                 if (DEBUG) {
 
-                    PrintDebug.debug(debugClass, "add to map existing foundIndex=" + i);
+                    debug(debugClass, "add to map existing foundIndex=" + i);
                 }
 
                 found = i;
@@ -616,7 +616,7 @@ public class HashArray {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
+                        debug(debugClass, "add to map foundIndex=" + i);
                     }
 
                     hashArray[i] = value;
@@ -630,7 +630,7 @@ public class HashArray {
 
                     if (DEBUG) {
 
-                        PrintDebug.debug(debugClass, "add to map foundIndex=" + i);
+                        debug(debugClass, "add to map foundIndex=" + i);
                     }
 
                     found = i;
@@ -648,7 +648,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exitWithBinary(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
+            exitWithBinary(debugClass, result, b -> b.add("hashArray", hashArray).add("value", value).add("hashArrayIndex", hashArrayIndex));
         }
 
         return result;
@@ -661,7 +661,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask));
+            enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask));
         }
 
         final int indexOfRemoved = getIndexScanEntireHashArray(hashArray, key, keyMask);
@@ -675,7 +675,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, indexOfRemoved, b -> b.add("key", key).add("keyMask", keyMask));
+            exit(debugClass, indexOfRemoved, b -> b.add("key", key).add("keyMask", keyMask));
         }
 
         return indexOfRemoved;
@@ -689,7 +689,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask).add("maxDistances", maxDistances));
+            enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask).add("maxDistances", maxDistances));
         }
 
         final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
@@ -703,7 +703,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, indexToRemove, b -> b.add("key", key).add("keyMask", keyMask).add("maxDistances", maxDistances));
+            exit(debugClass, indexToRemove, b -> b.add("key", key).add("keyMask", keyMask).add("maxDistances", maxDistances));
         }
 
         return indexToRemove;
@@ -716,7 +716,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            enter(debugClass, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         final int indexToRemove = HashArray.getIndexScanHashArrayToMaxHashArrayIndex(hashArray, key, hashArrayIndex, max);
@@ -728,7 +728,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, indexToRemove, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            exit(debugClass, indexToRemove, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         return indexToRemove;
@@ -741,7 +741,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
         final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
@@ -750,7 +750,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
+            exit(debugClass, result, b -> b.add("hashArray", hashArray).add("key", key).hex("keyMask", keyMask));
         }
 
         return result;
@@ -764,7 +764,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
+            enter(debugClass, b -> b.add("hashArray", hashArray).add("key", key).add("hashArrayIndex", hashArrayIndex));
         }
 
         final int noIndex = NO_INDEX;
@@ -801,7 +801,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).hex("hashArrayIndex", hashArrayIndex));
+            exit(debugClass, found, b -> b.add("hashArray", hashArray).add("key", key).hex("hashArrayIndex", hashArrayIndex));
         }
 
         return found;
@@ -814,7 +814,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask));
+            enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask));
         }
 
         final int indexOfRemoved = getIndexScanEntireHashArray(hashArray, key, keyMask);
@@ -828,7 +828,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, indexOfRemoved, b -> b.add("key", key).add("keyMask", keyMask));
+            exit(debugClass, indexOfRemoved, b -> b.add("key", key).add("keyMask", keyMask));
         }
 
         return indexOfRemoved;
@@ -842,7 +842,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask).add("maxDistances", maxDistances));
+            enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask).add("maxDistances", maxDistances));
         }
 
         final int hashArrayIndex = HashFunctions.hashArrayIndex(key, keyMask);
@@ -856,7 +856,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, indexToRemove, b -> b.add("key", key).add("keyMask", keyMask).add("maxDistances", maxDistances));
+            exit(debugClass, indexToRemove, b -> b.add("key", key).add("keyMask", keyMask).add("maxDistances", maxDistances));
         }
 
         return indexToRemove;
@@ -869,7 +869,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            enter(debugClass, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         final int indexToRemove = HashArray.getIndexScanHashArrayToMaxHashArrayIndex(hashArray, key, hashArrayIndex, max);
@@ -881,7 +881,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, indexToRemove, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
+            exit(debugClass, indexToRemove, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("max", max));
         }
 
         return indexToRemove;
@@ -894,7 +894,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask).add("noKey", noKey));
+            enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask).add("noKey", noKey));
         }
 
         final int indexOfRemoved = getIndexScanEntireHashArray(hashArray, key, keyMask);
@@ -908,7 +908,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, indexOfRemoved, b -> b.add("key", key).add("keyMask", keyMask).add("noKey", noKey));
+            exit(debugClass, indexOfRemoved, b -> b.add("key", key).add("keyMask", keyMask).add("noKey", noKey));
         }
 
         return indexOfRemoved;
@@ -922,7 +922,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask).add("noKey", noKey).add("maxDistances", maxDistances));
+            enter(debugClass, b -> b.add("key", key).add("keyMask", keyMask).add("noKey", noKey).add("maxDistances", maxDistances));
         }
 
         final int hashArrayIndex = HashFunctions.objectHashArrayIndex(key, keyMask);
@@ -936,7 +936,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, indexToRemove, b -> b.add("key", key).add("keyMask", keyMask).add("noKey", noKey).add("maxDistances", maxDistances));
+            exit(debugClass, indexToRemove, b -> b.add("key", key).add("keyMask", keyMask).add("noKey", noKey).add("maxDistances", maxDistances));
         }
 
         return indexToRemove;
@@ -949,7 +949,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("noKey", noKey).add("max", max));
+            enter(debugClass, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("noKey", noKey).add("max", max));
         }
 
         final int indexToRemove = getIndexScanHashArrayToMaxHashArrayIndex(hashArray, key, hashArrayIndex, max);
@@ -961,7 +961,7 @@ public class HashArray {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, indexToRemove, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("noKey", noKey).add("max", max));
+            exit(debugClass, indexToRemove, b -> b.add("key", key).add("hashArrayIndex", hashArrayIndex).add("noKey", noKey).add("max", max));
         }
 
         return indexToRemove;

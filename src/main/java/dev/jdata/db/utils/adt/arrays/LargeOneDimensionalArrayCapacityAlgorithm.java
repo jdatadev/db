@@ -8,7 +8,7 @@ import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.scalars.Integers;
 
-class LargeOneDimensionalArrayCapacityAlgorithm {
+class LargeOneDimensionalArrayCapacityAlgorithm extends PrintDebug {
 
     private static final Boolean DEBUG = DebugConstants.DEBUG_LARGE_ONE_DIMENSIONAL_ARRAY_CAPACITY_ALGORITHM;
 
@@ -38,7 +38,7 @@ class LargeOneDimensionalArrayCapacityAlgorithm {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("instance", instance).add("limit", limit).add("newLimit", newLimit)
+            enter(debugClass, b -> b.add("instance", instance).add("limit", limit).add("newLimit", newLimit)
                     .add("numOuterAllocatedInnerArrays", numOuterAllocatedInnerArrays).add("numOuterUtilizedEntries", numOuterUtilizedEntries)
                     .add("innerElementCapacity", innerElementCapacity).add("clearInnerArrays", clearInnerArrays)
                     .add("arrayCapacityOperations", arrayCapacityOperations));
@@ -93,7 +93,7 @@ class LargeOneDimensionalArrayCapacityAlgorithm {
 
             if (DEBUG) {
 
-                PrintDebug.debug(debugClass, "with allocated entries", b -> b.add("lastInnerRemainingElements", lastInnerRemainingElements).add("resultIndex", resultIndex));
+                debug(debugClass, "with allocated entries", b -> b.add("lastInnerRemainingElements", lastInnerRemainingElements).add("resultIndex", resultIndex));
             }
 
             if (numAdditionalElements > lastInnerRemainingElements) {
@@ -122,7 +122,7 @@ class LargeOneDimensionalArrayCapacityAlgorithm {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, resultIndex);
+            exit(debugClass, resultIndex);
         }
 
         return resultIndex;
@@ -134,7 +134,7 @@ class LargeOneDimensionalArrayCapacityAlgorithm {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("numAdditional", numAdditional).add("lastInnerRemaining", lastInnerRemaining)
+            enter(debugClass, b -> b.add("numAdditional", numAdditional).add("lastInnerRemaining", lastInnerRemaining)
                     .add("innerElementCapacity", innerElementCapacity));
         }
 
@@ -142,7 +142,7 @@ class LargeOneDimensionalArrayCapacityAlgorithm {
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;
@@ -155,14 +155,14 @@ class LargeOneDimensionalArrayCapacityAlgorithm {
 
         if (DEBUG) {
 
-            PrintDebug.enter(debugClass, b -> b.add("numAdditional", numAdditional).add("innerElementCapacity", innerElementCapacity));
+            enter(debugClass, b -> b.add("numAdditional", numAdditional).add("innerElementCapacity", innerElementCapacity));
         }
 
         final int result = Integers.checkUnsignedLongToUnsignedInt(((numAdditional - 1) / innerElementCapacity) + 1);
 
         if (DEBUG) {
 
-            PrintDebug.exit(debugClass, result);
+            exit(debugClass, result);
         }
 
         return result;

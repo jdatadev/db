@@ -2,8 +2,9 @@ package dev.jdata.db;
 
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Assertions;
+import dev.jdata.db.utils.debug.PrintDebug;
 
-public class DBBitEncoding {
+public class DBBitEncoding extends PrintDebug {
 
     protected static final int LOCK_TYPE_NUM_BITS;
 

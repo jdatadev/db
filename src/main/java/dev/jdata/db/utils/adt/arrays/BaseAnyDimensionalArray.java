@@ -7,9 +7,8 @@ import dev.jdata.db.utils.adt.byindex.ByIndex;
 import dev.jdata.db.utils.adt.elements.BaseADTElements;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
-import dev.jdata.db.utils.debug.PrintDebug;
 
-abstract class BaseAnyDimensionalArray<T, U, V> extends BaseADTElements<T, U, V> implements IAnyDimensionalArray, PrintDebug {
+abstract class BaseAnyDimensionalArray<T, U, V> extends BaseADTElements<T, U, V> implements IAnyDimensionalArray {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_BASE_ARRAY;
 

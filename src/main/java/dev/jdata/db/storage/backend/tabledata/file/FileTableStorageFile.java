@@ -12,7 +12,6 @@ import dev.jdata.db.utils.adt.arrays.IByteArrayAllocator;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.debug.PrintDebug;
 import dev.jdata.db.utils.file.access.IFilePath;
 import dev.jdata.db.utils.file.access.IFileSystemAccess.OpenMode;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
@@ -20,7 +19,7 @@ import dev.jdata.db.utils.file.access.RandomFileAccess;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess> implements PrintDebug {
+public final class FileTableStorageFile extends BaseStorageFile<RandomFileAccess> {
 
     private static final boolean DEBUG = Boolean.TRUE;
 
