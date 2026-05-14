@@ -66,7 +66,7 @@ public final class VersionedDatabaseSchemas {
 
         final IIndexList<IDatabaseSchema> sorted = indexListAllocator.sortedOf(schemas, (s1, s2) -> s1.getVersion().compareTo(s2.getVersion()));
 
-        for (long i = 0L; i < numElements; ++ i) {
+        for (int i = 0; i < numElements; ++ i) {
 
             final IDatabaseSchema schema = sorted.get(i);
 
@@ -79,7 +79,7 @@ public final class VersionedDatabaseSchemas {
 
             schemasByVersion.put(schemaVersion, schema);
 
-            schema.getTables().forEach(tableSchemasOrderedByVersion, (t, a) -> a.addWithOuterExpand(t.getId(), new VersionedTable(t, schemaVersion)));
+            schema.getTablesList().forEach(tableSchemasOrderedByVersion, (t, a) -> a.addWithOuterExpand(t.getId(), new VersionedTable(t, schemaVersion)));
         }
     }
 

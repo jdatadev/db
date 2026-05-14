@@ -5,26 +5,34 @@ import java.util.function.IntFunction;
 
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.engine.descriptorables.BaseSingleTypeDescriptorables;
+import dev.jdata.db.engine.transactions.mvcc.MVCCTransaction;
 import dev.jdata.db.utils.adt.maps.IHeapMutableLongToObjectDynamicMap;
 import dev.jdata.db.utils.checks.Checks;
 
 public final class Transactions extends BaseSingleTypeDescriptorables<Transaction.TransactionState, Transaction> {
 
     @FunctionalInterface
-    public interface TransactionFactory {
+    public interface ITransactionFactory {
+
+        static ITransactionFactory makeMVCCTransactionFactory(AllocationType allocationType) {
+
+            AllocationType.checkIsHeap(allocationType);
+
+            return () -> new Transaction(allocationType, new MVCCTransaction());
+        }
 
         Transaction createTransaction();
     }
 
     private static final IntFunction<Transaction[]> createTransactionArray = Transaction[]::new;
 
-    private final TransactionFactory transactionFactory;
+    private final ITransactionFactory transactionFactory;
 
     private long transactionIdAllocator;
 
     private final IHeapMutableLongToObjectDynamicMap<Transaction> transactionByGlobalTransactionId;
 
-    public Transactions(long initialTransactionId, TransactionFactory transactionFactory) {
+    public Transactions(long initialTransactionId, ITransactionFactory transactionFactory) {
         super(AllocationType.HEAP, createTransactionArray);
 
         this.transactionIdAllocator = initialTransactionId != DBConstants.NO_TRANSACTION_ID ? Checks.isTransactionId(initialTransactionId) : DBConstants.INITIAL_TRANSACTION_ID;
@@ -42,7 +50,7 @@ public final class Transactions extends BaseSingleTypeDescriptorables<Transactio
 
     public synchronized int addTransaction() {
 
-        final Transaction transaction = addDescriptorable(this, (a, t) -> t.transactionFactory.createTransaction());
+        final Transaction transaction = addDescriptorable(this, (a, d, i) -> i.transactionFactory.createTransaction());
 
         Objects.requireNonNull(transaction);
 

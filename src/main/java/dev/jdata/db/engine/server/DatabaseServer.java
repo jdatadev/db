@@ -6,8 +6,8 @@ import java.nio.charset.Charset;
 import java.util.Objects;
 
 import dev.jdata.db.engine.database.DatabaseParameters;
-import dev.jdata.db.engine.database.Databases;
 import dev.jdata.db.engine.database.EvaluateException;
+import dev.jdata.db.engine.database.IDatabases;
 import dev.jdata.db.engine.database.operations.IDatabaseOperations;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
@@ -17,9 +17,9 @@ import dev.jdata.db.sql.parse.ISQLString;
 
 public final class DatabaseServer implements IDatabaseServer {
 
-    private final Databases databases;
+    private final IDatabases databases;
 
-    public DatabaseServer(Databases databases) {
+    public DatabaseServer(IDatabases databases) {
 
         this.databases = Objects.requireNonNull(databases);
     }

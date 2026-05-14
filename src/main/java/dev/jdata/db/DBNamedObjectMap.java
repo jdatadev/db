@@ -11,104 +11,91 @@ import dev.jdata.db.utils.adt.elements.IObjectUnorderedOnlyElementsView;
 import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.adt.lists.IIndexListView;
 import dev.jdata.db.utils.adt.maps.IHeapMutableDynamicMap;
-import dev.jdata.db.utils.adt.maps.IHeapMutableLongToObjectDynamicMap;
-import dev.jdata.db.utils.adt.maps.IHeapMutableLongToObjectDynamicMapAllocator;
+import dev.jdata.db.utils.adt.maps.ILongToObjectDynamicMap;
+import dev.jdata.db.utils.adt.maps.ILongToObjectDynamicMapAllocator;
+import dev.jdata.db.utils.adt.maps.ILongToObjectDynamicMapBuilder;
 import dev.jdata.db.utils.adt.maps.ILongToObjectDynamicMapView;
 import dev.jdata.db.utils.adt.maps.ILongToObjectMapView;
 import dev.jdata.db.utils.adt.maps.IMutableDynamicMap;
-import dev.jdata.db.utils.adt.maps.IMutableLongToObjectDynamicMap;
 import dev.jdata.db.utils.adt.maps.IObjectToObjectDynamicMapView;
 import dev.jdata.db.utils.adt.sets.IHeapMutableLongSet;
 import dev.jdata.db.utils.allocators.Allocatable;
-import dev.jdata.db.utils.allocators.IFreeable;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class DBNamedObjectMap<V extends DBNamedObject, M extends DBNamedObjectMap<V, M>>
+public abstract class DBNamedObjectMap<
+
+                NAMED_OBJECT extends DBNamedObject,
+                MAP extends ILongToObjectDynamicMap<NAMED_OBJECT>,
+                MAP_BUILDER extends ILongToObjectDynamicMapBuilder<NAMED_OBJECT, MAP, ?>,
+                MAP_ALLOCATOR extends ILongToObjectDynamicMapAllocator<NAMED_OBJECT, MAP, ?, MAP_BUILDER>,
+                NAMED_OBJECT_MAP extends DBNamedObjectMap<NAMED_OBJECT, MAP, MAP_BUILDER, MAP_ALLOCATOR, NAMED_OBJECT_MAP>>
 
         extends Allocatable
-        implements IObjectUnorderedOnlyElementsView<V>, IFreeable<IHeapMutableLongToObjectDynamicMapAllocator<V>> {
+        implements IObjectUnorderedOnlyElementsView<NAMED_OBJECT> {
 
     private static final boolean ASSERT = AssertionContants.ASSERT_DB_NAMED_OBJECT_MAP;
 
     protected static final boolean EQUALS_NAME_CASE_SENSITIVE = true;
 
-    private final IntFunction<V[]> createValuesArray;
+    private final IntFunction<NAMED_OBJECT[]> createNamedObjectArray;
 
-    private final IHeapMutableLongToObjectDynamicMap<V> schemaObjectByName;
+    private final MAP objectByName;
 
-    public abstract M makeCopy();
+    public abstract NAMED_OBJECT_MAP makeCopy();
 
     protected DBNamedObjectMap(AllocationType allocationType) {
         super(allocationType);
 
-        this.createValuesArray = null;
-        this.schemaObjectByName = null;
+        this.createNamedObjectArray = null;
+        this.objectByName = null;
     }
 
-    protected DBNamedObjectMap(AllocationType allocationType, IIndexListView<V> namedObjects, IntFunction<V[]> createValuesArray,
-            IHeapMutableLongToObjectDynamicMapAllocator<V> longToObjectMapAllocator) {
+    protected DBNamedObjectMap(AllocationType allocationType, IIndexListView<NAMED_OBJECT> namedObjects, IntFunction<NAMED_OBJECT[]> createNamedObjectArray,
+            MAP_ALLOCATOR longToObjectMapAllocator) {
         super(allocationType);
 
-        Objects.requireNonNull(namedObjects);
-        Objects.requireNonNull(createValuesArray);
+        Checks.isNotEmpty(namedObjects);
+        Objects.requireNonNull(createNamedObjectArray);
         Objects.requireNonNull(longToObjectMapAllocator);
 
-        this.createValuesArray = Objects.requireNonNull(createValuesArray);
+        this.createNamedObjectArray = Objects.requireNonNull(createNamedObjectArray);
 
         final long numElements = namedObjects.getNumElements();
 
-        this.schemaObjectByName = longToObjectMapAllocator.createMutable(numElements);
+        final MAP_BUILDER builder = longToObjectMapAllocator.createBuilder(numElements);
 
-        for (int i = 0; i < numElements; ++ i) {
+        try {
+            for (int i = 0; i < numElements; ++ i) {
 
-            final V namedObject = namedObjects.get(i);
+                final NAMED_OBJECT namedObject = namedObjects.get(i);
 
-            put(namedObject.getHashName(), namedObject);
+                builder.add(namedObject.getHashName(), namedObject);
+            }
+
+            this.objectByName = builder.buildNotEmpty();
         }
-    }
+        finally {
 
-    protected DBNamedObjectMap(AllocationType allocationType, M toCopy, IHeapMutableLongToObjectDynamicMapAllocator<V> longToObjectAllocator) {
-        super(allocationType);
-
-        Objects.requireNonNull(toCopy);
-        Objects.requireNonNull(longToObjectAllocator);
-
-        final DBNamedObjectMap<V, M> toCopyNamedObjectMap = toCopy;
-
-        this.createValuesArray = toCopyNamedObjectMap.createValuesArray;
-
-        this.schemaObjectByName = longToObjectAllocator.copyLongToObjectMap(((DBNamedObjectMap<V, ?>)toCopy).schemaObjectByName);
-    }
-
-    private DBNamedObjectMap(AllocationType allocationType, int initialCapacity, IntFunction<V[]> createValuesArray,
-            IHeapMutableLongToObjectDynamicMapAllocator<V> longToObjectMapAllocator) {
-        super(allocationType);
-
-        Checks.isIntInitialCapacityAboveZero(initialCapacity);
-        Objects.requireNonNull(createValuesArray);
-        Objects.requireNonNull(longToObjectMapAllocator);
-
-        this.createValuesArray = Objects.requireNonNull(createValuesArray);
-
-        this.schemaObjectByName = longToObjectMapAllocator.createMutable(initialCapacity);
+            longToObjectMapAllocator.freeBuilder(builder);
+        }
     }
 
     @Override
     public boolean isEmpty() {
 
-        return IContainsView.isNullOrEmpty(schemaObjectByName);
+        return IContainsView.isNullOrEmpty(objectByName);
     }
 
     @Override
     public long getNumElements() {
 
-        return isEmpty() ? 0L : schemaObjectByName.getNumElements();
+        return isEmpty() ? 0L : objectByName.getNumElements();
     }
 
     @Override
-    public final <P> void toString(StringBuilder sb, P parameter, IElementsToStringAdder<V, P> consumer) {
+    public final <P> void toString(StringBuilder sb, P parameter, IElementsToStringAdder<NAMED_OBJECT, P> consumer) {
 
         Objects.requireNonNull(sb);
         Objects.requireNonNull(consumer);
@@ -116,44 +103,30 @@ public abstract class DBNamedObjectMap<V extends DBNamedObject, M extends DBName
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public final void free(IHeapMutableLongToObjectDynamicMapAllocator<V> longToObjectAllocator) {
+    public final void free(MAP_ALLOCATOR longToObjectAllocator) {
 
         Objects.requireNonNull(longToObjectAllocator);
 
-        longToObjectAllocator.freeMutable(schemaObjectByName);
-    }
-
-    private void put(long schemaObjectName, V schemaObject) {
-
-        StringRef.checkIsString(schemaObjectName);
-        Objects.requireNonNull(schemaObject);
-
-        if (schemaObjectByName.containsKey(schemaObjectName)) {
-
-            throw new IllegalStateException();
-        }
-
-        schemaObjectByName.put(schemaObjectName, schemaObject);
+        longToObjectAllocator.freeImmutable(objectByName);
     }
 
     protected final boolean containsNamedObject(long name) {
 
         StringRef.checkIsString(name);
 
-        return isEmpty() ? false : schemaObjectByName.containsKey(name);
+        return isEmpty() ? false : objectByName.containsKey(name);
     }
 
-    protected final V getNamedObject(long name) {
+    protected final NAMED_OBJECT getNamedObject(long name) {
 
         StringRef.checkIsString(name);
 
-        return isEmpty() ? null : schemaObjectByName.get(name);
+        return isEmpty() ? null : objectByName.get(name);
     }
 
     private StringResolver scratchThisStringResolver;
 
-    public final boolean equalsMap(StringResolver thisStringResolver, DBNamedObjectMap<V, M> other, StringResolver otherStringResolver) {
+    public final boolean equalsMap(StringResolver thisStringResolver, DBNamedObjectMap<NAMED_OBJECT, MAP, ?, ?, ?> other, StringResolver otherStringResolver) {
 
         Objects.requireNonNull(thisStringResolver);
         Objects.requireNonNull(other);
@@ -161,8 +134,8 @@ public abstract class DBNamedObjectMap<V extends DBNamedObject, M extends DBName
 
         final boolean result;
 
-        final boolean mapNullOrEmpty = IContainsView.isNullOrEmpty(schemaObjectByName);
-        final boolean otherNullOrEmpty = IContainsView.isNullOrEmpty(other.schemaObjectByName);
+        final boolean mapNullOrEmpty = IContainsView.isNullOrEmpty(objectByName);
+        final boolean otherNullOrEmpty = IContainsView.isNullOrEmpty(other.objectByName);
 
         if (this == other) {
 
@@ -181,8 +154,8 @@ public abstract class DBNamedObjectMap<V extends DBNamedObject, M extends DBName
             result = false;
         }
         else {
-            final IMutableLongToObjectDynamicMap<V> thisMap = schemaObjectByName;
-            final IMutableLongToObjectDynamicMap<V> otherMap = other.schemaObjectByName;
+            final ILongToObjectDynamicMap<NAMED_OBJECT> thisMap = objectByName;
+            final ILongToObjectDynamicMap<NAMED_OBJECT> otherMap = other.objectByName;
 
             result = equals(thisMap, IOnlyElementsView.intNumElements(thisMap), thisStringResolver, otherMap, IOnlyElementsView.intNumElements(otherMap), otherStringResolver);
         }
@@ -190,7 +163,7 @@ public abstract class DBNamedObjectMap<V extends DBNamedObject, M extends DBName
         return result;
     }
 
-    private boolean equals(ILongToObjectDynamicMapView<V> thisMap, int thisMapInitialCapacity, StringResolver thisStringResolver, ILongToObjectDynamicMapView<V> otherMap,
+    private boolean equals(ILongToObjectDynamicMapView<NAMED_OBJECT> thisMap, int thisMapInitialCapacity, StringResolver thisStringResolver, ILongToObjectDynamicMapView<NAMED_OBJECT> otherMap,
             int otherMapInitialCapacity, StringResolver otherStringResolver) {
 
         boolean result;
@@ -206,8 +179,8 @@ public abstract class DBNamedObjectMap<V extends DBNamedObject, M extends DBName
             result = false;
         }
         else {
-            final IObjectToObjectDynamicMapView<String, V> thisStringMap = makeMapForEquals(thisMap, thisMapInitialCapacity, thisStringResolver);
-            final IObjectToObjectDynamicMapView<String, V> otherStringMap = makeMapForEquals(otherMap, otherMapInitialCapacity, otherStringResolver);
+            final IObjectToObjectDynamicMapView<String, NAMED_OBJECT> thisStringMap = makeMapForEquals(thisMap, thisMapInitialCapacity, thisStringResolver);
+            final IObjectToObjectDynamicMapView<String, NAMED_OBJECT> otherStringMap = makeMapForEquals(otherMap, otherMapInitialCapacity, otherStringResolver);
 
             result = thisStringMap.equals(thisStringResolver, otherStringMap, otherStringResolver, (e1, r1, e2, r2) -> e1.equalsName(r1, e2, r2, EQUALS_NAME_CASE_SENSITIVE));
         }
@@ -215,9 +188,9 @@ public abstract class DBNamedObjectMap<V extends DBNamedObject, M extends DBName
         return result;
     }
 
-    private IMutableDynamicMap<String, V> scratchMutableObjectMap;
+    private IMutableDynamicMap<String, NAMED_OBJECT> scratchMutableObjectMap;
 
-    private IObjectToObjectDynamicMapView<String, V> makeMapForEquals(ILongToObjectMapView<V> map, int initialCapacity, StringResolver stringResolver) {
+    private IObjectToObjectDynamicMapView<String, NAMED_OBJECT> makeMapForEquals(ILongToObjectMapView<NAMED_OBJECT> map, int initialCapacity, StringResolver stringResolver) {
 
         if (ASSERT) {
 
@@ -225,7 +198,7 @@ public abstract class DBNamedObjectMap<V extends DBNamedObject, M extends DBName
             Assertions.isNull(scratchMutableObjectMap);
         }
 
-        final IMutableDynamicMap<String, V> result = IHeapMutableDynamicMap.create(initialCapacity, String[]::new, createValuesArray);
+        final IMutableDynamicMap<String, NAMED_OBJECT> result = IHeapMutableDynamicMap.create(initialCapacity, String[]::new, createNamedObjectArray);
 
         this.scratchThisStringResolver = stringResolver;
         this.scratchMutableObjectMap = result;
@@ -261,9 +234,9 @@ public abstract class DBNamedObjectMap<V extends DBNamedObject, M extends DBName
             result = false;
         }
         else {
-            final DBNamedObjectMap<?, ?> other = (DBNamedObjectMap<?, ?>)object;
+            final DBNamedObjectMap<?, ?, ?, ?, ?> other = (DBNamedObjectMap<?, ?, ?, ?, ?>)object;
 
-            result = Objects.equals(schemaObjectByName, other.schemaObjectByName);
+            result = Objects.equals(objectByName, other.objectByName);
         }
 
         return result;
@@ -272,6 +245,6 @@ public abstract class DBNamedObjectMap<V extends DBNamedObject, M extends DBName
     @Override
     public final String toString() {
 
-        return getClass().getSimpleName() + " [map=" + schemaObjectByName + "]";
+        return getClass().getSimpleName() + " [map=" + objectByName + "]";
     }
 }

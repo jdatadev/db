@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.sets;
 
-public interface IHeapIntSetBuilder extends IIntSetBuilder<IHeapIntSet, IHeapIntSet> {
+import dev.jdata.db.utils.adt.contains.builders.IHeapContainsBuilderMarker;
+
+public interface IHeapIntSetBuilder extends IIntSetBuilder<IHeapIntSet, IHeapIntSet>, IHeapContainsBuilderMarker {
 
 }

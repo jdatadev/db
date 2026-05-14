@@ -1,8 +1,9 @@
 package dev.jdata.db.utils.adt.lists;
 
+import dev.jdata.db.utils.adt.contains.builders.IHeapContainsBuilderMarker;
 import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 
-public interface IHeapIntIndexListBuilder extends IIntIndexListBuilder<IHeapIntIndexList, IHeapIntIndexList> {
+public interface IHeapIntIndexListBuilder extends IIntIndexListBuilder<IHeapIntIndexList, IHeapIntIndexList>, IHeapContainsBuilderMarker {
 
     public static IHeapIntIndexListBuilder create() {
 

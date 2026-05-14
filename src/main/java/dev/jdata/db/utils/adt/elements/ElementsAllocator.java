@@ -14,25 +14,25 @@ abstract class ElementsAllocator<
 
                 IMMUTABLE extends IElements,
                 HEAP_IMMUTABLE extends IElements & IHeapContainsMarker,
-                ELEMENTS_ARRAY,
+                ALLOCATE_FROM_ARRAY,
                 INTERFACE_MUTABLE extends IMutableElements,
-                CLASS_MUTABLE extends BaseADTElements<?, ELEMENTS_ARRAY, ?> & IMutableElements,
+                CLASS_MUTABLE extends BaseADTElements<?, ?, ?> & IMutableElements,
                 BUILDER extends IElementsBuilder<IMMUTABLE, HEAP_IMMUTABLE>>
 
         extends ContainsBuilderAllocator<IMMUTABLE, HEAP_IMMUTABLE, CLASS_MUTABLE, BUILDER>
-        implements IElementsArrayElementsAllocator<IMMUTABLE, INTERFACE_MUTABLE, BUILDER, ELEMENTS_ARRAY>, IAllocators {
+        implements IElementsArrayElementsAllocator<IMMUTABLE, INTERFACE_MUTABLE, BUILDER, ALLOCATE_FROM_ARRAY>, IAllocators {
 
     protected static final int DEFAULT_INITIAL_CAPACITY = ADTConstants.DEFAULT_INITIAL_CAPACITY;
 
     protected static final int DEFAULT_CAPACITY_MULTIPLICATOR = ADTConstants.DEFAULT_CAPACITY_MULTIPLICATOR;
 
-    private final IElementsAllocators<IMMUTABLE, CLASS_MUTABLE, BUILDER, ELEMENTS_ARRAY> elementsAllocators;
+    private final IElementsAllocators<IMMUTABLE, CLASS_MUTABLE, BUILDER, ALLOCATE_FROM_ARRAY> elementsAllocators;
 
     private final AllocationType allocationType;
 
-    protected abstract long getElementsArrayLength(ELEMENTS_ARRAY elementsArray);
+    protected abstract long getElementsArrayLength(ALLOCATE_FROM_ARRAY elementsArray);
 
-    ElementsAllocator(AllocationType allocationType, IElementsAllocators<IMMUTABLE, CLASS_MUTABLE, BUILDER, ELEMENTS_ARRAY> elementsAllocators) {
+    ElementsAllocator(AllocationType allocationType, IElementsAllocators<IMMUTABLE, CLASS_MUTABLE, BUILDER, ALLOCATE_FROM_ARRAY> elementsAllocators) {
 
         this.allocationType = Objects.requireNonNull(allocationType);
         this.elementsAllocators = Objects.requireNonNull(elementsAllocators);
@@ -63,7 +63,7 @@ abstract class ElementsAllocator<
     }
 
     @Override
-    public final IMMUTABLE allocateImmutableFrom(ELEMENTS_ARRAY values, long startIndex, long numElements) {
+    public final IMMUTABLE allocateImmutableFrom(ALLOCATE_FROM_ARRAY values, long startIndex, long numElements) {
 
         Objects.requireNonNull(values);
         Checks.checkLongIndexAndNumElements(startIndex, numElements);
@@ -111,10 +111,12 @@ abstract class ElementsAllocator<
         return elementsAllocators.emptyImmutable();
     }
 
+    @Deprecated // requires new mechanism
     final IMMUTABLE makeFromClassMutableToImmutableAndRecreateOrDispose(CLASS_MUTABLE mutable) {
 
         Objects.requireNonNull(mutable);
 
-        return mutable.makeFromElementsAndRecreateOrDispose(allocationType, this, (a, c, e, n, i) -> i.allocateImmutableFrom(e, n));
+        throw new UnsupportedOperationException();
+//        return mutable.makeFromElementsAndRecreateOrDispose(allocationType, this, (a, c, e, n, i) -> i.allocateImmutableFrom(e, n));
     }
 }

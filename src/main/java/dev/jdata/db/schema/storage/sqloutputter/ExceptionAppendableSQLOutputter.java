@@ -12,9 +12,9 @@ abstract class ExceptionAppendableSQLOutputter<P, E extends Exception> extends B
 
     private ICharactersBufferAllocator charactersBufferAllocator;
     private P parameter;
-    private ExceptionAppendable<P, E> appendable;
+    private IExceptionAppendable<P, E> appendable;
 
-    final void initialize(ICharactersBufferAllocator charactersBufferAllocator, P parameter, ExceptionAppendable<P, E> appendable) {
+    final void initialize(ICharactersBufferAllocator charactersBufferAllocator, P parameter, IExceptionAppendable<P, E> appendable) {
 
         this.charactersBufferAllocator = Objects.requireNonNull(charactersBufferAllocator);
         this.parameter = parameter;
@@ -56,7 +56,7 @@ abstract class ExceptionAppendableSQLOutputter<P, E extends Exception> extends B
 
         stringResolver.makeString(stringRef, this, charactersBufferAllocator, (b, n, i) -> {
 
-            final ExceptionAppendable<P, E> appendable = i.appendable;
+            final IExceptionAppendable<P, E> appendable = i.appendable;
             final P parameter = i.parameter;
 
             for (int characterIndex = 0; characterIndex < n; ++ characterIndex) {

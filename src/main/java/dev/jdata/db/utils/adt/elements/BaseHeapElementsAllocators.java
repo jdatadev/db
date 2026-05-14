@@ -33,9 +33,21 @@ abstract class BaseHeapElementsAllocators<
 
     private final AllocationType allocationType;
     private final CapacityMax capacityMax;
+    @Deprecated // rename type and variable ? does not allocate from array
     private final IAllocateFromArrayFunction<ALLOCATE_FROM_ARRAY, INTERFACE_IMMUTABLE> createImmutable;
     private final IAllocateFunction<CLASS_MUTABLE> createMutable;
     private final IAllocateFunction<INTERFACE_BUILDER> createBuilder;
+
+    BaseHeapElementsAllocators(AllocationType allocationType, CapacityMax capacityMax, Supplier<INTERFACE_IMMUTABLE> emptyImmutableSupplier,
+            IAllocateFunction<CLASS_MUTABLE> createMutable, IAllocateFunction<INTERFACE_BUILDER> createBuilder) {
+        super(emptyImmutableSupplier);
+
+        this.allocationType = Objects.requireNonNull(allocationType);
+        this.capacityMax = Objects.requireNonNull(capacityMax);
+        this.createImmutable = null;
+        this.createMutable = Objects.requireNonNull(createMutable);
+        this.createBuilder = Objects.requireNonNull(createBuilder);
+    }
 
     BaseHeapElementsAllocators(AllocationType allocationType, CapacityMax capacityMax, IAllocateFromArrayFunction<ALLOCATE_FROM_ARRAY, INTERFACE_IMMUTABLE> createImmutable,
             Supplier<INTERFACE_IMMUTABLE> emptyImmutableSupplier, IAllocateFunction<CLASS_MUTABLE> createMutable, IAllocateFunction<INTERFACE_BUILDER> createBuilder) {

@@ -18,4 +18,9 @@ public class ElementsExceptions {
 
         return new IllegalStateException();
     }
+
+    public static AlreadyAddedExeption alreadyAddedException() {
+
+        return new AlreadyAddedExeption();
+    }
 }

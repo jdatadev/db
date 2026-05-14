@@ -9,16 +9,16 @@ import org.jutils.io.buffers.BaseStringBuffers;
 import org.jutils.io.strings.StringResolver;
 import org.jutils.parse.ParserException;
 
-import dev.jdata.db.ddl.allocators.DDLSchemaScratchObjects;
-import dev.jdata.db.ddl.helpers.buildschema.DDLCompleteSchemasHelper;
-import dev.jdata.db.ddl.helpers.buildschema.IDDLSchemaSQLStatementsWorkerObjects;
+import dev.jdata.db.ddl.helpers.sqltoschema.complete.DDLCompleteSchemasHelper;
+import dev.jdata.db.ddl.helpers.sqltoschema.complete.IDDLSchemaSQLStatementsAllocators;
+import dev.jdata.db.ddl.helpers.sqltoschema.complete.scratchobjects.DDLSchemaScratchObjects;
 import dev.jdata.db.engine.database.StringManagement;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.model.schemamaps.IAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamap.ICompleteSchemaMap;
 import dev.jdata.db.schema.storage.sqloutputter.ISQLOutputter;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.schema.types.SchemaDataTypeVisitor;
@@ -27,29 +27,34 @@ import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.parse.SQLParserFactory;
 import dev.jdata.db.sql.parse.SQLParserHelper;
 import dev.jdata.db.sql.parse.SQLToken;
+import dev.jdata.db.utils.adt.lists.IHeapIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
+import dev.jdata.db.utils.adt.sets.IIntSetBuilder;
 
 public abstract class BaseDatabaseSchemaSerialization<
 
+                INT_SET_BUILDER extends IIntSetBuilder<?, ?>,
+                COLUMN_INDEX_LIST_BUILDER extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>,
                 INDEX_LIST extends IIndexList<BaseSQLStatement>,
                 INDEX_LIST_BUILDER extends IIndexListBuilder<BaseSQLStatement, INDEX_LIST, ?>,
                 INDEX_LIST_ALLOCATOR extends IIndexListAllocator<BaseSQLStatement, INDEX_LIST, ?, INDEX_LIST_BUILDER>,
-                COMPLETE_SCHEMA_MAPS extends IAllCompleteSchemaMaps>
+                COMPLETE_SCHEMA_MAP extends ICompleteSchemaMap>
 
-        implements IDatabaseSchemaSerialization<COMPLETE_SCHEMA_MAPS> {
+        implements IDatabaseSchemaSerialization<COMPLETE_SCHEMA_MAP> {
 
     private static final SchemaDataTypeOutputter dataTypeOutputter = new SchemaDataTypeOutputter();
 
     private final ISQLAllocator sqlAllocator;
 
     private final SQLParserHelper<INDEX_LIST, INDEX_LIST_BUILDER, INDEX_LIST_ALLOCATOR> sqlParserHelper;
-    private final IDDLSchemaSQLStatementsWorkerObjects<COMPLETE_SCHEMA_MAPS, ?, ?> ddlSchemaSQLStatementsWorkerObjects;
-    private final DDLSchemaScratchObjects ddlSchemaScratchObjects;
+    private final IDDLSchemaSQLStatementsAllocators<INT_SET_BUILDER, COLUMN_INDEX_LIST_BUILDER, COMPLETE_SCHEMA_MAP, ?, ?> ddlSchemaSQLStatementsWorkerObjects;
+    private final DDLSchemaScratchObjects<INT_SET_BUILDER, COLUMN_INDEX_LIST_BUILDER> ddlSchemaScratchObjects;
 
     protected BaseDatabaseSchemaSerialization(SQLParserFactory sqlParserFactory, ISQLAllocator sqlAllocator,
-            IDDLSchemaSQLStatementsWorkerObjects<COMPLETE_SCHEMA_MAPS, ?, ?> ddlSchemaSQLStatementsWorkerObjects, DDLSchemaScratchObjects ddlSchemaScratchObjects,
+            IDDLSchemaSQLStatementsAllocators<INT_SET_BUILDER, COLUMN_INDEX_LIST_BUILDER, COMPLETE_SCHEMA_MAP, ?, ?> ddlSchemaSQLStatementsWorkerObjects,
+            DDLSchemaScratchObjects<INT_SET_BUILDER, COLUMN_INDEX_LIST_BUILDER> ddlSchemaScratchObjects,
             Function<IntFunction<BaseSQLStatement[]>, INDEX_LIST_ALLOCATOR> createIndexListAllocator) {
 
         this.sqlAllocator = Objects.requireNonNull(sqlAllocator);
@@ -66,7 +71,7 @@ public abstract class BaseDatabaseSchemaSerialization<
         Objects.requireNonNull(stringResolver);
         Objects.requireNonNull(sqlOutputter);
 
-        safeSerializeSchemaObjects(databaseSchema.getTables(), stringResolver, sqlOutputter, BaseDatabaseSchemaSerialization::serializeTable);
+        safeSerializeSchemaObjects(databaseSchema.getTablesList(), stringResolver, sqlOutputter, BaseDatabaseSchemaSerialization::serializeTable);
     }
 
     @FunctionalInterface
@@ -133,7 +138,7 @@ public abstract class BaseDatabaseSchemaSerialization<
     }
 
     @Override
-    public <E extends Exception, BUFFER extends BaseStringBuffers<E>> COMPLETE_SCHEMA_MAPS deserialize(BUFFER buffer, Function<String, E> createEOFException,
+    public <E extends Exception, BUFFER extends BaseStringBuffers<E>> COMPLETE_SCHEMA_MAP deserialize(BUFFER buffer, Function<String, E> createEOFException,
             StringManagement stringManagement, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) throws ParserException, E {
 
         Objects.requireNonNull(buffer);
@@ -141,7 +146,7 @@ public abstract class BaseDatabaseSchemaSerialization<
         Objects.requireNonNull(stringManagement);
         Objects.requireNonNull(schemaObjectIdAllocator);
 
-        final COMPLETE_SCHEMA_MAPS result;
+        final COMPLETE_SCHEMA_MAP result;
 
         final INDEX_LIST sqlStatements = sqlParserHelper.parse(buffer, sqlAllocator, createEOFException);
 

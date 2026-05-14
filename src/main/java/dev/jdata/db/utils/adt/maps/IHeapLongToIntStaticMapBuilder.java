@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.maps;
 
-public interface IHeapLongToIntStaticMapBuilder extends ILongToIntStaticMapBuilder<IHeapLongToIntStaticMap, IHeapLongToIntStaticMap> {
+import dev.jdata.db.utils.adt.contains.builders.IHeapContainsBuilderMarker;
+
+public interface IHeapLongToIntStaticMapBuilder extends ILongToIntStaticMapBuilder<IHeapLongToIntStaticMap, IHeapLongToIntStaticMap>, IHeapContainsBuilderMarker {
 
 }

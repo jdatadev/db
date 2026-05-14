@@ -1,7 +1,7 @@
 package dev.jdata.db.sql.ast;
 
-import dev.jdata.db.utils.allocators.IFreeable;
+import dev.jdata.db.utils.allocators.IAllocatorFreeable;
 
-public interface ISQLFreeable extends IFreeable<ISQLAllocator> {
+public interface ISQLFreeable extends IAllocatorFreeable<ISQLAllocator> {
 
 }

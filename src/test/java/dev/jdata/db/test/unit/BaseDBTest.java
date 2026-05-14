@@ -10,9 +10,9 @@ import org.jutils.io.strings.StringResolver;
 
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.custom.ansi.schema.storage.HeapANSIDatabaseSchemaSerialization;
-import dev.jdata.db.ddl.allocators.DDLSchemaScratchObjects;
 import dev.jdata.db.ddl.helpers.SchemaObjectIdAllocators;
-import dev.jdata.db.ddl.helpers.buildschema.HeapDDLSchemaSQLStatementsWorkerObjects;
+import dev.jdata.db.ddl.helpers.sqltoschema.complete.HeapDDLSchemaSQLStatementsAllocators;
+import dev.jdata.db.ddl.helpers.sqltoschema.complete.scratchobjects.DDLSchemaScratchObjects;
 import dev.jdata.db.engine.database.DatabaseStringManagement;
 import dev.jdata.db.engine.database.IStringStorer;
 import dev.jdata.db.engine.database.StringManagement;
@@ -20,12 +20,13 @@ import dev.jdata.db.engine.database.strings.IStringCache;
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaManager;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.schema.allocators.SchemaManagementAllocators;
+import dev.jdata.db.schema.allocators.databases.schemamanagement.HeapDatabaseSchemaManagementAllocators;
 import dev.jdata.db.schema.model.databaseschema.IHeapGenericCompleteDatabaseSchema;
+import dev.jdata.db.schema.model.diff.dropped.HeapSchemaDroppedElementsAllocators;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.schemamap.IHeapCompleteSchemaMapBuilder;
 import dev.jdata.db.schema.storage.sqloutputter.StringBuilderSQLOutputter;
 import dev.jdata.db.schema.storage.sqloutputter.TextSQLOutputter;
 import dev.jdata.db.schema.storage.sqloutputter.TextToByteOutputPrerequisites;
@@ -46,11 +47,14 @@ import dev.jdata.db.schema.types.TimestampType;
 import dev.jdata.db.schema.types.VarCharType;
 import dev.jdata.db.utils.adt.lists.IHeapIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexList;
+import dev.jdata.db.utils.adt.maps.IHeapMutableIntToObjectWithRemoveStaticMap;
+import dev.jdata.db.utils.adt.maps.IHeapMutableIntToObjectWithRemoveStaticMapAllocator;
+import dev.jdata.db.utils.adt.sets.IHeapMutableIntSet;
 import dev.jdata.db.utils.adt.sets.IHeapMutableIntSetAllocator;
 import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
 import dev.jdata.db.utils.checks.Checks;
-import dev.jdata.db.utils.jdk.niobuffers.ByteArrayByteBufferAllocator;
+import dev.jdata.db.utils.jdk.niobuffers.CachedByteArrayByteBufferAllocator;
 import dev.jdata.db.utils.jdk.niobuffers.CharBufferAllocator;
 
 public abstract class BaseDBTest extends BaseSQLTest {
@@ -192,13 +196,15 @@ public abstract class BaseDBTest extends BaseSQLTest {
 
         final DatabaseSchemaVersion schemaVersion = DatabaseSchemaVersion.of(DatabaseSchemaVersion.INITIAL_VERSION);
 
-        final IHeapMutableIntSetAllocator intSetAllocator = IHeapMutableIntSetAllocator.create();
-
-        final SchemaManagementAllocators schemaManagementAllocators = new SchemaManagementAllocators(intSetAllocator);
+        final HeapDatabaseSchemaManagementAllocators<IHeapMutableIntSet, IHeapMutableIntToObjectWithRemoveStaticMap<IHeapMutableIntSet>> databaseSchemaManagementAllocators
+                = new HeapDatabaseSchemaManagementAllocators<>(
+                        new HeapSchemaDroppedElementsAllocators<>(
+                                IHeapMutableIntSetAllocator.create(),
+                                IHeapMutableIntToObjectWithRemoveStaticMapAllocator.create(IHeapMutableIntSet[]::new)));
 
         final IHeapGenericCompleteDatabaseSchema databaseSchema = IHeapGenericCompleteDatabaseSchema.empty(databaseId, schemaVersion);
 
-        return DatabaseSchemaManager.of(databaseId, databaseSchema, schemaManagementAllocators.getSchemaManagerAllocator());
+        return DatabaseSchemaManager.of(databaseId, databaseSchema, IHeapIndexList.empty(), databaseSchemaManagementAllocators);
     }
 
     protected static HeapANSIDatabaseSchemaSerialization createANSIDatabaseSchemaSerializer() {
@@ -248,19 +254,19 @@ public abstract class BaseDBTest extends BaseSQLTest {
 
         final CharsetEncoder charsetEncoder = Charset.defaultCharset().newEncoder();
         final CharBufferAllocator charBufferAllocator = new CharBufferAllocator();
-        final ByteArrayByteBufferAllocator byteBufferAllocator = new ByteArrayByteBufferAllocator();
+        final CachedByteArrayByteBufferAllocator byteBufferAllocator = new CachedByteArrayByteBufferAllocator();
 
         return new TextToByteOutputPrerequisites(charsetEncoder, charBufferAllocator, byteBufferAllocator);
     }
 
-    protected static IHeapAllCompleteSchemaMapsBuilder createCompleteSchemaMapsBuilder() {
+    protected static IHeapCompleteSchemaMapBuilder createCompleteSchemaMapsBuilder() {
 
-        return IHeapAllCompleteSchemaMapsBuilder.create();
+        return IHeapCompleteSchemaMapBuilder.create();
     }
 
-    protected static HeapDDLSchemaSQLStatementsWorkerObjects createDDLSchemaSQLStatementsWorkerObjects() {
+    protected static HeapDDLSchemaSQLStatementsAllocators createDDLSchemaSQLStatementsWorkerObjects() {
 
-        return new HeapDDLSchemaSQLStatementsWorkerObjects();
+        return new HeapDDLSchemaSQLStatementsAllocators();
     }
 
     protected static DDLSchemaScratchObjects createDDLSchemaScratchObjects() {

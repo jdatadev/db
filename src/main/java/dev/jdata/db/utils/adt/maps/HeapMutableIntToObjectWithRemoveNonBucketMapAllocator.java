@@ -1,5 +1,6 @@
 package dev.jdata.db.utils.adt.maps;
 
+import java.util.Objects;
 import java.util.function.IntFunction;
 
 import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
@@ -14,7 +15,14 @@ final class HeapMutableIntToObjectWithRemoveNonBucketMapAllocator<V>
                         IIntToObjectMapView<V>>
         implements IHeapMutableIntToObjectWithRemoveStaticMapAllocator<V> {
 
-    HeapMutableIntToObjectWithRemoveNonBucketMapAllocator(IntFunction<V[]> createValuesArray) {
+    static <V> HeapMutableIntToObjectWithRemoveNonBucketMapAllocator<V> create(IntFunction<V[]> createValuesArray) {
+
+        Objects.requireNonNull(createValuesArray);
+
+        return new HeapMutableIntToObjectWithRemoveNonBucketMapAllocator<>(createValuesArray);
+    }
+
+    private HeapMutableIntToObjectWithRemoveNonBucketMapAllocator(IntFunction<V[]> createValuesArray) {
         super(createValuesArray);
     }
 

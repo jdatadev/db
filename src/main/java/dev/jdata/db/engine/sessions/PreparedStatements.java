@@ -26,7 +26,7 @@ final class PreparedStatements extends BaseSingleTypeDescriptorables<PreparedSta
         Objects.requireNonNull(sqlStatement);
         Objects.requireNonNull(sqlString);
 
-        final PreparedStatement preparedStatement = addDescriptorable(sqlStatement, (a, p) -> new PreparedStatement(a));
+        final PreparedStatement preparedStatement = addDescriptorable(sqlStatement, (a, d, p) -> new PreparedStatement(a));
 
         preparedStatement.initialize(sqlStatement, sqlString);
 

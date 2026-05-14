@@ -5,10 +5,12 @@ import java.util.function.ToIntFunction;
 
 import org.jutils.io.strings.StringResolver;
 
-import dev.jdata.db.ddl.allocators.DDLSchemaScratchObjects;
-import dev.jdata.db.ddl.helpers.DDLAlterTableSchemasHelper;
-import dev.jdata.db.ddl.helpers.DDLCreateTableSchemasHelper;
 import dev.jdata.db.ddl.helpers.SchemaObjectIdAllocators;
+import dev.jdata.db.ddl.helpers.sqltoschema.complete.scratchobjects.DDLSchemaScratchObjects;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.DDLAlterTableSchemasHelper;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.DDLCreateTableSchemasHelper;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects.ProcessAlterTableScratchObject;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects.ProcessCreateTableScratchObject;
 import dev.jdata.db.ddl.model.diff.TableDiff;
 import dev.jdata.db.engine.database.StringManagement;
 import dev.jdata.db.engine.transactions.ddl.DDLTransaction.DDLTransactionStatement;
@@ -21,10 +23,11 @@ import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.effective.IHeapEffectiveDatabaseSchema;
+import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.schemamap.IHeapCompleteSchemaMapBuilder;
 import dev.jdata.db.schema.storage.IDatabaseSchemaSerializer;
 import dev.jdata.db.schema.storage.IDatabaseSchemaStorageFactory;
 import dev.jdata.db.schema.storage.IDatabaseSchemaStorageFactory.IDatabaseSchemaStorage;
@@ -37,11 +40,16 @@ import dev.jdata.db.sql.ast.statements.table.SQLDropTableStatement;
 import dev.jdata.db.sql.parse.ISQLString;
 import dev.jdata.db.utils.Initializable;
 import dev.jdata.db.utils.adt.IResettable;
+import dev.jdata.db.utils.adt.lists.IHeapIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.adt.lists.IIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
 import dev.jdata.db.utils.adt.lists.IMutableIndexList;
 import dev.jdata.db.utils.adt.lists.IMutableIndexListAllocator;
+import dev.jdata.db.utils.adt.sets.IHeapIntSet;
+import dev.jdata.db.utils.adt.sets.IIntSet;
+import dev.jdata.db.utils.adt.sets.IIntSetAllocator;
+import dev.jdata.db.utils.adt.sets.IIntSetBuilder;
 import dev.jdata.db.utils.allocators.Allocatable;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
@@ -53,7 +61,11 @@ class DDLTransaction<
                 TRANSACTION_STATEMENT_INDEX_LIST_BUILDER extends IIndexListBuilder<DDLTransactionStatement, TRANSACTION_STATEMENT_INDEX_LIST, ?>,
                 TRANSACTION_OBJECT_INDEX_LIST extends IIndexList<DDLTransactionObject>,
                 TRANSACTION_OBJECT_INDEX_LIST_BUILDER extends IIndexListBuilder<DDLTransactionObject, TRANSACTION_OBJECT_INDEX_LIST, ?>,
-                TRANSACTION_OBJECT_MUTABLE_INDEX_LIST extends IMutableIndexList<DDLTransactionObject>>
+                TRANSACTION_OBJECT_MUTABLE_INDEX_LIST extends IMutableIndexList<DDLTransactionObject>,
+                INT_SET extends IIntSet,
+                INT_SET_BUILDER extends IIntSetBuilder<INT_SET, ? extends IHeapIntSet>,
+                HEAP_COLUMN_INDEX_LIST extends IHeapIndexList<Column>,
+                COLUMN_INDEX_LIST_BUILDER extends IIndexListBuilder<Column, ?, HEAP_COLUMN_INDEX_LIST>>
 
         extends Allocatable
         implements IResettable {
@@ -64,7 +76,11 @@ class DDLTransaction<
                     TRANSACTION_STATEMENT_INDEX_LIST_BUILDER extends IIndexListBuilder<DDLTransactionStatement, TRANSACTION_STATEMENT_INDEX_LIST, ?>,
                     TRANSACTION_OBJECT_INDEX_LIST extends IIndexList<DDLTransactionObject>,
                     TRANSACTION_OBJECT_INDEX_LIST_BUILDER extends IIndexListBuilder<DDLTransactionObject, TRANSACTION_OBJECT_INDEX_LIST, ?>,
-                    TRANSACTION_OBJECT_MUTABLE_INDEX_LIST extends IMutableIndexList<DDLTransactionObject>> {
+                    TRANSACTION_OBJECT_MUTABLE_INDEX_LIST extends IMutableIndexList<DDLTransactionObject>,
+                    INT_SET extends IIntSet,
+                    INT_SET_BUILDER extends IIntSetBuilder<INT_SET, ? extends IHeapIntSet>,
+                    HEAP_COLUMN_INDEX_LIST extends IHeapIndexList<Column>,
+                    COLUMN_INDEX_LIST_BUILDER extends IIndexListBuilder<Column, ?, HEAP_COLUMN_INDEX_LIST>> {
 
         private final IIndexListAllocator<
 
@@ -80,9 +96,11 @@ class DDLTransaction<
                         ?,
                         TRANSACTION_OBJECT_INDEX_LIST_BUILDER> ddlTransactionObjectListAllocator;
 
-        private final IMutableIndexListAllocator<DDLTransactionObject, TRANSACTION_OBJECT_MUTABLE_INDEX_LIST> ddlTransactionObjectMutableListAllocator;
+        private final IMutableIndexListAllocator<DDLTransactionObject, TRANSACTION_OBJECT_MUTABLE_INDEX_LIST> ddlMutableTransactionObjectListAllocator;
 
-        private final DDLSchemaScratchObjects ddlSchemaScratchObjects;
+        private final IIntSetAllocator<INT_SET, ?, INT_SET_BUILDER> intSetAllocator;
+        private final IIndexListAllocator<Column, ?, ?, COLUMN_INDEX_LIST_BUILDER> columnIndexListAllocator;
+        private final DDLSchemaScratchObjects<INT_SET_BUILDER, COLUMN_INDEX_LIST_BUILDER> ddlSchemaScratchObjects;
 
         private final SchemaObjectIdAllocators schemaObjectIdAllocators;
 
@@ -98,14 +116,16 @@ class DDLTransaction<
         DDLTransactionCachedObjects(
                 IIndexListAllocator<DDLTransactionStatement, TRANSACTION_STATEMENT_INDEX_LIST, ?, TRANSACTION_STATEMENT_INDEX_LIST_BUILDER> ddlTransactionStatementListAllocator,
                 IIndexListAllocator<DDLTransactionObject, TRANSACTION_OBJECT_INDEX_LIST, ?, TRANSACTION_OBJECT_INDEX_LIST_BUILDER> ddlTransactionObjectListAllocator,
-                IMutableIndexListAllocator<DDLTransactionObject, TRANSACTION_OBJECT_MUTABLE_INDEX_LIST> ddlTransactionObjectMutableListAllocator,
-                DDLSchemaScratchObjects ddlSchemaScratchObjects) {
+                IMutableIndexListAllocator<DDLTransactionObject, TRANSACTION_OBJECT_MUTABLE_INDEX_LIST> ddlMutableTransactionObjectListAllocator,
+                IIntSetAllocator<INT_SET, ?, INT_SET_BUILDER> intSetAllocator, IIndexListAllocator<Column, ?, ?, COLUMN_INDEX_LIST_BUILDER> columnIndexListAllocator) {
 
             this.ddlTransactionStatementListAllocator = Objects.requireNonNull(ddlTransactionStatementListAllocator);
             this.ddlTransactionObjectListAllocator = Objects.requireNonNull(ddlTransactionObjectListAllocator);
-            this.ddlTransactionObjectMutableListAllocator = Objects.requireNonNull(ddlTransactionObjectMutableListAllocator);
+            this.ddlMutableTransactionObjectListAllocator = Objects.requireNonNull(ddlMutableTransactionObjectListAllocator);
+            this.intSetAllocator = Objects.requireNonNull(intSetAllocator);
+            this.columnIndexListAllocator = Objects.requireNonNull(columnIndexListAllocator);
 
-            this.ddlSchemaScratchObjects = Objects.requireNonNull(ddlSchemaScratchObjects);
+            this.ddlSchemaScratchObjects = new DDLSchemaScratchObjects<>();
 
             this.schemaObjectIdAllocators = SchemaObjectIdAllocators.ofInitial();
 
@@ -171,11 +191,16 @@ class DDLTransaction<
     private StringResolver schemaStringResolver;
 
     private DDLTransactionCachedObjects<
+
                     TRANSACTION_STATEMENT_INDEX_LIST,
                     TRANSACTION_STATEMENT_INDEX_LIST_BUILDER,
                     TRANSACTION_OBJECT_INDEX_LIST,
                     TRANSACTION_OBJECT_INDEX_LIST_BUILDER,
-                    TRANSACTION_OBJECT_MUTABLE_INDEX_LIST> ddlTransactionCachedObjects;
+                    TRANSACTION_OBJECT_MUTABLE_INDEX_LIST,
+                    INT_SET,
+                    INT_SET_BUILDER,
+                    HEAP_COLUMN_INDEX_LIST,
+                    COLUMN_INDEX_LIST_BUILDER> ddlTransactionCachedObjects;
 
     private IEffectiveDatabaseSchema currentSchema;
 
@@ -192,11 +217,16 @@ class DDLTransaction<
 
     final void initialize(IEffectiveDatabaseSchema currentSchema, StringResolver schemaStringResolver,
             DDLTransactionCachedObjects<
+
                             TRANSACTION_STATEMENT_INDEX_LIST,
                             TRANSACTION_STATEMENT_INDEX_LIST_BUILDER,
                             TRANSACTION_OBJECT_INDEX_LIST,
                             TRANSACTION_OBJECT_INDEX_LIST_BUILDER,
-                            TRANSACTION_OBJECT_MUTABLE_INDEX_LIST>
+                            TRANSACTION_OBJECT_MUTABLE_INDEX_LIST,
+                            INT_SET,
+                            INT_SET_BUILDER,
+                            HEAP_COLUMN_INDEX_LIST,
+                            COLUMN_INDEX_LIST_BUILDER>
                             ddlCachedObjects) {
 
         Objects.requireNonNull(currentSchema);
@@ -216,7 +246,7 @@ class DDLTransaction<
                 ddlCachedObjects.ddlTransactionObjectListAllocator.createBuilder());
 
         this.ddlTransactionObjectsList = Initializable.checkNotYetInitialized(this.ddlTransactionObjectsList,
-                ddlCachedObjects.ddlTransactionObjectMutableListAllocator.createMutable(0L));
+                ddlCachedObjects.ddlMutableTransactionObjectListAllocator.createMutable(0L));
 
         ddlTransactionCachedObjects.schemaObjectIdAllocators.initialize(currentSchema);
     }
@@ -240,7 +270,7 @@ class DDLTransaction<
 
     public final <E extends Exception> IHeapEffectiveDatabaseSchema commit(DatabaseSchemaVersion databaseSchemaVersion,
             IDatabaseSchemaStorageFactory<E> databaseSchemaStorage, IDatabaseSchemaSerializer databaseSchemaSerializer,
-            ISQLOutputter<E> sqlOutputter, IHeapAllCompleteSchemaMapsBuilder completeSchemaMapsBuilder, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) throws E {
+            ISQLOutputter<E> sqlOutputter, IHeapCompleteSchemaMapBuilder completeSchemaMapsBuilder, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) throws E {
 
         Objects.requireNonNull(databaseSchemaVersion);
         Objects.requireNonNull(databaseSchemaStorage);
@@ -332,11 +362,11 @@ class DDLTransaction<
         }
     }
 
-    private static final DDLTransactionObjectVisitor<DDLTransactionCachedObjects<?, ?, ?, ?, ?>, Void> freeDDLTransactionObjectVisitor
-            = new DDLTransactionObjectVisitor<DDLTransactionCachedObjects<?, ?, ?, ?, ?>, Void>() {
+    private static final DDLTransactionObjectVisitor<DDLTransactionCachedObjects<?, ?, ?, ?, ?, ?, ?, ?, ?>, Void> freeDDLTransactionObjectVisitor
+            = new DDLTransactionObjectVisitor<DDLTransactionCachedObjects<?, ?, ?, ?, ?, ?, ?, ?, ?>, Void>() {
 
         @Override
-        public Void onAddedColumnsSchemaObject(DDLTransactionAddedColumnsSchemaObject addedColumnsSchemaObject, DDLTransactionCachedObjects<?, ?, ?, ?, ?> parameter) {
+        public Void onAddedColumnsSchemaObject(DDLTransactionAddedColumnsSchemaObject addedColumnsSchemaObject, DDLTransactionCachedObjects<?, ?, ?, ?, ?, ?, ?, ?, ?> parameter) {
 
             parameter.ddlTransactionAddedColumnsSchemaObjectCache.free(addedColumnsSchemaObject);
 
@@ -344,7 +374,8 @@ class DDLTransaction<
         }
 
         @Override
-        public Void onAddedNonColumnsSchemaObject(DDLTransactionAddedNonColumnsSchemaObject addedNonColumnsSchemaObject, DDLTransactionCachedObjects<?, ?, ?, ?, ?> parameter) {
+        public Void onAddedNonColumnsSchemaObject(DDLTransactionAddedNonColumnsSchemaObject addedNonColumnsSchemaObject,
+                DDLTransactionCachedObjects<?, ?, ?, ?, ?, ?, ?, ?, ?> parameter) {
 
             parameter.ddlTransactionAddedNonColumnsSchemaObjectCache.free(addedNonColumnsSchemaObject);
 
@@ -352,7 +383,7 @@ class DDLTransaction<
         }
 
         @Override
-        public Void onColumnsDiffObject(DDLTransactionColumnsDiffObject columnsDiffObject, DDLTransactionCachedObjects<?, ?, ?, ?, ?> parameter) {
+        public Void onColumnsDiffObject(DDLTransactionColumnsDiffObject columnsDiffObject, DDLTransactionCachedObjects<?, ?, ?, ?, ?, ?, ?, ?, ?> parameter) {
 
             parameter.ddlTransactionColumnsDiffObjectCache.free(columnsDiffObject);
 
@@ -360,7 +391,7 @@ class DDLTransaction<
         }
 
         @Override
-        public Void onDroppedSchemaObject(DDLTransactionDroppedSchemaObject droppedSchemaObject, DDLTransactionCachedObjects<?, ?, ?, ?, ?> parameter) {
+        public Void onDroppedSchemaObject(DDLTransactionDroppedSchemaObject droppedSchemaObject, DDLTransactionCachedObjects<?, ?, ?, ?, ?, ?, ?, ?, ?> parameter) {
 
             parameter.ddlTransactionDroppedSchemaObjectCache.free(droppedSchemaObject);
 
@@ -386,7 +417,7 @@ class DDLTransaction<
             ddlTransactionCachedObjects.ddlTransactionObjectListAllocator.freeImmutable(ddlTransactionObjects);
         }
 
-        ddlTransactionCachedObjects.ddlTransactionObjectMutableListAllocator.freeMutable(ddlTransactionObjectsList);
+        ddlTransactionCachedObjects.ddlMutableTransactionObjectListAllocator.freeMutable(ddlTransactionObjectsList);
     }
 
     final void addDDLStatement(BaseSQLDDLOperationStatement ddlStatement, ISQLString sqlString, StringResolver parserStringResolver, StringManagement stringManagement)
@@ -414,21 +445,35 @@ class DDLTransaction<
     private DDLTransactionAddedColumnsSchemaObject processCreateTable(SQLCreateTableStatement sqlCreateTableStatement, StringManagement stringManagement)
             throws TableAlreadyExistsException {
 
+        final DDLTransactionAddedColumnsSchemaObject result;
+
         final long storedTableName = stringManagement.storeParsedStringRef(sqlCreateTableStatement.getName());
 
         checkSchemaObjectAlreadyExists(DDLObjectType.TABLE, storedTableName, TableAlreadyExistsException::new);
 
-        final Table table = DDLCreateTableSchemasHelper.processCreateTable(sqlCreateTableStatement, stringManagement, ddlTransactionCachedObjects.ddlSchemaScratchObjects,
-                ddlTransactionCachedObjects.schemaObjectIdAllocators, a -> a.allocate(DDLObjectType.TABLE));
+        final DDLSchemaScratchObjects<INT_SET_BUILDER, COLUMN_INDEX_LIST_BUILDER> ddlSchemaScratchObjects = ddlTransactionCachedObjects.ddlSchemaScratchObjects;
 
-        final DDLTransactionAddedColumnsSchemaObject result = ddlTransactionCachedObjects.ddlTransactionAddedColumnsSchemaObjectCache.allocate();
+        final ProcessCreateTableScratchObject processCreateTableScratchObject = ddlSchemaScratchObjects.allocateProcessCreateTableScratchObject();
 
-        result.initialize(table);
+        try {
+            final Table table = DDLCreateTableSchemasHelper.processCreateTable(sqlCreateTableStatement, stringManagement, ddlTransactionCachedObjects.columnIndexListAllocator,
+                    processCreateTableScratchObject, ddlTransactionCachedObjects.schemaObjectIdAllocators, a -> a.allocate(DDLObjectType.TABLE));
+
+            result = ddlTransactionCachedObjects.ddlTransactionAddedColumnsSchemaObjectCache.allocate();
+
+            result.initialize(table);
+        }
+        finally {
+
+            ddlSchemaScratchObjects.freeProcessCreateTableScratchObject(processCreateTableScratchObject);
+        }
 
         return result;
     }
 
     private DDLTransactionColumnsDiffObject processAlterTable(SQLAlterTableStatement sqlAlterTableStatement, StringManagement stringManagement) throws SQLValidationException {
+
+        final DDLTransactionColumnsDiffObject result;
 
         final long parsedTableName = stringManagement.storeParsedStringRef(sqlAlterTableStatement.getName());
 
@@ -443,14 +488,24 @@ class DDLTransaction<
 
         final long schemaTableName = stringManagement.getHashStringRef(parsedTableName);
 
-        final Table existingTable = currentSchema.getTableMap().getSchemaObjectByName(schemaTableName);
+        final Table existingTable = currentSchema.getTables().getSchemaObjectByName(schemaTableName);
 
-        final TableDiff tableDiff = DDLAlterTableSchemasHelper.processAlterTable(sqlAlterTableStatement, databaseId, existingTable, null, stringManagement,
-                ddlTransactionCachedObjects.ddlSchemaScratchObjects);
+        final DDLSchemaScratchObjects<INT_SET_BUILDER, COLUMN_INDEX_LIST_BUILDER> ddlSchemaScratchObjects = ddlTransactionCachedObjects.ddlSchemaScratchObjects;
 
-        final DDLTransactionColumnsDiffObject result = ddlTransactionCachedObjects.ddlTransactionColumnsDiffObjectCache.allocate();
+        final ProcessAlterTableScratchObject<INT_SET_BUILDER, COLUMN_INDEX_LIST_BUILDER> processAlterTableScratchObject
+                = ddlSchemaScratchObjects.allocateProcessAlterTableScratchObject();
+        try {
+            final TableDiff tableDiff = DDLAlterTableSchemasHelper.processAlterTable(sqlAlterTableStatement, databaseId, existingTable, stringManagement,
+                    ddlTransactionCachedObjects.intSetAllocator, ddlTransactionCachedObjects.columnIndexListAllocator, processAlterTableScratchObject);
 
-        result.initialize(tableDiff);
+            result = ddlTransactionCachedObjects.ddlTransactionColumnsDiffObjectCache.allocate();
+
+            result.initialize(tableDiff);
+        }
+        finally {
+
+            ddlSchemaScratchObjects.freeProcessAlterTableScratchObject(processAlterTableScratchObject);
+        }
 
         return result;
     }
@@ -474,7 +529,7 @@ class DDLTransaction<
 
         final long schemaSchemaObjectName = stringManagement.getHashStringRef(parsedSchemaObjectName);
 
-        final SchemaObject existingSchemaObject = currentSchema.getSchemaMap(ddlObjectType).getSchemaObjectByName(schemaSchemaObjectName);
+        final SchemaObject existingSchemaObject = currentSchema.getSchemaObjects(ddlObjectType).getSchemaObjectByName(schemaSchemaObjectName);
 
         final DDLTransactionDroppedSchemaObject result = ddlTransactionCachedObjects.ddlTransactionDroppedSchemaObjectCache.allocate();
 

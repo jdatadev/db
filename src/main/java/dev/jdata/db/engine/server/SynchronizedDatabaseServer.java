@@ -26,83 +26,87 @@ final class SynchronizedDatabaseServer implements IDatabaseServer {
 
     @Override
     public synchronized int getDatabase(CharSequence dbName) {
+
         return delegate.getDatabase(dbName);
     }
 
     @Override
+    public synchronized int createDatabase(CharSequence dbName, DatabaseParameters parameters) {
+
+        return delegate.createDatabase(dbName, parameters);
+    }
+
+    @Override
     public synchronized int getOrCreateDatabase(CharSequence dbName, DatabaseParameters parameters) {
+
         return delegate.getOrCreateDatabase(dbName, parameters);
     }
 
     @Override
+    public synchronized void dropDatabase(int databaseId) {
+
+        delegate.dropDatabase(databaseId);
+    }
+
+    @Override
     public synchronized int addSession(int databaseId, Charset charset) {
+
         return delegate.addSession(databaseId, charset);
     }
 
     @Override
     public synchronized int prepareStatement(int databaseId, int sessionId, BaseSQLStatement sqlStatement, ISQLString sqlString) {
+
         return delegate.prepareStatement(databaseId, sessionId, sqlStatement, sqlString);
     }
 
     @Override
     public synchronized void freePreparedStatement(int databaseId, int sessionId, int preparedStatementId) {
+
         delegate.freePreparedStatement(databaseId, sessionId, preparedStatementId);
     }
 
     @Override
     public synchronized IDatabaseOperations getDatabaseOperations(int databaseId) {
+
         return delegate.getDatabaseOperations(databaseId);
     }
 
     @Override
-    public int createDatabase(CharSequence dbName, DatabaseParameters parameters) {
-        // TODO Auto-generated method stub
-        return 0;
+    public synchronized <E extends Exception> long executePreparedStatement(int databaseId, int sessionId, int preparedStatementId, PreparedStatementParameters parameters,
+            ExecuteSQLResultWriter<E> resultWriter) throws EvaluateException, E {
+
+        return delegate.executePreparedStatement(databaseId, sessionId, preparedStatementId, parameters, resultWriter);
     }
 
     @Override
-    public void dropDatabase(int databaseId) {
-        // TODO Auto-generated method stub
+    public synchronized long createPreparedStatementLargeObject(int databaseId, int sessionId, int preparedStatementId, long length) throws IOException {
 
+        return delegate.createPreparedStatementLargeObject(databaseId, sessionId, preparedStatementId, length);
     }
 
     @Override
-    public <E extends Exception> long executePreparedStatement(int databaseId, int sessionId, int preparedStatementId,
-            PreparedStatementParameters parameters, ExecuteSQLResultWriter<E> resultWriter)
-            throws EvaluateException, E {
-        // TODO Auto-generated method stub
-        return 0;
+    public synchronized void storePreparedStatementLargeObjectPart(int databaseId, int sessionId, int preparedStatementId, long largeObjectRef, boolean isFinal, ByteBuffer byteBuffer,
+            int offset, int length) throws IOException {
+
+        delegate.storePreparedStatementLargeObjectPart(databaseId, sessionId, preparedStatementId, largeObjectRef, isFinal, byteBuffer, offset, length);
     }
 
     @Override
-    public long createPreparedStatementLargeObject(int databaseId, int sessionId, int preparedStatementId, long length)
-            throws IOException {
-        // TODO Auto-generated method stub
-        return 0;
+    public synchronized void closeSession(int databaseId, int sessionId) {
+
+        delegate.closeSession(databaseId, sessionId);
     }
 
     @Override
-    public void storePreparedStatementLargeObjectPart(int databaseId, int sessionId, int preparedStatementId,
-            long largeObjectRef, boolean isFinal, ByteBuffer byteBuffer, int offset, int length) throws IOException {
-        // TODO Auto-generated method stub
+    public synchronized Charset getSessionCharset(int databaseId, int sessionId) {
 
+        return delegate.getSessionCharset(databaseId, sessionId);
     }
 
     @Override
-    public void closeSession(int databaseId, int sessionId) {
-        // TODO Auto-generated method stub
+    public synchronized IDatabaseSessionStatus getDatabaseSessionStatus(int databaseId) {
 
-    }
-
-    @Override
-    public Charset getSessionCharset(int databaseId, int sessionId) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IDatabaseSessionStatus getDatabaseSessionStatus(int databaseId) {
-        // TODO Auto-generated method stub
-        return null;
+        return delegate.getDatabaseSessionStatus(databaseId);
     }
 }

@@ -5,7 +5,7 @@ import java.util.Objects;
 import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
-import dev.jdata.db.schema.model.diff.IDiffDatabaseSchema;
+import dev.jdata.db.schema.model.diff.databaseschema.IDiffDatabaseSchema;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.adt.arrays.TwoDimensionalArray;
@@ -49,7 +49,7 @@ public final class StorageTableSchemas {
 
         final DatabaseSchemaVersion databaseSchemaVersion = effectiveDatabaseSchema.getVersion();
 
-        final IIndexList<Table> tables = effectiveDatabaseSchema.getTables();
+        final IIndexList<Table> tables = effectiveDatabaseSchema.getTablesList();
 
         final long numElements = tables.getNumElements();
 

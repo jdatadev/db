@@ -13,7 +13,7 @@ import dev.jdata.db.schema.model.databaseschema.IHeapGenericCompleteDatabaseSche
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.effective.IHeapEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
-import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamap.IHeapCompleteSchemaMap;
 
 public final class SchemaBuilder extends BaseSchemaBuilder<SchemaBuilder> {
 
@@ -42,12 +42,12 @@ public final class SchemaBuilder extends BaseSchemaBuilder<SchemaBuilder> {
     @FunctionalInterface
     private interface SchemaFactory<T extends IDatabaseSchema> {
 
-        T create(DatabaseId databaseId, DatabaseSchemaVersion version, IHeapAllCompleteSchemaMaps schemaMaps);
+        T create(DatabaseId databaseId, DatabaseSchemaVersion version, IHeapCompleteSchemaMap schemaMaps);
     }
 
     private <T extends IDatabaseSchema> T build(SchemaFactory<T> schemaFactory) {
 
-        final IHeapAllCompleteSchemaMaps schemaMaps = buildCompleteSchemaMaps();
+        final IHeapCompleteSchemaMap schemaMaps = buildCompleteSchemaMaps();
 
         final DatabaseSchemaVersion schemaVersion = DatabaseSchemaVersion.of(DatabaseSchemaVersion.INITIAL_VERSION);
 

@@ -2,22 +2,22 @@ package dev.jdata.db.utils.jdk.niobuffers;
 
 import java.nio.ByteBuffer;
 
-public final class ByteArrayByteBufferAllocatorTest extends ByteBufferAllocatorTest<ByteArrayByteBufferAllocator> {
+public final class ByteArrayByteBufferAllocatorTest extends ByteBufferAllocatorTest<CachedByteArrayByteBufferAllocator> {
 
     @Override
-    protected ByteArrayByteBufferAllocator createAllocator() {
+    protected CachedByteArrayByteBufferAllocator createAllocator() {
 
-        return new ByteArrayByteBufferAllocator();
+        return new CachedByteArrayByteBufferAllocator();
     }
 
     @Override
-    protected ByteBuffer allocate(ByteArrayByteBufferAllocator allocator, int minimumCapacity) {
+    protected ByteBuffer allocate(CachedByteArrayByteBufferAllocator allocator, int minimumCapacity) {
 
         return allocator.allocateByteArrayByteBuffer(minimumCapacity);
     }
 
     @Override
-    protected void free(ByteArrayByteBufferAllocator allocator, ByteBuffer instance) {
+    protected void free(CachedByteArrayByteBufferAllocator allocator, ByteBuffer instance) {
 
         allocator.freeByteBuffer(instance);
     }

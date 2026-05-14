@@ -7,6 +7,7 @@ import java.util.Objects;
 
 import dev.jdata.db.data.cache.DataCache;
 import dev.jdata.db.engine.database.Database.DatabaseState;
+import dev.jdata.db.engine.database.allocators.IDatabasesAllocators;
 import dev.jdata.db.engine.database.operations.IDatabaseOperations;
 import dev.jdata.db.engine.database.operations.exceptions.DMLException;
 import dev.jdata.db.engine.descriptorables.BaseDescriptorable;
@@ -26,22 +27,24 @@ import dev.jdata.db.sql.ast.statements.dml.SQLDMLUpdatingStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLSelectStatement;
 import dev.jdata.db.sql.parse.ISQLString;
 import dev.jdata.db.utils.State;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
+import dev.jdata.db.utils.adt.sets.IMutableLongLargeSet;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class Database extends BaseDescriptorable<DatabaseState> implements IDatabaseOperations {
+public final class Database<T extends IMutableLongLargeArray, U extends IMutableLongLargeSet> extends BaseDescriptorable<DatabaseState> implements IDatabaseOperations {
 
-    public interface DMLEvaluatorParameterAllocator {
+    public interface IDMLEvaluatorParameterAllocator<T extends IMutableLongLargeArray, U extends IMutableLongLargeSet> {
 
-        DMLUpdatingEvaluatorParameter allocateDMLEvaluatorParameter();
+        DMLUpdatingEvaluatorParameter<T, U> allocateDMLEvaluatorParameter();
 
-        void freeDMLEvaluatorParameter(DMLUpdatingEvaluatorParameter evaluatorParameter);
+        void freeDMLEvaluatorParameter(DMLUpdatingEvaluatorParameter<T, U> evaluatorParameter);
     }
 
-    public interface DMLPreparedStatementEvaluatorParameterAllocator {
+    public interface IDMLPreparedStatementEvaluatorParameterAllocator<T extends IMutableLongLargeArray> {
 
-        DMLUpdatingPreparedEvaluatorParameter allocateDMLPreparedStatementEvaluatorParameter();
+        DMLUpdatingPreparedEvaluatorParameter<T> allocateDMLPreparedStatementEvaluatorParameter();
 
-        void freeDMLPreparedStatementEvaluatorParameter(DMLUpdatingPreparedEvaluatorParameter evaluatorParameter);
+        void freeDMLPreparedStatementEvaluatorParameter(DMLUpdatingPreparedEvaluatorParameter<T> evaluatorParameter);
     }
 
     static enum DatabaseState implements State {
@@ -62,14 +65,15 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
     }
 
     private final String name;
-    private final IDatabasesAllocators allocators;
+    private final IDatabasesAllocators<T, U> databasesAllocators;
     private final DatabaseStringManagement stringManagement;
-    private final DatabaseSchemaManager schemas;
+    private final DatabaseSchemaManager schemaManager;
     private final DataCache dataCache;
 //    private final TableDataStorageBackend tableDataStorageBackend;
-    private final DMLEvaluatorParameterAllocator dmlEvaluatorParameterAllocator;
-    private final DMLPreparedStatementEvaluatorParameterAllocator dmlPreparedStatementEvaluatorParameterAllocator;
-
+/*
+    private final IDMLEvaluatorParameterAllocator dmlEvaluatorParameterAllocator;
+    private final IDMLPreparedStatementEvaluatorParameterAllocator dmlPreparedStatementEvaluatorParameterAllocator;
+*/
 //    private final Tables tables;
 //    private final Indices indices;
 
@@ -79,33 +83,35 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
 
     private final Transactions transactions;
 
-    Database(AllocationType allocationType, String name, DatabaseParameters parameters, DMLEvaluatorParameterAllocator dmlEvaluatorParameterAllocator,
-            DMLPreparedStatementEvaluatorParameterAllocator dmlPreparedStatementEvaluatorParameterAllocator) {
+    Database(AllocationType allocationType, String name, DatabasesParameters<T, U> databasesParameters, DatabaseInstantiationParameters databaseParameters
+            /* , IDMLEvaluatorParameterAllocator dmlEvaluatorParameterAllocator,
+            IDMLPreparedStatementEvaluatorParameterAllocator dmlPreparedStatementEvaluatorParameterAllocator */) {
         super(allocationType, DatabaseState.CREATED, false);
 
         Checks.isDatabaseName(name);
-        Objects.requireNonNull(parameters);
+        Objects.requireNonNull(databasesParameters);
+/*
         Objects.requireNonNull(dmlEvaluatorParameterAllocator);
         Objects.requireNonNull(dmlPreparedStatementEvaluatorParameterAllocator);
-
+*/
         this.name = name;
-        this.allocators = parameters.getAllocators();
-        this.stringManagement = parameters.getStringManagement();
-        this.schemas = parameters.getDatabaseSchemas();
-        this.dataCache = parameters.getDataCache();
+        this.databasesAllocators = databasesParameters.getAllocators();
+        this.stringManagement = databasesParameters.getStringManagement();
+        this.schemaManager = databaseParameters.getDatabaseSchemaManager();
+        this.dataCache = databaseParameters.getDataCache();
 //        this.tableDataStorageBackend = parameters;
-
+/*
         this.dmlEvaluatorParameterAllocator = dmlEvaluatorParameterAllocator;
         this.dmlPreparedStatementEvaluatorParameterAllocator = dmlPreparedStatementEvaluatorParameterAllocator;
-
+*/
 //        this.tables = new Tables(schemas, parameters.getInitialRowIds());
 //        this.indices = new Indices();
 
         this.sqlStatements = new SQLStatementsCache();
 
-        this.sessions = new Sessions(parameters.getLargeObjectStorer());
+        this.sessions = new Sessions(databasesParameters.getLargeObjectStorer());
 
-        this.transactions = new Transactions(parameters.getInitialTransactionId(), parameters.getTransactionFactory());
+        this.transactions = new Transactions(databaseParameters.getInitialTransactionId(), databasesParameters.getTransactionFactory());
     }
 
     @Override
@@ -176,7 +182,7 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
     @Override
     public long executeDMLUpdateSQL(int sessionId, SQLDMLUpdatingStatement sqlStatement) throws DMLException {
 
-        final DMLUpdatingEvaluatorParameter evaluatorParameter = dmlEvaluatorParameterAllocator.allocateDMLEvaluatorParameter();
+        final DMLUpdatingEvaluatorParameter<T, U> evaluatorParameter = databasesAllocators.allocateDMLEvaluatorParameter();
 
         final Session session = getSession(sessionId);
 
@@ -191,7 +197,7 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
         }
         finally {
 
-            dmlEvaluatorParameterAllocator.freeDMLEvaluatorParameter(evaluatorParameter);
+            databasesAllocators.freeDMLEvaluatorParameter(evaluatorParameter);
         }
 
         return numUpdatedRows;
@@ -220,14 +226,14 @@ public final class Database extends BaseDescriptorable<DatabaseState> implements
 
         final long result;
 
-        final DMLUpdatingPreparedEvaluatorParameter evaluatorParameter = dmlPreparedStatementEvaluatorParameterAllocator.allocateDMLPreparedStatementEvaluatorParameter();
+        final DMLUpdatingPreparedEvaluatorParameter<T> evaluatorParameter = databasesAllocators.allocateDMLPreparedStatementEvaluatorParameter();
 
         try {
             result = getSession(sessionId).executePreparedStatement(preparedStatementId, preparedStatementParameters, evaluatorParameter, resultWriter);
         }
         finally {
 
-            dmlPreparedStatementEvaluatorParameterAllocator.freeDMLPreparedStatementEvaluatorParameter(evaluatorParameter);
+            databasesAllocators.freeDMLPreparedStatementEvaluatorParameter(evaluatorParameter);
         }
 
         return result;

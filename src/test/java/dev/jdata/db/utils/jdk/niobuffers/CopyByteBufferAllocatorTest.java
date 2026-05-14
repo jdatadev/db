@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public final class CopyByteBufferAllocatorTest extends ByteBufferAllocatorTest<CopyByteBufferAllocator> {
+public final class CopyByteBufferAllocatorTest extends ByteBufferAllocatorTest<CachedCopyByteBufferAllocator> {
 
     @Test
     @Category(UnitTest.class)
@@ -13,9 +13,9 @@ public final class CopyByteBufferAllocatorTest extends ByteBufferAllocatorTest<C
 
         final byte[] bytes = new byte[] { 12, 23, 34 };
 
-        assertThatThrownBy(() -> new CopyByteBufferAllocator().allocate(ByteBuffer.wrap(bytes), 1, 0)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new CopyByteBufferAllocator().allocate(ByteBuffer.wrap(bytes), 0, 4)).isInstanceOf(IndexOutOfBoundsException.class);
-        assertThatThrownBy(() -> new CopyByteBufferAllocator().allocate(ByteBuffer.wrap(bytes), -1, 3)).isInstanceOf(IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> new CachedCopyByteBufferAllocator().allocate(ByteBuffer.wrap(bytes), 1, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new CachedCopyByteBufferAllocator().allocate(ByteBuffer.wrap(bytes), 0, 4)).isInstanceOf(IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> new CachedCopyByteBufferAllocator().allocate(ByteBuffer.wrap(bytes), -1, 3)).isInstanceOf(IndexOutOfBoundsException.class);
 
         checkCopyByteBuffer(bytes, 0, 1, (byte)12);
         checkCopyByteBuffer(bytes, 0, 2, (byte)12, (byte)23);
@@ -31,7 +31,7 @@ public final class CopyByteBufferAllocatorTest extends ByteBufferAllocatorTest<C
 
         final byte[] bytes = new byte[] { 12, 23, 34 };
 
-        final CopyByteBufferAllocator allocator = new CopyByteBufferAllocator();
+        final CachedCopyByteBufferAllocator allocator = new CachedCopyByteBufferAllocator();
 
         final int length = bytes.length;
 
@@ -58,7 +58,7 @@ public final class CopyByteBufferAllocatorTest extends ByteBufferAllocatorTest<C
 
     private static void checkCopyByteBuffer(byte[] byteArray, int offset, int length, byte ... expectedBytes) {
 
-        final CopyByteBufferAllocator allocator = new CopyByteBufferAllocator();
+        final CachedCopyByteBufferAllocator allocator = new CachedCopyByteBufferAllocator();
 
         final ByteBuffer copy = allocator.allocate(ByteBuffer.wrap(byteArray), offset, length);
 
@@ -68,19 +68,19 @@ public final class CopyByteBufferAllocatorTest extends ByteBufferAllocatorTest<C
     }
 
     @Override
-    protected CopyByteBufferAllocator createAllocator() {
+    protected CachedCopyByteBufferAllocator createAllocator() {
 
-        return new CopyByteBufferAllocator();
+        return new CachedCopyByteBufferAllocator();
     }
 
     @Override
-    protected ByteBuffer allocate(CopyByteBufferAllocator allocator, int minimumCapacity) {
+    protected ByteBuffer allocate(CachedCopyByteBufferAllocator allocator, int minimumCapacity) {
 
         return allocator.allocate(ByteBuffer.wrap(new byte[minimumCapacity]), 0, minimumCapacity);
     }
 
     @Override
-    protected void free(CopyByteBufferAllocator allocator, ByteBuffer instance) {
+    protected void free(CachedCopyByteBufferAllocator allocator, ByteBuffer instance) {
 
         allocator.freeByteBuffer(instance);
     }

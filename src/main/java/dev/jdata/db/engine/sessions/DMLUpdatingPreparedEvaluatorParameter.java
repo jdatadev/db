@@ -9,11 +9,12 @@ import dev.jdata.db.dml.DMLInsertRows.InsertRow;
 import dev.jdata.db.engine.database.SQLExpressionEvaluator;
 import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
 import dev.jdata.db.utils.adt.arrays.IArrayAllocator;
-import dev.jdata.db.utils.adt.arrays.ICachedMutableLongLargeArrayAllocator;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArrayAllocator;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.jdk.niobuffers.IByteArrayByteBufferAllocator;
 
-public final class DMLUpdatingPreparedEvaluatorParameter extends BaseDMLUpdatingEvaluatorParameter {
+public final class DMLUpdatingPreparedEvaluatorParameter<T extends IMutableLongLargeArray> extends BaseDMLUpdatingEvaluatorParameter<T> {
 
     private final IArrayAllocator<InsertRow> insertRowArrayAllocator;
 
@@ -25,7 +26,7 @@ public final class DMLUpdatingPreparedEvaluatorParameter extends BaseDMLUpdating
 
     public DMLUpdatingPreparedEvaluatorParameter(AllocationType allocationType, IArrayAllocator<SQLExpressionEvaluator> arrayAllocator,
             INumStorageBitsGetter numStorageBitsGetter, IByteArrayByteBufferAllocator byteArrayByteBufferAllocator,
-            ICachedMutableLongLargeArrayAllocator mutableLongLargeArrayAllocator, IArrayAllocator<InsertRow> insertRowArrayAllocator) {
+            IMutableLongLargeArrayAllocator<T> mutableLongLargeArrayAllocator, IArrayAllocator<InsertRow> insertRowArrayAllocator) {
         super(allocationType, arrayAllocator, numStorageBitsGetter, byteArrayByteBufferAllocator, mutableLongLargeArrayAllocator);
 
         this.insertRowArrayAllocator = Objects.requireNonNull(insertRowArrayAllocator);

@@ -8,9 +8,9 @@ import org.jutils.parse.ParserException;
 
 import dev.jdata.db.engine.database.StringManagement;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
-import dev.jdata.db.schema.model.schemamaps.IAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamap.ICompleteSchemaMap;
 
-public interface IDatabaseSchemaDeserializer<T extends IAllCompleteSchemaMaps> {
+public interface IDatabaseSchemaDeserializer<T extends ICompleteSchemaMap> {
 
     <E extends Exception, BUFFER extends BaseStringBuffers<E>> T deserialize(BUFFER buffer, Function<String, E> createEOFException,
             StringManagement stringManagement, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) throws ParserException, E;

@@ -1,6 +1,6 @@
 package dev.jdata.db.utils.allocators;
 
-public interface IFreeable<T> {
+public interface IFreeable {
 
-    void free(T allocator);
+    void free();
 }

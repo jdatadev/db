@@ -3,10 +3,11 @@ package dev.jdata.db.utils.adt.lists;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
+import dev.jdata.db.utils.adt.contains.builders.IHeapContainsBuilderMarker;
 import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.checks.Checks;
 
-public interface IHeapIndexListBuilder<T> extends IIndexListBuilder<T, IHeapIndexList<T>, IHeapIndexList<T>> {
+public interface IHeapIndexListBuilder<T> extends IIndexListBuilder<T, IHeapIndexList<T>, IHeapIndexList<T>>, IHeapContainsBuilderMarker {
 
     public static <T> IHeapIndexListBuilder<T> create(IntFunction<T[]> createElementsArray) {
 

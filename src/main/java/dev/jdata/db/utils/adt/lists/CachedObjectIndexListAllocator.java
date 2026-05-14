@@ -5,18 +5,17 @@ import java.util.function.IntFunction;
 import dev.jdata.db.utils.adt.capacity.CapacityMax;
 import dev.jdata.db.utils.adt.elements.IntCapacityCachedElementsAllocators;
 import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
-import dev.jdata.db.utils.allocators.IAllocators;
 import dev.jdata.db.utils.classes.Classes;
 
 final class CachedObjectIndexListAllocator<T>
 
         extends ObjectIndexListAllocator<T, ICachedIndexList<T>, IHeapIndexList<T>, ICachedMutableIndexList<T>, CachedMutableObjectIndexList<T>, ICachedIndexListBuilder<T>>
-        implements ICachedIndexListAllocator<T>, IAllocators {
+        implements ICachedIndexListAllocator<T> {
 
     private static final AllocationType ALLOCATION_TYPE = AllocationType.CACHING_ALLOCATOR;
 
-    CachedObjectIndexListAllocator(IntFunction<T[]> createElementsArray,
-            MutableObjectIndexListAllocator<T, ?, ? extends MutableObjectIndexList<T>> mutableObjectIndexListAllocator) {
+    CachedObjectIndexListAllocator(MutableObjectIndexListAllocator<T, ?, ? extends MutableObjectIndexList<T>> mutableObjectIndexListAllocator,
+            IntFunction<T[]> createElementsArray) {
         super(ALLOCATION_TYPE, new IntCapacityCachedElementsAllocators<>(ALLOCATION_TYPE, CapacityMax.INT,
                 Classes.genericClass(ICachedIndexList.class), Classes.genericClass(CachedObjectIndexList.class),
                 (a, c) -> CachedObjectIndexList.createEmptyValuesInitializable(a), l -> l.getElementsCapacity(), CachedObjectIndexList::empty,

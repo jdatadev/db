@@ -12,7 +12,7 @@ public final class CachedIndexListTest extends BaseTest {
     public void testBuildHeapAllocated() {
 
         final CachedMutableObjectIndexListAllocator<String> mutableIntIndexListAllocator = new CachedMutableObjectIndexListAllocator<>(String[]::new);
-        final CachedObjectIndexListAllocator<String> cacheIndexListAllocator = new CachedObjectIndexListAllocator<>(String[]::new, mutableIntIndexListAllocator);
+        final CachedObjectIndexListAllocator<String> cacheIndexListAllocator = new CachedObjectIndexListAllocator<>(mutableIntIndexListAllocator, String[]::new);
         final ICachedIndexListBuilder<String> indexListBuilder = cacheIndexListAllocator.createBuilder();
 
         final String string = "abc";

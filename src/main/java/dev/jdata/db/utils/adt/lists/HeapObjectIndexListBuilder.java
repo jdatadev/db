@@ -28,7 +28,7 @@ final class HeapObjectIndexListBuilder<T>
     }
 
     private HeapObjectIndexListBuilder(AllocationType allocationType, int initialCapacity, IntFunction<T[]> createElementsArray) {
-        this(allocationType, initialCapacity, new HeapObjectIndexListAllocator<>(createElementsArray), (t, c, a) -> a.allocate(t, c));
+        this(allocationType, initialCapacity, new HeapMutableObjectIndexListAllocator<>(createElementsArray), (t, c, a) -> a.allocateMutable(createElementsArray, c));
     }
 
     private <P> HeapObjectIndexListBuilder(AllocationType allocationType, int initialCapacity, P parameter,

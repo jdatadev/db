@@ -41,6 +41,6 @@ final class CachedObjectIndexList<T> extends ObjectIndexList<T> implements ICach
     @Override
     public IHeapIndexList<T> toHeapAllocated() {
 
-        return HeapObjectIndexList.copyImmutableIndexList(AllocationType.HEAP, createElementsArray, this);
+        return HeapObjectIndexList.copyImmutableIndexList(AllocationType.HEAP, this, createElementsArray);
     }
 }

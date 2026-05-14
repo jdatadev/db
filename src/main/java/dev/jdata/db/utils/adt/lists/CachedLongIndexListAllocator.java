@@ -3,12 +3,11 @@ package dev.jdata.db.utils.adt.lists;
 import dev.jdata.db.utils.adt.capacity.CapacityMax;
 import dev.jdata.db.utils.adt.elements.IntCapacityCachedElementsAllocators;
 import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
-import dev.jdata.db.utils.allocators.IAllocators;
 
 final class CachedLongIndexListAllocator
 
         extends LongIndexListAllocator<ICachedLongIndexList, IHeapLongIndexList, ICachedMutableLongIndexList, CachedMutableLongIndexList, ICachedLongIndexListBuilder>
-        implements ICachedLongIndexListAllocator, IAllocators {
+        implements ICachedLongIndexListAllocator {
 
     private static final AllocationType ALLOCATION_TYPE = AllocationType.CACHING_ALLOCATOR;
 
@@ -17,7 +16,7 @@ final class CachedLongIndexListAllocator
                 ICachedLongIndexList.class, CachedLongIndexList.class, (a, c) -> CachedLongIndexList.createEmptyValuesInitializable(a), l -> l.getElementsCapacity(),
                 CachedLongIndexList::empty,
                 CachedMutableLongIndexList.class, CachedMutableLongIndexList::create, l -> l.getElementsCapacity(),
-                ICachedLongIndexListBuilder.class, CachedLongIndexListBuilder.class, (a, c) -> new CachedLongIndexListBuilder(a, mutableLongIndexListAllocator),
+                ICachedLongIndexListBuilder.class, CachedLongIndexListBuilder.class, (a, c) -> new CachedLongIndexListBuilder(a, c, mutableLongIndexListAllocator),
                 b -> b.getCapacity()));
     }
 }

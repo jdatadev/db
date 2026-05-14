@@ -12,14 +12,14 @@ import dev.jdata.db.utils.adt.sets.IMutableIntSet;
 import dev.jdata.db.utils.adt.sets.IMutableIntSetAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
-public abstract class SchemaDroppedElements<T extends IMutableIntSet, U extends IMutableIntToObjectWithRemoveStaticMap<T>>
+public final class SchemaDroppedElements<T extends IMutableIntSet, U extends IMutableIntToObjectWithRemoveStaticMap<T>>
 
         extends ObjectCacheNode
         implements ISchemaDroppedElements {
 
     private final DroppedElements<T, U>[] droppedElementsArray;
 
-    SchemaDroppedElements(AllocationType allocationType) {
+    public SchemaDroppedElements(AllocationType allocationType) {
         super(allocationType);
 
         @SuppressWarnings("unchecked")

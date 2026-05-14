@@ -2,8 +2,14 @@ package dev.jdata.db.utils.builders;
 
 import dev.jdata.db.utils.adt.marker.IHeapTypeMarker;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
+import dev.jdata.db.utils.checks.Checks;
 
 public abstract class BaseBuilder<T, U extends IHeapTypeMarker> extends ObjectCacheNode implements IBuildable<T>, IBuilder {
+
+    protected static void checkIsIntMinimumCapacity(int minimumCapacity) {
+
+        Checks.isIntMinimumCapacityAtOrAboveZero(minimumCapacity);
+    }
 
     protected abstract boolean isEmpty();
 

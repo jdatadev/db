@@ -23,8 +23,8 @@ public interface IHeapIndexList<T> extends IIndexList<T>, IHeapContainsMarker {
         return instances.length != 0 ? HeapObjectIndexList.of(AllocationType.HEAP, instances) : HeapObjectIndexList.empty();
     }
 
-    public static <T> IHeapIndexList<T> copyOf(IntFunction<T[]> createElementsArray, IIndexListView<T> elements) {
+    public static <T> IHeapIndexList<T> copyOf(IIndexListView<T> elements, IntFunction<T[]> createElementsArray) {
 
-        return HeapObjectIndexList.copyOf(AllocationType.HEAP, createElementsArray, elements);
+        return HeapObjectIndexList.copyOf(AllocationType.HEAP, elements, createElementsArray);
     }
 }

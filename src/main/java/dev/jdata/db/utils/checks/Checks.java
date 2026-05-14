@@ -1491,6 +1491,11 @@ public class Checks {
         return initialCapacity;
     }
 
+    public static long isIntMinimumCapacityAtOrAboveZero(int minimumCapacity) {
+
+        return isIntInitialCapacityAtOrAboveZero(minimumCapacity);
+    }
+
     public static long isIntMinimumCapacityAtOrAboveZero(long minimumCapacity) {
 
         return isIntInitialCapacityAtOrAboveZero(minimumCapacity);

@@ -12,16 +12,16 @@ import dev.jdata.db.dml.DMLUpdateRows.UpdateRow;
 import dev.jdata.db.engine.database.SQLExpressionEvaluator;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.adt.arrays.IArrayAllocator;
-import dev.jdata.db.utils.adt.arrays.ICachedMutableLongLargeArray;
-import dev.jdata.db.utils.adt.arrays.ICachedMutableLongLargeArrayAllocator;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArrayAllocator;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.jdk.niobuffers.IByteArrayByteBufferAllocator;
 
-abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParameter {
+abstract class BaseDMLUpdatingEvaluatorParameter<T extends IMutableLongLargeArray> extends BaseDMLEvaluatorParameter {
 
     private final INumStorageBitsGetter numStorageBitsGetter;
     private final IByteArrayByteBufferAllocator byteArrayByteBufferAllocator;
-    private final ICachedMutableLongLargeArrayAllocator mutableLongLargeArrayAllocator;
+    private final IMutableLongLargeArrayAllocator<T> mutableLongLargeArrayAllocator;
 
     private final RowDataNumBits rowDataNumBits;
 
@@ -42,7 +42,7 @@ abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParamet
     abstract void evaluateParameterByIndex(int parameterIndex, SQLExpressionEvaluator dst);
 
     BaseDMLUpdatingEvaluatorParameter(AllocationType allocationType, IArrayAllocator<SQLExpressionEvaluator> arrayAllocator, INumStorageBitsGetter numStorageBitsGetter,
-            IByteArrayByteBufferAllocator byteArrayByteBufferAllocator, ICachedMutableLongLargeArrayAllocator mutableLongLargeArrayAllocator) {
+            IByteArrayByteBufferAllocator byteArrayByteBufferAllocator, IMutableLongLargeArrayAllocator<T> mutableLongLargeArrayAllocator) {
         super(allocationType, arrayAllocator);
 
         this.numStorageBitsGetter = Objects.requireNonNull(numStorageBitsGetter);
@@ -78,14 +78,14 @@ abstract class BaseDMLUpdatingEvaluatorParameter extends BaseDMLEvaluatorParamet
         byteArrayByteBufferAllocator.freeByteBuffer(byteArrayByteBuffer);
     }
 
-    final ICachedMutableLongLargeArray allocateMutableLongLargeArray(long minimumCapacity) {
+    final T allocateMutableLongLargeArray(long minimumCapacity) {
 
         Checks.isLongMinimumCapacityAboveZero(minimumCapacity);
 
         return mutableLongLargeArrayAllocator.createMutable(minimumCapacity);
     }
 
-    final void freeMutableLongLargeArray(ICachedMutableLongLargeArray mutableLongLargeArray) {
+    final void freeMutableLongLargeArray(T mutableLongLargeArray) {
 
         Objects.requireNonNull(mutableLongLargeArray);
 

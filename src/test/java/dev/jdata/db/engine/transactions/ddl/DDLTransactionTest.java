@@ -61,7 +61,7 @@ public final class DDLTransactionTest extends BaseDBTest {
         final IEffectiveDatabaseSchema newEffectiveDatabaseSchema = checkDDLOperation(createTableSQL, SQLCreateTableStatement.class, stringStorer,
                 IHeapEffectiveDatabaseSchema::empty, createTableSQL);
 
-        final IIndexList<Table> tables = newEffectiveDatabaseSchema.getSchemaObjects(DDLObjectType.TABLE);
+        final IIndexList<Table> tables = newEffectiveDatabaseSchema.getSchemaObjectsList(DDLObjectType.TABLE);
 
         assertThat(tables).isNotNull();
         assertThat(tables).hasNumElements(1L);
@@ -118,7 +118,7 @@ public final class DDLTransactionTest extends BaseDBTest {
         final IEffectiveDatabaseSchema newEffectiveDatabaseSchema = checkDDLOperation(dropTableSQL, SQLDropTableStatement.class, stringStorer,
                 d -> createTestEffectiveDatabaseSchema(d, testTableName, stringStorer), "");
 
-        final IIndexList<Table> tables = newEffectiveDatabaseSchema.getSchemaObjects(DDLObjectType.TABLE);
+        final IIndexList<Table> tables = newEffectiveDatabaseSchema.getSchemaObjectsList(DDLObjectType.TABLE);
 
         assertThat(tables).isNull();
     }

@@ -3,16 +3,16 @@ package dev.jdata.db.schema.storage.sqloutputter;
 import java.nio.charset.CharsetEncoder;
 import java.util.Objects;
 
-import dev.jdata.db.utils.jdk.niobuffers.ByteArrayByteBufferAllocator;
+import dev.jdata.db.utils.jdk.niobuffers.CachedByteArrayByteBufferAllocator;
 import dev.jdata.db.utils.jdk.niobuffers.CharBufferAllocator;
 
 public final class TextToByteOutputPrerequisites {
 
     private final CharsetEncoder charsetEncoder;
     private final CharBufferAllocator charBufferAllocator;
-    private final ByteArrayByteBufferAllocator byteBufferAllocator;
+    private final CachedByteArrayByteBufferAllocator byteBufferAllocator;
 
-    public TextToByteOutputPrerequisites(CharsetEncoder charsetEncoder, CharBufferAllocator charBufferAllocator, ByteArrayByteBufferAllocator byteBufferAllocator) {
+    public TextToByteOutputPrerequisites(CharsetEncoder charsetEncoder, CharBufferAllocator charBufferAllocator, CachedByteArrayByteBufferAllocator byteBufferAllocator) {
 
         this.charsetEncoder = Objects.requireNonNull(charsetEncoder);
         this.charBufferAllocator = Objects.requireNonNull(charBufferAllocator);
@@ -27,7 +27,7 @@ public final class TextToByteOutputPrerequisites {
         return charBufferAllocator;
     }
 
-    public ByteArrayByteBufferAllocator getByteBufferAllocator() {
+    public CachedByteArrayByteBufferAllocator getByteBufferAllocator() {
         return byteBufferAllocator;
     }
 }

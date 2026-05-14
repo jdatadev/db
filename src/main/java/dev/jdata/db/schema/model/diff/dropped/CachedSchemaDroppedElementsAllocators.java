@@ -8,7 +8,7 @@ import dev.jdata.db.utils.adt.sets.IMutableIntSet;
 import dev.jdata.db.utils.adt.sets.IMutableIntSetAllocator;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 
-final class CachedSchemaDroppedElementsAllocators<T extends IMutableIntSet, U extends IMutableIntToObjectWithRemoveStaticMap<T>>
+public final class CachedSchemaDroppedElementsAllocators<T extends IMutableIntSet, U extends IMutableIntToObjectWithRemoveStaticMap<T>>
 
         extends SchemaDroppedElementsAllocators<T, U> {
 
@@ -40,6 +40,8 @@ final class CachedSchemaDroppedElementsAllocators<T extends IMutableIntSet, U ex
     void freeDroppedElements(DroppedElements<T, U> droppedElements) {
 
         Objects.requireNonNull(droppedElements);
+
+        droppedElements.free(getMutableIntToObjectMapAllocator(), getMutableIntSetAllocator());
 
         droppedElementsCache.free(droppedElements);
     }

@@ -1,0 +1,21 @@
+package dev.jdata.db.schema.model.schemamap;
+
+import java.util.function.IntFunction;
+
+import dev.jdata.db.schema.model.objects.DBFunction;
+import dev.jdata.db.schema.model.objects.Index;
+import dev.jdata.db.schema.model.objects.Procedure;
+import dev.jdata.db.schema.model.objects.SchemaObject;
+import dev.jdata.db.schema.model.objects.Table;
+import dev.jdata.db.schema.model.objects.Trigger;
+import dev.jdata.db.schema.model.objects.View;
+import dev.jdata.db.schema.model.schemaobjects.ISchemaObjects;
+
+abstract class NonDiffSchemaMap<T extends ISchemaObjects<? extends SchemaObject>> extends BaseSchemaMap<T> implements INonDiffSchemaMap {
+
+    @SuppressWarnings("unchecked")
+    NonDiffSchemaMap(AllocationType allocationType, IntFunction<T[]> createSchemaObjectsArray, ISchemaObjects<Table> tables, ISchemaObjects<View> views,
+            ISchemaObjects<Index> indices, ISchemaObjects<Trigger> triggers, ISchemaObjects<DBFunction> functions, ISchemaObjects<Procedure> procedures) {
+        super(allocationType, m -> (T)m, createSchemaObjectsArray, m -> m, tables, views, indices, triggers, functions, procedures);
+    }
+}

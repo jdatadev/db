@@ -16,6 +16,7 @@ import dev.jdata.db.engine.database.IDatabaseExecutePreparedStatement;
 import dev.jdata.db.engine.database.IDatabaseFreePreparedStatement;
 import dev.jdata.db.engine.database.IDatabaseLookup;
 import dev.jdata.db.engine.database.IDatabaseSessions;
+import dev.jdata.db.engine.database.IDatabasesMutators;
 import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.ISelectResultWriter;
 import dev.jdata.db.engine.database.operations.IDatabaseOperations;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
@@ -38,7 +39,9 @@ import dev.jdata.db.utils.allocators.ObjectCache;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.scalars.Integers;
 
-public final class SQLDatabaseServer implements IDatabaseLookup, IDatabaseSessions, IDatabaseExecutePreparedStatement, IDatabaseFreePreparedStatement, IAllocators {
+public final class SQLDatabaseServer
+
+        implements IDatabaseLookup, IDatabasesMutators, IDatabaseSessions, IDatabaseExecutePreparedStatement, IDatabaseFreePreparedStatement, IAllocators {
 
     public interface ExecuteSQLResultWriter<E extends Exception> {
 

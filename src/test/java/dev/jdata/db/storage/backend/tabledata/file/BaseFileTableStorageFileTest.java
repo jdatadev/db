@@ -18,8 +18,7 @@ import dev.jdata.db.schema.model.databaseschema.IDatabaseSchema;
 import dev.jdata.db.schema.model.databaseschema.IGenericCompleteDatabaseSchema;
 import dev.jdata.db.schema.model.databaseschema.IHeapGenericCompleteDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.model.schemamap.IHeapSchemaMap;
-import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamap.IHeapCompleteSchemaMap;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchema;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.file.BaseFileTableStorageFileTest.TestData;
@@ -29,7 +28,7 @@ import dev.jdata.db.test.unit.BaseDBTest;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.lists.IHeapIndexList;
 import dev.jdata.db.utils.adt.lists.IHeapIndexListAllocator;
-import dev.jdata.db.utils.adt.maps.IHeapMutableLongToObjectDynamicMapAllocator;
+import dev.jdata.db.utils.adt.maps.IHeapLongToObjectDynamicMapAllocator;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.Assertions;
@@ -93,7 +92,7 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
 
             final IHeapIndexListAllocator<Table> tableIndexListAllocator = IHeapIndexListAllocator.create(Table[]::new);
             final IHeapIndexListAllocator<IDatabaseSchema> databaseSchemaIndexListAllocator = IHeapIndexListAllocator.create(IDatabaseSchema[]::new);
-            final IHeapMutableLongToObjectDynamicMapAllocator<Table> longToObjectMapAllocator = null;
+            final IHeapLongToObjectDynamicMapAllocator<Table> longToObjectMapAllocator = IHeapLongToObjectDynamicMapAllocator.create(Table[]::new);
 
             final TestAllocators testAllocators = new TestAllocators(tableIndexListAllocator, longToObjectMapAllocator, databaseSchemaIndexListAllocator);
 
@@ -220,10 +219,10 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
     private static final class TestAllocators {
 
         private final IHeapIndexListAllocator<Table> tableIndexListAllocator;
-        private final IHeapMutableLongToObjectDynamicMapAllocator<Table> longToObjectMapAllocator;
+        private final IHeapLongToObjectDynamicMapAllocator<Table> longToObjectMapAllocator;
         private final IHeapIndexListAllocator<IDatabaseSchema> databaseSchemaIndexListAllocator;
 
-        TestAllocators(IHeapIndexListAllocator<Table> tableIndexListAllocator, IHeapMutableLongToObjectDynamicMapAllocator<Table> longToObjectMapAllocator,
+        TestAllocators(IHeapIndexListAllocator<Table> tableIndexListAllocator, IHeapLongToObjectDynamicMapAllocator<Table> longToObjectMapAllocator,
                 IHeapIndexListAllocator<IDatabaseSchema> databaseSchemaIndexListAllocator) {
 
             this.tableIndexListAllocator = Objects.requireNonNull(tableIndexListAllocator);
@@ -266,8 +265,6 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
 
         final byte columnValue = (byte)0b10101010;
 
-//        byte[] expectedOutput = null;
-
         final int numRows = forEachRow(testData, (rowId, deleteMarkerValue, transactionId, numRowsParameter) -> {
 
             Arrays.fill(rowBuffer, (byte)0);
@@ -275,12 +272,7 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
             writeRowToBuffer(rowBuffer, testSchema, rowId, deleteMarkerValue, transactionId, columnValue);
 
             fileTableStorageFile.append(1, rowBuffer, numRowBytes, false);
-/*
-            if (expectedOutput == null) {
 
-                expectedOutput = Arrays.copyOf(rowBuffer, rowBuffer.length);
-            }
-*/
             assertThat(fileTableStorageFile.getNumRows()).isEqualTo(numRowsParameter);
             assertThat(fileTableStorageFile.getLastRowId()).isEqualTo(testData.startRowId + numRowsParameter - 1);
         });
@@ -435,11 +427,7 @@ abstract class BaseFileTableStorageFileTest<T extends TestData, E extends Except
         Checks.isNotEmpty(tables);
         Checks.areElements(tables, Objects::nonNull);
 
-        final IHeapIndexList<Table> tableList = IHeapIndexList.of(tables);
-
-        final IHeapSchemaMap<Table> tablesSchemaMap = IHeapSchemaMap.of(tableList, Table[]::new, testAllocators.longToObjectMapAllocator);
-
-        final IHeapAllCompleteSchemaMaps schemaMaps = IHeapAllCompleteSchemaMaps.empty();
+        final IHeapCompleteSchemaMap schemaMaps = IHeapCompleteSchemaMap.empty();
 
         final DatabaseId databaseId = new DatabaseId(DBConstants.INITIAL_DESCRIPTORABLE, TEST_DATABASE_NAME);
 

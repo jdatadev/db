@@ -1,15 +1,6 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.allocators.ICacheableMarker;
-
-final class CachedIntIndexListBuilder
-
-        extends IntIndexListBuilder<ICachedIntIndexList, IHeapIntIndexList, MutableIntIndexList>
-        implements ICachedIntIndexListBuilder, ICacheableMarker {
-
-    CachedIntIndexListBuilder(AllocationType allocationType, MutableIntIndexListAllocator<?, ? extends MutableIntIndexList> mutableIntIndexListAllocator) {
-        this(allocationType, DEFAULT_INITIAL_CAPACITY, mutableIntIndexListAllocator);
-    }
+final class CachedIntIndexListBuilder extends IntIndexListBuilder<ICachedIntIndexList, IHeapIntIndexList, MutableIntIndexList> implements ICachedIntIndexListBuilder {
 
     CachedIntIndexListBuilder(AllocationType allocationType, int initialCapacity,
             MutableIntIndexListAllocator<?, ? extends MutableIntIndexList> mutableIntIndexListAllocator) {

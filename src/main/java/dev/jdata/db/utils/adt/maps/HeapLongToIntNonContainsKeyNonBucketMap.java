@@ -2,11 +2,12 @@ package dev.jdata.db.utils.adt.maps;
 
 final class HeapLongToIntNonContainsKeyNonBucketMap extends LongToIntNonContainsKeyNonBucketMap<HeapLongToIntNonContainsKeyNonBucketMap> implements IHeapLongToIntStaticMap {
 
-    static HeapLongToIntNonContainsKeyNonBucketMap withMakeElementsFrom(AllocationType allocationType, MutableLongToIntNonRemoveNonBucketMap<?> longToIntNonBucketMap) {
+    static HeapLongToIntNonContainsKeyNonBucketMap withMakeElementsFrom(AllocationType allocationType,
+            MutableLongToIntNonRemoveNonBucketMap<?> toInitializeFrom) {
 
-        checkWithMakeElementsFrom(allocationType, AllocationMechanism.HEAP, longToIntNonBucketMap);
+        checkWithMakeElementsFrom(allocationType, AllocationMechanism.HEAP, toInitializeFrom);
 
-        return new HeapLongToIntNonContainsKeyNonBucketMap(allocationType, longToIntNonBucketMap, null);
+        return new HeapLongToIntNonContainsKeyNonBucketMap(allocationType, toInitializeFrom, null);
     }
 
     private HeapLongToIntNonContainsKeyNonBucketMap(AllocationType allocationType, BaseLongToIntNonBucketMap<?> toInitializeFrom, Void disambiguate) {

@@ -1,6 +1,8 @@
 package dev.jdata.db.schema;
 
-abstract class BaseDatabaseSchemas extends DatabaseSchemaRootObject {
+import dev.jdata.db.common.database.DatabaseIdentifiable;
+
+abstract class BaseDatabaseSchemas extends DatabaseIdentifiable {
 
     BaseDatabaseSchemas(AllocationType allocationType, DatabaseId databaseId) {
         super(allocationType, databaseId);

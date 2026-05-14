@@ -27,7 +27,7 @@ public abstract class TextSQLOutputter<P, E extends Exception> extends Exception
         this.parameter = parameter;
         this.charOutputter = Objects.requireNonNull(charOutputter);
 
-        final ExceptionAppendable<TextSQLOutputter<P, E>, E> appendable = (c, i) -> {
+        final IExceptionAppendable<TextSQLOutputter<P, E>, E> appendable = (c, i) -> {
 
             i.charOutputter.output(c, i.parameter);
         };

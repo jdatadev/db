@@ -20,7 +20,7 @@ public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends B
     @FunctionalInterface
     protected interface IDescriptorableFactory<P, R> {
 
-        R create(AllocationType allocationType, P parameter);
+        R create(AllocationType allocationType, int descriptor, P parameter);
     }
 
     static final int NO_DESCRIPTOR = DBConstants.NO_DESCRIPTOR;
@@ -127,7 +127,7 @@ public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends B
             result = freeListAllocator.apply(freeList, allocateParameter);
         }
         else {
-            result = descriptorableFactory.create(AllocationType.CACHING_ALLOCATOR, factoryParameter);
+            result = descriptorableFactory.create(AllocationType.CACHING_ALLOCATOR, descriptor, factoryParameter);
         }
 
         Objects.requireNonNull(result);

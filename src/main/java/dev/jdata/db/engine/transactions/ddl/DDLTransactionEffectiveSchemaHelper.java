@@ -9,7 +9,7 @@ import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.effective.IHeapEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
-import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMapsBuilder;
+import dev.jdata.db.schema.model.schemamap.IHeapCompleteSchemaMapBuilder;
 import dev.jdata.db.utils.Initializable;
 import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
@@ -22,7 +22,7 @@ class DDLTransactionEffectiveSchemaHelper {
     static final class DDLComputeEffectiveDatabaseSchemaParameter extends ObjectCacheNode implements IResettable {
 
         private IIndexList<DDLTransactionObject> ddlTransactionObjects;
-        private IHeapAllCompleteSchemaMapsBuilder completeSchemaMapsBuilder;
+        private IHeapCompleteSchemaMapBuilder completeSchemaMapsBuilder;
         private ToIntFunction<DDLObjectType> schemaObjectIdAllocator;
 
         private int scratchIndex;
@@ -31,7 +31,7 @@ class DDLTransactionEffectiveSchemaHelper {
             super(allocationType);
         }
 
-        void initialize(IIndexList<DDLTransactionObject> ddlTransactionObjects, IHeapAllCompleteSchemaMapsBuilder completeSchemaMapsBuilder,
+        void initialize(IIndexList<DDLTransactionObject> ddlTransactionObjects, IHeapCompleteSchemaMapBuilder completeSchemaMapsBuilder,
                 ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
 
             this.ddlTransactionObjects = Initializable.checkNotYetInitialized(this.ddlTransactionObjects, ddlTransactionObjects);
@@ -120,7 +120,7 @@ class DDLTransactionEffectiveSchemaHelper {
 
         final IIndexList<DDLTransactionObject> ddlTransactionObjects = ddlComputeEffectiveDatabaseSchemaParameter.ddlTransactionObjects;
 
-        final IHeapAllCompleteSchemaMapsBuilder completeSchemaMapsBuilder = ddlComputeEffectiveDatabaseSchemaParameter.completeSchemaMapsBuilder;
+        final IHeapCompleteSchemaMapBuilder completeSchemaMapsBuilder = ddlComputeEffectiveDatabaseSchemaParameter.completeSchemaMapsBuilder;
 
         final int numDDLTransactionObjects = IOnlyElementsView.intNumElements(ddlTransactionObjects);
 
@@ -135,7 +135,7 @@ class DDLTransactionEffectiveSchemaHelper {
 
         for (DDLObjectType ddlObjectType : DDLObjectType.values()) {
 
-            final IIndexList<SchemaObject> schemaObjects = currentSchema.getSchemaObjects(ddlObjectType);
+            final IIndexList<SchemaObject> schemaObjects = currentSchema.getSchemaObjectsList(ddlObjectType);
 
             if (schemaObjects != null) {
 

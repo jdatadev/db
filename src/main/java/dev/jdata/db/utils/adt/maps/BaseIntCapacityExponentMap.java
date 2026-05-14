@@ -75,4 +75,9 @@ abstract class BaseIntCapacityExponentMap<KEYS, MAP extends BaseIntCapacityExpon
 
         throw new UnsupportedOperationException();
     }
+
+    final int getElementsCapacity() {
+
+        return getHashedCapacity();
+    }
 }

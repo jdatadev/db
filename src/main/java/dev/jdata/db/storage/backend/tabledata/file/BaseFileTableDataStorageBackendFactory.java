@@ -12,7 +12,7 @@ import dev.jdata.db.data.tables.TableByIdMap;
 import dev.jdata.db.schema.VersionedDatabaseSchemas;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.model.schemamap.ISchemaMap;
+import dev.jdata.db.schema.model.schemaobjects.ISchemaObjects;
 import dev.jdata.db.storage.backend.tabledata.StorageTableSchemas;
 import dev.jdata.db.storage.backend.tabledata.TableDataStorageBackend;
 import dev.jdata.db.storage.backend.tabledata.file.StorageTableFileSchema.StorageTableFileSchemaGetters;
@@ -174,9 +174,9 @@ public abstract class BaseFileTableDataStorageBackendFactory extends BaseTableDa
 
         Objects.requireNonNull(parameters);
 
-        final ISchemaMap<Table> tableMap = databaseSchema.getTableMap();
+        final ISchemaObjects<Table> tables = databaseSchema.getTables();
 
-        tableMap.forEach(parameters, (o, p) -> {
+        tables.forEach(parameters, (o, p) -> {
 
             final IRelativeFileSystemAccess fileSystemAccess = p.fileSystemAccess;
 

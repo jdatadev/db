@@ -29,6 +29,10 @@ abstract class BaseLongToObjectNonBucketMap<V, M extends BaseLongToObjectNonBuck
         }
     }
 
+    BaseLongToObjectNonBucketMap(AllocationType allocationType, BaseLongToObjectNonBucketMap<V, ?> toInitializeFrom, Void disambiguate) {
+        super(allocationType, toInitializeFrom);
+    }
+
     BaseLongToObjectNonBucketMap(AllocationType allocationType, BaseLongToObjectNonBucketMap<V, M> toCopy) {
         super(allocationType, toCopy, (a1, a2) -> System.arraycopy(a1, 0, a2, 0, a1.length));
 

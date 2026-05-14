@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.sets;
 
-public interface IHeapLongSetBuilder extends ILongSetBuilder<IHeapLongSet, IHeapLongSet> {
+import dev.jdata.db.utils.adt.contains.builders.IHeapContainsBuilderMarker;
+
+public interface IHeapLongSetBuilder extends ILongSetBuilder<IHeapLongSet, IHeapLongSet>, IHeapContainsBuilderMarker {
 
 }

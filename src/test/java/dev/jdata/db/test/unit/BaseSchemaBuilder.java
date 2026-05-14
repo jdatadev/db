@@ -7,25 +7,25 @@ import java.util.function.ToIntFunction;
 import dev.jdata.db.engine.database.IStringStorer;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.model.schemamap.IHeapSchemaMap;
-import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamap.IHeapCompleteSchemaMap;
+import dev.jdata.db.schema.model.schemaobjects.IHeapSchemaObjects;
 import dev.jdata.db.utils.adt.lists.IHeapIndexListBuilder;
-import dev.jdata.db.utils.adt.maps.IHeapMutableLongToObjectDynamicMapAllocator;
+import dev.jdata.db.utils.adt.maps.IHeapLongToObjectDynamicMapAllocator;
 import dev.jdata.db.utils.checks.Checks;
 
 abstract class BaseSchemaBuilder<T extends BaseSchemaBuilder<T>> {
 
     private final IStringStorer stringStorer;
-    private final IHeapMutableLongToObjectDynamicMapAllocator<Table> longToObjectMapAllocator;
+    private final IHeapLongToObjectDynamicMapAllocator<Table> longToObjectMapAllocator;
     private final ToIntFunction<DDLObjectType> schemaObjectIdAllocator;
 
     private final IHeapIndexListBuilder<Table> tablesBuilder;
 
     BaseSchemaBuilder(IStringStorer stringStorer, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
-        this(stringStorer, IHeapMutableLongToObjectDynamicMapAllocator.create(Table[]::new), schemaObjectIdAllocator);
+        this(stringStorer, IHeapLongToObjectDynamicMapAllocator.create(Table[]::new), schemaObjectIdAllocator);
     }
 
-    private BaseSchemaBuilder(IStringStorer stringStorer, IHeapMutableLongToObjectDynamicMapAllocator<Table> longToObjectMapAllocator,
+    private BaseSchemaBuilder(IStringStorer stringStorer, IHeapLongToObjectDynamicMapAllocator<Table> longToObjectMapAllocator,
             ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
 
         this.stringStorer = Objects.requireNonNull(stringStorer);
@@ -56,12 +56,12 @@ abstract class BaseSchemaBuilder<T extends BaseSchemaBuilder<T>> {
         return getThis();
     }
 
-    final IHeapAllCompleteSchemaMaps buildCompleteSchemaMaps() {
+    final IHeapCompleteSchemaMap buildCompleteSchemaMaps() {
 
-        final IHeapSchemaMap<Table> tableSchemaMap = IHeapSchemaMap.of(tablesBuilder.buildOrNull(), Table[]::new, longToObjectMapAllocator);
+        final IHeapSchemaObjects<Table> tableSchemaMap = IHeapSchemaObjects.of(tablesBuilder.buildOrNull(), longToObjectMapAllocator, Table[]::new);
 
-        return IHeapAllCompleteSchemaMaps.of(tableSchemaMap, IHeapSchemaMap.empty(), IHeapSchemaMap.empty(), IHeapSchemaMap.empty(), IHeapSchemaMap.empty(),
-                IHeapSchemaMap.empty());
+        return IHeapCompleteSchemaMap.of(tableSchemaMap, IHeapSchemaObjects.empty(), IHeapSchemaObjects.empty(), IHeapSchemaObjects.empty(), IHeapSchemaObjects.empty(),
+                IHeapSchemaObjects.empty());
     }
 
     @SuppressWarnings("unchecked")

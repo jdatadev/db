@@ -15,7 +15,7 @@ abstract class IntSetAllocator<
                 CLASS_MUTABLE extends BaseADTElements<int[], int[], int[]> & IMutableIntSet,
                 BUILDER extends IIntSetBuilder<IMMUTABLE, HEAP_IMMUTABLE>>
 
-        extends BaseIntSetBuilderAllocator<IMMUTABLE, HEAP_IMMUTABLE, INTERFACE_MUTABLE, CLASS_MUTABLE, BUILDER>
+        extends BaseIntSetAllocator<IMMUTABLE, HEAP_IMMUTABLE, INTERFACE_MUTABLE, CLASS_MUTABLE, BUILDER>
         implements IIntSetAllocator<IMMUTABLE, INTERFACE_MUTABLE, BUILDER> {
 
     IntSetAllocator(AllocationType allocationType, IElementsAllocators<IMMUTABLE, CLASS_MUTABLE, BUILDER, int[]> elementsAllocators) {

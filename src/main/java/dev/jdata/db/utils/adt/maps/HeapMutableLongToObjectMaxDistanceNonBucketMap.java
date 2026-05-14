@@ -1,5 +1,6 @@
 package dev.jdata.db.utils.adt.maps;
 
+import java.util.Objects;
 import java.util.function.IntFunction;
 
 final class HeapMutableLongToObjectMaxDistanceNonBucketMap<V>
@@ -8,6 +9,9 @@ final class HeapMutableLongToObjectMaxDistanceNonBucketMap<V>
         implements IHeapMutableLongToObjectDynamicMap<V> {
 
     static <V> HeapMutableLongToObjectMaxDistanceNonBucketMap<V> create(AllocationType allocationType, int initialCapacity, IntFunction<V[]> createValuesArray) {
+
+        checkMutableCreateParameters(allocationType, AllocationMechanism.HEAP, initialCapacity);
+        Objects.requireNonNull(createValuesArray);
 
         return instantiateWithCapacityExponent(allocationType, AllocationMechanism.HEAP, initialCapacity, createValuesArray, HeapMutableLongToObjectMaxDistanceNonBucketMap::new);
     }

@@ -15,7 +15,7 @@ public interface IAllocators extends IAllocator {
         <T> void addInstanceAllocator(String name, RefType refType, Class<?> objectType, ITypedInstanceAllocator<T> instanceAllocator);
 
         void addAllocators(String name, RefType refType, IAllocators cache);
-        void addAllocators(String name, RefType refType, Class<?> objectTye, IAllocators cache);
+        void addAllocators(String name, RefType refType, Class<?> objectType, IAllocators cache);
 
         <T> void addObjectCache(String name, Class<T> objectType, ObjectCache<T> objectCache);
         <T> void addObjectCacheForGenericType(String name, Class<T> objectType, ObjectCache<? extends T> objectCache);

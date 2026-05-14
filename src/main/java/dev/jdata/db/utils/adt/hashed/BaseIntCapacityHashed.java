@@ -29,17 +29,16 @@ abstract class BaseIntCapacityHashed<HASHED, CREATE_ELEMENTS, MAKE_ELEMENTS_FROM
         return instantiateWithCapacityExponent(allocationType, initialCapacity, instantiator, null, null, (a, e, i, p2, p3) -> i.apply(a, e));
     }
 
-    protected static <T extends IMutable, U> T instantiateWithCapacityExponent(AllocationType allocationType, AllocationMechanism expectedAllocationMechanism,
-            int initialCapacity, IntFunction<U> createElements, IWithCapacityExponentInstantiator<T, IntFunction<U>> instantiator) {
+    protected static <T, U> T instantiateWithCapacityExponent(AllocationType allocationType, AllocationMechanism expectedAllocationMechanism, int initialCapacity,
+            IntFunction<U> createElements, IWithCapacityExponentInstantiator<T, IntFunction<U>> instantiator) {
 
         checkInstantiateParameters(allocationType, expectedAllocationMechanism, initialCapacity, instantiator);
 
         return instantiateWithCapacityExponent(allocationType, initialCapacity, instantiator, createElements, null, (a, e, i, c, p3) -> i.instantiate(a, e, c));
     }
 
-    protected static <T extends IMutable, U, V> T instantiateWithCapacityExponent(AllocationType allocationType, AllocationMechanism expectedAllocationMechanism,
-            int initialCapacity, IntFunction<U> createElements1, IntFunction<V> createElements2,
-            IWithCapacityExponentInstantiator2<T, IntFunction<U>, IntFunction<V>> instantiator) {
+    protected static <T, U, V> T instantiateWithCapacityExponent(AllocationType allocationType, AllocationMechanism expectedAllocationMechanism, int initialCapacity,
+            IntFunction<U> createElements1, IntFunction<V> createElements2, IWithCapacityExponentInstantiator2<T, IntFunction<U>, IntFunction<V>> instantiator) {
 
         checkInstantiateParameters(allocationType, expectedAllocationMechanism, initialCapacity, instantiator);
 
@@ -53,8 +52,8 @@ abstract class BaseIntCapacityHashed<HASHED, CREATE_ELEMENTS, MAKE_ELEMENTS_FROM
         Objects.requireNonNull(instantiator);
     }
 
-    private static <T extends IMutable, P1, P2, P3> T instantiateWithCapacityExponent(AllocationType allocationType, int initialCapacity, P1 parameter1, P2 parameter2,
-            P3 parameter3, WithCapacityExponentInstantiator3<T, P1, P2, P3> instantiator) {
+    private static <T, P1, P2, P3> T instantiateWithCapacityExponent(AllocationType allocationType, int initialCapacity, P1 parameter1, P2 parameter2, P3 parameter3,
+            WithCapacityExponentInstantiator3<T, P1, P2, P3> instantiator) {
 
         return instantiator.instantiate(allocationType, CapacityExponents.computeIntCapacityExponentForAtOrAboveZero(initialCapacity), parameter1, parameter2, parameter3);
     }

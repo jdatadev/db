@@ -1,6 +1,7 @@
 package dev.jdata.db.engine.sessions;
 
 import java.util.Objects;
+import java.util.function.IntFunction;
 
 import org.jutils.io.strings.StringRef;
 
@@ -11,17 +12,18 @@ import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.types.SchemaDataType;
 import dev.jdata.db.sql.ast.statements.dml.SQLObjectName;
 import dev.jdata.db.utils.adt.maps.IHeapMutableLongToIntWithRemoveStaticMap;
-import dev.jdata.db.utils.adt.maps.ILongToIntMapAllocator;
 import dev.jdata.db.utils.adt.maps.ILongToIntMapView;
-import dev.jdata.db.utils.adt.maps.IMutableLongToIntWithRemoveStaticMap;
+import dev.jdata.db.utils.adt.maps.IMutableLongToIntNonRemoveStaticMap;
+import dev.jdata.db.utils.adt.maps.IMutableLongToIntNonRemoveStaticMapAllocator;
 import dev.jdata.db.utils.checks.Checks;
 
-abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject> {
+abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject, U extends IMutableLongToIntNonRemoveStaticMap> {
 
     private final IHeapMutableLongToIntWithRemoveStaticMap columnsObjectIdByName;
 
     private IEffectiveDatabaseSchema databaseSchema;
-    private IMutableLongToIntWithRemoveStaticMap[] columnNameToIndexMapsByColumnsObjectId;
+    @Deprecated // immutable and build?
+    private U[] columnNameToIndexMapsByColumnsObjectId;
     private int maxColumnsObjectId;
 
     abstract DDLObjectType getDDLObjectType();
@@ -31,10 +33,11 @@ abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject> {
         this.columnsObjectIdByName = IHeapMutableLongToIntWithRemoveStaticMap.create(0);
     }
 
-    public final void initialize(IEffectiveDatabaseSchema databaseSchema, ILongToIntMapAllocator allocator) {
+    public final void initialize(IEffectiveDatabaseSchema databaseSchema, IMutableLongToIntNonRemoveStaticMapAllocator<U> allocator, IntFunction<U[]> createArray) {
 
         Objects.requireNonNull(databaseSchema);
         Objects.requireNonNull(allocator);
+        Objects.requireNonNull(createArray);
 
         this.databaseSchema = databaseSchema;
 
@@ -44,23 +47,11 @@ abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject> {
 
         final int arrayLength = columnNameToIndexMapsByColumnsObjectId.length;
 
-        final int oldMaxColumnsObjectId = maxColumnsObjectId;
-
-        for (int i = 0; i <= oldMaxColumnsObjectId; ++ i) {
-
-            final IMutableLongToIntWithRemoveStaticMap longToIntMap = columnNameToIndexMapsByColumnsObjectId[i];
-
-            if (longToIntMap != null) {
-
-                allocator.freeLongToIntMap(longToIntMap);
-
-                columnNameToIndexMapsByColumnsObjectId[i] = null;
-            }
-        }
+        free(allocator);
 
         if (newMaxColumnsObjectId >= arrayLength) {
 
-            this.columnNameToIndexMapsByColumnsObjectId = new IMutableLongToIntWithRemoveStaticMap[newMaxColumnsObjectId + 1];
+            this.columnNameToIndexMapsByColumnsObjectId = createArray.apply(newMaxColumnsObjectId + 1);
         }
 
         columnsObjectIdByName.clear();
@@ -75,7 +66,7 @@ abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject> {
 
             final int numColumns = columnsObject.getNumColumns();
 
-            final IMutableLongToIntWithRemoveStaticMap longToIntMap = allocator.allocateLongToIntMap(numColumns);
+            final U mutableLongToIntMap = allocator.createMutable(numColumns);
 
             for (int columnIndex = 0; columnIndex < numColumns; ++ columnIndex) {
 
@@ -83,13 +74,32 @@ abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject> {
 
                 final long columnNameStringRef = column.getHashName();
 
-                longToIntMap.put(columnNameStringRef, columnIndex);
+                mutableLongToIntMap.put(columnNameStringRef, columnIndex);
             }
 
-            columnNameToIndexMapsByColumnsObjectId[columnsObjectId] = longToIntMap;
+            columnNameToIndexMapsByColumnsObjectId[columnsObjectId] = mutableLongToIntMap;
         }
 
         this.maxColumnsObjectId = newMaxColumnsObjectId;
+    }
+
+    public final void free(IMutableLongToIntNonRemoveStaticMapAllocator<U> allocator) {
+
+        Objects.requireNonNull(allocator);
+
+        final int oldMaxColumnsObjectId = maxColumnsObjectId;
+
+        for (int i = 0; i <= oldMaxColumnsObjectId; ++ i) {
+
+            final U mutableLongToIntMap = columnNameToIndexMapsByColumnsObjectId[i];
+
+            if (mutableLongToIntMap != null) {
+
+                allocator.freeMutable(mutableLongToIntMap);
+
+                columnNameToIndexMapsByColumnsObjectId[i] = null;
+            }
+        }
     }
 
     final int getColumnsObjectId(long columnsObjectName) {

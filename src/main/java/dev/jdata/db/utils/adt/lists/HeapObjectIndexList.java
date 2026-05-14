@@ -80,12 +80,12 @@ final class HeapObjectIndexList<T> extends ObjectIndexList<T> implements IHeapIn
         return new HeapObjectIndexList<>(allocationType, startIndex == 0 ? Arrays.copyOf(instances, numElements) : Arrays.copyOfRange(instances, startIndex, numElements));
     }
 
-    static <T> HeapObjectIndexList<T> copyImmutableIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexList<T> indexList) {
+    static <T> HeapObjectIndexList<T> copyImmutableIndexList(AllocationType allocationType, IIndexList<T> indexList, IntFunction<T[]> createElementsArray) {
 
         checkHeapCopyImmutableParameters(allocationType, indexList);
         Objects.requireNonNull(createElementsArray);
 
-        return copyOf(allocationType, createElementsArray, indexList);
+        return copyOf(allocationType, indexList, createElementsArray);
     }
 
     static <T> HeapObjectIndexList<T> copyMutableIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IMutableIndexList<T> mutableIndexList) {
@@ -93,10 +93,10 @@ final class HeapObjectIndexList<T> extends ObjectIndexList<T> implements IHeapIn
         checkCopyMutableParameters(allocationType, AllocationMechanism.HEAP, mutableIndexList);
         Objects.requireNonNull(createElementsArray);
 
-        return copyOf(allocationType, createElementsArray, mutableIndexList);
+        return copyOf(allocationType, mutableIndexList, createElementsArray);
     }
 
-    static <T> HeapObjectIndexList<T> copyOf(AllocationType allocationType, IntFunction<T[]> createElementsArray, IIndexListView<T> indexList) {
+    static <T> HeapObjectIndexList<T> copyOf(AllocationType allocationType, IIndexListView<T> indexList, IntFunction<T[]> createElementsArray) {
 
         checkCopyOfParameters(allocationType, AllocationMechanism.HEAP, indexList);
         Objects.requireNonNull(createElementsArray);

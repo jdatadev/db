@@ -1,5 +1,7 @@
 package dev.jdata.db.utils.adt.lists;
 
-public interface ICachedIntIndexListBuilder extends IIntIndexListBuilder<ICachedIntIndexList, IHeapIntIndexList> {
+import dev.jdata.db.utils.adt.contains.builders.ICachedContainsBuilderMarker;
+
+public interface ICachedIntIndexListBuilder extends IIntIndexListBuilder<ICachedIntIndexList, IHeapIntIndexList>, ICachedContainsBuilderMarker {
 
 }

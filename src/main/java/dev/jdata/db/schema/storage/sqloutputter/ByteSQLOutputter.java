@@ -46,7 +46,7 @@ public final class ByteSQLOutputter<P, E extends Exception> extends ExceptionApp
         this.charBuffer = textOutputPrerequisites.getCharBufferAllocator().allocateForEncodeCharacters(numCharacters);
         this.byteBuffer = textOutputPrerequisites.getByteBufferAllocator().allocateByteArrayByteBuffer(numBytes);
 
-        final ExceptionAppendable<ByteSQLOutputter<P, E>, E> appendable = (c, i) -> {
+        final IExceptionAppendable<ByteSQLOutputter<P, E>, E> appendable = (c, i) -> {
 
             final CharBuffer charBuffer = i.charBuffer;
 

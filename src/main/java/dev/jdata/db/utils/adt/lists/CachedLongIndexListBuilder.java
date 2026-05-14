@@ -1,16 +1,6 @@
 package dev.jdata.db.utils.adt.lists;
 
-import dev.jdata.db.utils.allocators.ICacheableMarker;
-
-final class CachedLongIndexListBuilder
-
-        extends LongIndexListBuilder<ICachedLongIndexList, IHeapLongIndexList, MutableLongIndexList>
-        implements ICachedLongIndexListBuilder, ICacheableMarker {
-
-
-    CachedLongIndexListBuilder(AllocationType allocationType, MutableLongIndexListAllocator<?, ? extends MutableLongIndexList> mutableLongIndexListAllocator) {
-        this(allocationType, DEFAULT_INITIAL_CAPACITY, mutableLongIndexListAllocator);
-    }
+final class CachedLongIndexListBuilder extends LongIndexListBuilder<ICachedLongIndexList, IHeapLongIndexList, MutableLongIndexList> implements ICachedLongIndexListBuilder {
 
     @Deprecated // fix allocateMutableElements() ?
     CachedLongIndexListBuilder(AllocationType allocationType, int initialCapacity,

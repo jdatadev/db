@@ -7,9 +7,10 @@ import org.jutils.io.strings.StringRef;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.sql.ast.statements.dml.SQLObjectName;
+import dev.jdata.db.utils.adt.maps.IMutableLongToIntNonRemoveStaticMap;
 import dev.jdata.db.utils.checks.Checks;
 
-public final class TableAndColumnNames extends ColumnsObjectAndColumnNames<Table> {
+public final class TableAndColumnNames<T extends IMutableLongToIntNonRemoveStaticMap> extends ColumnsObjectAndColumnNames<Table, T> {
 
     public int getTableId(long tableName) {
 

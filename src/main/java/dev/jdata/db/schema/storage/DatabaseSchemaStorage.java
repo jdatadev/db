@@ -22,7 +22,7 @@ import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
 import dev.jdata.db.utils.file.access.RelativeDirectoryPath;
 import dev.jdata.db.utils.file.access.RelativeFilePath;
 import dev.jdata.db.utils.jdk.adt.strings.CharacterEncodingUtil;
-import dev.jdata.db.utils.jdk.niobuffers.ByteArrayByteBufferAllocator;
+import dev.jdata.db.utils.jdk.niobuffers.CachedByteArrayByteBufferAllocator;
 import dev.jdata.db.utils.jdk.niobuffers.CharBufferAllocator;
 
 final class DatabaseSchemaStorage extends FileStorage implements IDatabaseSchemaStorage<IOException> {
@@ -74,7 +74,7 @@ final class DatabaseSchemaStorage extends FileStorage implements IDatabaseSchema
 
         final CharsetEncoder charsetEncoder = textToByteOutputPrerequisites.getCharsetEncoder();
         final CharBufferAllocator charBufferAllocator = textToByteOutputPrerequisites.getCharBufferAllocator();
-        final ByteArrayByteBufferAllocator byteBufferAllocator = textToByteOutputPrerequisites.getByteBufferAllocator();
+        final CachedByteArrayByteBufferAllocator byteBufferAllocator = textToByteOutputPrerequisites.getByteBufferAllocator();
 
         final int numCharacters = 1000;
         final int numBytes = CharacterEncodingUtil.calculateNumEncodedBytes(charsetEncoder, numCharacters);

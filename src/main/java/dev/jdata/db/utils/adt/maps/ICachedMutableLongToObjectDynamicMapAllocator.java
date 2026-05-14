@@ -9,6 +9,6 @@ public interface ICachedMutableLongToObjectDynamicMapAllocator<V> extends IMutab
 
         Objects.requireNonNull(createValuesArray);
 
-        return new CachedMutableLongToObjectMaxDistanceNonBucketMapAllocator<>(createValuesArray);
+        return new CachedMutableLongToObjectDynamicMapAllocator<>(createValuesArray);
     }
 }

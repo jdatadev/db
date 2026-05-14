@@ -41,6 +41,16 @@ public class Initializable {
         return Objects.requireNonNull(value);
     }
 
+    public static <T> T checkNotYetInitializedNullable(T existing, T value) {
+
+        if (existing != null) {
+
+            throw new IllegalStateException();
+        }
+
+        return value;
+    }
+
     public static <T> T checkNotYetInitializedToNull(T existing) {
 
         if (existing != null) {
@@ -67,6 +77,11 @@ public class Initializable {
 
             throw new IllegalStateException();
         }
+
+        return null;
+    }
+
+    public static <T> T checkResettableNullable(T existing) {
 
         return null;
     }

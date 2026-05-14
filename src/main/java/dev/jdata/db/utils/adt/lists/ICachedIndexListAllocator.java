@@ -9,6 +9,6 @@ public interface ICachedIndexListAllocator<T> extends IIndexListAllocator<T, ICa
 
         Objects.requireNonNull(createElementsArray);
 
-        return new CachedObjectIndexListAllocator<>(createElementsArray, new CachedMutableObjectIndexListAllocator<T>(createElementsArray));
+        return new CachedObjectIndexListAllocator<>(new CachedMutableObjectIndexListAllocator<T>(createElementsArray), createElementsArray);
     }
 }

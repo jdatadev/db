@@ -17,7 +17,8 @@ public abstract class SchemaDroppedElementsAllocators<T extends IMutableIntSet, 
     abstract DroppedElements<T, U> allocateDroppedElements();
     abstract void freeDroppedElements(DroppedElements<T, U> droppedElements);
 
-    SchemaDroppedElementsAllocators(IMutableIntSetAllocator<T> mutableIntSetAllocator, IMutableIntToObjectWithRemoveStaticMapAllocator<T, U> mutableIntToObjectMapAllocator) {
+    SchemaDroppedElementsAllocators(IMutableIntSetAllocator<T> mutableIntSetAllocator,
+            IMutableIntToObjectWithRemoveStaticMapAllocator<T, U> mutableIntToObjectMapAllocator) {
 
         this.mutableIntSetAllocator = Objects.requireNonNull(mutableIntSetAllocator);
         this.mutableIntToObjectMapAllocator = Objects.requireNonNull(mutableIntToObjectMapAllocator);

@@ -33,7 +33,7 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
 
     private static final boolean ASSERT = AssertionContants.ASSERT_DB_SESSION;
 
-    public interface LargeObjectStorer<E extends Exception> {
+    public interface ILargeObjectStorer<E extends Exception> {
 
         long createLargeObject(long length) throws E;
 
@@ -126,7 +126,7 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
     private final PreparedStatements preparedStatements;
 
     private Charset charset;
-    private LargeObjectStorer<IOException> largeObjectStorer;
+    private ILargeObjectStorer<IOException> largeObjectStorer;
 
     private int currentTransaction;
 
@@ -253,7 +253,7 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
         }
     }
 
-    void initialize(Charset charset, LargeObjectStorer<IOException> largeObjectStorer) {
+    void initialize(Charset charset, ILargeObjectStorer<IOException> largeObjectStorer) {
 
         this.charset = Objects.requireNonNull(charset);
         this.largeObjectStorer = Objects.requireNonNull(largeObjectStorer);

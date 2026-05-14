@@ -42,12 +42,22 @@ public abstract class BaseAllocatorChecks {
         Objects.requireNonNull(mutable);
     }
 
+    protected static void checkCreateBuilderParameters(CapacityMax capacityMax, long minimumCapacity) {
+
+        checkMinimumCapacity(capacityMax, minimumCapacity);
+    }
+
+    protected static void checkFreeCreatedBuilderParameters(IBuilder builder) {
+
+        Objects.requireNonNull(builder);
+    }
+
     protected static void checkAllocateBuilderParameters(CapacityMax capacityMax, long minimumCapacity) {
 
         checkMinimumCapacity(capacityMax, minimumCapacity);
     }
 
-    protected static void checkFreeBuilderParameters(IBuilder builder) {
+    protected static void checkFreeAllocatedBuilderParameters(IBuilder builder) {
 
         Objects.requireNonNull(builder);
     }

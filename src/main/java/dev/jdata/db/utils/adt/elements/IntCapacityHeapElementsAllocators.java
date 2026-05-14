@@ -21,16 +21,24 @@ public final class IntCapacityHeapElementsAllocators<
         T allocate(AllocationType allocationType, int capacity);
     }
 
+    private static final CapacityMax CAPACITY_MAX = CapacityMax.INT;
+
     @FunctionalInterface
     public interface IIntCapacityAllocateFromArrayFunction<T, U extends IElements> {
 
         U allocate(AllocationType allocationType, T values, int startIndex, int numElements);
     }
 
+    public IntCapacityHeapElementsAllocators(AllocationType allocationType, Supplier<INTERFACE_IMMUTABLE> emptyImmutableSupplier,
+            IIntCapacityAllocateFunction<CLASS_MUTABLE> createMutable,IIntCapacityAllocateFunction<INTERFACE_BUILDER> createBuilder) {
+        super(allocationType, CAPACITY_MAX, emptyImmutableSupplier, (a, c) -> createMutable.allocate(a, BaseADTElements.intMinimumCapacity(c)),
+                (a, c) -> createBuilder.allocate(a, BaseADTElements.intMinimumCapacity(c)));
+    }
+
     public IntCapacityHeapElementsAllocators(AllocationType allocationType, IIntCapacityAllocateFromArrayFunction<ALLOCATE_FROM_ARRAY, INTERFACE_IMMUTABLE> createImmutable,
             Supplier<INTERFACE_IMMUTABLE> emptyImmutableSupplier, IIntCapacityAllocateFunction<CLASS_MUTABLE> createMutable,
             IIntCapacityAllocateFunction<INTERFACE_BUILDER> createBuilder) {
-        super(allocationType, CapacityMax.INT, (a, v, s, n) -> createImmutable.allocate(a, v, BaseADTElements.intIndex(s), BaseADTElements.intNumElements(n)),
+        super(allocationType, CAPACITY_MAX, (a, v, s, n) -> createImmutable.allocate(a, v, BaseADTElements.intIndex(s), BaseADTElements.intNumElements(n)),
                 emptyImmutableSupplier, (a, c) -> createMutable.allocate(a, BaseADTElements.intMinimumCapacity(c)),
                 (a, c) -> createBuilder.allocate(a, BaseADTElements.intMinimumCapacity(c)));
     }

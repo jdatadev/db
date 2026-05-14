@@ -7,24 +7,23 @@ import org.jutils.io.strings.StringResolver;
 
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
-import dev.jdata.db.schema.model.DatabaseSchemaModelRootObject;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
+import dev.jdata.db.schema.model.schemamap.BaseSchemaMap;
 import dev.jdata.db.schema.model.schemamap.ISchemaMap;
-import dev.jdata.db.schema.model.schemamaps.BaseSchemaMaps;
-import dev.jdata.db.schema.model.schemamaps.ISchemaMaps;
+import dev.jdata.db.schema.model.schemaobjects.ISchemaObjects;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.checks.Checks;
 
-public abstract class BaseDatabaseSchema<T extends ISchemaMaps> extends DatabaseSchemaModelRootObject implements IDatabaseSchema {
+public abstract class BaseDatabaseSchema<T extends ISchemaMap> extends DatabaseSchemaModelRootObject implements IDatabaseSchema {
 
-    private final T schemaMaps;
+    private final T schemaMap;
     private final DatabaseSchemaVersion version;
 
-    protected BaseDatabaseSchema(AllocationType allocationType, DatabaseId databaseId, DatabaseSchemaVersion version, T schemaMaps) {
+    protected BaseDatabaseSchema(AllocationType allocationType, DatabaseId databaseId, DatabaseSchemaVersion version, T schemaMap) {
         super(allocationType, databaseId);
 
-        this.schemaMaps = Objects.requireNonNull(schemaMaps);
+        this.schemaMap = Objects.requireNonNull(schemaMap);
         this.version = Objects.requireNonNull(version);
     }
 
@@ -39,7 +38,7 @@ public abstract class BaseDatabaseSchema<T extends ISchemaMaps> extends Database
         Objects.requireNonNull(ddlObjectType);
         StringRef.checkIsString(hashObjectName);
 
-        return schemaMaps.containsSchemaObjectName(ddlObjectType, hashObjectName);
+        return schemaMap.containsSchemaObjectName(ddlObjectType, hashObjectName);
     }
 
     @Override
@@ -48,26 +47,26 @@ public abstract class BaseDatabaseSchema<T extends ISchemaMaps> extends Database
         Objects.requireNonNull(ddlObjectType);
         Checks.isSchemaObjectId(schemaObjectId);
 
-        return schemaMaps.getSchemaObject(ddlObjectType, schemaObjectId);
+        return schemaMap.getSchemaObject(ddlObjectType, schemaObjectId);
     }
 
     @Override
-    public final <R extends SchemaObject> ISchemaMap<R> getSchemaMap(DDLObjectType ddlObjectType) {
+    public final <R extends SchemaObject> ISchemaObjects<R> getSchemaObjects(DDLObjectType ddlObjectType) {
 
         Objects.requireNonNull(ddlObjectType);
 
-        return schemaMaps.getSchemaMap(ddlObjectType);
+        return schemaMap.getSchemaObjects(ddlObjectType);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public final <R extends SchemaObject> IIndexList<R> getSchemaObjects(DDLObjectType ddlObjectType) {
+    public final <R extends SchemaObject> IIndexList<R> getSchemaObjectsList(DDLObjectType ddlObjectType) {
 
         Objects.requireNonNull(ddlObjectType);
 
-        final ISchemaMap<R> schemaMap = (ISchemaMap<R>)getSchemaMap(ddlObjectType);
+        final ISchemaObjects<R> schemaObjects = (ISchemaObjects<R>)getSchemaObjects(ddlObjectType);
 
-        return schemaMap != null ? schemaMap.getSchemaObjects() : null;
+        return schemaObjects != null ? schemaObjects.getSchemaObjectsList() : null;
     }
 
     @Override
@@ -75,12 +74,12 @@ public abstract class BaseDatabaseSchema<T extends ISchemaMaps> extends Database
 
         Objects.requireNonNull(ddlObjectType);
 
-        return schemaMaps.computeMaxId(ddlObjectType, defaultValue);
+        return schemaMap.computeMaxId(ddlObjectType, defaultValue);
     }
 
-    final T getSchemaMaps() {
+    final T getSchemaMap() {
 
-        return schemaMaps;
+        return schemaMap;
     }
 
     @Override
@@ -106,12 +105,12 @@ public abstract class BaseDatabaseSchema<T extends ISchemaMaps> extends Database
             final BaseDatabaseSchema<?> otherDatabaseSchema = (BaseDatabaseSchema<?>)other;
 
             @SuppressWarnings("unchecked")
-            final BaseSchemaMaps<ISchemaMap<?>> maps = (BaseSchemaMaps<ISchemaMap<?>>)schemaMaps;
+            final BaseSchemaMap<ISchemaObjects<?>> map = (BaseSchemaMap<ISchemaObjects<?>>)schemaMap;
 
             @SuppressWarnings("unchecked")
-            final BaseSchemaMaps<ISchemaMap<?>> otherMaps = (BaseSchemaMaps<ISchemaMap<?>>)otherDatabaseSchema.schemaMaps;
+            final BaseSchemaMap<ISchemaObjects<?>> otherMap = (BaseSchemaMap<ISchemaObjects<?>>)otherDatabaseSchema.schemaMap;
 
-            result = version.equals(otherDatabaseSchema.version) && maps.isEqualTo(thisStringResolver, otherMaps, otherStringResolver);
+            result = version.equals(otherDatabaseSchema.version) && map.isEqualTo(thisStringResolver, otherMap, otherStringResolver);
         }
 
         return result;
@@ -137,7 +136,7 @@ public abstract class BaseDatabaseSchema<T extends ISchemaMaps> extends Database
         else {
             final BaseDatabaseSchema<?> other = (BaseDatabaseSchema<?>)object;
 
-            result = version.equals(other.version) && schemaMaps.equals(other.schemaMaps);
+            result = version.equals(other.version) && schemaMap.equals(other.schemaMap);
         }
 
         return result;
@@ -146,6 +145,6 @@ public abstract class BaseDatabaseSchema<T extends ISchemaMaps> extends Database
     @Override
     public String toString() {
 
-        return getClass().getSimpleName() + " [version=" + version + ", schemaMaps=" + schemaMaps + ", super=" + super.toString() + "]";
+        return getClass().getSimpleName() + " [version=" + version + ", schemaMaps=" + schemaMap + ", super=" + super.toString() + "]";
     }
 }

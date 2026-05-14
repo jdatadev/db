@@ -22,13 +22,13 @@ import dev.jdata.db.sql.ast.statements.dml.SQLUpdateStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateValues;
 import dev.jdata.db.utils.adt.ADTConstants;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.arrays.ICachedMutableLongLargeArray;
+import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
 import dev.jdata.db.utils.adt.elements.ILongByIndexOrderedElementsView;
 import dev.jdata.db.utils.checks.Checks;
 
 public class DMLUpdatingStatementEvaluator {
 
-    static void onInsert(SQLInsertStatement insertStatement, DMLUpdatingEvaluatorParameter evaluatorParameter) throws EvaluateException {
+    static void onInsert(SQLInsertStatement insertStatement, DMLUpdatingEvaluatorParameter<?, ?> evaluatorParameter) throws EvaluateException {
 
         final TableAndColumnNames tableAndColumnNames = evaluatorParameter.getTableAndColumnNames();
 
@@ -49,11 +49,11 @@ public class DMLUpdatingStatementEvaluator {
     @FunctionalInterface
     private interface EvaluatedInsertValuesProcessor<E extends Exception> {
 
-        void processEvalutedValues(SQLExpressionEvaluator[] values, SQLInsertStatement insertStatement, DMLUpdatingEvaluatorParameter evaluatorParameter) throws E;
+        void processEvalutedValues(SQLExpressionEvaluator[] values, SQLInsertStatement insertStatement, DMLUpdatingEvaluatorParameter<?, ?> evaluatorParameter) throws E;
     }
 
     private static <E extends EvaluateException> void evaluteInsertValues(ASTList<Expression> values, SQLInsertStatement insertStatement,
-            DMLUpdatingEvaluatorParameter evaluatorParameter, EvaluatedInsertValuesProcessor<E> insertValuesProcessor) throws EvaluateException {
+            DMLUpdatingEvaluatorParameter<?, ?> evaluatorParameter, EvaluatedInsertValuesProcessor<E> insertValuesProcessor) throws EvaluateException {
 
         final int numColumns = values.size();
 
@@ -77,7 +77,7 @@ public class DMLUpdatingStatementEvaluator {
         }
     }
 
-    private static void storeInsertValues(SQLExpressionEvaluator[] values, SQLInsertStatement insertStatement, DMLUpdatingEvaluatorParameter evaluatorParameter)
+    private static void storeInsertValues(SQLExpressionEvaluator[] values, SQLInsertStatement insertStatement, DMLUpdatingEvaluatorParameter<?, ?> evaluatorParameter)
             throws OverflowException {
 
         final int tableId = evaluatorParameter.getTableId();
@@ -100,7 +100,7 @@ public class DMLUpdatingStatementEvaluator {
         evaluatorParameter.getTransaction().insertRows(evaluatorParameter.getTable(), null, insertRows);
     }
 
-    private static void storeColumnToByteBufferExpression(Expression expression, int index, DMLUpdatingEvaluatorParameter evaluatorParameter,
+    private static void storeColumnToByteBufferExpression(Expression expression, int index, DMLUpdatingEvaluatorParameter<?, ?> evaluatorParameter,
             Function<BaseDMLUpdatingEvaluatorParameter, byte[]> byteArrayGetter) throws EvaluateException {
 
         final SQLExpressionEvaluator evaluator = evaluatorParameter.getExpressionEvaluator();
@@ -110,7 +110,8 @@ public class DMLUpdatingStatementEvaluator {
         ColumnStoreUtil.storeColumnToByteBuffer(evaluator, index, evaluatorParameter, byteArrayGetter);
     }
 
-    static void onUpdate(SQLUpdateStatement updateStatement, DMLUpdatingEvaluatorParameter evaluatorParameter) throws EvaluateException {
+    static <T extends IMutableLongLargeArray> void onUpdate(SQLUpdateStatement updateStatement,
+            DMLUpdatingEvaluatorParameter<T, ?> evaluatorParameter) throws EvaluateException {
 
         final TableAndColumnNames tableAndColumnNames = evaluatorParameter.getTableAndColumnNames();
 
@@ -125,7 +126,7 @@ public class DMLUpdatingStatementEvaluator {
 
         final SQLWhereClause whereClause = updateStatement.getWhereClause();
 
-        final ICachedMutableLongLargeArray rowIds = whereClause != null ? evaluatorParameter.allocateMutableLongLargeArray(ADTConstants.DEFAULT_INITIAL_CAPACITY) : null;
+        final T rowIds = whereClause != null ? evaluatorParameter.allocateMutableLongLargeArray(ADTConstants.DEFAULT_INITIAL_CAPACITY) : null;
 
         try {
             if (whereClause != null) {
@@ -160,11 +161,11 @@ public class DMLUpdatingStatementEvaluator {
     private interface EvaluatedUpdateValuesProcessor<E extends Exception> {
 
         void processEvaluatedValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongByIndexOrderedElementsView rowIds,
-                DMLUpdatingEvaluatorParameter evaluatorParameter) throws OverflowException;
+                DMLUpdatingEvaluatorParameter<?, ?> evaluatorParameter) throws OverflowException;
     }
 
     private static <E extends EvaluateException> void evaluateUpdateValues(ASTList<SQLColumnValueUpdateValue> values, SQLColumnValueUpdateValues updateValues,
-            ILongByIndexOrderedElementsView rowIds, DMLUpdatingEvaluatorParameter evaluatorParameter, EvaluatedUpdateValuesProcessor<E> evaluatedValuesProcessor)
+            ILongByIndexOrderedElementsView rowIds, DMLUpdatingEvaluatorParameter<?, ?> evaluatorParameter, EvaluatedUpdateValuesProcessor<E> evaluatedValuesProcessor)
                     throws EvaluateException {
 
         final int numColumns = values.size();
@@ -190,7 +191,7 @@ public class DMLUpdatingStatementEvaluator {
     }
 
     private static void storeUpdateValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongByIndexOrderedElementsView rowIds,
-            DMLUpdatingEvaluatorParameter evaluatorParameter) throws OverflowException {
+            DMLUpdatingEvaluatorParameter<?, ?> evaluatorParameter) throws OverflowException {
 
         final Transaction transaction = evaluatorParameter.getTransaction();
         final Table table = evaluatorParameter.getTable();
@@ -217,7 +218,7 @@ public class DMLUpdatingStatementEvaluator {
         }
     }
 
-    static void onDelete(SQLDeleteStatement deleteStatement, DMLUpdatingEvaluatorParameter evaluatorParameter) throws EvaluateException {
+    static <T extends IMutableLongLargeArray> void onDelete(SQLDeleteStatement deleteStatement, DMLUpdatingEvaluatorParameter<T, ?> evaluatorParameter) throws EvaluateException {
 
         final TableAndColumnNames tableAndColumnNames = evaluatorParameter.getTableAndColumnNames();
 
@@ -232,7 +233,7 @@ public class DMLUpdatingStatementEvaluator {
 
         final SQLWhereClause whereClause = deleteStatement.getWhereClause();
 
-        final ICachedMutableLongLargeArray rowIds = whereClause != null ? evaluatorParameter.allocateMutableLongLargeArray(ADTConstants.DEFAULT_INITIAL_CAPACITY) : null;
+        final T rowIds = whereClause != null ? evaluatorParameter.allocateMutableLongLargeArray(ADTConstants.DEFAULT_INITIAL_CAPACITY) : null;
 
         try {
             final Transaction transaction = evaluatorParameter.getTransaction();

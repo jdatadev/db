@@ -37,6 +37,22 @@ abstract class BaseLongToObjectMaxDistanceNonBucketMap<V, M extends BaseLongToOb
         }
     }
 
+    BaseLongToObjectMaxDistanceNonBucketMap(AllocationType allocationType, BaseLongToObjectMaxDistanceNonBucketMap<V, ?> toInitializeFrom, Void disambiguate) {
+        super(allocationType, toInitializeFrom, disambiguate);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("allocationType", allocationType).add("toInitializeFrom", toInitializeFrom));
+        }
+
+        this.maxDistances = toInitializeFrom.maxDistances;
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
     BaseLongToObjectMaxDistanceNonBucketMap(AllocationType allocationType, BaseLongToObjectMaxDistanceNonBucketMap<V, M> toCopy) {
         super(allocationType, toCopy);
 

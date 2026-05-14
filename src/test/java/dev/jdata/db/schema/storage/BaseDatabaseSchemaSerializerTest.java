@@ -14,7 +14,7 @@ import org.jutils.io.strings.StringResolver.ICharactersBufferAllocator;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.DBConstants;
-import dev.jdata.db.ddl.helpers.buildschema.HeapDDLSchemaSQLStatementsWorkerObjects;
+import dev.jdata.db.ddl.helpers.sqltoschema.complete.HeapDDLSchemaSQLStatementsAllocators;
 import dev.jdata.db.engine.database.DatabaseStringManagement;
 import dev.jdata.db.engine.database.IStringStorer;
 import dev.jdata.db.engine.database.StringManagement;
@@ -24,7 +24,7 @@ import dev.jdata.db.schema.model.effective.IHeapEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.Table;
-import dev.jdata.db.schema.model.schemamaps.IHeapAllCompleteSchemaMaps;
+import dev.jdata.db.schema.model.schemamap.IHeapCompleteSchemaMap;
 import dev.jdata.db.schema.storage.sqloutputter.StringBuilderSQLOutputter;
 import dev.jdata.db.sql.ast.ISQLAllocator;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
@@ -42,10 +42,10 @@ import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
 import dev.jdata.db.utils.allocators.IAddableListAllocator;
 
-public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSchemaSerialization<?, ?, ?, IHeapAllCompleteSchemaMaps>> extends BaseDBTest {
+public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSchemaSerialization<?, ?, ?, ?, ?, IHeapCompleteSchemaMap>> extends BaseDBTest {
 
     protected abstract SQLParserFactory getSQLParserFactory();
-    protected abstract T createDatabaseSchemaSerializer(ISQLAllocator sqlAllocator, HeapDDLSchemaSQLStatementsWorkerObjects ddlSchemaSQLStatementsWorkerObjects);
+    protected abstract T createDatabaseSchemaSerializer(ISQLAllocator sqlAllocator, HeapDDLSchemaSQLStatementsAllocators ddlSchemaSQLStatementsWorkerObjects);
 
     @Test
     @Category(UnitTest.class)
@@ -95,7 +95,7 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
     }
 
     private static String serialize(IEffectiveDatabaseSchema effectiveDatabaseSchema, IStringStorer stringStorer,
-            BaseDatabaseSchemaSerialization<?, ?, ?, IHeapAllCompleteSchemaMaps> databaseSchemaSerializer) {
+            BaseDatabaseSchemaSerialization<?, ?, ?, ?, ?, IHeapCompleteSchemaMap> databaseSchemaSerializer) {
 
         final StringBuilderSQLOutputter sqlOutputter = new StringBuilderSQLOutputter();
 
@@ -128,7 +128,7 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
 
         final SQLCreateTableStatement createTableStatement = (SQLCreateTableStatement)sqlStatements.getHead();
 
-        checkTable(createTableStatement, stringBuffers, effectiveDatabaseSchema.getTables().getHead(), stringResolver);
+        checkTable(createTableStatement, stringBuffers, effectiveDatabaseSchema.getTablesList().getHead(), stringResolver);
     }
 
     private static void checkTable(SQLCreateTableStatement createTableStatement, StringResolver createTableResolver, Table table, StringResolver tableResolver) {
@@ -147,7 +147,7 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
         });
     }
 
-    private static <T extends BaseDatabaseSchemaSerialization<?, ?, ?, IHeapAllCompleteSchemaMaps>> void checkDeserialize(IEffectiveDatabaseSchema effectiveDatabaseSchema,
+    private static <T extends BaseDatabaseSchemaSerialization<?, ?, ?, ?, ?, IHeapCompleteSchemaMap>> void checkDeserialize(IEffectiveDatabaseSchema effectiveDatabaseSchema,
             String serializedSQL, T databaseSchemaSerializer, IStringStorer stringStorer, ToIntFunction<DDLObjectType> schemaObjectIdAllocator,
             BiConsumer<IEffectiveDatabaseSchema, IEffectiveDatabaseSchema> compareDatabaseSchemas) throws ParserException {
 
@@ -157,7 +157,7 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
         compareDatabaseSchemas.accept(effectiveDatabaseSchema, deserializedDatabaseSchema);
     }
 
-    private static <T extends BaseDatabaseSchemaSerialization<?, ?, ?, IHeapAllCompleteSchemaMaps>> IEffectiveDatabaseSchema deserialize(
+    private static <T extends BaseDatabaseSchemaSerialization<?, ?, ?, ?, ?, IHeapCompleteSchemaMap>> IEffectiveDatabaseSchema deserialize(
             IEffectiveDatabaseSchema effectiveDatabaseSchema, String serializedSQL, T databaseSchemaSerializer, IStringStorer stringStorer,
             ToIntFunction<DDLObjectType> schemaObjectIdAllocator) throws ParserException {
 
@@ -171,7 +171,7 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
 
         stringManagement.initialize(databaseStringManagement, stringBuffers, stringCache);
 
-        final IHeapAllCompleteSchemaMaps completeSchemaMaps = databaseSchemaSerializer.deserialize(stringBuffers, RuntimeException::new, stringManagement, schemaObjectIdAllocator);
+        final IHeapCompleteSchemaMap completeSchemaMaps = databaseSchemaSerializer.deserialize(stringBuffers, RuntimeException::new, stringManagement, schemaObjectIdAllocator);
 
         final IEffectiveDatabaseSchema deserializedDatabaseSchema = IHeapEffectiveDatabaseSchema.of(effectiveDatabaseSchema.getDatabaseId(), effectiveDatabaseSchema.getVersion(),
                 completeSchemaMaps);

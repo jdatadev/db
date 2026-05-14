@@ -18,13 +18,12 @@ import dev.jdata.db.sql.ast.statements.dml.SQLUpdateStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateValues;
 import dev.jdata.db.utils.adt.ADTConstants;
 import dev.jdata.db.utils.adt.arrays.Array;
-import dev.jdata.db.utils.adt.arrays.ICachedMutableLongLargeArray;
 import dev.jdata.db.utils.adt.arrays.ILongArrayView;
 import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
 
 class BaseDMLUpdatingEvaluator {
 
-    static void evaluateUpdate(SQLUpdateStatement sqlUpdateStatement, BaseDMLUpdatingEvaluatorParameter evaluatorParameter, IMutableLongLargeArray rowIds)
+    static void evaluateUpdate(SQLUpdateStatement sqlUpdateStatement, BaseDMLUpdatingEvaluatorParameter<?> evaluatorParameter, IMutableLongLargeArray rowIds)
             throws EvaluateException {
 
         Objects.requireNonNull(sqlUpdateStatement);
@@ -57,12 +56,11 @@ class BaseDMLUpdatingEvaluator {
     private interface EvaluatedUpdateValuesProcessor<E extends Exception> {
 
         void processEvaluatedValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArrayView rowIds,
-                BaseDMLUpdatingEvaluatorParameter evaluatorParameter) throws OverflowException;
+                BaseDMLUpdatingEvaluatorParameter<?> evaluatorParameter) throws OverflowException;
     }
 
     private static <E extends EvaluateException> void evaluteUpdateValues(ASTList<SQLColumnValueUpdateValue> values, SQLColumnValueUpdateValues updateValues,
-            ILongArrayView rowIds, BaseDMLUpdatingEvaluatorParameter evaluatorParameter, EvaluatedUpdateValuesProcessor<E> evaluatedValuesProcessor)
-                    throws EvaluateException {
+            ILongArrayView rowIds, BaseDMLUpdatingEvaluatorParameter<?> evaluatorParameter, EvaluatedUpdateValuesProcessor<E> evaluatedValuesProcessor) throws EvaluateException {
 
         final int numColumns = values.size();
 
@@ -87,7 +85,7 @@ class BaseDMLUpdatingEvaluator {
     }
 
     private static void storeUpdateValues(SQLExpressionEvaluator[] values, SQLColumnValueUpdateValues updateValues, ILongArrayView rowIds,
-            BaseDMLUpdatingEvaluatorParameter evaluatorParameter) throws OverflowException {
+            BaseDMLUpdatingEvaluatorParameter<?> evaluatorParameter) throws OverflowException {
 
         final Transaction transaction = evaluatorParameter.getTransaction();
         final Table table = evaluatorParameter.getTable();
@@ -114,7 +112,8 @@ class BaseDMLUpdatingEvaluator {
         }
     }
 
-    static void delete(SQLDeleteStatement sqlDeleteStatement, BaseDMLUpdatingEvaluatorParameter evaluatorParameter) throws EvaluateException {
+    static <T extends IMutableLongLargeArray> void delete(SQLDeleteStatement sqlDeleteStatement, BaseDMLUpdatingEvaluatorParameter<T> evaluatorParameter)
+            throws EvaluateException {
 
         final TableAndColumnNames tableAndColumnNames = evaluatorParameter.getTableAndColumnNames();
 
@@ -125,7 +124,7 @@ class BaseDMLUpdatingEvaluator {
 
         final SQLWhereClause whereClause = sqlDeleteStatement.getWhereClause();
 
-        final ICachedMutableLongLargeArray rowIds = whereClause != null
+        final T rowIds = whereClause != null
                 ? evaluatorParameter.allocateMutableLongLargeArray(ADTConstants.DEFAULT_INITIAL_CAPACITY)
                 : null;
 

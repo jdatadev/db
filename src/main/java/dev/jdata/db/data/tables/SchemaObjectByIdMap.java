@@ -26,13 +26,13 @@ abstract class SchemaObjectByIdMap<T extends SchemaObject, U> {
 
         this.objects = createArray.apply(arrayLength);
 
-        final IIndexList<T> schemaObjectList = databaseSchema.getSchemaObjects(ddlObjectType);
+        final IIndexList<T> schemaObjects = databaseSchema.getSchemaObjectsList(ddlObjectType);
 
-        final long numTables = schemaObjectList.getNumElements();
+        final long numTables = schemaObjects.getNumElements();
 
         for (long i = 0L; i < numTables; ++ i) {
 
-            final T schemaObject = schemaObjectList.get(i);
+            final T schemaObject = schemaObjects.get(i);
 
             objects[schemaObject.getId()] = elementMapper.apply(schemaObject);
         }

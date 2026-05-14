@@ -17,7 +17,7 @@ public abstract class BaseADTElements<T, U, V> extends Allocatable {
     @FunctionalInterface
     public interface IMakeFromElementsFunction<T, U, P, R> {
 
-        R apply(AllocationType allocationType, IntFunction<T> createElementsArray, U from, long numElements, P parameter);
+        R apply(AllocationType allocationType, IntFunction<T> createElementsArray, U toInitializeFrom, long numElements, P parameter);
     }
 
     protected static final int DEFAULT_INITIAL_CAPACITY = ADTConstants.DEFAULT_INITIAL_CAPACITY;
