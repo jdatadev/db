@@ -353,7 +353,7 @@ abstract class MutableLongLargeArray extends LimitLargeArray<long[][], long[]> i
     protected final void clearInnerArray(long[] innerArray, long startIndex, long numElements) {
 
         Objects.requireNonNull(innerArray);
-        Checks.checkFromIndexSize(startIndex, numElements, innerArray.length);
+        Checks.checkLongFromIndexSize(startIndex, numElements, innerArray.length);
 
         assertShouldClear();
 

@@ -7,12 +7,10 @@ final class HeapIntSetAllocator extends IntSetAllocator<IHeapIntSet, IHeapIntSet
 
         implements IHeapIntSetAllocator {
 
-    static final HeapIntSetAllocator INSTANCE = new HeapIntSetAllocator();
+    static final HeapIntSetAllocator INSTANCE = new HeapIntSetAllocator(AllocationType.HEAP_ALLOCATOR);
 
-    private static final AllocationType ALLOCATION_TYPE = AllocationType.HEAP_ALLOCATOR;
-
-    private HeapIntSetAllocator() {
-        super(ALLOCATION_TYPE, new IntCapacityHeapElementsAllocators<>(ALLOCATION_TYPE, HeapIntMaxDistanceNonBucketSet::copyArray, HeapIntMaxDistanceNonBucketSet::empty,
+    private HeapIntSetAllocator(AllocationType allocationType) {
+        super(allocationType, new IntCapacityHeapElementsAllocators<>(allocationType, HeapIntMaxDistanceNonBucketSet::copyArray, HeapIntMaxDistanceNonBucketSet::empty,
                 HeapMutableIntMaxDistanceNonBucketSet::create, HeapIntSetBuilder::create));
     }
 }

@@ -3,17 +3,12 @@ package dev.jdata.db.utils.jdk.adt.lists;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
-import java.util.function.ToIntFunction;
-import java.util.function.ToLongFunction;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.utils.adt.lists.BaseObjectArrayList;
 import dev.jdata.db.utils.adt.lists.BaseRandomAccessMutableObjectArrayListTest;
-import dev.jdata.db.utils.jdk.adt.collections.Coll;
 
 public final class ArrayListImplTest extends BaseRandomAccessMutableObjectArrayListTest<ArrayListImpl<Integer>, ArrayListImpl<String>> {
 
@@ -22,9 +17,9 @@ public final class ArrayListImplTest extends BaseRandomAccessMutableObjectArrayL
     public void testConstructorArguments() {
 
         assertThatThrownBy(() -> new ArrayListImpl<>(null)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> new ArrayListImpl<>(null, 1)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> new ArrayListImpl<>(String[]::new, -1)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new ArrayListImpl<>(String[]::new, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new ArrayListImpl<>(1, null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> new ArrayListImpl<>(-1, String[]::new)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new ArrayListImpl<>(0, String[]::new)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -38,7 +33,7 @@ public final class ArrayListImplTest extends BaseRandomAccessMutableObjectArrayL
     @Category(UnitTest.class)
     public void testAddMany() {
 
-        checkAddTailMany(List::add);
+        checkArrayListAddTailMany(List::add);
     }
 
     @Test
@@ -121,31 +116,7 @@ public final class ArrayListImplTest extends BaseRandomAccessMutableObjectArrayL
     }
 
     @Override
-    protected <P> long count(ArrayListImpl<Integer> elements, P parameter, BiPredicate<Integer, P> predicate) {
-
-        return Coll.count(elements, parameter, predicate);
-    }
-
-    @Override
-    protected long countWithClosure(ArrayListImpl<Integer> elements, Predicate<Integer> predicate) {
-
-        return Coll.closureOrConstantCount(elements, predicate);
-    }
-
-    @Override
-    protected int maxInt(ArrayListImpl<Integer> elements, int defaultValue, ToIntFunction<Integer> mapper) {
-
-        return Coll.maxInt(elements, defaultValue, mapper);
-    }
-
-    @Override
-    protected long maxLong(ArrayListImpl<Integer> elements, long defaultValue, ToLongFunction<Integer> mapper) {
-
-        return Coll.maxLong(elements, defaultValue, mapper);
-    }
-
-    @Override
-    protected int getCapacity(ArrayListImpl<String> list) {
+    protected long getCapacity(ArrayListImpl<String> list) {
 
         return list.getCapacity();
     }
@@ -169,11 +140,9 @@ public final class ArrayListImplTest extends BaseRandomAccessMutableObjectArrayL
     }
 
     @Override
-    protected void checkNumElements(BaseObjectArrayList<?> list, int expectedNumElements) {
+    protected void checkNumElements(ArrayListImpl<String> arrayListImpl, int expectedNumElements) {
 
-        super.checkNumElements(list, expectedNumElements);
-
-        final ArrayListImpl<?> arrayListImpl = (ArrayListImpl<?>)list;
+        super.checkNumElements(arrayListImpl, expectedNumElements);
 
         assertThat(arrayListImpl.size()).isEqualTo(expectedNumElements);
     }
@@ -187,7 +156,7 @@ public final class ArrayListImplTest extends BaseRandomAccessMutableObjectArrayL
     @Override
     protected ArrayListImpl<String> createStringList(int initialCapacity) {
 
-        return new ArrayListImpl<>(String[]::new, initialCapacity);
+        return new ArrayListImpl<>(initialCapacity, String[]::new);
     }
 
     @Override

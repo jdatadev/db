@@ -3,19 +3,27 @@ package dev.jdata.db.schema.model.schemamap;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.SchemaObject;
 import dev.jdata.db.schema.model.schemaobjects.IHeapSchemaObjects;
+import dev.jdata.db.schema.model.schemaobjects.IHeapSchemaObjectsBuilder;
 import dev.jdata.db.schema.model.schemaobjects.ISchemaObjects;
 
 final class HeapSimpleCompleteSchemaMapBuilder
 
-        extends SimpleCompleteSchemaMapBuilder<IHeapSchemaObjects<SchemaObject>, IHeapCompleteSchemaMap, IHeapCompleteSchemaMap, IHeapCompleteSchemaMapBuilder>
+        extends SimpleCompleteSchemaMapBuilder<
+
+                        IHeapSchemaObjects<SchemaObject>,
+                        IHeapSchemaObjectsBuilder<SchemaObject>,
+                        IHeapCompleteSchemaMap,
+                        IHeapCompleteSchemaMap,
+                        IHeapCompleteSchemaMapBuilder>
+
         implements IHeapCompleteSchemaMapBuilder {
 
     HeapSimpleCompleteSchemaMapBuilder(AllocationType allocationType) {
-        super(allocationType, IHeapSchemaObjects[]::new);
+        super(allocationType, IHeapSchemaObjectsBuilder[]::new, c -> IHeapSchemaObjectsBuilder.create(allocationType, c, SchemaObject[]::new));
     }
 
     @Override
-    protected IHeapCompleteSchemaMap build(AllocationType allocationType, IHeapSchemaObjects<SchemaObject>[] mutable) {
+    protected IHeapCompleteSchemaMap build(AllocationType allocationType, IHeapSchemaObjectsBuilder<SchemaObject>[] mutable) {
 
         checkSchemaMapBuildParameters(allocationType, AllocationMechanism.HEAP, mutable);
 
@@ -31,7 +39,7 @@ final class HeapSimpleCompleteSchemaMapBuilder
     }
 
     @Override
-    protected IHeapCompleteSchemaMap heapBuild(AllocationType allocationType, IHeapSchemaObjects<SchemaObject>[] mutable) {
+    protected IHeapCompleteSchemaMap heapBuild(AllocationType allocationType, IHeapSchemaObjectsBuilder<SchemaObject>[] mutable) {
 
         checkSchemaMapBuildParameters(allocationType, AllocationMechanism.HEAP, mutable);
 
@@ -44,8 +52,11 @@ final class HeapSimpleCompleteSchemaMapBuilder
         return empty();
     }
 
-    private static <R extends ISchemaObjects<?>> R mapOrEmpty(IHeapSchemaObjects<SchemaObject>[] schemaObjects, DDLObjectType ddlObjectType) {
+    private static <R extends ISchemaObjects<?>> R mapOrEmpty(IHeapSchemaObjectsBuilder<SchemaObject>[] schemaObjects, DDLObjectType ddlObjectType) {
 
-        return mapOrEmpty(schemaObjects, ddlObjectType, IHeapSchemaObjects.empty());
+        @SuppressWarnings("unchecked")
+        final R result = (R)mapOrEmpty(schemaObjects, ddlObjectType, IHeapSchemaObjects.empty(), b -> b.buildNotEmpty());
+
+        return result;
     }
 }

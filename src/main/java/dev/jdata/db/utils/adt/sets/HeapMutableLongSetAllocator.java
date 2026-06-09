@@ -12,18 +12,18 @@ final class HeapMutableLongSetAllocator
     static final HeapMutableLongSetAllocator INSTANCE = new HeapMutableLongSetAllocator();
 
     @Override
-    protected HeapMutableLongMaxDistanceNonBucketSet allocateMutable(int minimumCapacity) {
-
-        checkAllocateMutableParameters(minimumCapacity);
-
-        return HeapMutableLongMaxDistanceNonBucketSet.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity);
-    }
-
-    @Override
     public HeapMutableLongMaxDistanceNonBucketSet copyToMutable(ILongIterableElementsView mutableFrom) {
 
         checkCopyToMutableParameters(mutableFrom);
 
         return HeapMutableLongMaxDistanceNonBucketSet.copyToMutable(AllocationType.HEAP_ALLOCATOR, mutableFrom);
+    }
+
+    @Override
+    protected HeapMutableLongMaxDistanceNonBucketSet allocateMutable(int minimumCapacity) {
+
+        checkAllocateMutableParameters(minimumCapacity);
+
+        return HeapMutableLongMaxDistanceNonBucketSet.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity);
     }
 }

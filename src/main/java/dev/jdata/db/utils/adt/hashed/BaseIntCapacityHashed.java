@@ -11,6 +11,7 @@ import dev.jdata.db.utils.adt.capacity.CapacityExponents;
 import dev.jdata.db.utils.adt.capacity.CapacityMax;
 import dev.jdata.db.utils.adt.capacity.IWithCapacityExponentInstantiator;
 import dev.jdata.db.utils.adt.capacity.IWithCapacityExponentInstantiator2;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.adt.mutability.IMutable;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.ObjIntFunction;
@@ -159,6 +160,6 @@ abstract class BaseIntCapacityHashed<HASHED, CREATE_ELEMENTS, MAKE_ELEMENTS_FROM
 
     protected final int getMakeFromElementsNumElements() {
 
-        return getHashedCapacity();
+        return IOnlyElementsView.intNumElements(this);
     }
 }

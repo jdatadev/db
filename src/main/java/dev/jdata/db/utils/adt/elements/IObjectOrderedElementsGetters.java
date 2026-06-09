@@ -9,18 +9,27 @@ interface IObjectOrderedElementsGetters<T> extends IElementsGettersMarker {
 
     <R> void map(IObjectOrderedAddable<R> addable, Function<T, R> mapper);
 
-    long closureOrConstantFindAtMostOneIndex(Predicate<T> predicate);
     <P> long findAtMostOneIndex(P parameter, BiPredicate<T, P> predicate);
-
-    boolean equalsOrdered(IObjectOrderedElementsView<T> other);
 
     <P1, P2, E extends Exception> boolean equals(P1 thisParameter, IObjectOrderedElementsView<T> other, P2 otherParameter, IElementEqualityTester<T, P1, P2, E> equalityTester)
             throws E;
+
+    default long closureOrConstantFindAtMostOneIndex(Predicate<T> predicate) {
+
+        return findAtMostOneIndex(predicate, (e, p) -> p.test(e));
+    }
 
     default long findInstanceIndex(T instance) {
 
         Objects.requireNonNull(instance);
 
         return findAtMostOneIndex(instance, (e, i) -> e == i);
+    }
+
+    default boolean equalsOrdered(IObjectOrderedElementsView<T> other) {
+
+        Objects.requireNonNull(other);
+
+        return equals(null, other, null, (e1, p1, e2, p2) -> e1.equals(e2));
     }
 }

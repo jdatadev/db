@@ -148,9 +148,9 @@ public class Lists extends BaseCollections {
     public static <T> boolean equals(List<T> list1, int startIndex1, List<T> list2, int startIndex2, int numElements) {
 
         Objects.requireNonNull(list1);
-        Checks.checkFromIndexSize(startIndex1, numElements, list1.size());
+        Checks.checkIntFromIndexSize(startIndex1, numElements, list1.size());
         Objects.requireNonNull(list2);
-        Checks.checkFromIndexSize(startIndex2, numElements, list2.size());
+        Checks.checkIntFromIndexSize(startIndex2, numElements, list2.size());
 
         boolean equals = true;
 

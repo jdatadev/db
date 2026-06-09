@@ -3,9 +3,7 @@ package dev.jdata.db.utils.adt.lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-abstract class BaseImmutableObjectArrayListTest<T, U extends BaseObjectArrayList<String>> extends BaseObjectArrayListTest<T> {
-
-    abstract U createStringList(String ... values);
+abstract class BaseImmutableObjectArrayListTest<T extends IList<Integer>, U extends ObjectIndexList<String>> extends BaseImmutableObjectListTest<T, U> {
 
     @Test
     @Category(UnitTest.class)
@@ -38,75 +36,5 @@ abstract class BaseImmutableObjectArrayListTest<T, U extends BaseObjectArrayList
         checkElementsSameAs(threeElementsList, abc, bcd, cde);
         assertThatThrownBy(() -> threeElementsList.get(-1)).isInstanceOf(IndexOutOfBoundsException.class);
         assertThatThrownBy(() -> threeElementsList.get(3)).isInstanceOf(IndexOutOfBoundsException.class);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testGetHead() {
-
-        final U emptyList = createStringList();
-
-        assertThatThrownBy(() -> emptyList.getHead()).isInstanceOf(IllegalStateException.class);
-
-        final String abc = "abc";
-        final String bcd = "bcd";
-
-        final U oneElementList = createStringList(abc);
-
-        assertThat(oneElementList.getHead()).isSameAs(abc);
-
-        final U twoElementsList = createStringList(abc, bcd);
-
-        assertThat(twoElementsList.getHead()).isSameAs(abc);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testGetTail() {
-
-        final U emptyList = createStringList();
-
-        assertThatThrownBy(() -> emptyList.getTail()).isInstanceOf(IllegalStateException.class);
-
-        final String abc = "abc";
-        final String bcd = "bcd";
-
-        final U oneElementList = createStringList(abc);
-
-        assertThat(oneElementList.getTail()).isSameAs(abc);
-
-        final U twoElementsList = createStringList(abc, bcd);
-
-        assertThat(twoElementsList.getTail()).isSameAs(bcd);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testGetNumElements() {
-
-        final U emptyList = createStringList();
-
-        assertThat(emptyList.getNumElements()).isEqualTo(0L);
-
-        final String abc = "abc";
-
-        final U oneElementList = createStringList(abc);
-
-        assertThat(oneElementList.getNumElements()).isEqualTo(1L);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testIsEmpty() {
-
-        final U emptyList = createStringList();
-
-        assertThat(emptyList.isEmpty()).isTrue();
-
-        final String abc = "abc";
-
-        final U oneElementList = createStringList(abc);
-
-        assertThat(oneElementList.isEmpty()).isFalse();
     }
 }

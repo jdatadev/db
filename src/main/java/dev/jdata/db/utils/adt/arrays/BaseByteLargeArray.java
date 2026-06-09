@@ -148,7 +148,7 @@ public abstract class BaseByteLargeArray extends ExponentLargeArray<byte[][], by
     protected void clearInnerArray(byte[] innerArray, long startIndex, long numElements) {
 
         Objects.requireNonNull(innerArray);
-        Checks.checkFromIndexSize(startIndex, numElements, innerArray.length);
+        Checks.checkLongFromIndexSize(startIndex, numElements, innerArray.length);
 
         assertShouldClear();
 

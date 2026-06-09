@@ -15,7 +15,7 @@ public interface IArrayView<T> extends IOneDimensionalArrayView, IObjectByIndexV
 
         final long limit = getLimit();
 
-        Checks.checkFromIndexNum(startIndex, numElements, limit);
+        Checks.checkIntOrLongFromIndexNum(startIndex, numElements, limit);
 
         return ByIndex.containsInstance(this, getLimit(), instance, startIndex, numElements, IObjectByIndexView::get, IndexOutOfBoundsException::new);
     }

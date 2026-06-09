@@ -15,6 +15,30 @@ public class Capacity {
 
     private static final int DEFAULT_INNER_CAPACITY_EXPONENT = CapacityExponents.DEFAULT_INNER_CAPACITY_EXPONENT;
 
+    public static int computeIncreasedIntCapacity(int currentCapacity, int requiredCapacity) {
+
+        Checks.isIntCapacityAtOrAboveZero(currentCapacity);
+        Checks.isIntCapacityAboveZero(requiredCapacity);
+        Checks.isGreaterThan(requiredCapacity, currentCapacity);
+
+        int newCapacity;
+
+        if (currentCapacity == 0 && requiredCapacity == 1) {
+
+            newCapacity = 1;
+        }
+        else {
+            newCapacity = currentCapacity == 0 ? 1 : currentCapacity;
+
+            do {
+                newCapacity <<= 1;
+
+            } while (newCapacity < requiredCapacity);
+        }
+
+        return newCapacity;
+    }
+
     public static int intCapacityRenamed(long capacity) {
 
         Checks.isIntCapacityAtOrAboveZero(capacity);

@@ -49,6 +49,16 @@ abstract class BaseLexer<TOKEN extends Enum<TOKEN> & IToken, E extends Exception
         return lexer.getStringRef(startPos, endSkip);
     }
 
+    public final long getInputPosition() {
+
+        return lexer.getInputPosition();
+    }
+
+    public final long getStringRefFromInputPosition(long startPos, long endPos) {
+
+        return lexer.getStringRefFromInputPosition(startPos, endPos);
+    }
+
     public final ParserException unexpectedToken(TOKEN expectedToken) {
 
         return lexer.unexpectedToken(expectedToken);

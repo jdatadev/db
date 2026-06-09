@@ -51,7 +51,7 @@ public final class CharSequenceLoadStream extends LoadStream<RuntimeException> {
     public long read(char[] buffer, int offset, int length) {
 
         Objects.requireNonNull(buffer);
-        Checks.checkFromIndexSize(offset, length, buffer.length);
+        Checks.checkIntFromOffsetSize(offset, length, buffer.length);
 
         if (charSequence.length() != charSequenceLength) {
 

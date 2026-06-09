@@ -1,9 +1,5 @@
 package dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects;
 
-import java.util.Objects;
-
-import org.jutils.io.strings.StringRef;
-
 import dev.jdata.db.engine.database.StringManagement;
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.model.objects.Column;
@@ -14,24 +10,31 @@ import dev.jdata.db.utils.adt.lists.IIndexListBuilder;
 import dev.jdata.db.utils.adt.sets.IIntSetAllocator;
 import dev.jdata.db.utils.adt.sets.IIntSetBuilder;
 
-public final class ProcessAlterTableScratchObject<T extends IIntSetBuilder<?, ?>, U extends IIndexListBuilder<Column, ?, ?>> extends ProcessTableColumnsScratchObject {
+public final class ProcessAlterTableScratchObject<T extends IIntSetBuilder<?, ?>, U extends IIndexListBuilder<Column, ?, ?>> extends ProcessParsedScratchObject {
+
+    private final ProcessAlterTableAddColumnsScratchObject<U> addColumnsScratchObject;
+    private final ProcessAlterTableModifyColumnsScratchObject<U> modifyColumnsScratchObject;
+    private final ProcessAlterTableDropColumnsScratchObject<T> dropColumnsScratchObject;
+    private final ProcessAlterTableAddPrimaryConstraintScratchObject addPrimaryConstraintScratchObject;
 
     private DatabaseId databaseId;
     private Table table;
     private IIntSetAllocator<?, ?, T> intSetAllocator;
     private IIndexListAllocator<Column, ?, ?, U> columnIndexListAllocator;
 
-    private Column existingColumn;
-    private long parsedName;
-
     public ProcessAlterTableScratchObject(AllocationType allocationType) {
         super(allocationType);
+
+        this.addColumnsScratchObject = new ProcessAlterTableAddColumnsScratchObject<>(allocationType);
+        this.modifyColumnsScratchObject = new ProcessAlterTableModifyColumnsScratchObject<>(allocationType);
+        this.dropColumnsScratchObject = new ProcessAlterTableDropColumnsScratchObject<>(allocationType);
+        this.addPrimaryConstraintScratchObject = new ProcessAlterTableAddPrimaryConstraintScratchObject(allocationType);
     }
 
     public void initialize(DatabaseId databaseId, StringManagement stringManagement, Table table, IIntSetAllocator<?, ?, T> intSetAllocator,
             IIndexListAllocator<Column, ?, ?, U> columnIndexListAllocator) {
 
-        initialize(stringManagement, table.getMaxColumnId() + 1);
+        initialize(stringManagement);
 
         this.databaseId = Initializable.checkNotYetInitialized(this.databaseId, databaseId);
         this.table = Initializable.checkNotYetInitialized(this.table, table);
@@ -48,9 +51,22 @@ public final class ProcessAlterTableScratchObject<T extends IIntSetBuilder<?, ?>
         this.table = Initializable.checkResettable(table);
         this.intSetAllocator = Initializable.checkResettable(intSetAllocator);
         this.columnIndexListAllocator = Initializable.checkResettable(columnIndexListAllocator);
+    }
 
-        this.existingColumn = null;
-        this.parsedName = StringRef.STRING_NONE;
+    public ProcessAlterTableAddColumnsScratchObject<U> getAddColumnsScratchObject() {
+        return addColumnsScratchObject;
+    }
+
+    public ProcessAlterTableModifyColumnsScratchObject<U> getModifyColumnsScratchObject() {
+        return modifyColumnsScratchObject;
+    }
+
+    public ProcessAlterTableDropColumnsScratchObject<T> getDropColumnsScratchObject() {
+        return dropColumnsScratchObject;
+    }
+
+    public ProcessAlterTableAddPrimaryConstraintScratchObject getAddPrimaryConstraintScratchObject() {
+        return addPrimaryConstraintScratchObject;
     }
 
     public DatabaseId getDatabaseId() {
@@ -61,29 +77,7 @@ public final class ProcessAlterTableScratchObject<T extends IIntSetBuilder<?, ?>
         return table;
     }
 
-    public IIntSetAllocator<?, ?, T> getIntSetAllocator() {
-        return intSetAllocator;
-    }
-
     public IIndexListAllocator<Column, ?, ?, U> getColumnIndexListAllocator() {
         return columnIndexListAllocator;
-    }
-
-    Column getExistingColumn() {
-        return existingColumn;
-    }
-
-    void setExistingColumn(Column existingColumn) {
-
-        this.existingColumn = Objects.requireNonNull(existingColumn);
-    }
-
-    public long getParsedName() {
-        return parsedName;
-    }
-
-    public void setParsedName(long parsedName) {
-
-        this.parsedName = StringRef.checkIsString(parsedName);
     }
 }

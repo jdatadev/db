@@ -1,4 +1,4 @@
-package dev.jdata.db.sql.parse;
+package dev.jdata.db.sql.strings;
 
 import java.io.DataOutput;
 import java.io.IOException;

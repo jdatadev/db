@@ -72,7 +72,7 @@ public interface IIntSingleHeadNodeListView extends ISingleHeadNodeListView, IIn
     default <P> long findAtMostOneIndexInRange(long startIndex, long numElements, P parameter, IIntElementPredicate<P> predicate) {
 
         Objects.requireNonNull(predicate);
-        Checks.checkFromIndexSize(startIndex, numElements, getNumElements());
+        Checks.checkIntOrLongFromIndexSize(startIndex, numElements, getNumElements());
 
         long foundIndex = -1L;
 

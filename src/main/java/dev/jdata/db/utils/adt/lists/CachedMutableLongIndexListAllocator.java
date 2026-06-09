@@ -11,18 +11,18 @@ final class CachedMutableLongIndexListAllocator
         implements ICachedMutableLongIndexListAllocator {
 
     @Override
-    protected MutableLongIndexList allocateMutableInstance(IntFunction<long[]> createElements, int minimumCapacity) {
-
-        checkAllocateMutableInstanceParameters(createElements, minimumCapacity);
-
-        return CachedMutableLongIndexList.create(AllocationType.CACHING_ALLOCATOR, minimumCapacity);
-    }
-
-    @Override
     public ICachedMutableLongIndexList copyToMutable(ILongIterableElementsView mutableFrom) {
 
         checkCopyToMutableParameters(mutableFrom);
 
         return CachedMutableLongIndexList.copyToMutable(AllocationType.CACHING_ALLOCATOR, mutableFrom);
+    }
+
+    @Override
+    protected MutableLongIndexList allocateMutableInstance(IntFunction<long[]> createElements, int minimumCapacity) {
+
+        checkAllocateMutableInstanceParameters(createElements, minimumCapacity);
+
+        return CachedMutableLongIndexList.create(AllocationType.CACHING_ALLOCATOR, minimumCapacity);
     }
 }

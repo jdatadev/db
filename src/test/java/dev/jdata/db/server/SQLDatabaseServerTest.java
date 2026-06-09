@@ -9,14 +9,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.jutils.parse.ParserException;
 
-import dev.jdata.db.custom.ansi.sql.parser.ANSISQLParserFactory;
 import dev.jdata.db.engine.database.ExecuteException;
-import dev.jdata.db.engine.database.IDatabases;
 import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.ISelectResultWriter;
-import dev.jdata.db.engine.server.DatabaseServer;
 import dev.jdata.db.engine.server.SQLDatabaseServer;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
-import dev.jdata.db.sql.parse.SQLParserFactory;
 import dev.jdata.db.test.unit.BaseDatabasesTest;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -26,13 +22,7 @@ public final class SQLDatabaseServerTest extends BaseDatabasesTest {
     @Category(UnitTest.class)
     public void testCRUD() throws ParserException, ExecuteException, IOException {
 
-        final SQLParserFactory parserFactory = ANSISQLParserFactory.INSTANCE;
-
-        final IDatabases databases = createDatabases();
-
-        final DatabaseServer databaseServer = new DatabaseServer(databases);
-
-        final SQLDatabaseServer sqlDatabaseServer = new SQLDatabaseServer(databaseServer, parserFactory);
+        final SQLDatabaseServer sqlDatabaseServer = createSQLDatabaseServer();
 
         final int databaseId = sqlDatabaseServer.createDatabase("testdb", makeDatabaseParameters());
 

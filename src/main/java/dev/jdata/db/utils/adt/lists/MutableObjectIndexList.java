@@ -20,8 +20,8 @@ abstract class MutableObjectIndexList<T> extends BaseObjectIndexList<T> implemen
         super(allocationType, createElementsArray, initialCapacity);
     }
 
-    MutableObjectIndexList(AllocationType allocationType, T[] instances) {
-        super(allocationType, instances);
+    MutableObjectIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, T[] instances) {
+        super(allocationType, createElementsArray, instances);
     }
 
     MutableObjectIndexList(AllocationType allocationType, IObjectIterableElementsView<T> mutableFrom, IntFunction<T[]> createElementsArray) {
@@ -73,14 +73,13 @@ abstract class MutableObjectIndexList<T> extends BaseObjectIndexList<T> implemen
     }
 
     @Override
-    public final void addTail(IObjectIterableElementsView<T> elements) {
+    public final void addTail(IObjectIterableElementsView<? extends T> elements) {
 
         Objects.requireNonNull(elements);
 
         if (elements instanceof BaseObjectArrayList<?>) {
 
-            @SuppressWarnings("unchecked")
-            final BaseObjectArrayList<T> baseArrayList = (BaseObjectArrayList<T>)elements;
+            final BaseObjectArrayList<? extends T> baseArrayList = (BaseObjectArrayList<? extends T>)elements;
 
             addTail(baseArrayList);
         }

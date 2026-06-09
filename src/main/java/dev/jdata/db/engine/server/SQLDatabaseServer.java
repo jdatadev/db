@@ -20,7 +20,7 @@ import dev.jdata.db.engine.database.IDatabasesMutators;
 import dev.jdata.db.engine.database.operations.IDatabaseExecuteOperations.ISelectResultWriter;
 import dev.jdata.db.engine.database.operations.IDatabaseOperations;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
-import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
+import dev.jdata.db.engine.sessions.ISession.IPreparedStatementParameters;
 import dev.jdata.db.sql.ast.statements.BaseSQLDDLOperationStatement;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLDMLUpdatingStatement;
@@ -175,7 +175,7 @@ public final class SQLDatabaseServer
         try {
             executeSQLParameter.initialize(server, resultWriter);
 
-            result = onSQL(executeSQLParameter, databaseId, sessionId, charBuffer, (dId, sId, sqlStatements, sqlStrings, instance) -> {
+            result = onSQL(executeSQLParameter, databaseId, sessionId, charBuffer, (dId, sId, sqlStatements, sqlStrings, stringResolver, instance) -> {
 
                 Checks.isExactlyOne(sqlStatements.getNumElements());
 
@@ -236,18 +236,18 @@ public final class SQLDatabaseServer
 
     public int prepareStatement(int databaseId, int sessionId, CharBuffer charBuffer) throws ParserException {
 
-        final long preparedStatementId = onSQL(this.server, databaseId, sessionId, charBuffer, (dId, sId, sqlStatements, sqlStrings, instance) -> {
+        final long preparedStatementId = onSQL(this.server, databaseId, sessionId, charBuffer, (dId, sId, sqlStatements, sqlStrings, stringResolver, instance) -> {
 
             Checks.isExactlyOne(sqlStatements.getNumElements());
 
-            return instance.prepareStatement(dId, sId, sqlStatements.get(0), sqlStrings.get(0));
+            return instance.prepareStatement(dId, sId, sqlStatements.get(0), sqlStrings.get(0), stringResolver);
         });
 
         return Integers.checkUnsignedLongToUnsignedInt(preparedStatementId);
     }
 
     @Override
-    public <E extends Exception> long executePreparedStatement(int databaseId, int sessionId, int preparedStatementId, PreparedStatementParameters preparedStatementParameters,
+    public <E extends Exception> long executePreparedStatement(int databaseId, int sessionId, int preparedStatementId, IPreparedStatementParameters preparedStatementParameters,
             ExecuteSQLResultWriter<E> resultWriter) throws EvaluateException, E {
 
         return server.executePreparedStatement(databaseId, sessionId, preparedStatementId, preparedStatementParameters, resultWriter);

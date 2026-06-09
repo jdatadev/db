@@ -23,7 +23,7 @@ public final class Sessions extends BaseSingleTypeDescriptorables<DBSession.Sess
         this.sessions = IHeapMutableIndexList.create(0, DBSession[]::new);
     }
 
-    public Session addSession(Charset charset) {
+    public ISession addSession(Charset charset) {
 
         Objects.requireNonNull(charset);
 
@@ -36,7 +36,7 @@ public final class Sessions extends BaseSingleTypeDescriptorables<DBSession.Sess
         return session;
     }
 
-    public Session getSession(int sessionId) {
+    public ISession getSession(int sessionId) {
 
         Checks.isSessionDescriptor(sessionId);
 

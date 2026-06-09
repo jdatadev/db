@@ -27,16 +27,18 @@ final class HeapMutableIntToObjectWithRemoveNonBucketMapAllocator<V>
     }
 
     @Override
-    protected HeapMutableIntToObjectWithRemoveNonBucketMap<V> allocateMutable(IntFunction<V[]> createElements, int minimumCapacity) {
-
-        return HeapMutableIntToObjectWithRemoveNonBucketMap.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity, createElements);
-    }
-
-    @Override
     public IHeapMutableIntToObjectWithRemoveStaticMap<V> copyToMutable(IIntToObjectMapView<V> mutableFrom) {
 
         checkCopyToMutableParameters(mutableFrom);
 
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected HeapMutableIntToObjectWithRemoveNonBucketMap<V> allocateMutable(int minimumCapacity, IntFunction<V[]> createElements) {
+
+        checkAllocateMutableParameters(minimumCapacity, createElements);
+
+        return HeapMutableIntToObjectWithRemoveNonBucketMap.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity, createElements);
     }
 }

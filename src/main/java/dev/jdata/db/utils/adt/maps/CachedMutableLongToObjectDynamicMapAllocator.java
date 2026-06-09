@@ -18,18 +18,18 @@ final class CachedMutableLongToObjectDynamicMapAllocator<V>
     }
 
     @Override
-    protected CachedMutableLongToObjectMaxDistanceNonBucketMap<V> allocateMutableInstance(IntFunction<Void> createElements, int minimumCapacity) {
-
-        checkAllocateMutableInstanceParameters(createElements, minimumCapacity);
-
-        return CachedMutableLongToObjectMaxDistanceNonBucketMap.create(AllocationType.CACHING_ALLOCATOR, minimumCapacity, createValuesArray);
-    }
-
-    @Override
     public ICachedMutableLongToObjectDynamicMap<V> copyToMutable(ILongToObjectMapView<V> mutableFrom) {
 
         checkCopyToMutableParameters(mutableFrom);
 
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected CachedMutableLongToObjectMaxDistanceNonBucketMap<V> allocateMutableInstance(IntFunction<Void> createElements, int minimumCapacity) {
+
+        checkAllocateMutableInstanceParameters(createElements, minimumCapacity);
+
+        return CachedMutableLongToObjectMaxDistanceNonBucketMap.create(AllocationType.CACHING_ALLOCATOR, minimumCapacity, createValuesArray);
     }
 }

@@ -94,6 +94,14 @@ public class Assertions {
         }
     }
 
+    public static <T> void areSameInstances(T instance1, T instance2) {
+
+        if (instance1 != instance2) {
+
+            throwAssertion();
+        }
+    }
+
     public static void isAboveZero(long value) {
 
         if (value < 1L) {

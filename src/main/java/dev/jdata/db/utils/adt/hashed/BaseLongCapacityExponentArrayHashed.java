@@ -57,9 +57,10 @@ public abstract class BaseLongCapacityExponentArrayHashed<T extends IMutableLarg
         super(allocationType, CapacityExponents.computeIntCapacityFromExponent(initialOuterCapacityExponent), innerCapacityExponent, loadFactor, getRecreateOuterCapacity(),
                 (o, i) -> {
 
-                    Checks.areEqual(o, CapacityExponents.computeIntCapacityFromExponent(initialOuterCapacityExponent));
+                    Checks.isGreaterThanOrEqualTo(o, initialOuterCapacityExponent);
+                    Checks.areEqual(i, innerCapacityExponent);
 
-                    return createHashed.apply(initialOuterCapacityExponent, i);
+                    return createHashed.apply(o, i);
 
                 }, clearHashed);
 

@@ -193,7 +193,7 @@ public final class TwoDimensionalArray<T> extends BaseAnyDimensionalLargeArray<T
 
     public void add(int index, T value) {
 
-        Checks.checkIndex(index, getNumOuterElements() + 1);
+        Checks.checkIntIndex(index, getNumOuterElements() + 1);
         Objects.requireNonNull(value);
 
         if (DEBUG) {
@@ -401,6 +401,6 @@ public final class TwoDimensionalArray<T> extends BaseAnyDimensionalLargeArray<T
 
     private void checkOuterIndex(int index) {
 
-        Checks.checkIndex(index, getNumOuterElements());
+        Checks.checkIntIndex(index, getNumOuterElements());
     }
 }

@@ -27,8 +27,10 @@ final class HeapObjectIndexListBuilder<T>
         this(allocationType, DEFAULT_INITIAL_CAPACITY, createElementsArray);
     }
 
+    @Deprecated // similar for other builders?
     private HeapObjectIndexListBuilder(AllocationType allocationType, int initialCapacity, IntFunction<T[]> createElementsArray) {
-        this(allocationType, initialCapacity, new HeapMutableObjectIndexListAllocator<>(createElementsArray), (t, c, a) -> a.allocateMutable(createElementsArray, c));
+        this(allocationType, initialCapacity, createElementsArray, (t, c, a)-> HeapMutableObjectIndexList.create(t, c, a));
+//                new HeapMutableObjectIndexListAllocator<>(createElementsArray), (t, c, a) -> a.allocateMutable(createElementsArray, c));
     }
 
     private <P> HeapObjectIndexListBuilder(AllocationType allocationType, int initialCapacity, P parameter,

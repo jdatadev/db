@@ -21,12 +21,12 @@ final class HeapLongToObjectDynamicMapBuilder<V>
     }
 
     private HeapLongToObjectDynamicMapBuilder(AllocationType allocationType, int initialCapacity, IntFunction<V[]> createValuesArray) {
-        this(allocationType, initialCapacity, HeapMutableLongToObjectDynamicMapAllocator.create(createValuesArray), createValuesArray);
+        this(allocationType, initialCapacity, createValuesArray, HeapMutableLongToObjectMaxDistanceNonBucketMap::create);
     }
 
     private HeapLongToObjectDynamicMapBuilder(AllocationType allocationType, int initialCapacity,
             HeapMutableLongToObjectDynamicMapAllocator<V> mutableLongToObjectMaxDistanceNonBucketMapAllocator, IntFunction<V[]> createValuesArray) {
-        this(allocationType, initialCapacity, mutableLongToObjectMaxDistanceNonBucketMapAllocator, (t, c, a) -> a.allocateMutable(createValuesArray, c));
+        this(allocationType, initialCapacity, mutableLongToObjectMaxDistanceNonBucketMapAllocator, (t, c, a) -> a.allocateMutable(c, createValuesArray));
     }
 
     private <P> HeapLongToObjectDynamicMapBuilder(AllocationType allocationType, int minimumCapacity, P parameter,

@@ -38,7 +38,7 @@ abstract class ObjectIndexListBuilder<
     }
 
     @Override
-    public final void addTail(IObjectIterableElementsView<T> elements) {
+    public final void addTail(IObjectIterableElementsView<? extends T> elements) {
 
         Checks.isNotEmpty(elements);
 

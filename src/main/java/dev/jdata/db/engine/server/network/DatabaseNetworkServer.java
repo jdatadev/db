@@ -182,7 +182,7 @@ public final class DatabaseNetworkServer {
     int isCompleteMessage(ByteBuffer byteBuffer, int offset, int length) {
 
         Objects.requireNonNull(byteBuffer);
-        Checks.checkBuffer(byteBuffer, offset, length);
+        Checks.checkBufferRead(byteBuffer, offset, length);
 
         return Protocol.isCompleteMessage(byteBuffer, offset, length);
     }
@@ -193,7 +193,7 @@ public final class DatabaseNetworkServer {
         Checks.isDatabaseId(databaseId);
         Checks.isSessionDescriptor(sessionId);
         Objects.requireNonNull(byteBuffer);
-        Checks.checkBuffer(byteBuffer, offset, length);
+        Checks.checkBufferRead(byteBuffer, offset, length);
         Objects.requireNonNull(largeObjectState);
         Objects.requireNonNull(responseWriter);
 
@@ -324,7 +324,7 @@ public final class DatabaseNetworkServer {
 
         Checks.isDatabaseId(databaseId);
         Checks.isSessionDescriptor(sessionId);
-        Checks.checkBuffer(byteBuffer, offset, length);
+        Checks.checkBufferRead(byteBuffer, offset, length);
         Objects.requireNonNull(largeObjectState);
 
         final long largeObjectLength = largeObjectState.getLength();

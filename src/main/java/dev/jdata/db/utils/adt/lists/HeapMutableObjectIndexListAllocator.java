@@ -22,14 +22,18 @@ final class HeapMutableObjectIndexListAllocator<T>
     }
 
     @Override
-    protected HeapMutableObjectIndexList<T> allocateMutable(IntFunction<T[]> createElementsArray, int minimumCapacity) {
+    public IHeapMutableIndexList<T> copyToMutable(IObjectIterableElementsView<T> mutableFrom) {
 
-        return HeapMutableObjectIndexList.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity, createElementsArray);
+        checkCopyToMutableParameters(mutableFrom);
+
+        return HeapMutableObjectIndexList.copyToMutable(AllocationType.HEAP_ALLOCATOR, mutableFrom, createElementsArray);
     }
 
     @Override
-    public IHeapMutableIndexList<T> copyToMutable(IObjectIterableElementsView<T> mutableFrom) {
+    protected HeapMutableObjectIndexList<T> allocateMutable(int minimumCapacity, IntFunction<T[]> createElementsArray) {
 
-        return HeapMutableObjectIndexList.copyToMutable(AllocationType.HEAP_ALLOCATOR, mutableFrom, createElementsArray);
+        checkAllocateMutableParameters(minimumCapacity, createElementsArray);
+
+        return HeapMutableObjectIndexList.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity, createElementsArray);
     }
 }

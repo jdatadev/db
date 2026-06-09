@@ -17,9 +17,9 @@ public abstract class Allocatable extends PrintDebug {
 
     public static enum AllocationType {
 
-        HEAP(AllocationMechanism.HEAP, false, AllocatableState.ALLOCATED),
+        HEAP(AllocationMechanism.HEAP, false, AllocatableState.ALLOCATED, AllocatableState.DISPOSED),
         HEAP_CONSTANT(AllocationMechanism.HEAP, false, AllocatableState.ALLOCATED),
-        HEAP_ALLOCATOR(AllocationMechanism.HEAP, false, AllocatableState.DISPOSED),
+        HEAP_ALLOCATOR(AllocationMechanism.HEAP, false, AllocatableState.ALLOCATED, AllocatableState.DISPOSED),
         CACHING_ALLOCATOR(AllocationMechanism.CACHE, true, AllocatableState.ALLOCATED, AllocatableState.FREE),
         ARRAY_ALLOCATOR(AllocationMechanism.ARRAY, false, AllocatableState.ALLOCATED, AllocatableState.FREE);
 
@@ -155,6 +155,16 @@ public abstract class Allocatable extends PrintDebug {
         default:
             throw new UnsupportedOperationException();
         }
+    }
+
+    protected final void setAllocated() {
+
+        setAllocated(true);
+    }
+
+    protected final void setFreed() {
+
+        setAllocated(false);
     }
 
     protected final void setDisposed() {

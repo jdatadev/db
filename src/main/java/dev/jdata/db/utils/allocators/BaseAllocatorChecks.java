@@ -84,6 +84,6 @@ public abstract class BaseAllocatorChecks {
 
     static void checkMinimumCapacity(CapacityMax capacityMax, long minimumCapacity) {
 
-        CapacityMax.checkMinimumCapacityAboveZero(capacityMax, minimumCapacity);
+        CapacityMax.checkMinimumCapacityAtOrAboveZero(capacityMax, minimumCapacity);
     }
 }

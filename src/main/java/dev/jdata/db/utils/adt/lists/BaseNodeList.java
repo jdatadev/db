@@ -110,8 +110,8 @@ abstract class BaseNodeList<TO_ARRAY, VALUES_LIST extends INodeListInternal<TO_A
     static <T> void checkMultiHeadAddHeadParameters(T instance, long headNode, long tailNode, ILongNodeSetter<T> headNodeSetter, ILongNodeSetter<T> tailNodeSetter) {
 
         Objects.requireNonNull(instance);
-        checkHeadNode(headNode);
-        checkTailNode(tailNode);
+        checkHeadNodeOrNoNode(headNode);
+        checkTailNodeOrNoNode(tailNode);
         Objects.requireNonNull(headNodeSetter);
         Objects.requireNonNull(tailNodeSetter);
     }
@@ -119,8 +119,8 @@ abstract class BaseNodeList<TO_ARRAY, VALUES_LIST extends INodeListInternal<TO_A
     static <T> void checkMultiHeadAddTailParameters(T instance, long headNode, long tailNode, ILongNodeSetter<T> headNodeSetter, ILongNodeSetter<T> tailNodeSetter) {
 
         Objects.requireNonNull(instance);
-        checkHeadNode(headNode);
-        checkTailNode(tailNode);
+        checkHeadNodeOrNoNode(headNode);
+        checkTailNodeOrNoNode(tailNode);
         Objects.requireNonNull(headNodeSetter);
         Objects.requireNonNull(tailNodeSetter);
     }
@@ -184,6 +184,20 @@ abstract class BaseNodeList<TO_ARRAY, VALUES_LIST extends INodeListInternal<TO_A
         Objects.requireNonNull(tailNodeSetter);
     }
 
+    private static long checkHeadNodeOrNoNode(long headNode) {
+
+        checkIsValidNode(headNode);
+
+        return headNode;
+    }
+
+    private static long checkTailNodeOrNoNode(long tailNode) {
+
+        checkIsValidNode(tailNode);
+
+        return tailNode;
+    }
+
     static long checkHeadNode(long headNode) {
 
         checkIsNode(headNode);
@@ -219,7 +233,7 @@ abstract class BaseNodeList<TO_ARRAY, VALUES_LIST extends INodeListInternal<TO_A
 
     private static long checkIsValidNode(long node) {
 
-        if (node < 0L) {
+        if (node < 0L && node != NO_NODE) {
 
             throw new IllegalArgumentException();
         }

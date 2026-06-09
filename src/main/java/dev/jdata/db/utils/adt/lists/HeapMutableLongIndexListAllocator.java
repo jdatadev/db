@@ -16,18 +16,18 @@ final class HeapMutableLongIndexListAllocator
     }
 
     @Override
-    protected HeapMutableLongIndexList allocateMutable(int minimumCapacity) {
-
-        checkAllocateMutableParameters(minimumCapacity);
-
-        return HeapMutableLongIndexList.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity);
-    }
-
-    @Override
     public IHeapMutableLongIndexList copyToMutable(ILongIterableElementsView mutableFrom) {
 
         checkCopyToMutableParameters(mutableFrom);
 
         return HeapMutableLongIndexList.copyToMutable(AllocationType.HEAP_ALLOCATOR, mutableFrom);
+    }
+
+    @Override
+    protected HeapMutableLongIndexList allocateMutable(int minimumCapacity) {
+
+        checkAllocateMutableParameters(minimumCapacity);
+
+        return HeapMutableLongIndexList.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity);
     }
 }

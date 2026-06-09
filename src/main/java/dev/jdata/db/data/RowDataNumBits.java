@@ -43,7 +43,7 @@ public class RowDataNumBits implements RowDataNumBitsGetter, IContainsView, ICle
     @Override
     public final boolean isNull(int columnIndex) {
 
-        Checks.checkIndex(columnIndex, numColumns);
+        Checks.checkIntIndex(columnIndex, numColumns);
 
         return rowDataNumBits[columnIndex] == 0;
     }
@@ -51,7 +51,7 @@ public class RowDataNumBits implements RowDataNumBitsGetter, IContainsView, ICle
     @Override
     public final int getNumBits(int columnIndex) {
 
-        Checks.checkIndex(columnIndex, numColumns);
+        Checks.checkIntIndex(columnIndex, numColumns);
 
         return rowDataNumBits[columnIndex];
     }
@@ -72,7 +72,7 @@ public class RowDataNumBits implements RowDataNumBitsGetter, IContainsView, ICle
 
     private void setNumBits(int columnIndex, int numBits) {
 
-        Checks.checkIndex(columnIndex, numColumns);
+        Checks.checkIntIndex(columnIndex, numColumns);
         Checks.isColumnIndex(columnIndex);
         Checks.isNumBits(numBits);
 

@@ -7,6 +7,27 @@ public enum CapacityMax {
     INT,
     LONG;
 
+    public static long checkMinimumCapacityAtOrAboveZero(CapacityMax capacityMax, long minimumCapacity) {
+
+        switch (capacityMax) {
+
+        case INT:
+
+            Checks.isIntMinimumCapacityAtOrAboveZero(minimumCapacity);
+            break;
+
+        case LONG:
+
+            Checks.isLongMinimumCapacityAtOrAboveZero(minimumCapacity);
+            break;
+
+        default:
+            throw new UnsupportedOperationException();
+        }
+
+        return minimumCapacity;
+    }
+
     public static long checkMinimumCapacityAboveZero(CapacityMax capacityMax, long minimumCapacity) {
 
         switch (capacityMax) {

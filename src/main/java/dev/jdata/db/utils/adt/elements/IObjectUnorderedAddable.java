@@ -4,12 +4,12 @@ import java.util.Objects;
 
 import dev.jdata.db.utils.checks.Checks;
 
-public interface IObjectUnorderedAddable<T> extends IUnorderedAddable<IObjectIterableElementsView<T>> {
+public interface IObjectUnorderedAddable<T> extends IUnorderedAddable<IObjectIterableElementsView<? extends T>> {
 
     void addUnordered(T instance);
 
     @Override
-    default void addUnordered(IObjectIterableElementsView<T> elements) {
+    default void addUnordered(IObjectIterableElementsView<? extends T> elements) {
 
         Objects.requireNonNull(elements);
 

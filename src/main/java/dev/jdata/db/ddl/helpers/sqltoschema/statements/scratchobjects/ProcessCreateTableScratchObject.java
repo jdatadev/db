@@ -13,6 +13,8 @@ public final class ProcessCreateTableScratchObject extends ProcessTableColumnsSc
 
     public void initializeCreateTable(StringManagement stringManagement, IIndexListBuilder<Column, ?, ?> columnsBuilder) {
 
-        initialize(stringManagement, DBConstants.INITIAL_COLUMN_ID, columnsBuilder);
+        initialize(stringManagement, DBConstants.INITIAL_COLUMN_ID);
+
+        setColumnsBuilder(columnsBuilder);
     }
 }

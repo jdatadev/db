@@ -21,11 +21,10 @@ final class HeapLongIndexListBuilder extends LongIndexListBuilder<IHeapLongIndex
     }
 
     private HeapLongIndexListBuilder(AllocationType allocationType, int initialCapacity) {
-        this(allocationType, initialCapacity, HeapMutableLongIndexListAllocator.INSTANCE);
+        this(allocationType, initialCapacity, null, (t, c, p) -> HeapMutableLongIndexList.create(t, c));
     }
 
-    private HeapLongIndexListBuilder(AllocationType allocationType, int initialCapacity,
-            HeapMutableLongIndexListAllocator mutableLongIndexListAllocator) {
+    private HeapLongIndexListBuilder(AllocationType allocationType, int initialCapacity, HeapMutableLongIndexListAllocator mutableLongIndexListAllocator) {
         this(allocationType, initialCapacity, mutableLongIndexListAllocator, (t, c, a) -> a.allocateMutable(c));
     }
 

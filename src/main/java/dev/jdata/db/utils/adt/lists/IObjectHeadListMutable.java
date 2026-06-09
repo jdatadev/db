@@ -5,4 +5,9 @@ import dev.jdata.db.utils.adt.mutability.IMutableMarker;
 @Deprecated // necessary?
 interface IObjectHeadListMutable<T> extends IMutableMarker, IListView<T>, IObjectHeadListMutators<T> {
 
+    @Override
+    default void removeHead() {
+
+        removeHeadAndReturnValue();
+    }
 }

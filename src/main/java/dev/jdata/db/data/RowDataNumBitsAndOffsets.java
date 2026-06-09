@@ -28,7 +28,7 @@ public final class RowDataNumBitsAndOffsets extends RowDataNumBits {
 
     public int getRowDataBitOffset(int columnIndex) {
 
-        Checks.checkIndex(columnIndex, getNumColumns());
+        Checks.checkIntIndex(columnIndex, getNumColumns());
 
         return rowDataBitOffsets[columnIndex];
     }

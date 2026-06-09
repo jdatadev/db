@@ -46,25 +46,9 @@ abstract class MutableLongIndexList extends BaseLongIndexList implements IMutabl
     @Override
     public final void addTail(long value) {
 
-        final long[] elementsArray = getElementsArray();
-        final int arrayLength = elementsArray.length;
-        final int numElements = getIntNumElements();
+        final long[] dstArray = checkArrayCapacity(1);
 
-        final long[] dstArray;
-
-        if (numElements == arrayLength) {
-
-            dstArray = Arrays.copyOf(elementsArray, increaseCapacity(arrayLength));
-
-            setArray(dstArray);
-        }
-        else {
-            dstArray = elementsArray;
-        }
-
-        dstArray[numElements] = value;
-
-        incrementNumElements();
+        dstArray[getAndIncrementNumElements()] = value;
     }
 
     @Override
@@ -72,26 +56,13 @@ abstract class MutableLongIndexList extends BaseLongIndexList implements IMutabl
 
         Checks.isNotEmpty(values);
 
-        final int num = getIntNumElements();
         final int numValues = values.length;
 
-        final int numTotal = num + numValues;
+        final long[] dstArray = checkArrayCapacity(numValues);
 
-        final long[] elementsArray = getElementsArray();
+        final int numElements = getAndIncreaseNumElements(numValues);
 
-        final long[] dstArray;
-
-        if (numTotal > elementsArray.length) {
-
-            dstArray = Arrays.copyOf(elementsArray, increaseCapacity(numTotal));
-
-            setArray(dstArray);
-        }
-        else {
-            dstArray = elementsArray;
-        }
-
-        setNumElements(numTotal);
+        System.arraycopy(dstArray, 0, dstArray, numElements, numValues);
     }
 
     @Override
@@ -193,5 +164,10 @@ abstract class MutableLongIndexList extends BaseLongIndexList implements IMutabl
         }
 
         return foundIndex;
+    }
+
+    private long[] checkArrayCapacity(int numElementsToAdd) {
+
+        return checkArrayCapacity(numElementsToAdd, null, a -> a.length, (p, c) -> new long[c]);
     }
 }

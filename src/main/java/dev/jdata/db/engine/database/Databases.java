@@ -5,6 +5,9 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Objects;
 
+import org.jutils.io.strings.StringRef;
+import org.jutils.io.strings.StringResolver;
+
 import dev.jdata.db.DBConstants;
 import dev.jdata.db.data.cache.row.RowCache;
 import dev.jdata.db.engine.database.Database.DatabaseState;
@@ -13,14 +16,14 @@ import dev.jdata.db.engine.database.strings.IStringCache;
 import dev.jdata.db.engine.descriptorables.BaseSingleTypeDescriptorables;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
-import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
+import dev.jdata.db.engine.sessions.ISession.IPreparedStatementParameters;
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.DatabaseSchemaManager;
 import dev.jdata.db.schema.DatabaseSchemaVersion;
 import dev.jdata.db.schema.model.databaseschema.IHeapGenericCompleteDatabaseSchema;
 import dev.jdata.db.schema.model.diff.databaseschema.IInitialDiffDatabaseSchema;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.sql.parse.ISQLString;
+import dev.jdata.db.sql.strings.ISQLString;
 import dev.jdata.db.utils.Initializable;
 import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
 import dev.jdata.db.utils.adt.lists.IHeapIndexList;
@@ -206,28 +209,38 @@ public final class Databases<T extends IMutableLongLargeArray, U extends IMutabl
 
     @Override
     public IDatabaseSessionStatus getDatabaseSessionStatus(int databaseId) {
-        // TODO Auto-generated method stub
-        return null;
+
+        Checks.isDatabaseId(databaseId);
+
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public int prepareStatement(int databaseId, int sessionId, BaseSQLStatement sqlStatement, ISQLString sqlString) {
+    public int prepareStatement(int databaseId, int sessionId, BaseSQLStatement sqlStatement, long sqlString, StringResolver parserStringResolver) {
 
         Checks.isDatabaseId(databaseId);
         Checks.isSessionDescriptor(sessionId);
-
+        StringRef.checkIsString(sqlString);
+        Objects.requireNonNull(parserStringResolver);
+/*
         if (sqlStatementCache != null) {
 
             sqlStatementCache.put(sqlString, sqlStatement);
         }
+*/
+        if (Boolean.TRUE) {
+
+            // fix statement cache
+            throw new UnsupportedOperationException();
+        }
 
         final Database<T, U> database = getDescriptorable(databaseId);
 
-        return database.prepareStatement(sessionId, sqlStatement, sqlString);
+        return database.prepareStatement(sessionId, sqlStatement, sqlString, parserStringResolver);
     }
 
     @Override
-    public <E extends Exception> long executePreparedStatement(int databaseId, int sessionId, int preparedStatementId, PreparedStatementParameters parameters,
+    public <E extends Exception> long executePreparedStatement(int databaseId, int sessionId, int preparedStatementId, IPreparedStatementParameters parameters,
             ExecuteSQLResultWriter<E> resultWriter) throws EvaluateException, E {
 
         Checks.isDatabaseId(databaseId);

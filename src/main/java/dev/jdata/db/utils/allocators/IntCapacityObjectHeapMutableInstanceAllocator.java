@@ -14,9 +14,15 @@ public abstract class IntCapacityObjectHeapMutableInstanceAllocator<
                 ELEMENTS,
                 MUTABLE_FROM extends IMutableFrom>
 
-        extends HeapMutableInstanceAllocator<INTERFACE_MUTABLE, MUTABLE_FROM> {
+        extends IntCapacityHeapMutableInstanceAllocator<INTERFACE_MUTABLE, MUTABLE_FROM> {
 
-    protected abstract CLASS_MUTABLE allocateMutable(IntFunction<ELEMENTS> createElements, int minimumCapacity);
+    protected static <T> void checkAllocateMutableParameters(int minimumCapacity, IntFunction<T> createElements) {
+
+        checkAllocateMutableParameters(minimumCapacity);
+        Objects.requireNonNull(createElements);
+    }
+
+    protected abstract CLASS_MUTABLE allocateMutable(int minimumCapacity, IntFunction<ELEMENTS> createElements);
 
     private final IntFunction<ELEMENTS> createElements;
 
@@ -30,6 +36,6 @@ public abstract class IntCapacityObjectHeapMutableInstanceAllocator<
 
         checkIntMinimumCapacity(minimumCapacity);
 
-        return allocateMutable(createElements, Capacity.intCapacityRenamed(minimumCapacity));
+        return allocateMutable(Capacity.intCapacityRenamed(minimumCapacity), createElements);
     }
 }

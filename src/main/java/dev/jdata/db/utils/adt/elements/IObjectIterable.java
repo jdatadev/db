@@ -58,12 +58,6 @@ interface IObjectIterable<T> extends IElementsIterable {
         forEach(forEach, (e, p) -> p.accept(e));
     }
 
-    @FunctionalInterface
-    public interface IObjectForEach2<T, P1, P2, E extends Exception> {
-
-        void each(T element, P1 parameter1, P2 parameter2) throws E;
-    }
-
     default <P1, P2, E extends Exception> void forEach(P1 parameter1, P2 parameter2, IObjectForEach2<T, P1, P2, E> forEach) throws E {
 
         forEachWithResult(null, parameter1, parameter2, (e, p1, p2) -> {

@@ -35,7 +35,8 @@ public final class SQLColumnDefinitionParser extends BaseSQLParser {
     private static final SQLToken[] COLUMN_DEFINITION_PEEK_TOKENS = new SQLToken[] {
 
             SQLToken.NOT,
-            SQLToken.COMMA
+            SQLToken.COMMA,
+            SQLToken.EOF
     };
 
     private static final SQLToken[] COLUMN_DEFINITION_NOT_NULL_PEEK_TOKENS = new SQLToken[] {

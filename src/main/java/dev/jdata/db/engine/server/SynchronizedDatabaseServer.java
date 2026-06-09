@@ -5,14 +5,15 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Objects;
 
+import org.jutils.io.strings.StringResolver;
+
 import dev.jdata.db.engine.database.DatabaseParameters;
 import dev.jdata.db.engine.database.EvaluateException;
 import dev.jdata.db.engine.database.operations.IDatabaseOperations;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.engine.sessions.IDatabaseSessionStatus;
-import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
+import dev.jdata.db.engine.sessions.ISession.IPreparedStatementParameters;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.sql.parse.ISQLString;
 
 @Deprecated // does this make sense?
 final class SynchronizedDatabaseServer implements IDatabaseServer {
@@ -55,9 +56,9 @@ final class SynchronizedDatabaseServer implements IDatabaseServer {
     }
 
     @Override
-    public synchronized int prepareStatement(int databaseId, int sessionId, BaseSQLStatement sqlStatement, ISQLString sqlString) {
+    public synchronized int prepareStatement(int databaseId, int sessionId, BaseSQLStatement sqlStatement, long sqlString, StringResolver parserStringResolver) {
 
-        return delegate.prepareStatement(databaseId, sessionId, sqlStatement, sqlString);
+        return delegate.prepareStatement(databaseId, sessionId, sqlStatement, sqlString, parserStringResolver);
     }
 
     @Override
@@ -73,7 +74,7 @@ final class SynchronizedDatabaseServer implements IDatabaseServer {
     }
 
     @Override
-    public synchronized <E extends Exception> long executePreparedStatement(int databaseId, int sessionId, int preparedStatementId, PreparedStatementParameters parameters,
+    public synchronized <E extends Exception> long executePreparedStatement(int databaseId, int sessionId, int preparedStatementId, IPreparedStatementParameters parameters,
             ExecuteSQLResultWriter<E> resultWriter) throws EvaluateException, E {
 
         return delegate.executePreparedStatement(databaseId, sessionId, preparedStatementId, parameters, resultWriter);

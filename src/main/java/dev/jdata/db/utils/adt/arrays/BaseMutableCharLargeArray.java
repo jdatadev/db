@@ -179,7 +179,7 @@ abstract class BaseMutableCharLargeArray extends LimitLargeArray<char[][], char[
     protected final void clearInnerArray(char[] innerArray, long startIndex, long numElements) {
 
         Objects.requireNonNull(innerArray);
-        Checks.checkFromIndexSize(startIndex, numElements, innerArray.length);
+        Checks.checkLongFromIndexSize(startIndex, numElements, innerArray.length);
 
         assertShouldClear();
 

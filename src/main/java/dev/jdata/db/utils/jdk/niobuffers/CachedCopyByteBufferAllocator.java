@@ -13,7 +13,7 @@ public final class CachedCopyByteBufferAllocator extends CachedByteBufferAllocat
     @Override
     public ByteBuffer allocate(ByteBuffer byteBuffer, int offset, int length) {
 
-        Checks.checkBuffer(byteBuffer, offset, length);
+        Checks.checkBufferRead(byteBuffer, offset, length);
         Checks.isIntLengthAboveZero(length);
 
         final ByteBuffer result = allocateFromFreeListOrCreateCapacityInstance(length);

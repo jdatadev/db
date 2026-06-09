@@ -1,11 +1,10 @@
 package dev.jdata.db.engine.database;
 
-import java.util.Objects;
-
 import org.jutils.io.strings.StringRef;
 import org.jutils.io.strings.StringResolver;
 
 import dev.jdata.db.engine.database.strings.IStringCache;
+import dev.jdata.db.utils.Initializable;
 import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
@@ -21,26 +20,17 @@ public final class StringManagement extends ObjectCacheNode implements IResettab
 
     public void initialize(DatabaseStringManagement databaseStringManagement, StringResolver parserStringResolver, IStringCache stringCache) {
 
-        if (this.databaseStringManagement != null) {
-
-            throw new IllegalStateException();
-        }
-
-        this.databaseStringManagement = Objects.requireNonNull(databaseStringManagement);
-        this.parserStringResolver = Objects.requireNonNull(parserStringResolver);
-        this.stringCache = Objects.requireNonNull(stringCache);
+        this.databaseStringManagement = Initializable.checkNotYetInitialized(this.databaseStringManagement, databaseStringManagement);
+        this.parserStringResolver = Initializable.checkNotYetInitialized(this.parserStringResolver, parserStringResolver);
+        this.stringCache = Initializable.checkNotYetInitialized(this.stringCache, stringCache);
     }
 
     @Override
     public void reset() {
 
-        if (databaseStringManagement == null) {
-
-            throw new IllegalStateException();
-        }
-
-        this.databaseStringManagement = null;
-        this.parserStringResolver = null;
+        this.databaseStringManagement = Initializable.checkResettable(databaseStringManagement);
+        this.parserStringResolver = Initializable.checkResettable(parserStringResolver);
+        this.stringCache = Initializable.checkResettable(stringCache);
     }
 
     public boolean parsedEqualsStored(long parsedStringRef, long storedStringRef, boolean caseSensitive) {

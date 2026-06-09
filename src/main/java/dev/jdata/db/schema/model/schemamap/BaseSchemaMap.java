@@ -131,6 +131,16 @@ public abstract class BaseSchemaMap<T extends ISchemaObjects<?>> extends ObjectC
 
     @Override
     @SuppressWarnings("unchecked")
+    public final <R extends SchemaObject> R getSchemaObjectByName(DDLObjectType ddlObjectType, long schemaObjectName) {
+
+        Objects.requireNonNull(ddlObjectType);
+        StringRef.checkIsString(schemaObjectName);
+
+        return (R)getSchemaObjects(ddlObjectType).getSchemaObjectByName(schemaObjectName);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
     public final <R extends SchemaObject> ISchemaObjects<R> getSchemaObjects(DDLObjectType ddlObjectType) {
 
         Objects.requireNonNull(ddlObjectType);

@@ -5,8 +5,8 @@ import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.utils.adt.lists.IHeapIndexList;
 import dev.jdata.db.utils.adt.lists.IHeapIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IHeapIndexListBuilder;
-import dev.jdata.db.utils.adt.lists.IHeapMutableIndexList;
-import dev.jdata.db.utils.adt.lists.IHeapMutableIndexListAllocator;
+import dev.jdata.db.utils.adt.lists.IHeapMutableDoublyLinkedList;
+import dev.jdata.db.utils.adt.lists.IHeapMutableDoublyLinkedListAllocator;
 import dev.jdata.db.utils.adt.sets.IHeapIntSet;
 import dev.jdata.db.utils.adt.sets.IHeapIntSetAllocator;
 import dev.jdata.db.utils.adt.sets.IHeapIntSetBuilder;
@@ -19,7 +19,7 @@ final class HeapDDLTransaction
                     IHeapIndexListBuilder<DDLTransactionStatement>,
                     IHeapIndexList<DDLTransactionObject>,
                     IHeapIndexListBuilder<DDLTransactionObject>,
-                    IHeapMutableIndexList<DDLTransactionObject>,
+                    IHeapMutableDoublyLinkedList<DDLTransactionObject>,
                     IHeapIntSet,
                     IHeapIntSetBuilder,
                     IHeapIndexList<Column>,
@@ -33,7 +33,7 @@ final class HeapDDLTransaction
                             IHeapIndexListBuilder<DDLTransactionStatement>,
                             IHeapIndexList<DDLTransactionObject>,
                             IHeapIndexListBuilder<DDLTransactionObject>,
-                            IHeapMutableIndexList<DDLTransactionObject>,
+                            IHeapMutableDoublyLinkedList<DDLTransactionObject>,
                             IHeapIntSet,
                             IHeapIntSetBuilder,
                             IHeapIndexList<Column>,
@@ -41,7 +41,7 @@ final class HeapDDLTransaction
 
         HeapDDLTransactionCachedObjects() {
             super(IHeapIndexListAllocator.create(DDLTransactionStatement[]::new), IHeapIndexListAllocator.create(DDLTransactionObject[]::new),
-                    IHeapMutableIndexListAllocator.create(DDLTransactionObject[]::new), IHeapIntSetAllocator.create(), IHeapIndexListAllocator.create(Column[]::new));
+                    IHeapMutableDoublyLinkedListAllocator.create(), IHeapIntSetAllocator.create(), IHeapIndexListAllocator.create(Column[]::new));
         }
     }
 

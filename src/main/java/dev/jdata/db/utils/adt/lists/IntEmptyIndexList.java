@@ -12,7 +12,7 @@ abstract class IntEmptyIndexList extends IntEmptyList implements IIntIndexList {
     @Override
     public final int get(long index) {
 
-        Checks.checkLongIndex(index, 0L);
+        Checks.checkIntOrLongIndex(index, 0);
 
         throw ElementsExceptions.emptyException();
     }
@@ -26,7 +26,7 @@ abstract class IntEmptyIndexList extends IntEmptyList implements IIntIndexList {
     @Override
     public final <P> long findAtMostOneIndexInRange(long startIndex, long numElements, P parameter, IIntElementPredicate<P> predicate) {
 
-        Checks.checkFromIndexSize(startIndex, numElements, 0L);
+        Checks.checkIntOrLongFromIndexSize(startIndex, numElements, 0L);
         Objects.requireNonNull(predicate);
 
         return -1L;
@@ -35,7 +35,7 @@ abstract class IntEmptyIndexList extends IntEmptyList implements IIntIndexList {
     @Override
     public final long closureOrConstantFindAtMostOneIndexInRange(long startIndex, long numElements, IntPredicate predicate) {
 
-        Checks.checkFromIndexSize(startIndex, numElements, 0L);
+        Checks.checkIntOrLongFromIndexSize(startIndex, numElements, 0L);
         Objects.requireNonNull(predicate);
 
         return -1L;

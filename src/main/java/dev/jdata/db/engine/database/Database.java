@@ -5,6 +5,9 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Objects;
 
+import org.jutils.io.strings.StringRef;
+import org.jutils.io.strings.StringResolver;
+
 import dev.jdata.db.data.cache.DataCache;
 import dev.jdata.db.engine.database.Database.DatabaseState;
 import dev.jdata.db.engine.database.allocators.IDatabasesAllocators;
@@ -14,8 +17,8 @@ import dev.jdata.db.engine.descriptorables.BaseDescriptorable;
 import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.engine.sessions.DMLUpdatingEvaluatorParameter;
 import dev.jdata.db.engine.sessions.DMLUpdatingPreparedEvaluatorParameter;
-import dev.jdata.db.engine.sessions.Session;
-import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
+import dev.jdata.db.engine.sessions.ISession;
+import dev.jdata.db.engine.sessions.ISession.IPreparedStatementParameters;
 import dev.jdata.db.engine.sessions.Sessions;
 import dev.jdata.db.engine.statements.SQLStatementsCache;
 import dev.jdata.db.engine.transactions.Transaction;
@@ -25,7 +28,6 @@ import dev.jdata.db.sql.ast.statements.BaseSQLDDLOperationStatement;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLDMLUpdatingStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLSelectStatement;
-import dev.jdata.db.sql.parse.ISQLString;
 import dev.jdata.db.utils.State;
 import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
 import dev.jdata.db.utils.adt.sets.IMutableLongLargeSet;
@@ -184,7 +186,7 @@ public final class Database<T extends IMutableLongLargeArray, U extends IMutable
 
         final DMLUpdatingEvaluatorParameter<T, U> evaluatorParameter = databasesAllocators.allocateDMLEvaluatorParameter();
 
-        final Session session = getSession(sessionId);
+        final ISession session = getSession(sessionId);
 
         final Transaction transaction = transactions.getTransaction(session.getCurrentTransaction());
 
@@ -207,16 +209,19 @@ public final class Database<T extends IMutableLongLargeArray, U extends IMutable
         return name;
     }
 
-    int prepareStatement(int sessionId, BaseSQLStatement sqlStatement, ISQLString sqlString) {
+    int prepareStatement(int sessionId, BaseSQLStatement sqlStatement, long sqlString, StringResolver stringResolver) {
 
         Checks.isSessionDescriptor(sessionId);
         Objects.requireNonNull(sqlStatement);
-        Objects.requireNonNull(sqlString);
+        StringRef.checkIsString(sqlString);
+        Objects.requireNonNull(stringResolver);
 
-        return getSession(sessionId).prepareStatement(sqlStatement, sqlString);
+        final long storedStringRef = stringManagement.storeParsedStringRef(stringResolver, sqlString);
+
+        return getSession(sessionId).prepareStatement(sqlStatement, storedStringRef);
     }
 
-    <E extends Exception> long executePreparedStatement(int sessionId, int preparedStatementId, PreparedStatementParameters preparedStatementParameters,
+    <E extends Exception> long executePreparedStatement(int sessionId, int preparedStatementId, IPreparedStatementParameters preparedStatementParameters,
             ExecuteSQLResultWriter<E> resultWriter) throws EvaluateException, E {
 
         Checks.isSessionDescriptor(sessionId);
@@ -273,7 +278,7 @@ public final class Database<T extends IMutableLongLargeArray, U extends IMutable
         return getDescriptor();
     }
 
-    private Session getSession(int sessionId) {
+    private ISession getSession(int sessionId) {
 
         return sessions.getSession(sessionId);
     }

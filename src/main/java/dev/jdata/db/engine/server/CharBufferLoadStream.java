@@ -34,7 +34,7 @@ final class CharBufferLoadStream extends LoadStream<RuntimeException> {
     @Override
     public long read(char[] buffer, int offset, int length) {
 
-        Checks.checkFromIndexSize(offset, length, buffer.length);
+        Checks.checkIntFromOffsetSize(offset, length, buffer.length);
 
         final int toRead = Math.min(charBuffer.remaining(), length);
 

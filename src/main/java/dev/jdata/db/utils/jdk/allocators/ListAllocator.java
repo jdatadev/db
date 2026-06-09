@@ -9,7 +9,7 @@ import dev.jdata.db.utils.jdk.adt.lists.ArrayListImpl;
 public final class ListAllocator extends BaseIntCapacityInstanceAllocator<ArrayListImpl<?>> implements IListAllocator {
 
     public ListAllocator(IntFunction<Object[]> createArray) {
-        super(createArray, ArrayListImpl::new, l -> l.getCapacity());
+        super(createArray, (create, initialCapacity) -> new ArrayListImpl<>(initialCapacity, create), l -> l.getCapacity());
     }
 
     @Override

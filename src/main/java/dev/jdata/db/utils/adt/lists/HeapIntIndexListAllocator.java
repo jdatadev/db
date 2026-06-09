@@ -8,12 +8,10 @@ final class HeapIntIndexListAllocator
         extends IntIndexListAllocator<IHeapIntIndexList, IHeapIntIndexList, IHeapMutableIntIndexList, MutableIntIndexList, IHeapIntIndexListBuilder>
         implements IHeapIntIndexListAllocator {
 
-    static final HeapIntIndexListAllocator INSTANCE = new HeapIntIndexListAllocator();
+    static final HeapIntIndexListAllocator INSTANCE = new HeapIntIndexListAllocator(AllocationType.HEAP_ALLOCATOR);
 
-    private static final AllocationType ALLOCATION_TYPE = AllocationType.HEAP_ALLOCATOR;
-
-    private HeapIntIndexListAllocator() {
-        super(ALLOCATION_TYPE, new IntCapacityHeapElementsAllocators<>(ALLOCATION_TYPE, HeapIntIndexList::copyArray, HeapIntIndexList::empty, HeapMutableIntIndexList::create,
+    private HeapIntIndexListAllocator(AllocationType allocationType) {
+        super(allocationType, new IntCapacityHeapElementsAllocators<>(allocationType, HeapIntIndexList::copyArray, HeapIntIndexList::empty, HeapMutableIntIndexList::create,
                 HeapIntIndexListBuilder::create));
     }
 }

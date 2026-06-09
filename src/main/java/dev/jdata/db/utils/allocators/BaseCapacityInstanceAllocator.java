@@ -95,7 +95,7 @@ public abstract class BaseCapacityInstanceAllocator<T> extends InstanceNodeAlloc
 
                 result = foundNode.instance;
 
-                foundNode.init(nodeFreeList, true, false, null);
+                foundNode.initialize(nodeFreeList, true, false, null);
 
                 nodeFreeList = foundNode;
 
@@ -135,7 +135,7 @@ public abstract class BaseCapacityInstanceAllocator<T> extends InstanceNodeAlloc
 
         if (instanceFreeList == null) {
 
-            allocatorNode.init(null, true, true, array);
+            allocatorNode.initialize(null, true, true, array);
 
             this.instanceFreeList = allocatorNode;
         }
@@ -173,7 +173,7 @@ public abstract class BaseCapacityInstanceAllocator<T> extends InstanceNodeAlloc
                 this.instanceFreeList = allocatorNode;
             }
 
-            allocatorNode.init(nextNode, true, true, array);
+            allocatorNode.initialize(nextNode, true, true, array);
         }
     }
 

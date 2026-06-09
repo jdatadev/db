@@ -2,10 +2,11 @@ package dev.jdata.db.engine.sessions;
 
 import java.util.Objects;
 
+import org.jutils.io.strings.StringRef;
+
 import dev.jdata.db.engine.descriptorables.BaseDescriptorable;
 import dev.jdata.db.engine.sessions.PreparedStatement.PreparedStatementState;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
-import dev.jdata.db.sql.parse.ISQLString;
 import dev.jdata.db.utils.State;
 import dev.jdata.db.utils.adt.IClearable;
 
@@ -29,7 +30,7 @@ final class PreparedStatement extends BaseDescriptorable<PreparedStatementState>
     }
 
     private BaseSQLStatement sqlStatement;
-    private ISQLString sqlString;
+    private long sqlString;
 
     PreparedStatement(AllocationType allocationType) {
         super(allocationType, PreparedStatementState.CREATED, false);
@@ -41,10 +42,10 @@ final class PreparedStatement extends BaseDescriptorable<PreparedStatementState>
         this.sqlStatement = null;
     }
 
-    void initialize(BaseSQLStatement sqlStatement, ISQLString sqlString) {
+    void initialize(BaseSQLStatement sqlStatement, long sqlString) {
 
         this.sqlStatement = Objects.requireNonNull(sqlStatement);
-        this.sqlString = Objects.requireNonNull(sqlString);
+        this.sqlString = StringRef.checkIsString(sqlString);
     }
 
     int getPreparedStatementId() {
@@ -56,7 +57,7 @@ final class PreparedStatement extends BaseDescriptorable<PreparedStatementState>
         return sqlStatement;
     }
 
-    ISQLString getSQLString() {
+    long getSQLString() {
         return sqlString;
     }
 }

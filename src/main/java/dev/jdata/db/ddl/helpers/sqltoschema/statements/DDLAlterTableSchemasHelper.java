@@ -5,6 +5,10 @@ import java.util.Objects;
 import org.jutils.ast.objects.list.ASTList;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects.ProcessAlterTableAddColumnsScratchObject;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects.ProcessAlterTableAddPrimaryConstraintScratchObject;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects.ProcessAlterTableDropColumnsScratchObject;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects.ProcessAlterTableModifyColumnsScratchObject;
 import dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects.ProcessAlterTableScratchObject;
 import dev.jdata.db.ddl.model.diff.TableDiff;
 import dev.jdata.db.engine.database.StringManagement;
@@ -44,7 +48,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
     public static <T extends IIntSetBuilder<?, ? extends IHeapIntSet>, U extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>, P> TableDiff processAlterTable(
             SQLAlterTableStatement sqlAlterTableStatement, DatabaseId databaseId, Table table, StringManagement stringManagement, IIntSetAllocator<?, ?, T> intSetAllocator,
-            IIndexListAllocator<Column, ?, ?, U> columnIndexListAllocator, ProcessAlterTableScratchObject<T, U> processAlterTableScratchObject) throws SQLValidationException {
+            IIndexListAllocator<Column, ?, ?, U> columnIndexListAllocator, ProcessAlterTableScratchObject<T, U> alterTableScratchObject) throws SQLValidationException {
 
         Objects.requireNonNull(sqlAlterTableStatement);
         Objects.requireNonNull(databaseId);
@@ -52,18 +56,26 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
         Objects.requireNonNull(intSetAllocator);
         Objects.requireNonNull(stringManagement);
         Objects.requireNonNull(columnIndexListAllocator);
-        Objects.requireNonNull(processAlterTableScratchObject);
+        Objects.requireNonNull(alterTableScratchObject);
 
         if (DEBUG) {
 
             enter(debugClass, b -> b.add("sqlAlterTableStatement", sqlAlterTableStatement).add("databaseId", databaseId).add("table", table)
                     .add("intSetAllocator", intSetAllocator).add("stringManagement", stringManagement).add("columnIndexListAllocator", columnIndexListAllocator)
-                    .add("processAlterTableScratchObject", processAlterTableScratchObject));
+                    .add("alterTableScratchObject", alterTableScratchObject));
         }
 
-        processAlterTableScratchObject.initialize(databaseId, stringManagement, table, intSetAllocator, columnIndexListAllocator);
+        final TableDiff result;
 
-        final TableDiff result = sqlAlterTableStatement.getOperation().visit(alterTableOperationVisitor, processAlterTableScratchObject);
+        try {
+            alterTableScratchObject.initialize(databaseId, stringManagement, table, intSetAllocator, columnIndexListAllocator);
+
+            result = sqlAlterTableStatement.getOperation().visit(alterTableOperationVisitor, alterTableScratchObject);
+        }
+        finally {
+
+            alterTableScratchObject.reset();
+        }
 
         if (DEBUG) {
 
@@ -100,7 +112,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
                         ? extends IIntSetBuilder<?, ? extends IHeapIntSet>,
                         ? extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>> parameter) throws SQLValidationException {
 
-            return processAlterTableModifyColumns(addColumnOperation, parameter);
+            return processAlterTableModifyColumns(addColumnOperation, parameter.getModifyColumnsScratchObject());
         }
 
         @Override
@@ -109,16 +121,16 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
                         ? extends IIntSetBuilder<?, ? extends IHeapIntSet>,
                         ? extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>> parameter) throws SQLValidationException {
 
-            return processAlterTableDropColumns(dropColumnOperation, parameter);
+            return processAlterTableDropColumns(dropColumnOperation, parameter.getDropColumnsScratchObject());
         }
 
         @Override
         public TableDiff onAddPrimaryKeyConstraint(SQLAddPrimaryKeyConstraintOperation addPrimaryKeyConstraintOperation,
                 ProcessAlterTableScratchObject<
                         ? extends IIntSetBuilder<?, ? extends IHeapIntSet>,
-                        ? extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>> parameter) {
+                        ? extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>> parameter) throws SQLValidationException {
 
-            throw new UnsupportedOperationException();
+            return processAlterTableAddPrimaryKeyConstraint(addPrimaryKeyConstraintOperation, parameter.getAddPrimaryConstraintScratchObject());
         }
 
         @Override
@@ -168,31 +180,52 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
     };
 
     private static <T extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>> TableDiff processAlterTableAddColumns(SQLAddColumnsOperation sqlAddColumnsOperation,
-            ProcessAlterTableScratchObject<?, T> processAlterTableScratchObject) throws ColumnAlreadyExistsException {
-
-        if (DEBUG) {
-
-            enter(debugClass, b -> b.add("sqlAddColumnsOperation", sqlAddColumnsOperation).add("processAlterTableScratchObject", processAlterTableScratchObject));
-        }
-
-        validateAddColumns(sqlAddColumnsOperation, processAlterTableScratchObject);
+            ProcessAlterTableScratchObject<?, T> alterTableScratchObject) throws ColumnAlreadyExistsException {
 
         final TableDiff result;
 
-        final IIndexListAllocator<Column, ?, ?, T> columnIndexListAllocator = processAlterTableScratchObject.getColumnIndexListAllocator();
+        final ProcessAlterTableAddColumnsScratchObject<T> addColumnsScratchObject = alterTableScratchObject.getAddColumnsScratchObject();
+
+        addColumnsScratchObject.initialize(alterTableScratchObject.getDatabaseId(), alterTableScratchObject.getStringManagement(), alterTableScratchObject.getTable(),
+                alterTableScratchObject.getColumnIndexListAllocator());
+
+        try {
+            result = processAlterTableAddColumns(sqlAddColumnsOperation, addColumnsScratchObject);
+        }
+        finally {
+
+            addColumnsScratchObject.reset();
+        }
+
+        return result;
+    }
+
+    private static <T extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>> TableDiff processAlterTableAddColumns(SQLAddColumnsOperation sqlAddColumnsOperation,
+            ProcessAlterTableAddColumnsScratchObject<T> addColumnsScratchObject) throws ColumnAlreadyExistsException {
+
+        if (DEBUG) {
+
+            enter(debugClass, b -> b.add("sqlAddColumnsOperation", sqlAddColumnsOperation).add("addColumnsScratchObject", addColumnsScratchObject));
+        }
+
+        validateAddColumns(sqlAddColumnsOperation, addColumnsScratchObject);
+
+        final TableDiff result;
+
+        final IIndexListAllocator<Column, ?, ?, T> columnIndexListAllocator = addColumnsScratchObject.getColumnIndexListAllocator();
 
         final ASTList<SQLAddColumnDefinition> sqlAddColumnDefinitions = sqlAddColumnsOperation.getColumnDefinitions();
 
         final int numAddedColumns = sqlAddColumnDefinitions.size();
 
-        final Table table = processAlterTableScratchObject.getTable();
+        final Table table = addColumnsScratchObject.getTable();
 
         final T addedColumnsBuilder = columnIndexListAllocator.createBuilder(numAddedColumns);
 
         try {
-            processAlterTableScratchObject.initialize(processAlterTableScratchObject.getStringManagement(), table.getMaxColumnId() + 1, addedColumnsBuilder);
+            addColumnsScratchObject.setColumnsBuilder(addedColumnsBuilder);
 
-            sqlAddColumnDefinitions.forEachWithParameter(processAlterTableScratchObject, (m, s) -> {
+            sqlAddColumnDefinitions.forEachWithParameter(addColumnsScratchObject, (m, s) -> {
 
                 final Table closureTable = s.getTable();
 
@@ -201,7 +234,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
                 s.setParsedName(parsedColumnName);
 
-                final Column existingColumn = closureTable.findAtMostOneColumn(s, (c, p) -> parsedEqualsStored(p, c));
+                final Column existingColumn = closureTable.findAtMostOneColumn(s, (c, p) -> parsedEqualsStored(p.getStringManagement(), p.getParsedName(), c));
 
                 if (existingColumn != null) {
 
@@ -228,10 +261,17 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
         return result;
     }
 
-    private static void validateAddColumns(SQLAddColumnsOperation sqlAddColumnsOperation, ProcessAlterTableScratchObject<?, ?> processAlterTableScratchObject)
+    private static void validateAddColumns(SQLAddColumnsOperation sqlAddColumnsOperation, ProcessAlterTableAddColumnsScratchObject<?> addColumnScratchObject)
             throws ColumnAlreadyExistsException {
 
-        sqlAddColumnsOperation.getColumnDefinitions().forEachWithParameter(processAlterTableScratchObject, (a, s) -> {
+        final ASTList<SQLAddColumnDefinition> columnDefinitions = sqlAddColumnsOperation.getColumnDefinitions();
+
+        if (columnDefinitions.isEmpty()) {
+
+            throw new IllegalArgumentException();
+        }
+
+        columnDefinitions.forEachWithParameter(addColumnScratchObject, (a, s) -> {
 
             final long sqlColumnName = a.getColumnDefinition().getName();
 
@@ -243,27 +283,27 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
     }
 
     private static <T extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>> TableDiff processAlterTableModifyColumns(
-            SQLModifyColumnsOperation sqlModifyColumnsOperation, ProcessAlterTableScratchObject<?, T> processAlterTableScratchObject) throws ColumnDoesNotExistException {
+            SQLModifyColumnsOperation sqlModifyColumnsOperation, ProcessAlterTableModifyColumnsScratchObject<T> modifyColumnsScratchObject) throws ColumnDoesNotExistException {
 
         if (DEBUG) {
 
-            enter(debugClass, b -> b.add("sqlModifyColumnsOperation", sqlModifyColumnsOperation).add("processAlterTableScratchObject", processAlterTableScratchObject));
+            enter(debugClass, b -> b.add("sqlModifyColumnsOperation", sqlModifyColumnsOperation).add("modifyColumnsScratchObject", modifyColumnsScratchObject));
         }
 
-        validateModifyColumns(sqlModifyColumnsOperation, processAlterTableScratchObject);
+        validateModifyColumns(sqlModifyColumnsOperation, modifyColumnsScratchObject);
 
         final TableDiff result;
 
-        final IIndexListAllocator<Column, ?, ?, T> columnIndexListAllocator = processAlterTableScratchObject.getColumnIndexListAllocator();
+        final IIndexListAllocator<Column, ?, ?, T> columnIndexListAllocator = modifyColumnsScratchObject.getColumnIndexListAllocator();
 
         final ASTList<SQLModifyColumn> sqlModifyColumns = sqlModifyColumnsOperation.getColumns();
 
         final T modifiedColumnsBuilder = columnIndexListAllocator.createBuilder(sqlModifyColumns.size());
 
         try {
-            processAlterTableScratchObject.initialize(processAlterTableScratchObject.getStringManagement(), -1, modifiedColumnsBuilder);
+            modifyColumnsScratchObject.setColumnsBuilder(modifiedColumnsBuilder);
 
-            sqlModifyColumns.forEachWithParameter(processAlterTableScratchObject, (m, s) -> {
+            sqlModifyColumns.forEachWithParameter(modifyColumnsScratchObject, (m, s) -> {
 
                 final Table table = s.getTable();
 
@@ -272,7 +312,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
                 s.setParsedName(parsedColumnName);
 
-                final Column existingColumn = table.findAtMostOneColumn(s, (c, p) -> parsedEqualsStored(p, c));
+                final Column existingColumn = table.findAtMostOneColumn(s, (c, p) -> parsedEqualsStored(p.getStringManagement(), p.getParsedName(), c));
 
                 if (existingColumn == null) {
 
@@ -284,7 +324,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
                 s.addColumn(modifiedColumn);
             });
 
-            result = TableDiff.ofModifiedColumns(processAlterTableScratchObject.getTable(), modifiedColumnsBuilder.buildHeapAllocatedNotEmpty());
+            result = TableDiff.ofModifiedColumns(modifyColumnsScratchObject.getTable(), modifiedColumnsBuilder.buildHeapAllocatedNotEmpty());
         }
         finally {
 
@@ -299,10 +339,10 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
         return result;
     }
 
-    private static void validateModifyColumns(SQLModifyColumnsOperation sqlModifyColumnsOperation, ProcessAlterTableScratchObject<?, ?> processAlterTableScratchObject)
+    private static void validateModifyColumns(SQLModifyColumnsOperation sqlModifyColumnsOperation, ProcessAlterTableModifyColumnsScratchObject modifyColumnsScratchObject)
             throws ColumnDoesNotExistException {
 
-        sqlModifyColumnsOperation.getColumns().forEachWithParameter(processAlterTableScratchObject, (m, s) -> {
+        sqlModifyColumnsOperation.getColumns().forEachWithParameter(modifyColumnsScratchObject, (m, s) -> {
 
             final long sqlColumnName = m.getColumnDefinition().getName();
 
@@ -314,46 +354,46 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
     }
 
     private static <T extends IIntSetBuilder<?, ? extends IHeapIntSet>> TableDiff processAlterTableDropColumns(SQLDropColumnsOperation sqlDropColumnsOperation,
-            ProcessAlterTableScratchObject<T, ?> processAlterTableScratchObject) throws ColumnDoesNotExistException {
+            ProcessAlterTableDropColumnsScratchObject<T> dropColumnsScratchObject) throws ColumnDoesNotExistException {
 
         if (DEBUG) {
 
-            enter(debugClass, b -> b.add("sqlDropColumnsOperation", sqlDropColumnsOperation).add("processAlterTableScratchObject", processAlterTableScratchObject));
+            enter(debugClass, b -> b.add("sqlDropColumnsOperation", sqlDropColumnsOperation).add("dropColumnsScratchObject", dropColumnsScratchObject));
         }
 
         final TableDiff result;
 
-        validateDropColumns(sqlDropColumnsOperation, processAlterTableScratchObject);
+        validateDropColumns(sqlDropColumnsOperation, dropColumnsScratchObject);
 
         final SQLColumnNames sqlColumnNames = sqlDropColumnsOperation.getNames();
 
         final long numColumnNames = sqlColumnNames.getNumElements();
 
-        final IIntSetAllocator<?, ?, T> intSetAllocator = processAlterTableScratchObject.getIntSetAllocator();
+        final IIntSetAllocator<?, ?, T> intSetAllocator = dropColumnsScratchObject.getIntSetAllocator();
 
         final T droppedColumnsBuilder = intSetAllocator.createBuilder(numColumnNames);
 
         try {
-            final Table table = processAlterTableScratchObject.getTable();
+            final Table table = dropColumnsScratchObject.getTable();
 
             for (int i = 0; i < numColumnNames; ++ i) {
 
                 final long sqlColumnName = sqlColumnNames.get(i);
 
-                processAlterTableScratchObject.setParsedName(sqlColumnName);
+                dropColumnsScratchObject.setParsedName(sqlColumnName);
 
-                final Column existingColumn = table.findAtMostOneColumn(processAlterTableScratchObject,
+                final Column existingColumn = table.findAtMostOneColumn(dropColumnsScratchObject,
                         (c, s) -> s.getStringManagement().parsedEqualsStored(s.getParsedName(), c.getParsedName(), false));
 
                 if (existingColumn == null) {
 
-                    throw new ColumnDoesNotExistException(processAlterTableScratchObject.getDatabaseId(), sqlColumnName);
+                    throw new ColumnDoesNotExistException(dropColumnsScratchObject.getDatabaseId(), sqlColumnName);
                 }
 
                 droppedColumnsBuilder.addUnordered(existingColumn.getId());
             }
 
-            result = TableDiff.ofDroppedColumns(processAlterTableScratchObject.getTable(), droppedColumnsBuilder.buildHeapAllocatedNotEmpty());
+            result = TableDiff.ofDroppedColumns(dropColumnsScratchObject.getTable(), droppedColumnsBuilder.buildHeapAllocatedNotEmpty());
         }
         finally {
 
@@ -368,15 +408,15 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
         return result;
     }
 
-    private static void validateDropColumns(SQLDropColumnsOperation sqlDropColumnsOperation, ProcessAlterTableScratchObject<?, ?> processAlterTableScratchObject)
+    private static void validateDropColumns(SQLDropColumnsOperation sqlDropColumnsOperation, ProcessAlterTableDropColumnsScratchObject<?> dropColumnsScratchObject)
             throws ColumnDoesNotExistException {
 
         final SQLColumnNames sqlColumnNames = sqlDropColumnsOperation.getNames();
 
         final long numColumnNames = sqlColumnNames.getNumElements();
 
-        final Table table = processAlterTableScratchObject.getTable();
-        final StringManagement stringManagement = processAlterTableScratchObject.getStringManagement();
+        final Table table = dropColumnsScratchObject.getTable();
+        final StringManagement stringManagement = dropColumnsScratchObject.getStringManagement();
 
         for (int i = 0; i < numColumnNames; ++ i) {
 
@@ -384,21 +424,21 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
             if (!containsColumn(table, sqlColumnName, stringManagement)) {
 
-                throw new ColumnDoesNotExistException(processAlterTableScratchObject.getDatabaseId(), sqlColumnName);
+                throw new ColumnDoesNotExistException(dropColumnsScratchObject.getDatabaseId(), sqlColumnName);
             }
         }
     }
 
     private static TableDiff processAlterTableAddPrimaryKeyConstraint(SQLAddPrimaryKeyConstraintOperation sqlAddPrimaryKeyConstraintOperation,
-            ProcessAlterTableScratchObject<?, ?> processAlterTableScratchObject) throws ColumnDoesNotExistException {
+            ProcessAlterTableAddPrimaryConstraintScratchObject addPrimaryConstraintScratchObject) throws ColumnDoesNotExistException {
 
         if (DEBUG) {
 
             enter(debugClass, b -> b.add("sqlAddPrimaryKeyConstraintOperation", sqlAddPrimaryKeyConstraintOperation)
-                    .add("processAlterTableScratchObject", processAlterTableScratchObject));
+                    .add("addPrimaryConstraintScratchObject", addPrimaryConstraintScratchObject));
         }
 
-        validateAddPrimaryConstraint(sqlAddPrimaryKeyConstraintOperation, processAlterTableScratchObject);
+        validateAddPrimaryConstraint(sqlAddPrimaryKeyConstraintOperation, addPrimaryConstraintScratchObject);
 
         final TableDiff result = null;
 
@@ -411,14 +451,14 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
     }
 
     private static void validateAddPrimaryConstraint(SQLAddPrimaryKeyConstraintOperation sqlAddPrimaryKeyConstraintOperation,
-            ProcessAlterTableScratchObject<?, ?> processAlterTableScratchObject) throws ColumnDoesNotExistException {
+            ProcessAlterTableAddPrimaryConstraintScratchObject addPrimaryConstraintScratchObject) throws ColumnDoesNotExistException {
 
         final SQLColumnNames sqlColumnNames = sqlAddPrimaryKeyConstraintOperation.getColumnNames();
 
         final long numColumnNames = sqlColumnNames.getNumElements();
 
-        final Table table = processAlterTableScratchObject.getTable();
-        final StringManagement stringManagement = processAlterTableScratchObject.getStringManagement();
+        final Table table = addPrimaryConstraintScratchObject.getTable();
+        final StringManagement stringManagement = addPrimaryConstraintScratchObject.getStringManagement();
 
         for (int i = 0; i < numColumnNames; ++ i) {
 
@@ -426,7 +466,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
             if (!containsColumn(table, sqlColumnName, stringManagement)) {
 
-                throw new ColumnDoesNotExistException(processAlterTableScratchObject.getDatabaseId(), sqlColumnName);
+                throw new ColumnDoesNotExistException(addPrimaryConstraintScratchObject.getDatabaseId(), sqlColumnName);
             }
         }
     }
@@ -436,8 +476,8 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
         return table.containsColumn(name, false, stringManagement, (n, c, s, m) -> m.parsedEqualsStored(n, c, s));
     }
 
-    private static boolean parsedEqualsStored(ProcessAlterTableScratchObject<?, ?> processAlterTableScratchObject, Column column) {
+    private static boolean parsedEqualsStored(StringManagement stringManagement, long parsedName, Column column) {
 
-        return processAlterTableScratchObject.getStringManagement().parsedEqualsStored(processAlterTableScratchObject.getParsedName(), column.getParsedName(), false);
+        return stringManagement.parsedEqualsStored(parsedName, column.getParsedName(), false);
     }
 }

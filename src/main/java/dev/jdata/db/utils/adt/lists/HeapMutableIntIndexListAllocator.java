@@ -16,18 +16,18 @@ final class HeapMutableIntIndexListAllocator
     }
 
     @Override
-    protected HeapMutableIntIndexList allocateMutable(int minimumCapacity) {
-
-        checkAllocateMutableParameters(minimumCapacity);
-
-        return HeapMutableIntIndexList.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity);
-    }
-
-    @Override
     public IHeapMutableIntIndexList copyToMutable(IIntIterableElementsView mutableFrom) {
 
         checkCopyToMutableParameters(mutableFrom);
 
         return HeapMutableIntIndexList.copyToMutable(AllocationType.HEAP_ALLOCATOR, mutableFrom);
+    }
+
+    @Override
+    protected HeapMutableIntIndexList allocateMutable(int minimumCapacity) {
+
+        checkAllocateMutableParameters(minimumCapacity);
+
+        return HeapMutableIntIndexList.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity);
     }
 }

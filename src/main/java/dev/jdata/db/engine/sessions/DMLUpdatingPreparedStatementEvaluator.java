@@ -7,7 +7,7 @@ import dev.jdata.db.dml.DMLInsertRows;
 import dev.jdata.db.dml.DMLInsertRows.InsertRow;
 import dev.jdata.db.engine.database.EvaluateException;
 import dev.jdata.db.engine.database.OverflowException;
-import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
+import dev.jdata.db.engine.sessions.ISession.IPreparedStatementParameters;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.sql.ast.clauses.SQLWhereClause;
 import dev.jdata.db.sql.ast.statements.dml.SQLDeleteStatement;
@@ -19,7 +19,7 @@ class DMLUpdatingPreparedStatementEvaluator extends BaseDMLUpdatingEvaluator {
 
     static void onInsert(SQLInsertStatement insertStatement, DMLUpdatingPreparedEvaluatorParameter<?> evaluatorParameter) throws EvaluateException {
 
-        final PreparedStatementParameters preparedStatementParameters = evaluatorParameter.getPreparedStatementParameters();
+        final IPreparedStatementParameters preparedStatementParameters = evaluatorParameter.getPreparedStatementParameters();
         final TableAndColumnNames tableAndColumnNames = evaluatorParameter.getTableAndColumnNames();
 
         final int tableId = tableAndColumnNames.getColumnsObjectId(insertStatement.getTableName());
@@ -30,7 +30,7 @@ class DMLUpdatingPreparedStatementEvaluator extends BaseDMLUpdatingEvaluator {
         storeInsertValues(preparedStatementParameters, insertStatement, evaluatorParameter);
     }
 
-    private static void storeInsertValues(PreparedStatementParameters preparedStatementParameters, SQLInsertStatement insertStatement,
+    private static void storeInsertValues(IPreparedStatementParameters preparedStatementParameters, SQLInsertStatement insertStatement,
             DMLUpdatingPreparedEvaluatorParameter<?> evaluatorParameter) throws OverflowException {
 
         final int tableId = evaluatorParameter.getTableId();
@@ -74,7 +74,7 @@ class DMLUpdatingPreparedStatementEvaluator extends BaseDMLUpdatingEvaluator {
     static <T extends IMutableLongLargeArray> void onUpdate(SQLUpdateStatement updateStatement, DMLUpdatingPreparedEvaluatorParameter<T> evaluatorParameter)
             throws EvaluateException {
 
-        final PreparedStatementParameters preparedStatementParameters = evaluatorParameter.getPreparedStatementParameters();
+        final IPreparedStatementParameters preparedStatementParameters = evaluatorParameter.getPreparedStatementParameters();
         final TableAndColumnNames tableAndColumnNames = evaluatorParameter.getTableAndColumnNames();
 
         final int tableId = tableAndColumnNames.getColumnsObjectId(updateStatement.getTableName());
@@ -107,7 +107,7 @@ class DMLUpdatingPreparedStatementEvaluator extends BaseDMLUpdatingEvaluator {
 
     static void onDelete(SQLDeleteStatement sqlDeleteStatement, DMLUpdatingPreparedEvaluatorParameter<?> evaluatorParameter) throws EvaluateException {
 
-        final PreparedStatementParameters preparedStatementParameters = evaluatorParameter.getPreparedStatementParameters();
+        final IPreparedStatementParameters preparedStatementParameters = evaluatorParameter.getPreparedStatementParameters();
 
         final int numDeletes = preparedStatementParameters.getParametersNumRows();
 

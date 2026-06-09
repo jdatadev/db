@@ -9,6 +9,6 @@ public interface IObjectOrderedOnlyElementsAllocator<
                 MUTABLE extends IMutableElements & IOnlyElementsView & IObjectOrderedElementsView<T>,
                 BUILDER extends IObjectOrderedOnlyElementsBuilder<T, IMMUTABLE, ?>>
 
-        extends IObjectElementsAllocator<T, IMMUTABLE, MUTABLE, BUILDER>, ISortableAllocator<IObjectIterableElementsView<T>, Comparator<? super T>, IMMUTABLE> {
+        extends IObjectElementsAllocator<T, IMMUTABLE, MUTABLE, BUILDER>, ISortableAllocator<IObjectIterableElementsView<? extends T>, Comparator<? super T>, IMMUTABLE> {
 
 }

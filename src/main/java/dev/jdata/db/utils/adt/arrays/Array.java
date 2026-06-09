@@ -185,7 +185,7 @@ public class Array {
     public static <T, P> T findAtMostOne(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
 
         Objects.requireNonNull(array);
-        Checks.checkFromIndexSize(startIndex, numElements, array.length);
+        Checks.checkIntFromIndexSize(startIndex, numElements, array.length);
         Objects.requireNonNull(predicate);
 
         T result = null;
@@ -218,7 +218,7 @@ public class Array {
     public static <T, P> T findExactlyOne(T[] array, int startIndex, int numElements, P parameter, BiPredicate<T, P> predicate) {
 
         Objects.requireNonNull(predicate);
-        Checks.checkFromIndexSize(startIndex, numElements, array.length);
+        Checks.checkIntFromIndexSize(startIndex, numElements, array.length);
         Objects.requireNonNull(predicate);
 
         T result = null;
@@ -585,16 +585,16 @@ public class Array {
         Checks.isIntLengthAboveZero(numElements);
         Checks.isNotZero(delta);
 
-        Checks.checkFromIndexSize(startIndex, numElements, arrayLength);
-        Checks.checkFromIndexSize(startIndex + delta, numElements, arrayLength);
+        Checks.checkIntFromIndexSize(startIndex, numElements, arrayLength);
+        Checks.checkIntFromIndexSize(startIndex + delta, numElements, arrayLength);
     }
 
     public static <T> boolean equals(T[] array1, int startIndex1, T[] array2, int startIndex2, int numElements) {
 
         Objects.requireNonNull(array1);
-        Checks.checkFromIndexSize(startIndex1, numElements, array1.length);
+        Checks.checkIntFromIndexSize(startIndex1, numElements, array1.length);
         Objects.requireNonNull(array2);
-        Checks.checkFromIndexSize(startIndex2, numElements, array2.length);
+        Checks.checkIntFromIndexSize(startIndex2, numElements, array2.length);
 
         boolean equals = true;
 
@@ -638,7 +638,7 @@ public class Array {
     public static String toString(byte[] array, int startIndex, int numElements) {
 
         Objects.requireNonNull(array);
-        Checks.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkIntFromToIndex(startIndex, numElements, array.length);
 
         return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[(int)i]));
     }
@@ -646,7 +646,7 @@ public class Array {
     public static String toString(int[] array, int startIndex, int numElements) {
 
         Objects.requireNonNull(array);
-        Checks.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkIntFromToIndex(startIndex, numElements, array.length);
 
         return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i, b) -> b.append(a[(int)i]));
     }
@@ -654,7 +654,7 @@ public class Array {
     public static String toString(int[] array, int startIndex, int numElements, IntPredicate predicate) {
 
         Objects.requireNonNull(array);
-        Checks.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkIntFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(predicate);
 
         return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[(int)i]), (a, i, b) -> b.append(a[(int)i]));
@@ -663,7 +663,7 @@ public class Array {
     public static void toString(int[] array, int startIndex, int numElements, StringBuilder sb, IntPredicate predicate) {
 
         Objects.requireNonNull(array);
-        Checks.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkIntFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(sb);
         Objects.requireNonNull(predicate);
 
@@ -673,7 +673,7 @@ public class Array {
     public static void toString(int[] array, int startIndex, int numElements, StringBuilder sb, IntPredicate predicate, IntByIndexStringAdder<int[]> byIndexStringAdder) {
 
         Objects.requireNonNull(array);
-        Checks.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkIntFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(sb);
         Objects.requireNonNull(predicate);
 
@@ -684,7 +684,7 @@ public class Array {
     public static String toString(long[] array, int startIndex, int numElements, LongPredicate predicate) {
 
         Objects.requireNonNull(array);
-        Checks.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkIntFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(predicate);
 
         return ByIndex.closureOrConstantToString(array, startIndex, numElements, null, (a, i) -> predicate.test(a[(int)i]), (a, i, b) -> b.append(a[(int)i]));
@@ -693,7 +693,7 @@ public class Array {
     public static void toString(long[] array, int startIndex, int numElements, StringBuilder sb, LongPredicate predicate) {
 
         Objects.requireNonNull(array);
-        Checks.checkFromToIndex(startIndex, numElements, array.length);
+        Checks.checkIntFromToIndex(startIndex, numElements, array.length);
         Objects.requireNonNull(sb);
         Objects.requireNonNull(predicate);
 

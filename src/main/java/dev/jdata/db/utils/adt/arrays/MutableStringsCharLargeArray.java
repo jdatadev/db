@@ -7,6 +7,7 @@ import org.jutils.io.strings.StringResolver.ICharactersBufferAllocator;
 import org.jutils.io.strings.StringResolver.ICharactersToString;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.utils.adt.elements.ICharForEach2;
 import dev.jdata.db.utils.adt.maps.Maps;
 import dev.jdata.db.utils.adt.maps.Maps.ILongAppendEachValue;
 import dev.jdata.db.utils.adt.maps.Maps.ILongForEachAppendCaller;
@@ -33,6 +34,69 @@ abstract class MutableStringsCharLargeArray extends BaseMutableCharLargeArray im
 
     MutableStringsCharLargeArray(AllocationType allocationType, int initialOuterCapacity, int innerCapacityExponent, char clearValue) {
         super(allocationType, initialOuterCapacity, innerCapacityExponent, clearValue);
+    }
+
+    @Override
+    public <P1, P2, E extends Exception> void forEach(long index, P1 parameter1, P2 parameter2, ICharForEach2<P1, P2, E> forEach) throws E {
+
+        Checks.checkLongIndex(index, getLimit());
+        Objects.requireNonNull(forEach);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("index", index).add("parameter1", parameter1).add("parameter2", parameter2).add("forEach", forEach));
+        }
+
+        int bufferNo = getOuterIndex(index);
+        int bufferOffset = getInnerElementIndex(index);
+
+        final char[][] buffers = getOuterArray();
+
+        char[] buffer = buffers[bufferNo];
+
+        final int endBufferOffset = getEndBufferOffset();
+
+        for (;;) {
+
+            final char c = buffer[bufferOffset];
+
+            if (c == TERMINATOR_CHAR) {
+
+                break;
+            }
+
+            forEach.each(c, parameter1, parameter2);
+
+            if (bufferOffset == endBufferOffset) {
+
+                ++ bufferNo;
+                bufferOffset = 0;
+                buffer = buffers[bufferNo];
+            }
+            else {
+                ++ bufferOffset;
+            }
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public final char charAt(long index) {
+
+        Checks.checkLongIndex(index, getLimit());
+
+        final char c = get(index);
+
+        if (c == TERMINATOR_CHAR) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return c;
     }
 
     @Override
@@ -70,7 +134,7 @@ abstract class MutableStringsCharLargeArray extends BaseMutableCharLargeArray im
 
         char[] buffer = buffers[bufferNo];
 
-        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerNumAllocateElements()) - 1;
+        final int endBufferOffset = getEndBufferOffset();
 
         for (;;) {
 
@@ -123,7 +187,7 @@ abstract class MutableStringsCharLargeArray extends BaseMutableCharLargeArray im
 
         int offset = bufferOffset;
 
-        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerElementCapacity()) - 1;
+        final int endBufferOffset = getEndBufferOffset();
 
         long remaining = length;
 
@@ -179,7 +243,7 @@ abstract class MutableStringsCharLargeArray extends BaseMutableCharLargeArray im
 
         char[] buffer = buffers[bufferNo];
 
-        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerNumAllocateElements()) - 1;
+        final int endBufferOffset = getEndBufferOffset();
 
         for (;;) {
 
@@ -221,7 +285,7 @@ abstract class MutableStringsCharLargeArray extends BaseMutableCharLargeArray im
 
         char[] buffer = buffers[bufferNo];
 
-        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerNumAllocateElements()) - 1;
+        final int endBufferOffset = getEndBufferOffset();
 
         for (;;) {
 
@@ -274,7 +338,7 @@ abstract class MutableStringsCharLargeArray extends BaseMutableCharLargeArray im
 
         final char[][] buffers = getOuterArray();
         char[] buffer = buffers[bufferNo];
-        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerNumAllocateElements()) - 1;
+        final int endBufferOffset = getEndBufferOffset();
 
         final char[][] otherBuffers = otherCharArray.getOuterArray();
         char[] otherBuffer = otherBuffers[otherBufferNo];
@@ -332,7 +396,7 @@ abstract class MutableStringsCharLargeArray extends BaseMutableCharLargeArray im
     public final boolean matches(long index, CharSequence charSequence, int offset, int length, boolean caseSensitive) {
 
         Checks.checkLongIndex(index, getLimit());
-        Checks.checkFromIndexSize(offset, length, charSequence.length());
+        Checks.checkIntFromIndexSize(offset, length, charSequence.length());
 
         boolean equals = true;
 
@@ -343,7 +407,7 @@ abstract class MutableStringsCharLargeArray extends BaseMutableCharLargeArray im
 
         char[] buffer = buffers[bufferNo];
 
-        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerNumAllocateElements()) - 1;
+        final int endBufferOffset = getEndBufferOffset();
 
         for (int i = 0; i < length; ++ i) {
 
@@ -443,7 +507,7 @@ abstract class MutableStringsCharLargeArray extends BaseMutableCharLargeArray im
     private void add(CharSequence charSequence, int offset, int length, boolean addTerminator) {
 
         Objects.requireNonNull(charSequence);
-        Checks.checkFromIndexSize(offset, length, charSequence.length());
+        Checks.checkIntFromIndexSize(offset, length, charSequence.length());
         Checks.isIntLengthAboveZero(length);
 
         final int numAdditional = length + 1;
@@ -460,7 +524,7 @@ abstract class MutableStringsCharLargeArray extends BaseMutableCharLargeArray im
 
         char[] buffer = buffers[bufferNo];
 
-        final int endBufferOffset = Integers.checkUnsignedLongToUnsignedInt(getInnerNumAllocateElements()) - 1;
+        final int endBufferOffset = getEndBufferOffset();
 
         for (int i = 0; i < length; ++ i) {
 
@@ -519,6 +583,11 @@ abstract class MutableStringsCharLargeArray extends BaseMutableCharLargeArray im
 
             exit(b -> b.add("parameter", parameter).add("forEachStringIndex", forEachStringIndex));
         }
+    }
+
+    private int getEndBufferOffset() {
+
+        return Integers.checkUnsignedLongToUnsignedInt(getInnerNumAllocateElements()) - 1;
     }
 
     @Override

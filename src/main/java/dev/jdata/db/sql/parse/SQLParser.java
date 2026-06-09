@@ -31,6 +31,7 @@ import dev.jdata.db.sql.parse.expression.SQLSubSelectParser;
 import dev.jdata.db.sql.parse.trigger.SQLCreateTriggerParser;
 import dev.jdata.db.sql.parse.trigger.SQLDropTriggerParser;
 import dev.jdata.db.sql.parse.where.SQLWhereClauseParser;
+import dev.jdata.db.utils.adt.elements.ILongOrderedAddable;
 import dev.jdata.db.utils.allocators.NodeObjectCache;
 import dev.jdata.db.utils.checks.Checks;
 
@@ -114,7 +115,7 @@ public abstract class SQLParser extends BaseSQLParser {
     }
 
     private <E extends Exception> void parse(LoadStream<E> loadStream, Function<String, E> createEOFException, ISQLAllocator allocator,
-            SQLScratchExpressionValues scratchExpressionValues, IAddable<BaseSQLStatement> sqlStatementDst, IAddable<ISQLString> sqlStringsDst) throws ParserException, E {
+            SQLScratchExpressionValues scratchExpressionValues, IAddable<BaseSQLStatement> sqlStatementDst, ILongOrderedAddable sqlStringsDst) throws ParserException, E {
 
         final LoadStreamStringBuffers<E> buffer = new LoadStreamStringBuffers<>(loadStream);
 
@@ -122,7 +123,7 @@ public abstract class SQLParser extends BaseSQLParser {
     }
 
     public <E extends Exception, BUFFER extends BaseStringBuffers<E>> void parse(BUFFER buffer, Function<String, E> createEOFException, ISQLAllocator allocator,
-            SQLScratchExpressionValues scratchExpressionValues, IAddable<BaseSQLStatement> sqlStatementDst, IAddable<ISQLString> sqlStringsDst) throws ParserException, E {
+            SQLScratchExpressionValues scratchExpressionValues, IAddable<BaseSQLStatement> sqlStatementDst, ILongOrderedAddable sqlStringsDst) throws ParserException, E {
 
         Objects.requireNonNull(buffer);
         Objects.requireNonNull(createEOFException);
@@ -137,11 +138,19 @@ public abstract class SQLParser extends BaseSQLParser {
 
             if (!skipEmptyStatements(lexer)) {
 
+                long startPos;
+
                 for (;;) {
+
+                    startPos = lexer.getInputPosition();
 
                     final BaseSQLStatement sqlStatement = parseStatement(lexer);
 
                     sqlStatementDst.add(sqlStatement);
+
+                    final long endPos = lexer.getInputPosition();
+
+                    sqlStringsDst.addTail(lexer.getStringRefFromInputPosition(startPos, endPos));
 
                     if (skipEmptyStatements(lexer)) {
 
@@ -179,7 +188,6 @@ public abstract class SQLParser extends BaseSQLParser {
 
                     isEOF = true;
                 }
-
                 break;
             }
         }

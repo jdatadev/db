@@ -10,7 +10,6 @@ import org.jutils.io.buffers.LoadStreamStringBuffers;
 import org.jutils.io.loadstream.LoadStream;
 import org.jutils.io.loadstream.StringLoadStream;
 import org.jutils.io.strings.StringResolver;
-import org.jutils.io.strings.StringResolver.ICharactersBufferAllocator;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.DBConstants;
@@ -19,6 +18,7 @@ import dev.jdata.db.engine.database.DatabaseStringManagement;
 import dev.jdata.db.engine.database.IStringStorer;
 import dev.jdata.db.engine.database.StringManagement;
 import dev.jdata.db.engine.database.strings.IStringCache;
+import dev.jdata.db.engine.database.strings.IStringWriter;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.effective.IHeapEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Column;
@@ -94,17 +94,16 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
         checkDeserialize(effectiveDatabaseSchema, serializedSQL, databaseSchemaSerializer, deserializeStringStorer, schemaObjectIdAllocator, compareDatabaseSchemas);
     }
 
-    private static String serialize(IEffectiveDatabaseSchema effectiveDatabaseSchema, IStringStorer stringStorer,
+    private static String serialize(IEffectiveDatabaseSchema effectiveDatabaseSchema, IStringWriter stringWriter,
             BaseDatabaseSchemaSerialization<?, ?, ?, ?, ?, IHeapCompleteSchemaMap> databaseSchemaSerializer) {
 
         final StringBuilderSQLOutputter sqlOutputter = new StringBuilderSQLOutputter();
 
-        final ICharactersBufferAllocator charactersBufferAllocator = new CharacterBuffersAllocator();
         final StringBuilder sb = new StringBuilder();
 
-        sqlOutputter.initialize(charactersBufferAllocator, sb);
+        sqlOutputter.initialize(sb);
 
-        databaseSchemaSerializer.serialize(effectiveDatabaseSchema, stringStorer, sqlOutputter);
+        databaseSchemaSerializer.serialize(effectiveDatabaseSchema, stringWriter, sqlOutputter);
 
         return sb.toString();
     }
@@ -121,8 +120,8 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
         final IAddableListAllocator addableListAllocator = new AddableListAllocator();
         final ICachedIndexListAllocator<BaseSQLStatement> indexListAllocator = ICachedIndexListAllocator.create(BaseSQLStatement[]::new);
 
-        final IIndexList<BaseSQLStatement> sqlStatements = SQLParserHelper.parse(sqlParser, stringBuffers, RuntimeException::new, sqlScratchExpressionValues, sqlAllocator,
-                addableListAllocator, indexListAllocator);
+        final IIndexList<BaseSQLStatement> sqlStatements = SQLParserHelper.parse(sqlParser, stringBuffers, sqlScratchExpressionValues, sqlAllocator, addableListAllocator,
+                indexListAllocator, RuntimeException::new);
 
         assertThat(sqlStatements).hasNumElements(1L);
 

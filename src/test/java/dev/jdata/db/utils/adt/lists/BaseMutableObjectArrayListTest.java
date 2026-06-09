@@ -7,74 +7,11 @@ import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 
-abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArrayList<String>> extends BaseObjectArrayListTest<T> {
-
-    protected abstract U createStringList();
-    protected abstract U createStringList(int initialCapacity);
-
-    protected abstract int getCapacity(U list);
-
-    protected abstract void add(U list, String string);
-    protected abstract void addTail(U list, String string);
-    protected abstract void addTail(U list, String ... strings);
-
-    protected abstract void clear(U list);
+abstract class BaseMutableObjectArrayListTest<T extends IIndexListView<Integer>, U extends BaseObjectArrayList<String>> extends BaseMutableObjectListTest<T, U> {
 
     @Test
     @Category(UnitTest.class)
-    public final void testAddTail() {
-
-        checkAddTail((l, s) -> {
-
-            addTail(l, s);
-
-            return true;
-        });
-    }
-
-    protected final void checkAddTail(BiPredicate<U, String> listTailAdder) {
-
-        final U list = createStringList();
-
-        final String abc = "abc";
-        final String bcd = "bcd";
-        final String cde = "cde";
-
-        assertThat(listTailAdder.test(list, abc)).isTrue();
-        checkElementsSameAs(list, abc);
-
-        assertThat(listTailAdder.test(list, bcd)).isTrue();
-        checkElementsSameAs(list, abc, bcd);
-
-        assertThat(listTailAdder.test(list, cde)).isTrue();
-        checkElementsSameAs(list, abc, bcd, cde);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testAddTailVarargs() {
-
-        final U list = createStringList();
-
-        final String abc = "abc";
-        final String bcd = "bcd";
-        final String cde = "cde";
-        final String def = "def";
-        final String efg = "efg";
-
-        assertThatThrownBy(() -> addTail(list, new String[0])).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> addTail(list, new String[] { abc })).isInstanceOf(UnsupportedOperationException.class);
-
-        addTail(list, abc, bcd);
-        checkElementsSameAs(list, abc, bcd);
-
-        addTail(list, cde, def, efg);
-        checkElementsSameAs(list, abc, bcd, cde, def, efg);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testAddTailVarargsMany() {
+    public final void testArrayListAddTailVarargsMany() {
 
         final U list = createStringList();
 
@@ -104,11 +41,10 @@ abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArrayList<S
         }
     }
 
-    @Test
     @Category(UnitTest.class)
-    public final void testAddTailMany() {
+    public final void testArrayListAddTailMany() {
 
-        checkAddTailMany((l, s) -> {
+        checkArrayListAddTailMany((l, s) -> {
 
             addTail(l, s);
 
@@ -116,14 +52,14 @@ abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArrayList<S
         });
     }
 
-    protected final void checkAddTailMany(BiPredicate<U, String> listTailAdder) {
+    protected final void checkArrayListAddTailMany(BiPredicate<U, String> listTailAdder) {
 
         final U list = createStringList();
 
-        checkAddTailMany(list, listTailAdder);
+        checkArrayListAddTailMany(list, listTailAdder);
     }
 
-    final void checkAddTailMany(U list, BiPredicate<U, String> listTailAdder) {
+    protected final void checkArrayListAddTailMany(U list, BiPredicate<U, String> listTailAdder) {
 
         final int numElements = IOnlyElementsView.intNumElements(list);
 
@@ -224,134 +160,9 @@ abstract class BaseMutableObjectArrayListTest<T, U extends BaseObjectArrayList<S
         assertThatThrownBy(() -> list.get(3)).isInstanceOf(IndexOutOfBoundsException.class);
     }
 
-    @Test
-    @Category(UnitTest.class)
-    public final void testGetHead() {
+    @Override
+    protected final boolean hasCapacity() {
 
-        final U list = createStringList();
-
-        assertThatThrownBy(() -> list.getHead()).isInstanceOf(IllegalStateException.class);
-
-        final String abc = "abc";
-        final String bcd = "bcd";
-
-        add(list, abc);
-        assertThat(list.getHead()).isSameAs(abc);
-
-        add(list, bcd);
-        assertThat(list.getHead()).isSameAs(abc);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testGetTail() {
-
-        final U list = createStringList();
-
-        assertThatThrownBy(() -> list.getTail()).isInstanceOf(IllegalStateException.class);
-
-        final String abc = "abc";
-        final String bcd = "bcd";
-
-        add(list, abc);
-        assertThat(list.getTail()).isSameAs(abc);
-
-        add(list, bcd);
-        assertThat(list.getTail()).isSameAs(bcd);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testGetNumElements() {
-
-        final U list = createStringList();
-
-        final String abc = "abc";
-
-        assertThat(list.getNumElements()).isEqualTo(0L);
-
-        add(list, abc);
-        assertThat(list.getNumElements()).isEqualTo(1L);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testIsEmpty() {
-
-        final U list = createStringList();
-
-        final String abc = "abc";
-
-        assertThat(list.isEmpty()).isTrue();
-
-        add(list, abc);
-        assertThat(list.isEmpty()).isFalse();
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testInitialCapacity() {
-
-        final int initialCapacity = 123;
-
-        final U list = createStringList(initialCapacity);
-
-        assertThat(getCapacity(list)).isEqualTo(initialCapacity);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testGetCapacity() {
-
-        final U list = createStringList();
-
-        final int initialCapacity = getCapacity(list);
-
-        int i;
-
-        for (i = 0; i < initialCapacity; ++ i) {
-
-            final String instance = String.valueOf(i);
-
-            add(list, instance);
-        }
-
-        final String instance = String.valueOf(i);
-
-        add(list, instance);
-
-        assertThat(getCapacity(list)).isEqualTo(initialCapacity * 2);
-    }
-
-    @Test
-    @Category(UnitTest.class)
-    public final void testClear() {
-
-        final U list = createStringList();
-
-        final String abc = "abc";
-        final String bcd = "bcd";
-        final String cde = "cde";
-
-        add(list, abc);
-        checkElementsSameAs(list, abc);
-
-        clear(list);
-        checkNumElements(list, 0);
-
-        add(list, abc);
-        add(list, bcd);
-        checkElementsSameAs(list, abc, bcd);
-
-        clear(list);
-        checkNumElements(list, 0);
-
-        add(list, abc);
-        add(list, bcd);
-        add(list, cde);
-        checkElementsSameAs(list, abc, bcd, cde);
-
-        clear(list);
-        checkNumElements(list, 0);
+        return true;
     }
 }

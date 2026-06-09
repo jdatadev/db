@@ -20,14 +20,13 @@ import dev.jdata.db.sql.ast.statements.dml.SQLDeleteStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLInsertStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLSelectStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLUpdateStatement;
-import dev.jdata.db.sql.parse.ISQLString;
 import dev.jdata.db.utils.State;
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.function.CheckedExceptionConsumer;
 
-public final class DBSession extends BaseDescriptorable<DBSession.SessionState> implements Session, IDatabaseSessionStatus, IClearable {
+public final class DBSession extends BaseDescriptorable<DBSession.SessionState> implements ISession, IDatabaseSessionStatus, IClearable {
 
     private static final boolean DEBUG = DebugConstants.DEBUG_DB_SESSION;
 
@@ -48,11 +47,11 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
         void retreiveLargeObject(long largeObjectRef, CheckedExceptionConsumer<MappedByteBuffer, E> mappedByteBufferConsumer) throws E;
     }
 
-    private final SQLStatementAdapter<DMLUpdatingEvaluatorParameter, Void, EvaluateException> statementVisitor
-            = new SQLStatementAdapter<DMLUpdatingEvaluatorParameter, Void, EvaluateException>() {
+    private final SQLStatementAdapter<DMLUpdatingEvaluatorParameter<?, ?>, Void, EvaluateException> statementVisitor
+            = new SQLStatementAdapter<DMLUpdatingEvaluatorParameter<?, ?>, Void, EvaluateException>() {
 
         @Override
-        public Void onInsert(SQLInsertStatement insertStatement, DMLUpdatingEvaluatorParameter parameter) throws EvaluateException {
+        public Void onInsert(SQLInsertStatement insertStatement, DMLUpdatingEvaluatorParameter<?, ?> parameter) throws EvaluateException {
 
             DMLUpdatingStatementEvaluator.onInsert(insertStatement, parameter);
 
@@ -60,7 +59,7 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
         }
 
         @Override
-        public Void onUpdate(SQLUpdateStatement updateStatement, DMLUpdatingEvaluatorParameter parameter) throws EvaluateException {
+        public Void onUpdate(SQLUpdateStatement updateStatement, DMLUpdatingEvaluatorParameter<?, ?> parameter) throws EvaluateException {
 
             DMLUpdatingStatementEvaluator.onUpdate(updateStatement, parameter);
 
@@ -68,7 +67,7 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
         }
 
         @Override
-        public Void onDelete(SQLDeleteStatement deleteStatement, DMLUpdatingEvaluatorParameter parameter) throws EvaluateException {
+        public Void onDelete(SQLDeleteStatement deleteStatement, DMLUpdatingEvaluatorParameter<?, ?> parameter) throws EvaluateException {
 
             DMLUpdatingStatementEvaluator.onDelete(deleteStatement, parameter);
 
@@ -76,11 +75,11 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
         }
     };
 
-    private final SQLStatementAdapter<DMLUpdatingPreparedEvaluatorParameter, Void, EvaluateException> preparedStatementVisitor
-            = new SQLStatementAdapter<DMLUpdatingPreparedEvaluatorParameter, Void, EvaluateException>() {
+    private final SQLStatementAdapter<DMLUpdatingPreparedEvaluatorParameter<?>, Void, EvaluateException> preparedStatementVisitor
+            = new SQLStatementAdapter<DMLUpdatingPreparedEvaluatorParameter<?>, Void, EvaluateException>() {
 
         @Override
-        public Void onInsert(SQLInsertStatement insertStatement, DMLUpdatingPreparedEvaluatorParameter parameter) throws EvaluateException {
+        public Void onInsert(SQLInsertStatement insertStatement, DMLUpdatingPreparedEvaluatorParameter<?> parameter) throws EvaluateException {
 
             DMLUpdatingPreparedStatementEvaluator.onInsert(insertStatement, parameter);
 
@@ -88,7 +87,7 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
         }
 
         @Override
-        public Void onUpdate(SQLUpdateStatement updateStatement, DMLUpdatingPreparedEvaluatorParameter parameter) throws EvaluateException {
+        public Void onUpdate(SQLUpdateStatement updateStatement, DMLUpdatingPreparedEvaluatorParameter<?> parameter) throws EvaluateException {
 
             DMLUpdatingPreparedStatementEvaluator.onUpdate(updateStatement, parameter);
 
@@ -96,7 +95,7 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
         }
 
         @Override
-        public Void onDelete(SQLDeleteStatement deleteStatement, DMLUpdatingPreparedEvaluatorParameter parameter) throws EvaluateException {
+        public Void onDelete(SQLDeleteStatement deleteStatement, DMLUpdatingPreparedEvaluatorParameter<?> parameter) throws EvaluateException {
 
             DMLUpdatingPreparedStatementEvaluator.onDelete(deleteStatement, parameter);
 
@@ -161,7 +160,7 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
     }
 
     @Override
-    public int prepareStatement(BaseSQLStatement sqlStatement, ISQLString sqlString) {
+    public int prepareStatement(BaseSQLStatement sqlStatement, long sqlString) {
 
         return preparedStatements.addPreparedStatement(sqlStatement, sqlString);
     }
@@ -198,7 +197,7 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
     }
 
     @Override
-    public long executeDMUpdatingLStatement(SQLDMLUpdatingStatement sqlDMLUpdatingStatement, DMLUpdatingEvaluatorParameter evaluatorParameter) throws EvaluateException {
+    public long executeDMUpdatingLStatement(SQLDMLUpdatingStatement sqlDMLUpdatingStatement, DMLUpdatingEvaluatorParameter<?, ?> evaluatorParameter) throws EvaluateException {
 
         Objects.requireNonNull(sqlDMLUpdatingStatement);
         Objects.requireNonNull(evaluatorParameter);
@@ -209,8 +208,8 @@ public final class DBSession extends BaseDescriptorable<DBSession.SessionState> 
     }
 
     @Override
-    public <E extends Exception> long executePreparedStatement(int preparedStatementId, PreparedStatementParameters preparedStatementParameters,
-            DMLUpdatingPreparedEvaluatorParameter evaluatorParameter, ExecuteSQLResultWriter<E> resultWriter) throws EvaluateException {
+    public <E extends Exception> long executePreparedStatement(int preparedStatementId, IPreparedStatementParameters preparedStatementParameters,
+            DMLUpdatingPreparedEvaluatorParameter<?> evaluatorParameter, ExecuteSQLResultWriter<E> resultWriter) throws EvaluateException {
 
         Checks.isPreparedStatementId(preparedStatementId);
         Objects.requireNonNull(preparedStatementParameters);

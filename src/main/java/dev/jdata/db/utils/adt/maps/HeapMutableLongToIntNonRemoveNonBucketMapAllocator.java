@@ -1,30 +1,17 @@
 package dev.jdata.db.utils.adt.maps;
 
-import java.util.function.IntFunction;
-
 import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
-import dev.jdata.db.utils.allocators.IntCapacityObjectHeapMutableInstanceAllocator;
+import dev.jdata.db.utils.allocators.IntCapacityHeapScalarMutableInstanceAllocator;
 
 final class HeapMutableLongToIntNonRemoveNonBucketMapAllocator
 
-        extends IntCapacityObjectHeapMutableInstanceAllocator<IHeapMutableLongToIntNonRemoveStaticMap, HeapMutableLongToIntNonRemoveNonBucketMap, int[], ILongToIntMapView>
+        extends IntCapacityHeapScalarMutableInstanceAllocator<IHeapMutableLongToIntNonRemoveStaticMap, HeapMutableLongToIntNonRemoveNonBucketMap, ILongToIntMapView>
         implements IHeapMutableLongToIntNonRemoveStaticMapAllocator {
 
     static final HeapMutableLongToIntNonRemoveNonBucketMapAllocator INSTANCE = new HeapMutableLongToIntNonRemoveNonBucketMapAllocator();
 
     private HeapMutableLongToIntNonRemoveNonBucketMapAllocator() {
-        super(int[]::new);
-    }
 
-    @Override
-    protected HeapMutableLongToIntNonRemoveNonBucketMap allocateMutable(IntFunction<int[]> createElements, int minimumCapacity) {
-
-        return allocateMutable(minimumCapacity);
-    }
-
-    HeapMutableLongToIntNonRemoveNonBucketMap allocateMutable(int minimumCapacity) {
-
-        return HeapMutableLongToIntNonRemoveNonBucketMap.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity);
     }
 
     @Override
@@ -33,5 +20,13 @@ final class HeapMutableLongToIntNonRemoveNonBucketMapAllocator
         checkCopyToMutableParameters(mutableFrom);
 
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected HeapMutableLongToIntNonRemoveNonBucketMap allocateMutable(int minimumCapacity) {
+
+        checkAllocateMutableParameters(minimumCapacity);
+
+        return HeapMutableLongToIntNonRemoveNonBucketMap.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity);
     }
 }

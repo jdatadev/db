@@ -52,8 +52,7 @@ public final class StringStorerTest extends BaseLargeCharArrayAndStringStorerTes
                 assertThat(getOrAddResult).isEqualTo(expectedCharArrayIndex);
             }
         },
-//        assertThat(getOrAddResult).isEqualTo(expectedCharArrayIndex),
-                (stringStore, stringToAdd, expectedCharArrayIndex) -> {
+        (stringStore, stringToAdd, expectedCharArrayIndex) -> {
 
             final long stringRef = expectedCharArrayIndex;
 
@@ -73,6 +72,52 @@ public final class StringStorerTest extends BaseLargeCharArrayAndStringStorerTes
 
             sb.setLength(0);
         });
+    }
+
+    @Test
+    @Category(UnitTest.class)
+    public void testCharAt() {
+
+        final StringStorer stringStorer = create();
+
+        final long stringRef1 = stringStorer.getOrAddStringRef("abc");
+        final long stringRef2 = stringStorer.getOrAddStringRef("def");
+        final long stringRef3 = stringStorer.getOrAddStringRef("ghi");
+
+        assertThatThrownBy(() -> stringStorer.charAt(-1L, 0L)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> stringStorer.charAt(0L, -1L)).isInstanceOf(IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> stringStorer.charAt(0L, 3L)).isInstanceOf(IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> stringStorer.charAt(3L, 0L)).isInstanceOf(IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> stringStorer.charAt(7L, 0L)).isInstanceOf(IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> stringStorer.charAt(11L, 0L)).isInstanceOf(IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> stringStorer.charAt(12L, 0L)).isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(stringStorer.charAt(0L, 0L)).isEqualTo('a');
+        assertThat(stringStorer.charAt(0L, 1L)).isEqualTo('b');
+        assertThat(stringStorer.charAt(0L, 2L)).isEqualTo('c');
+
+        assertThat(stringStorer.charAt(1L, 0L)).isEqualTo('b');
+        assertThat(stringStorer.charAt(1L, 1L)).isEqualTo('c');
+
+        assertThat(stringStorer.charAt(2L, 0L)).isEqualTo('c');
+
+        assertThat(stringStorer.charAt(4L, 0L)).isEqualTo('d');
+        assertThat(stringStorer.charAt(4L, 1L)).isEqualTo('e');
+        assertThat(stringStorer.charAt(4L, 2L)).isEqualTo('f');
+
+        assertThat(stringStorer.charAt(5L, 0L)).isEqualTo('e');
+        assertThat(stringStorer.charAt(5L, 1L)).isEqualTo('f');
+
+        assertThat(stringStorer.charAt(6L, 0L)).isEqualTo('f');
+
+        assertThat(stringStorer.charAt(8L, 0L)).isEqualTo('g');
+        assertThat(stringStorer.charAt(8L, 1L)).isEqualTo('h');
+        assertThat(stringStorer.charAt(8L, 2L)).isEqualTo('i');
+
+        assertThat(stringStorer.charAt(9L, 0L)).isEqualTo('h');
+        assertThat(stringStorer.charAt(9L, 1L)).isEqualTo('i');
+
+        assertThat(stringStorer.charAt(10L, 0L)).isEqualTo('i');
     }
 
     @Test

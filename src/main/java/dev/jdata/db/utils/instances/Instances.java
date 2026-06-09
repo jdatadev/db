@@ -91,6 +91,17 @@ public class Instances {
         return result;
     }
 
+    @Deprecated // necessary?
+    public static <T> T checkNoExisting(T existing, T value) {
+
+        if (existing != null) {
+
+            throw new IllegalStateException();
+        }
+
+        return Objects.requireNonNull(value);
+    }
+
     private static IllegalStateException makeException() {
 
         return new IllegalStateException();

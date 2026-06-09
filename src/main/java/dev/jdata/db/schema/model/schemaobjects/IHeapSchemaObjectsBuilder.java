@@ -10,6 +10,13 @@ import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 
 public interface IHeapSchemaObjectsBuilder<T extends SchemaObject> extends ISchemaObjectsBuilder<T, IHeapSchemaObjects<T>, IHeapSchemaObjects<T>>, IHeapContainsBuilderMarker {
 
+    public static <T extends SchemaObject> IHeapSchemaObjectsBuilder<T> create(AllocationType allocationType, int initialCapacity, IntFunction<T[]> createSchemaObjectsArray) {
+
+        return create(allocationType, initialCapacity, IHeapIndexListAllocator.create(createSchemaObjectsArray),
+                IHeapLongToObjectDynamicMapAllocator.create(createSchemaObjectsArray), createSchemaObjectsArray);
+    }
+
+    @Deprecated // check parameters, here or HeapSchemaObjectsBuilder.create() ?
     public static <T extends SchemaObject> IHeapSchemaObjectsBuilder<T> create(AllocationType allocationType, int initialCapacity, IHeapIndexListAllocator<T> indexListAllocator,
             IHeapLongToObjectDynamicMapAllocator<T> longToObjectMapAllocator, IntFunction<T[]> createValuesArray) {
 

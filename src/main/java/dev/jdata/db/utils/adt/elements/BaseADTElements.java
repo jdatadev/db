@@ -121,7 +121,7 @@ public abstract class BaseADTElements<T, U, V> extends Allocatable {
         Checks.isIntIndex(startIndex);
         Checks.isAboveZero(startIndex);
         Checks.isIntNumElements(numElements);
-        Checks.checkFromIndexSize(startIndex, numElements, elementsLength);
+        Checks.checkIntFromIndexSize(startIndex, numElements, elementsLength);
     }
 
     protected static <T> void checkIntOrLongCopyValuesParameters(T elements, long elementsLength, long startIndex, long numElements) {
@@ -136,7 +136,7 @@ public abstract class BaseADTElements<T, U, V> extends Allocatable {
         Checks.isLongIndex(startIndex);
         Checks.isAboveZero(startIndex);
         Checks.isLongNumElements(numElements);
-        Checks.checkFromIndexSize(startIndex, numElements, elementsLength);
+        Checks.checkLongFromIndexSize(startIndex, numElements, elementsLength);
     }
 
     protected static <T extends IOnlyElementsView> void checkIntIntitializeWithValuesParameters(T elements, long numElements) {
@@ -263,7 +263,7 @@ public abstract class BaseADTElements<T, U, V> extends Allocatable {
     private void initialize(V values, long valuesLength, long numElements) {
 
         Objects.requireNonNull(values);
-        Checks.checkLongNumElements(numElements, valuesLength);
+        Checks.checkIntOrLongNumElements(numElements, valuesLength);
 
         initializeWithValues(values, numElements);
     }
@@ -271,7 +271,7 @@ public abstract class BaseADTElements<T, U, V> extends Allocatable {
     protected final void initialize(V values, long valuesLength, long startIndex, long numElements) {
 
         Objects.requireNonNull(values);
-        Checks.checkFromIndexSize(startIndex, numElements, valuesLength);
+        Checks.checkIntOrLongFromIndexSize(startIndex, numElements, valuesLength);
 
         if (startIndex == 0L) {
 

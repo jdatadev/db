@@ -156,6 +156,11 @@ abstract class BaseObjectNonBucketSet<T> extends BaseNonBucketSet<T[]> implement
 
         Objects.requireNonNull(predicate);
 
+        if (DEBUG) {
+
+            enter(b -> b.add("parameter", parameter).add("predicate", predicate));
+        }
+
         int count = 0;
 
         final T[] hashArray = getHashed();

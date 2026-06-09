@@ -471,8 +471,8 @@ public class MaxDistance extends BaseMaxDistance {
         Checks.isIntIndex(putIndex);
         Checks.isIntIndex(hashArrayIndex);
         Checks.isIntCapacityAboveZero(capacity);
-        Checks.checkIndex(putIndex, capacity);
-        Checks.checkIndex(hashArrayIndex, capacity);
+        Checks.checkIntIndex(putIndex, capacity);
+        Checks.checkIntIndex(hashArrayIndex, capacity);
 
         return putIndex >= hashArrayIndex ? putIndex - hashArrayIndex : capacity - hashArrayIndex + putIndex;
     }

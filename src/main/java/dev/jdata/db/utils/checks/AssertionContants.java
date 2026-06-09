@@ -16,6 +16,8 @@ public class AssertionContants {
     public static final boolean ASSERT_TRANSACTION = ASSERT_TRANSACTION_MANAGEMENT;
     public static final boolean ASSERT_TRANSACTION_LOCKING = ASSERT_TRANSACTION_MANAGEMENT;
 
+    public static final boolean ASSERT_DDL_TRANSACTION_EFFECTIVE_SCHEMA_HELPER = ASSERT_TRANSACTION;
+
     public static final boolean ASSERT_MVCC_ROW_BUFFER_COMPARER = Boolean.TRUE;
 
     public static final boolean ASSERT_MVCC = Boolean.TRUE;

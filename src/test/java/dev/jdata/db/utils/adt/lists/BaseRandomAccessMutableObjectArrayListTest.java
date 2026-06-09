@@ -7,7 +7,9 @@ import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 
-public abstract class BaseRandomAccessMutableObjectArrayListTest<T, U extends BaseObjectArrayList<String>> extends BaseMutableObjectArrayListTest<T, U> {
+public abstract class BaseRandomAccessMutableObjectArrayListTest<T extends IIndexListView<Integer>, U extends BaseObjectArrayList<String>>
+
+        extends BaseMutableObjectArrayListTest<T, U> {
 
     protected abstract void addHead(U list, String string);
 

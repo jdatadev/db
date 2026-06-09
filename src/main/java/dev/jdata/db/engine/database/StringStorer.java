@@ -1,11 +1,15 @@
 package dev.jdata.db.engine.database;
 
+import java.io.DataOutput;
+import java.io.IOException;
+import java.nio.CharBuffer;
 import java.util.Objects;
 
 import org.jutils.io.strings.StringRef;
 import org.jutils.io.strings.StringResolver;
 
 import dev.jdata.db.DebugConstants;
+import dev.jdata.db.schema.storage.sqloutputter.IExceptionAppendable;
 import dev.jdata.db.utils.adt.arrays.IHeapMutableLongLargeArray;
 import dev.jdata.db.utils.adt.arrays.IHeapMutableStringsCharLargeArray;
 import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
@@ -107,6 +111,9 @@ final class StringStorer extends InheritableArrayKeysLargeMap<IMutableLongLargeA
     @Override
     public boolean contains(CharSequence charSequence, int offset, int length) {
 
+        Objects.requireNonNull(charSequence);
+        Checks.checkIntFromOffsetSize(offset, length, charSequence.length());
+
         if (DEBUG) {
 
             enter(b -> b.add("charSequence", charSequence).add("offset", offset).add("length", length));
@@ -171,7 +178,80 @@ final class StringStorer extends InheritableArrayKeysLargeMap<IMutableLongLargeA
     }
 
     @Override
+    public <P, E extends Exception> void append(long stringRef, P parameter, IExceptionAppendable<P, E> appendable) throws E {
+
+        StringRef.checkIsString(stringRef);
+        Objects.requireNonNull(appendable);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("stringRef", stringRef).add("parameter", parameter).add("appendable", appendable));
+        }
+
+        charArray.forEach(stringRef, parameter, appendable, (c, p, a) -> a.append(c, p));
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public void write(long stringRef, DataOutput dataOutput) throws IOException {
+
+        StringRef.checkIsString(stringRef);
+        Objects.requireNonNull(dataOutput);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("stringRef", stringRef).add("dataOutput", dataOutput));
+        }
+
+        if (Boolean.TRUE) {
+
+            throw new UnsupportedOperationException();
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
+    public void writeToCharBuffer(long stringRef, CharBuffer charBuffer, int dstOffset) {
+
+        StringRef.checkIsString(stringRef);
+        Objects.requireNonNull(charBuffer);
+        Checks.checkBufferWriteOffset(charBuffer, dstOffset);
+
+        if (DEBUG) {
+
+            enter(b -> b.add("stringRef", stringRef).add("charBuffer", charBuffer).add("dstOffset", dstOffset));
+        }
+
+        final int oldPosition = charBuffer.position();
+
+        charBuffer.position(dstOffset);
+
+        try {
+            charArray.forEach(stringRef, charBuffer, null, (c, d, p) -> d.put(c));
+        }
+        finally {
+
+            charBuffer.position(oldPosition);
+        }
+
+        if (DEBUG) {
+
+            exit();
+        }
+    }
+
+    @Override
     public long toLowerCase(long stringRef) {
+
+        StringRef.checkIsString(stringRef);
 
         if (DEBUG) {
 
@@ -203,6 +283,8 @@ final class StringStorer extends InheritableArrayKeysLargeMap<IMutableLongLargeA
     @Override
     public long getOrAddLowerCaseStringRef(long stringRef) {
 
+        StringRef.checkIsString(stringRef);
+
         if (DEBUG) {
 
             enter(b -> b.add("stringRef", stringRef));
@@ -227,6 +309,9 @@ final class StringStorer extends InheritableArrayKeysLargeMap<IMutableLongLargeA
     @Override
     public long getOrAddStringRef(CharSequence charSequence, int offset, int length) {
 
+        Objects.requireNonNull(charSequence);
+        Checks.checkIntFromOffsetSize(offset, length, charSequence.length());
+
         if (DEBUG) {
 
             enter(b -> b.add("charSequence", charSequence).add("offset", offset).add("length", length));
@@ -247,6 +332,7 @@ final class StringStorer extends InheritableArrayKeysLargeMap<IMutableLongLargeA
 
         Checks.isNotEmpty(characterBuffers);
         Checks.isIntNumElements(numCharacterBuffers);
+        Checks.isLessThanOrEqualTo(numCharacterBuffers, characterBuffers.length);
 
         if (DEBUG) {
 
@@ -288,11 +374,11 @@ final class StringStorer extends InheritableArrayKeysLargeMap<IMutableLongLargeA
     @Override
     public boolean remove(long stringRef) {
 
-        Checks.isNotNegative(stringRef);
+        StringRef.checkIsString(stringRef);
 
         if (DEBUG) {
 
-            enter(b -> b.add("element", stringRef));
+            enter(b -> b.add("stringRef", stringRef));
         }
 
         if (Boolean.TRUE) {
@@ -357,6 +443,48 @@ final class StringStorer extends InheritableArrayKeysLargeMap<IMutableLongLargeA
     }
 
     @Override
+    public long getLength(long stringRef) {
+
+        StringRef.checkIsString(stringRef);
+        Checks.isLessThan(stringRef, charArray.getLimit());
+
+        if (DEBUG) {
+
+            enter(b -> b.add("stringRef", stringRef));
+        }
+
+        final long result = charArray.getStringLength(stringRef);
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
+    @Override
+    public char charAt(long stringRef, long index) {
+
+        StringRef.checkIsString(stringRef);
+        Checks.checkLongIndex(index, getLength(stringRef));
+
+        if (DEBUG) {
+
+            enter(b -> b.add("stringRef", stringRef));
+        }
+
+        final char result = charArray.charAt(stringRef + index);
+
+        if (DEBUG) {
+
+            exit(result);
+        }
+
+        return result;
+    }
+
+    @Override
     public void asString(long stringRef, StringBuilder sb) {
 
         StringRef.checkIsString(stringRef);
@@ -378,16 +506,43 @@ final class StringStorer extends InheritableArrayKeysLargeMap<IMutableLongLargeA
     @Override
     public boolean equals(long stringRef, StringResolver otherStringResolver, long otherStringRef, boolean caseSensitive) {
 
+        StringRef.checkIsString(stringRef);
+        Objects.requireNonNull(otherStringResolver);
+        StringRef.checkIsString(otherStringRef);
         Checks.areNotSame(this, otherStringResolver);
 
-        if (!(otherStringResolver instanceof StringStorer)) {
+        final boolean result;
 
-            throw new IllegalArgumentException();
+        if (otherStringResolver instanceof StringStorer) {
+
+            final StringStorer other = (StringStorer)otherStringResolver;
+
+            result = charArray.equals(stringRef, other.charArray, otherStringRef, caseSensitive);
+        }
+        else {
+            final long stringLength = getLength(stringRef);
+
+            if (stringLength != otherStringResolver.getLength(otherStringRef)) {
+
+                result = false;
+            }
+            else {
+                boolean equals = true;
+
+                for (long i = 0L; i < stringLength; ++ i) {
+
+                    if (charAt(stringRef, i) != otherStringResolver.charAt(otherStringRef, i)) {
+
+                        equals = false;
+                        break;
+                    }
+                }
+
+                result = equals;
+            }
         }
 
-        final StringStorer other = (StringStorer)otherStringResolver;
-
-        return charArray.equals(stringRef, other.charArray, otherStringRef, caseSensitive);
+        return result;
     }
 
     @Override
@@ -424,7 +579,7 @@ final class StringStorer extends InheritableArrayKeysLargeMap<IMutableLongLargeA
         void initialize(IMutableStringsCharLargeArray charArray, long charArrayOffset, int length, CharMapper<Void> charMapper) {
 
             Objects.requireNonNull(charArray);
-            Checks.checkFromIndexSize(charArrayOffset, length, charArray.getLimit());
+            Checks.checkLongFromIndexSize(charArrayOffset, length, charArray.getLimit());
 
             this.charArray = charArray;
             this.charArrayOffset = charArrayOffset;
@@ -441,15 +596,17 @@ final class StringStorer extends InheritableArrayKeysLargeMap<IMutableLongLargeA
         @Override
         public char charAt(int index) {
 
-            Checks.checkIndex(index, length);
+            Checks.checkIntIndex(index, length);
 
-            final char c = charArray.get(charArrayOffset + index);
+            final char c = charArray.charAt(charArrayOffset + index);
 
             return charMapper != null ? charMapper.map(c, null) : c;
         }
 
         @Override
         public CharSequence subSequence(int start, int end) {
+
+            Checks.checkIntFromToIndex(start, end, length);
 
             throw new UnsupportedOperationException();
         }
@@ -701,9 +858,5 @@ final class StringStorer extends InheritableArrayKeysLargeMap<IMutableLongLargeA
     private static IMutableLongLargeArray createHashArray(int outerCapacity, int innerCapacityExponent) {
 
         return IHeapMutableLongLargeArray.create(outerCapacity, innerCapacityExponent, NO_NODE);
-    }
-
-    private static void clearHashArray(IMutableLongLargeArray keys) {
-
     }
 }

@@ -8,6 +8,4 @@ public interface ISchemaObjectsBuilder<T extends SchemaObject, U extends ISchema
 
         extends IObjectUnorderedElementsBuilder<T, U, V> {
 
-    @Deprecated // in use?
-    void setSchemaMap(ISchemaObjects<T> schemaMap);
 }

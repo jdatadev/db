@@ -25,10 +25,11 @@ abstract class BaseLongCapacityArrayHashed<T extends IMutableLargeArrayMarker> e
             BiIntToObjectFunction<T> createHashed, Consumer<T> clearHashed) {
         super(allocationType, initialOuterCapacity * CapacityExponents.computeLongCapacityFromExponent(innerCapacityExponent), loadFactor,
                 c -> {
+                    final int outerCapacity = CapacityExponents.computeArrayOuterCapacity(c, innerCapacityExponent);
 
-                    Checks.areEqual(c, initialOuterCapacity * (1L << innerCapacityExponent));
+                    Checks.areEqual(c, outerCapacity * (1L << innerCapacityExponent));
 
-                    return createHashed.apply(initialOuterCapacity, innerCapacityExponent);
+                    return createHashed.apply(outerCapacity, innerCapacityExponent);
                 },
                 clearHashed, () -> createHashed.apply(recreateOuterCapacity, innerCapacityExponent));
 

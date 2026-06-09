@@ -13,12 +13,11 @@ import dev.jdata.db.engine.server.SQLDatabaseServer.ExecuteSQLResultWriter;
 import dev.jdata.db.sql.ast.statements.BaseSQLStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLDMLUpdatingStatement;
 import dev.jdata.db.sql.ast.statements.dml.SQLSelectStatement;
-import dev.jdata.db.sql.parse.ISQLString;
 import dev.jdata.db.utils.bits.BitBufferUtil;
 
-public interface Session {
+public interface ISession {
 
-    public interface PreparedStatementParameters {
+    public interface IPreparedStatementParameters {
 
         RowDataNumBits getParametersRowDataNumBits();
 
@@ -53,12 +52,12 @@ public interface Session {
     <E extends Exception> void executeDMLSelectSQL(SQLSelectStatement sqlSelectStatement, DMLSelectEvaluatorParameter eEvaluatorParameter,
             ISelectResultWriter<E> selectResultWriter) throws DMLException, E;
 
-    long executeDMUpdatingLStatement(SQLDMLUpdatingStatement sqlDMLUpdatingStatement, DMLUpdatingEvaluatorParameter evaluatorParameter) throws EvaluateException;
+    long executeDMUpdatingLStatement(SQLDMLUpdatingStatement sqlDMLUpdatingStatement, DMLUpdatingEvaluatorParameter<?, ?> evaluatorParameter) throws EvaluateException;
 
-    int prepareStatement(BaseSQLStatement sqlStatement, ISQLString sqlString);
+    int prepareStatement(BaseSQLStatement sqlStatement, long sqlString);
 
-    <E extends Exception> long executePreparedStatement(int preparedStatementId, PreparedStatementParameters preparedStatementParameters,
-            DMLUpdatingPreparedEvaluatorParameter evaluatorParameter, ExecuteSQLResultWriter<E> resultWriter) throws EvaluateException, E;
+    <E extends Exception> long executePreparedStatement(int preparedStatementId, IPreparedStatementParameters preparedStatementParameters,
+            DMLUpdatingPreparedEvaluatorParameter<?> evaluatorParameter, ExecuteSQLResultWriter<E> resultWriter) throws EvaluateException, E;
 
     long createPreparedStatementLargeObjectPart(int preparedStatementId, long length) throws IOException;
     void storePreparedStatementLargeObjectPart(int preparedStatementId, long largeObjectRef, boolean isFinal, ByteBuffer byteBuffer, int offset, int length) throws IOException;

@@ -6,6 +6,7 @@ public interface IObjectByIndexMutators<T> extends IByIndexMutatorsMarker {
 
     T setAndReturnPrevious(long index, T value);
 
+    @Deprecated // Checks.isIntOrLongIndex(index) here and similar?
     default void set(long index, T value) {
 
         Checks.isLongIndex(index);

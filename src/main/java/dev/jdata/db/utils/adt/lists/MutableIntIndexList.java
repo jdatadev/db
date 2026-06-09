@@ -47,25 +47,9 @@ abstract class MutableIntIndexList extends BaseIntIndexList implements IMutableI
     @Override
     public final void addTail(int value) {
 
-        final int [] elementsArray = getElementsArray();
-        final int arrayLength = elementsArray.length;
-        final int numElements = getIntNumElements();
+        final int[] dstArray = checkArrayCapacity(1);
 
-        final int[] dstArray;
-
-        if (numElements == arrayLength) {
-
-            dstArray = Arrays.copyOf(elementsArray, increaseCapacity(arrayLength));
-
-            setArray(dstArray);
-        }
-        else {
-            dstArray = elementsArray;
-        }
-
-        dstArray[numElements] = value;
-
-        incrementNumElements();
+        dstArray[getAndIncrementNumElements()] = value;
     }
 
     @Override
@@ -73,28 +57,12 @@ abstract class MutableIntIndexList extends BaseIntIndexList implements IMutableI
 
         Checks.isNotEmpty(values);
 
-        final int num = getIntNumElements();
         final int numValues = values.length;
 
-        final int numTotal = num + numValues;
+        final int[] dstArray = checkArrayCapacity(numValues);
+        final int numElements = getAndIncreaseNumElements(numValues);
 
-        final int[] elementsArray = getElementsArray();
-
-        final int[] dstArray;
-
-        if (numTotal > elementsArray.length) {
-
-            dstArray = Arrays.copyOf(elementsArray, increaseCapacity(numTotal));
-
-            setArray(dstArray);
-        }
-        else {
-            dstArray = elementsArray;
-        }
-
-        System.arraycopy(values, 0, dstArray, num, numValues);
-
-        setNumElements(numTotal);
+        System.arraycopy(values, 0, dstArray, numElements, numValues);
     }
 
     @Override
@@ -196,5 +164,10 @@ abstract class MutableIntIndexList extends BaseIntIndexList implements IMutableI
         }
 
         return foundIndex;
+    }
+
+    private int[] checkArrayCapacity(int numElementsToAdd) {
+
+        return checkArrayCapacity(numElementsToAdd, null, a -> a.length, (p, c) -> new int[c]);
     }
 }

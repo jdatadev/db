@@ -17,7 +17,7 @@ public class PathUtil {
     public static String getNameString(Path path, int index) {
 
         Objects.requireNonNull(path);
-        Checks.checkIndex(index, path.getNameCount());
+        Checks.checkIntIndex(index, path.getNameCount());
 
         return getFileName(path.getName(index));
     }

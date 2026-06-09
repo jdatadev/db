@@ -7,6 +7,24 @@ public interface IHeapLongIndexList extends ILongIndexList, IHeapContainsMarker 
 
     public static IHeapLongIndexList of(long ... values) {
 
-        return values.length != 0 ? HeapLongIndexList.of(AllocationType.HEAP, values) : HeapLongIndexList.empty();
+        final IHeapLongIndexList result;
+
+        switch (values.length) {
+
+        case 0:
+            result = HeapLongIndexList.empty();
+            break;
+
+        case 1:
+            result = HeapLongIndexList.of(AllocationType.HEAP, values[0]);
+            break;
+
+        default:
+
+            result = HeapLongIndexList. of(AllocationType.HEAP, values);
+            break;
+        }
+
+        return result;
     }
 }

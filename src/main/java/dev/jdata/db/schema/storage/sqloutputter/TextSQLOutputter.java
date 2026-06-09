@@ -1,38 +1,30 @@
 package dev.jdata.db.schema.storage.sqloutputter;
 
-import java.util.Objects;
-
-import org.jutils.io.strings.StringResolver.ICharactersBufferAllocator;
-
+import dev.jdata.db.utils.Initializable;
 import dev.jdata.db.utils.adt.IResettable;
 
 public abstract class TextSQLOutputter<P, E extends Exception> extends ExceptionAppendableSQLOutputter<TextSQLOutputter<P, E>, E> implements IResettable {
 
     @FunctionalInterface
-    public interface CharOutputter<P, E extends Exception> {
+    public interface ICharOutputter<P, E extends Exception> {
 
         void output(char c, P parameter) throws E;
     }
 
     private P parameter;
-    private CharOutputter<P, E> charOutputter;
+    private ICharOutputter<P, E> charOutputter;
 
-    protected final void initialize(ICharactersBufferAllocator charactersBufferAllocator, P parameter, CharOutputter<P, E> charOutputter) {
-
-        if (this.charOutputter != null) {
-
-            throw new IllegalStateException();
-        }
+    protected final void initialize(P parameter, ICharOutputter<P, E> charOutputter) {
 
         this.parameter = parameter;
-        this.charOutputter = Objects.requireNonNull(charOutputter);
+        this.charOutputter = Initializable.checkNotYetInitialized(this.charOutputter, charOutputter);
 
         final IExceptionAppendable<TextSQLOutputter<P, E>, E> appendable = (c, i) -> {
 
             i.charOutputter.output(c, i.parameter);
         };
 
-        initialize(charactersBufferAllocator, this, appendable);
+        initialize(this, appendable);
     }
 
     @Override
@@ -41,6 +33,6 @@ public abstract class TextSQLOutputter<P, E extends Exception> extends Exception
         super.reset();
 
         this.parameter = null;
-        this.charOutputter = null;
+        this.charOutputter = Initializable.checkResettable(charOutputter);
     }
 }

@@ -10,7 +10,7 @@ final class HeapLongToIntStaticMapBuilder
     }
 
     private HeapLongToIntStaticMapBuilder(AllocationType allocationType, int initialCapacity) {
-        this(allocationType, initialCapacity, HeapMutableLongToIntNonRemoveNonBucketMapAllocator.INSTANCE);
+        this(allocationType, initialCapacity, null, (t, c, p) -> HeapMutableLongToIntNonRemoveNonBucketMap.create(t, c));
     }
 
     private HeapLongToIntStaticMapBuilder(AllocationType allocationType, int initialCapacity,

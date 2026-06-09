@@ -1,32 +1,22 @@
 package dev.jdata.db.schema.storage.sqloutputter;
 
-import java.util.Objects;
-
-import org.jutils.io.strings.StringResolver.ICharactersBufferAllocator;
+import dev.jdata.db.utils.Initializable;
 
 public final class StringBuilderSQLOutputter extends TextSQLOutputter<StringBuilder, RuntimeException> {
 
     private StringBuilder sb;
 
-    public void initialize(ICharactersBufferAllocator charactersBufferAllocator, StringBuilder sb) {
+    public void initialize(StringBuilder sb) {
 
-        if (this.sb != null) {
+        this.sb = Initializable.checkNotYetInitialized(this.sb, sb);
 
-            throw new IllegalStateException();
-        }
-
-        this.sb = Objects.requireNonNull(sb);
-
-        super.initialize(charactersBufferAllocator, sb, (c, b) -> b.append(c));
+        super.initialize(sb, (c, b) -> b.append(c));
     }
 
     @Override
     public void reset() {
 
-        if (this.sb == null) {
-
-            throw new IllegalStateException();
-        }
+        this.sb = Initializable.checkResettable(sb);
 
         super.reset();
     }

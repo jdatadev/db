@@ -12,18 +12,18 @@ final class HeapMutableIntSetAllocator
     static final HeapMutableIntSetAllocator INSTANCE = new HeapMutableIntSetAllocator();
 
     @Override
-    protected HeapMutableIntMaxDistanceNonBucketSet allocateMutable(int minimumCapacity) {
-
-        checkAllocateMutableParameters(minimumCapacity);
-
-        return HeapMutableIntMaxDistanceNonBucketSet.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity);
-    }
-
-    @Override
     public HeapMutableIntMaxDistanceNonBucketSet copyToMutable(IIntIterableElementsView mutableFrom) {
 
         checkCopyToMutableParameters(mutableFrom);
 
         return HeapMutableIntMaxDistanceNonBucketSet.copyToMutable(AllocationType.HEAP_ALLOCATOR, mutableFrom);
+    }
+
+    @Override
+    protected HeapMutableIntMaxDistanceNonBucketSet allocateMutable(int minimumCapacity) {
+
+        checkAllocateMutableParameters(minimumCapacity);
+
+        return HeapMutableIntMaxDistanceNonBucketSet.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity);
     }
 }

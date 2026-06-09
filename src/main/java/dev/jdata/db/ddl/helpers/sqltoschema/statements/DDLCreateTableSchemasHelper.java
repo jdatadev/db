@@ -59,6 +59,8 @@ public class DDLCreateTableSchemasHelper extends DDLTableSchemasHelper {
         }
         finally {
 
+            processCreateTableScratchObject.reset();
+
             columnIndexListAllocator.freeBuilder(columnsBuilder);
         }
 

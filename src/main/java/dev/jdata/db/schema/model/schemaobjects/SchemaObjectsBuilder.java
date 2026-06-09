@@ -95,19 +95,11 @@ abstract class SchemaObjectsBuilder<
     }
 
     @Override
-    public final void addUnordered(IObjectIterableElementsView<SCHEMA_OBJECT> schemaObjects) {
+    public final void addUnordered(IObjectIterableElementsView<? extends SCHEMA_OBJECT> schemaObjects) {
 
         Checks.isNotEmpty(schemaObjects);
 
         schemaObjectsBuilder.addTail(schemaObjects);
-    }
-
-    @Override
-    public final void setSchemaMap(ISchemaObjects<SCHEMA_OBJECT> schemaMap) {
-
-        Objects.requireNonNull(schemaMap);
-
-        throw new UnsupportedOperationException();
     }
 
     @Override

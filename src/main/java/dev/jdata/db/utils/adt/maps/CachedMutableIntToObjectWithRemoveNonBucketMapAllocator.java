@@ -18,18 +18,18 @@ final class CachedMutableIntToObjectWithRemoveNonBucketMapAllocator<V>
     }
 
     @Override
-    protected CachedMutableIntToObjectWithRemoveNonBucketMap<V> allocateMutableInstance(IntFunction<Void> createElements, int minimumCapacity) {
-
-        checkAllocateMutableInstanceParameters(createElements, minimumCapacity);
-
-        return CachedMutableIntToObjectWithRemoveNonBucketMap.create(AllocationType.CACHING_ALLOCATOR, minimumCapacity, createValuesArray);
-    }
-
-    @Override
     public ICachedMutableIntToObjectWithRemoveStaticMap<V> copyToMutable(IIntToObjectMapView<V> mutableFrom) {
 
         checkCopyToMutableParameters(mutableFrom);
 
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected CachedMutableIntToObjectWithRemoveNonBucketMap<V> allocateMutableInstance(IntFunction<Void> createElements, int minimumCapacity) {
+
+        checkAllocateMutableInstanceParameters(createElements, minimumCapacity);
+
+        return CachedMutableIntToObjectWithRemoveNonBucketMap.create(AllocationType.CACHING_ALLOCATOR, minimumCapacity, createValuesArray);
     }
 }

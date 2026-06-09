@@ -6,16 +6,18 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.function.IntFunction;
 
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.adt.lists.BaseObjectArrayList;
+import dev.jdata.db.utils.checks.Checks;
 
 public final class ArrayListImpl<T> extends BaseObjectArrayList<T> implements List<T> {
 
     public ArrayListImpl(IntFunction<T[]> createElementsArray) {
-        super(AllocationType.HEAP, createElementsArray);
+        this(DEFAULT_INITIAL_CAPACITY, createElementsArray);
     }
 
-    public ArrayListImpl(IntFunction<T[]> createElementsArray, int initialCapacity) {
-        super(AllocationType.HEAP, createElementsArray, initialCapacity);
+    public ArrayListImpl(int initialCapacity, IntFunction<T[]> createElementsArray) {
+        super(AllocationType.HEAP, createElementsArray, Checks.isIntInitialCapacityAboveZero(initialCapacity));
     }
 
     @Override
@@ -95,7 +97,7 @@ public final class ArrayListImpl<T> extends BaseObjectArrayList<T> implements Li
     @Override
     public int size() {
 
-        throw new UnsupportedOperationException();
+        return IOnlyElementsView.intNumElements(this);
     }
 
     @Override

@@ -13,15 +13,24 @@ final class HeapObjectIndexList<T> extends ObjectIndexList<T> implements IHeapIn
 
     private static final IHeapIndexList<?> emptyList = HeapObjectEmptyIndexList.empty();
 
+    private static final HeapObjectIndexList<?> emptyObjectIndexList = new HeapObjectIndexList<>(AllocationType.HEAP_CONSTANT);
+
     @SuppressWarnings("unchecked")
     static <T> IHeapIndexList<T> empty() {
 
         return (IHeapIndexList<T>)emptyList;
     }
 
+    @SuppressWarnings("unchecked")
+    static <T> HeapObjectIndexList<T> emptyObjectIndexList() {
+
+        return (HeapObjectIndexList<T>)emptyObjectIndexList;
+    }
+
     static <T> HeapObjectIndexList<T> of(AllocationType allocationType, T instance) {
 
         checkOfInstanceParameters(allocationType, AllocationMechanism.HEAP, instance);
+
         @SuppressWarnings("unchecked")
         final IntFunction<T[]> createElementsArray = l -> (T[])java.lang.reflect.Array.newInstance(instance.getClass(), l);
 

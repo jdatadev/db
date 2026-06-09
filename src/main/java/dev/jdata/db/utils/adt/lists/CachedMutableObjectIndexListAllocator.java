@@ -21,18 +21,18 @@ final class CachedMutableObjectIndexListAllocator<T>
     }
 
     @Override
-    protected MutableObjectIndexList<T> allocateMutableInstance(IntFunction<T[]> createElements, int minimumCapacity) {
-
-        checkAllocateMutableInstanceParameters(createElements, minimumCapacity);
-
-        return CachedMutableObjectIndexList.create(AllocationType.CACHING_ALLOCATOR, createElements, minimumCapacity);
-    }
-
-    @Override
     public ICachedMutableIndexList<T> copyToMutable(IObjectIterableElementsView<T> mutableFrom) {
 
         checkCopyToMutableParameters(mutableFrom);
 
         return CachedMutableObjectIndexList.copyToMutable(AllocationType.CACHING_ALLOCATOR, mutableFrom, createElementsArray);
+    }
+
+    @Override
+    protected MutableObjectIndexList<T> allocateMutableInstance(IntFunction<T[]> createElements, int minimumCapacity) {
+
+        checkAllocateMutableInstanceParameters(createElements, minimumCapacity);
+
+        return CachedMutableObjectIndexList.create(AllocationType.CACHING_ALLOCATOR, createElements, minimumCapacity);
     }
 }

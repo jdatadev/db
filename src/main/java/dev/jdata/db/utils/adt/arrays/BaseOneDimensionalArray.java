@@ -40,7 +40,7 @@ abstract class BaseOneDimensionalArray<T> extends BaseAnyDimensionalArray<T, T, 
         Checks.isAboveZero(elementsArrayLength);
         Checks.isIntNumElements(numElements);
         Checks.isAboveZero(numElements);
-        Checks.checkFromIndexSize(startIndex, numElements, elementsArrayLength);
+        Checks.checkIntFromIndexSize(startIndex, numElements, elementsArrayLength);
     }
 
     private final IntFunction<T> createElementsArray;

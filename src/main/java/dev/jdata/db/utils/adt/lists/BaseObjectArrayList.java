@@ -10,6 +10,7 @@ import java.util.function.IntFunction;
 import dev.jdata.db.utils.adt.arrays.Array;
 import dev.jdata.db.utils.adt.byindex.ByIndex;
 import dev.jdata.db.utils.adt.byindex.IObjectByIndexView;
+import dev.jdata.db.utils.adt.capacity.Capacity;
 import dev.jdata.db.utils.adt.elements.ElementsExceptions;
 import dev.jdata.db.utils.adt.elements.IObjectForEach;
 import dev.jdata.db.utils.adt.elements.IObjectForEachWithResult;
@@ -99,7 +100,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
 
         if (getIntNumElements() == 0) {
 
-            throw new IllegalStateException();
+            throw ElementsExceptions.emptyException();
         }
 
         return getElementsArray()[0];
@@ -112,7 +113,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
 
         if (numElements == 0) {
 
-            throw new IllegalStateException();
+            throw ElementsExceptions.emptyException();
         }
 
         return getElementsArray()[numElements - 1];
@@ -172,67 +173,35 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
 
         final int num = getIntNumElements();
 
-        final T[] dstArray = num == arrayLength ? recreateArray(increaseCapacity(arrayLength)) : thisArray;
+        final T[] dstArray = num == arrayLength
+                ? recreateArray(Capacity.computeIncreasedIntCapacity(arrayLength, arrayLength + 1))
+                : thisArray;
 
         System.arraycopy(thisArray, 0, dstArray, 1, num);
 
-        thisArray[0] = instance;
-
-        incrementNumElements();
+        thisArray[getAndIncrementNumElements()] = instance;
     }
 
     protected final void addTailElement(T instance) {
 
         Objects.requireNonNull(instance);
 
-        final T[] thisArray = getElementsArray();
-        final int arrayLength = thisArray.length;
+        final T[] dstArray = checkArrayCapacity(1);
 
-        final int numElements = getIntNumElements();
-
-        final T[] dstArray;
-
-        if (numElements == arrayLength) {
-
-            dstArray = recreateArray(allocateLength(arrayLength + 1));
-
-            System.arraycopy(thisArray, 0, dstArray, 0, arrayLength);
-        }
-        else {
-            dstArray = thisArray;
-        }
-
-        dstArray[numElements] = instance;
-
-        incrementNumElements();
+        dstArray[getAndIncrementNumElements()] = instance;
     }
 
-    final void addTail(BaseObjectArrayList<T> baseArrayList) {
+    final void addTail(BaseObjectArrayList<? extends T> baseArrayList) {
 
         Objects.requireNonNull(baseArrayList);
 
-        final int thisNumElements = getIntNumElements();
         final int toAddNumElements = baseArrayList.getIntNumElements();
-        final int requiredCapacity = thisNumElements + toAddNumElements;
 
-        final T[] thisArray = getElementsArray();
-        final int arrayLength = thisArray.length;
+        final T[] dstArray = checkArrayCapacity(toAddNumElements);
 
-        final T[] dstArray;
+        final int thisNumElements = getAndIncreaseNumElements(toAddNumElements);
 
-        if (requiredCapacity > arrayLength) {
-
-            dstArray = recreateArray(allocateLength(requiredCapacity));
-
-            System.arraycopy(thisArray, 0, dstArray, 0, thisNumElements);
-        }
-        else {
-            dstArray = thisArray;
-        }
-
-        System.arraycopy(baseArrayList.getElementsArray(), 0, thisArray, thisNumElements, toAddNumElements);
-
-        increaseNumElements(toAddNumElements);
+        System.arraycopy(baseArrayList.getElementsArray(), 0, dstArray, thisNumElements, toAddNumElements);
     }
 
     final void addTailElements(@SuppressWarnings("unchecked") T... instances) {
@@ -250,32 +219,16 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
             throw new IllegalArgumentException();
 
         case 1:
-            throw new UnsupportedOperationException();
+            addTailElement(instances[0]);
+            break;
 
         default:
 
-            final T[] thisArray = getElementsArray();
-            final int arrayLength = thisArray.length;
+            final T[] dstArray = checkArrayCapacity(numElementsToAdd);
 
-            final int numListElementsBeforeAdd = getIntNumElements();
+            final int numElements = getAndIncreaseNumElements(numElementsToAdd);
 
-            final int requiredArrayLength = numListElementsBeforeAdd + numElementsToAdd;
-
-            final T[] dstArray;
-
-            if (requiredArrayLength > arrayLength) {
-
-                dstArray = recreateArray(increaseCapacity(requiredArrayLength));
-
-                System.arraycopy(thisArray, 0, dstArray, 0, numListElementsBeforeAdd);
-            }
-            else {
-                dstArray = thisArray;
-            }
-
-            System.arraycopy(instances, startIndex, dstArray, numListElementsBeforeAdd, numElementsToAdd);
-
-            increaseNumElements(numElementsToAdd);
+            System.arraycopy(instances, startIndex, dstArray, numElements, numElementsToAdd);
             break;
         }
     }
@@ -527,7 +480,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
 
         final T[] a = getElementsArray();
 
-        Checks.checkFromIndexSize(0, dst.length, a.length);
+        Checks.checkIntFromIndexSize(0, dst.length, a.length);
 
         final int num = getIntNumElements();
 
@@ -540,6 +493,11 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
         }
 
         return dst;
+    }
+
+    private T[] checkArrayCapacity(int numElementsToAdd) {
+
+        return checkArrayCapacity(numElementsToAdd, this, a -> a.length, (i, c) -> i.recreateArray(c));
     }
 
     private static <T> T[] copy(IntFunction<T[]> createElementsArray, BaseObjectArrayList<T> toCopy) {

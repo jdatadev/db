@@ -79,7 +79,7 @@ public interface IByteByIndexOrderedElementsView extends IByteOrderedElementsVie
     default <P> long findAtMostOneIndexInRange(long startIndex, long numElements, P parameter, IByteElementPredicate<P> predicate) {
 
         Objects.requireNonNull(predicate);
-        Checks.checkFromIndexSize(startIndex, numElements, getIndexLimit());
+        Checks.checkIntOrLongFromIndexSize(startIndex, numElements, getIndexLimit());
 
         long foundIndex = -1L;
 

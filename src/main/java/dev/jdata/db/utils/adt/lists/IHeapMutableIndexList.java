@@ -17,12 +17,6 @@ public interface IHeapMutableIndexList<T> extends IMutableIndexList<T> {
         return HeapMutableObjectIndexList.create(AllocationType.HEAP, initialCapacity, createElementsArray);
     }
 
-    @SafeVarargs
-    public static <T> IHeapMutableIndexList<T> of(T ... instances) {
-
-        return HeapMutableObjectIndexList.of(AllocationType.HEAP, instances);
-    }
-
     public static <T> IHeapMutableIndexList<T> copyOf(IntFunction<T[]> createElementsArray, IBaseObjectIndexList<T> toCopy) {
 
         return HeapMutableObjectIndexList.copyOf(AllocationType.HEAP, toCopy, createElementsArray);

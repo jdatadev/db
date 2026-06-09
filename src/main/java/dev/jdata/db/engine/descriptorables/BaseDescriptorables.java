@@ -75,7 +75,7 @@ public abstract class BaseDescriptorables<T extends Enum<T> & State, U extends B
 
     protected final U getDescriptorable(int descriptor) {
 
-        Checks.checkIndex(descriptor, numArrayElements);
+        Checks.checkIntIndex(descriptor, numArrayElements);
 
         return descriptorables[descriptor];
     }

@@ -6,13 +6,13 @@ import java.util.function.IntFunction;
 import java.util.function.ToIntFunction;
 
 import org.jutils.io.buffers.BaseStringBuffers;
-import org.jutils.io.strings.StringResolver;
 import org.jutils.parse.ParserException;
 
 import dev.jdata.db.ddl.helpers.sqltoschema.complete.DDLCompleteSchemasHelper;
 import dev.jdata.db.ddl.helpers.sqltoschema.complete.IDDLSchemaSQLStatementsAllocators;
 import dev.jdata.db.ddl.helpers.sqltoschema.complete.scratchobjects.DDLSchemaScratchObjects;
 import dev.jdata.db.engine.database.StringManagement;
+import dev.jdata.db.engine.database.strings.IStringWriter;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
@@ -65,23 +65,23 @@ public abstract class BaseDatabaseSchemaSerialization<
     }
 
     @Override
-    public final <E extends Exception> void serialize(IEffectiveDatabaseSchema databaseSchema, StringResolver stringResolver, ISQLOutputter<E> sqlOutputter) throws E {
+    public final <E extends Exception> void serialize(IEffectiveDatabaseSchema databaseSchema, IStringWriter stringWriter, ISQLOutputter<E> sqlOutputter) throws E {
 
         Objects.requireNonNull(databaseSchema);
-        Objects.requireNonNull(stringResolver);
+        Objects.requireNonNull(stringWriter);
         Objects.requireNonNull(sqlOutputter);
 
-        safeSerializeSchemaObjects(databaseSchema.getTablesList(), stringResolver, sqlOutputter, BaseDatabaseSchemaSerialization::serializeTable);
+        safeSerializeSchemaObjects(databaseSchema.getTablesList(), stringWriter, sqlOutputter, BaseDatabaseSchemaSerialization::serializeTable);
     }
 
     @FunctionalInterface
     private interface SchemaObjectSerializer<T extends SchemaObject, E extends Exception> {
 
-        void serialize(T schemaObject, StringResolver stringResolver, ISQLOutputter<E> sqlOutputter) throws E;
+        void serialize(T schemaObject, IStringWriter stringWriter, ISQLOutputter<E> sqlOutputter) throws E;
     }
 
-    private <T extends SchemaObject, E extends Exception> void safeSerializeSchemaObjects(IIndexList<T> schemaObjects, StringResolver stringResolver,
-            ISQLOutputter<E> sqlOutputter, SchemaObjectSerializer<T, E> schemaObjectSerializer) throws E {
+    private <T extends SchemaObject, E extends Exception> void safeSerializeSchemaObjects(IIndexList<T> schemaObjects, IStringWriter stringWriter, ISQLOutputter<E> sqlOutputter,
+            SchemaObjectSerializer<T, E> schemaObjectSerializer) throws E {
 
         if (schemaObjects != null) {
 
@@ -89,16 +89,16 @@ public abstract class BaseDatabaseSchemaSerialization<
 
             for (int i = 0; i < numTables; ++ i) {
 
-                schemaObjectSerializer.serialize(schemaObjects.get(i), stringResolver, sqlOutputter);
+                schemaObjectSerializer.serialize(schemaObjects.get(i), stringWriter, sqlOutputter);
             }
         }
     }
 
-    private static <E extends Exception> void serializeTable(Table table, StringResolver stringResolver, ISQLOutputter<E> sqlOutputter) throws E {
+    private static <E extends Exception> void serializeTable(Table table, IStringWriter stringWriter, ISQLOutputter<E> sqlOutputter) throws E {
 
         sqlOutputter.appendKeyword(SQLToken.CREATE).appendSeparator().appendKeyword(SQLToken.TABLE);
 
-        sqlOutputter.appendSeparator().appendName(table.getParsedName(), stringResolver);
+        sqlOutputter.appendSeparator().appendName(table.getParsedName(), stringWriter);
 
         sqlOutputter.appendSeparator().appendKeyword(SQLToken.LPAREN);
 
@@ -111,17 +111,17 @@ public abstract class BaseDatabaseSchemaSerialization<
                 sqlOutputter.appendKeyword(SQLToken.COMMA).appendSeparator();
             }
 
-            serializeColumn(table.getColumn(i), stringResolver, sqlOutputter);
+            serializeColumn(table.getColumn(i), stringWriter, sqlOutputter);
         }
 
         sqlOutputter.appendKeyword(SQLToken.RPAREN);
     }
 
-    private static <E extends Exception> void serializeColumn(Column column, StringResolver stringResolver, ISQLOutputter<E> sqlOutputter) throws E {
+    private static <E extends Exception> void serializeColumn(Column column, IStringWriter stringWriter, ISQLOutputter<E> sqlOutputter) throws E {
 
-        sqlOutputter.appendName(column.getParsedName(), stringResolver).appendSeparator();
+        sqlOutputter.appendName(column.getParsedName(), stringWriter).appendSeparator();
 
-        serializeType(column.getSchemaType(), stringResolver, sqlOutputter);
+        serializeType(column.getSchemaType(), stringWriter, sqlOutputter);
 
         if (!column.isNullable()) {
 
@@ -129,7 +129,7 @@ public abstract class BaseDatabaseSchemaSerialization<
         }
     }
 
-    protected static <E extends Exception> void serializeType(SchemaDataType schemaDataType, StringResolver stringResolver, ISQLOutputter<E> sqlOutputter) throws E {
+    protected static <E extends Exception> void serializeType(SchemaDataType schemaDataType, IStringWriter stringWriter, ISQLOutputter<E> sqlOutputter) throws E {
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         final SchemaDataTypeVisitor<ISQLOutputter<E>, Void, E> outputter = (SchemaDataTypeVisitor)dataTypeOutputter;

@@ -10,7 +10,7 @@ final class HeapIntSetBuilder extends IntSetBuilder<IHeapIntSet, IHeapIntSet, Mu
     }
 
     private HeapIntSetBuilder(AllocationType allocationType, int initialCapacity) {
-        this(allocationType, initialCapacity, HeapMutableIntSetAllocator.INSTANCE);
+        this(allocationType, initialCapacity, null, (t, c, p) -> HeapMutableIntMaxDistanceNonBucketSet.create(t, c));
     }
 
     private HeapIntSetBuilder(AllocationType allocationType, int initialCapacity, HeapMutableIntSetAllocator mutableIntSetAllocator) {

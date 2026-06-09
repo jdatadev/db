@@ -73,7 +73,7 @@ public class EffectiveSchemaHelper {
 
                 final SCHEMA_OBJECTS schemaObjects = buildSchemaMap(ddlObjectType, ddlObjectType.getCreateArray(), initialSchema, schemaDiffs, indexListAllocator, allocators);
 
-                completeSchemaMapsBuilder.setSchemaObjects(ddlObjectType, schemaObjects);
+                completeSchemaMapsBuilder.addSchemaObjects(ddlObjectType, schemaObjects);
             }
 
             result = completeSchemaMapsBuilder.buildOrEmpty();

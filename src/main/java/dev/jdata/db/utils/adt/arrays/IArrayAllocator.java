@@ -28,7 +28,7 @@ public interface IArrayAllocator<T> {
     default T[] allocateArrayCopy(T[] toCopy, int startIndex, int numElements) {
 
         Objects.requireNonNull(toCopy);
-        Checks.checkFromIndexSize(startIndex, numElements, toCopy.length);
+        Checks.checkIntFromIndexSize(startIndex, numElements, toCopy.length);
 
         final T[] result = allocateArray(numElements);
 

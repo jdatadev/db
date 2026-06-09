@@ -8,6 +8,7 @@ import org.jutils.ast.objects.list.IImmutableIndexList;
 
 import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.adt.capacity.CapacityMax;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.adt.lists.BaseObjectArrayList;
 import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.checks.Checks;
@@ -32,8 +33,8 @@ public final class AddableListAllocator extends BaseCapacityInstanceAllocator<Ad
             return new AddableList<>(AllocationType.HEAP, instances);
         }
 
-        AddableList(IntFunction<T[]> createArray, int initialCapacity) {
-            super(AllocationType.HEAP, createArray, initialCapacity);
+        AddableList(AllocationType allocationType, IntFunction<T[]> createArray, int initialCapacity) {
+            super(allocationType, createArray, initialCapacity);
 
             this.initialized = false;
         }
@@ -68,6 +69,8 @@ public final class AddableListAllocator extends BaseCapacityInstanceAllocator<Ad
                 throw new IllegalStateException();
             }
 
+            setAllocated();
+
             this.initialized = true;
         }
 
@@ -95,6 +98,8 @@ public final class AddableListAllocator extends BaseCapacityInstanceAllocator<Ad
 
             clearElements();
 
+            setFreed();
+
             this.initialized = false;
         }
 
@@ -105,7 +110,8 @@ public final class AddableListAllocator extends BaseCapacityInstanceAllocator<Ad
     }
 
     public AddableListAllocator() {
-        super(CapacityMax.INT, null, (c, p) -> new AddableList<>(AllocationType.CACHING_ALLOCATOR, Object[]::new, c), l -> l.getCapacity());
+        super(CapacityMax.INT, null, (p, c) -> new AddableList<>(AllocationType.CACHING_ALLOCATOR, Object[]::new, IOnlyElementsView.intNumElementsRenamed(c)),
+                l -> l.getCapacity());
     }
 
     @Override
@@ -121,6 +127,8 @@ public final class AddableListAllocator extends BaseCapacityInstanceAllocator<Ad
 
     @Override
     public void freeList(IAddableList<?> list) {
+
+        Objects.requireNonNull(list);
 
         final AddableList<?> addableList = (AddableList<?>)list;
 

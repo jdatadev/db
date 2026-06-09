@@ -11,7 +11,9 @@ import dev.jdata.db.utils.checks.Checks;
 
 public interface ISchemaObjectsByObjectType extends IImmutable {
 
-    <T extends SchemaObject> T getSchemaObject(DDLObjectType ddlObjectType, int schemaObjectId);
+    <R extends SchemaObject> R getSchemaObject(DDLObjectType ddlObjectType, int schemaObjectId);
+
+    <R extends SchemaObject> R getSchemaObjectByName(DDLObjectType ddlObjectType, long schemaObjectName);
 
     <T extends SchemaObject> ISchemaObjects<T> getSchemaObjects(DDLObjectType ddlObjectType);
 

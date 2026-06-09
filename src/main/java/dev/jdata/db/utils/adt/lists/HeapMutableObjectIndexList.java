@@ -23,11 +23,12 @@ final class HeapMutableObjectIndexList<T> extends MutableObjectIndexList<T> impl
         return new HeapMutableObjectIndexList<>(allocationType, initialCapacity, createElementsArray);
     }
 
-    static <T> HeapMutableObjectIndexList<T> of(AllocationType allocationType, T[] instances) {
+    static <T> HeapMutableObjectIndexList<T> of(AllocationType allocationType, T[] instances, IntFunction<T[]> createElementsArray) {
 
         checkOfInstancesParameters(allocationType, AllocationMechanism.HEAP, instances);
+        Objects.requireNonNull(createElementsArray);
 
-        return new HeapMutableObjectIndexList<>(AllocationType.HEAP, instances);
+        return new HeapMutableObjectIndexList<>(AllocationType.HEAP, instances, createElementsArray);
     }
 
     static <T> HeapMutableObjectIndexList<T> copyToMutable(AllocationType allocationType, IObjectIterableElementsView<T> mutableFrom, IntFunction<T[]> createElementsArray) {
@@ -58,13 +59,14 @@ final class HeapMutableObjectIndexList<T> extends MutableObjectIndexList<T> impl
     }
 
     private HeapMutableObjectIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray) {
-        super(allocationType, createElementsArray);
+        this(allocationType, DEFAULT_INITIAL_CAPACITY, createElementsArray);
     }
 
     private HeapMutableObjectIndexList(AllocationType allocationType, int initialCapacity, IntFunction<T[]> createElementsArray) {
         super(allocationType, createElementsArray, initialCapacity);
     }
 
+    @Deprecated // fix parameter order?
     private HeapMutableObjectIndexList(AllocationType allocationType, IntFunction<T[]> createElementsArray, IBaseObjectIndexList<T> toCopy) {
         this(allocationType, toCopy, createElementsArray, Function.identity());
     }
@@ -77,7 +79,7 @@ final class HeapMutableObjectIndexList<T> extends MutableObjectIndexList<T> impl
         super(allocationType, createElementsArray, toCopy, mapper);
     }
 
-    private HeapMutableObjectIndexList(AllocationType allocationType, T[] instances) {
-        super(allocationType, instances);
+    private HeapMutableObjectIndexList(AllocationType allocationType, T[] instances, IntFunction<T[]> createElementsArray) {
+        super(allocationType, createElementsArray, instances);
     }
 }

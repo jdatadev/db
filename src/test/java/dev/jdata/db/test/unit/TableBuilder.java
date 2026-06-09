@@ -28,10 +28,6 @@ public final class TableBuilder {
 
     private int columnIdSequenceNo;
 
-    private TableBuilder(String tableName, int tableId) {
-        this(tableName, tableId, IStringStorer.create(1, 10));
-    }
-
     private TableBuilder(String tableName, int tableId, IStringStorer stringStorer) {
 
         this.tableName = Checks.isTableName(tableName);

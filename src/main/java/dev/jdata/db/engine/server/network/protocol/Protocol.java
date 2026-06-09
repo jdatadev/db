@@ -38,7 +38,7 @@ public final class Protocol {
     public static int isCompleteMessage(ByteBuffer byteBuffer, int offset, int length) {
 
         Objects.requireNonNull(byteBuffer);
-        Checks.checkBuffer(byteBuffer, offset, length);
+        Checks.checkBufferRead(byteBuffer, offset, length);
 
         final int result;
 

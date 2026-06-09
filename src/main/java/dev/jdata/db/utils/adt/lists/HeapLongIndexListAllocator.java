@@ -8,12 +8,10 @@ final class HeapLongIndexListAllocator
         extends LongIndexListAllocator<IHeapLongIndexList, IHeapLongIndexList, IHeapMutableLongIndexList, MutableLongIndexList, IHeapLongIndexListBuilder>
         implements IHeapLongIndexListAllocator {
 
-    static final HeapLongIndexListAllocator INSTANCE = new HeapLongIndexListAllocator();
+    static final HeapLongIndexListAllocator INSTANCE = new HeapLongIndexListAllocator(AllocationType.HEAP_ALLOCATOR);
 
-    private static final AllocationType ALLOCATION_TYPE = AllocationType.HEAP_ALLOCATOR;
-
-    private HeapLongIndexListAllocator() {
-        super(ALLOCATION_TYPE, new IntCapacityHeapElementsAllocators<>(ALLOCATION_TYPE, HeapLongIndexList::copyArray, HeapLongIndexList::empty, HeapMutableLongIndexList::create,
+    private HeapLongIndexListAllocator(AllocationType allocationType) {
+        super(allocationType, new IntCapacityHeapElementsAllocators<>(allocationType, HeapLongIndexList::copyArray, HeapLongIndexList::empty, HeapMutableLongIndexList::create,
                 HeapLongIndexListBuilder::create));
     }
 }

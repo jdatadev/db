@@ -50,7 +50,7 @@ abstract class BaseHashed<HASHED, CREATE_ELEMENTS, MAKE_ELEMENTS_FROM, INIT_FROM
             enter(b -> b.add("allocationType", allocationType).add("toInitializeFrom", toInitializeFrom));
         }
 
-        this.hashed = Objects.requireNonNull(hashed);
+        this.hashed = Objects.requireNonNull(toInitializeFrom.hashed);
 
         this.clearHashed = null;
         this.recreateHashed = null;

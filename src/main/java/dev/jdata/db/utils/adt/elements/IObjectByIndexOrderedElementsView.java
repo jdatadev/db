@@ -21,7 +21,7 @@ public interface IObjectByIndexOrderedElementsView<T>
 
         Objects.requireNonNull(predicate);
 
-        long count = 0;
+        long count = 0L;
 
         final long indexLimit = getIndexLimit();
 
@@ -222,9 +222,9 @@ public interface IObjectByIndexOrderedElementsView<T>
     @Override
     default boolean equals(long startIndex, IObjectByIndexOrderedElementsView<T> other, long otherStartIndex, long numElements) {
 
-        Checks.checkFromIndexSize(startIndex, numElements, getIndexLimit());
+        Checks.checkIntOrLongFromIndexSize(startIndex, numElements, getIndexLimit());
         Objects.requireNonNull(other);
-        Checks.checkFromIndexSize(otherStartIndex, numElements, other.getIndexLimit());
+        Checks.checkIntOrLongFromIndexSize(otherStartIndex, numElements, other.getIndexLimit());
 
         boolean equals = false;
 
@@ -243,6 +243,9 @@ public interface IObjectByIndexOrderedElementsView<T>
     @Override
     default <P1, P2, E extends Exception> boolean equals(P1 thisParameter, IObjectOrderedElementsView<T> other, P2 otherParameter,
             IElementEqualityTester<T, P1, P2, E> equalityTester) throws E {
+
+        Objects.requireNonNull(other);
+        Objects.requireNonNull(equalityTester);
 
         final boolean equals;
 

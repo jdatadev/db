@@ -20,7 +20,25 @@ public interface IHeapIndexList<T> extends IIndexList<T>, IHeapContainsMarker {
     @SafeVarargs
     public static <T> IHeapIndexList<T> of(T ... instances) {
 
-        return instances.length != 0 ? HeapObjectIndexList.of(AllocationType.HEAP, instances) : HeapObjectIndexList.empty();
+        final IHeapIndexList<T> result;
+
+        switch (instances.length) {
+
+        case 0:
+            result = HeapObjectIndexList.empty();
+            break;
+
+        case 1:
+            result = HeapObjectIndexList.of(AllocationType.HEAP, instances[0]);
+            break;
+
+        default:
+
+            result = HeapObjectIndexList.of(AllocationType.HEAP, instances);
+            break;
+        }
+
+        return result;
     }
 
     public static <T> IHeapIndexList<T> copyOf(IIndexListView<T> elements, IntFunction<T[]> createElementsArray) {

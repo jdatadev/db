@@ -5,10 +5,10 @@ import java.sql.JDBCType;
 import java.util.Objects;
 
 import dev.jdata.db.data.RowDataNumBits;
-import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
+import dev.jdata.db.engine.sessions.ISession.IPreparedStatementParameters;
 import dev.jdata.db.utils.checks.Checks;
 
-abstract class ParameterPreparedStatementMessage extends PreparedStatementMessage implements PreparedStatementParameters {
+abstract class ParameterPreparedStatementMessage extends PreparedStatementMessage implements IPreparedStatementParameters {
 
     public interface IJDBCTypeArrayAllocator {
 

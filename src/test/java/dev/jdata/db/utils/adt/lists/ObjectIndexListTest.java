@@ -1,16 +1,11 @@
 package dev.jdata.db.utils.adt.lists;
 
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
-import java.util.function.ToIntFunction;
-import java.util.function.ToLongFunction;
-
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 
-public final class IndexListTest extends BaseImmutableObjectArrayListTest<IBaseObjectIndexList<Integer>, ObjectIndexList<String>> {
+public final class ObjectIndexListTest extends BaseImmutableObjectArrayListTest<IBaseObjectIndexList<Integer>, ObjectIndexList<String>> {
 
     @Test
     @Category(UnitTest.class)
@@ -40,8 +35,7 @@ public final class IndexListTest extends BaseImmutableObjectArrayListTest<IBaseO
         final String bcd = "bcd";
         final String cde = "cde";
 
-        final ObjectIndexList<String> emptyList = HeapObjectIndexList.of(AllocationType.HEAP);
-        assertThat(emptyList).isEmpty();
+        assertThatThrownBy(() -> HeapObjectIndexList.of(AllocationType.HEAP)).isInstanceOf(IllegalArgumentException.class);
 
         final ObjectIndexList<String> oneElementList = HeapObjectIndexList.of(AllocationType.HEAP, new String[] { abc });
         checkElementsSameAs(oneElementList, abc);
@@ -101,37 +95,13 @@ public final class IndexListTest extends BaseImmutableObjectArrayListTest<IBaseO
     }
 
     @Override
-    protected <P> long count(IBaseObjectIndexList<Integer> elements, P parameter, BiPredicate<Integer, P> predicate) {
-
-        return elements.count(parameter, predicate);
-    }
-
-    @Override
-    protected long countWithClosure(IBaseObjectIndexList<Integer> elements, Predicate<Integer> predicate) {
-
-        return elements.closureOrConstantCount(predicate);
-    }
-
-    @Override
-    protected int maxInt(IBaseObjectIndexList<Integer> elements, int defaultValue, ToIntFunction<Integer> mapper) {
-
-        return elements.maxInt(defaultValue, mapper);
-    }
-
-    @Override
-    protected long maxLong(IBaseObjectIndexList<Integer> elements, long defaultValue, ToLongFunction<Integer> mapper) {
-
-        return elements.maxLong(defaultValue, mapper);
-    }
-
-    @Override
     ObjectIndexList<String> createStringList(String ... values) {
 
-        return HeapObjectIndexList.of(AllocationType.HEAP, values);
+        return values.length == 0 ? HeapObjectIndexList.emptyObjectIndexList() : HeapObjectIndexList.of(AllocationType.HEAP, values);
     }
 
     @SafeVarargs
-    static <E, L extends IIndexList<E>> void checkElementsSameAs(L list, E ... expectedElements) {
+    private static <E, L extends IIndexList<E>> void checkElementsSameAs(L list, E ... expectedElements) {
 
         checkElementsSameAs(list, IIndexList::get, IIndexList::isEmpty, IIndexList::getNumElements, expectedElements);
     }

@@ -3,10 +3,8 @@ package dev.jdata.db.schema.storage.sqloutputter;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetEncoder;
-import java.util.Objects;
 
-import org.jutils.io.strings.StringResolver.ICharactersBufferAllocator;
-
+import dev.jdata.db.utils.Initializable;
 import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.jdk.adt.strings.CharacterEncodingUtil;
 
@@ -26,17 +24,11 @@ public final class ByteSQLOutputter<P, E extends Exception> extends ExceptionApp
     private CharBuffer charBuffer;
     private ByteBuffer byteBuffer;
 
-    public void initialize(ICharactersBufferAllocator charactersBufferAllocator, TextToByteOutputPrerequisites textOutputPrerequisites, P parameter,
-            ByteOutputter<P, E> byteOutputter) {
+    public void initialize(TextToByteOutputPrerequisites textOutputPrerequisites, P parameter, ByteOutputter<P, E> byteOutputter) {
 
-        if (this.textToByteOutputPrerequisites != null) {
-
-            throw new IllegalStateException();
-        }
-
-        this.textToByteOutputPrerequisites = Objects.requireNonNull(textOutputPrerequisites);
+        this.textToByteOutputPrerequisites = Initializable.checkNotYetInitialized(this.textToByteOutputPrerequisites, textOutputPrerequisites);
         this.parameter = parameter;
-        this.byteOutputter = Objects.requireNonNull(byteOutputter);
+        this.byteOutputter = Initializable.checkNotYetInitialized(this.byteOutputter, byteOutputter);
 
         this.charsetEncoder = textOutputPrerequisites.getCharsetEncoder();
 
@@ -72,7 +64,7 @@ public final class ByteSQLOutputter<P, E extends Exception> extends ExceptionApp
             }
         };
 
-        initialize(charactersBufferAllocator, this, appendable);
+        initialize(this, appendable);
     }
 
     @Override

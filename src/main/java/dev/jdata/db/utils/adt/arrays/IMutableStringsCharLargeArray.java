@@ -5,14 +5,18 @@ import org.jutils.io.strings.StringResolver.ICharactersBufferAllocator;
 import org.jutils.io.strings.StringResolver.ICharactersToString;
 
 import dev.jdata.db.utils.adt.IClearable;
+import dev.jdata.db.utils.adt.elements.ICharForEach2;
 import dev.jdata.db.utils.adt.mutability.IMutable;
 import dev.jdata.db.utils.function.CharPredicate;
 
+@Deprecated // split out getters
 public interface IMutableStringsCharLargeArray extends IMutable, IClearable {
 
     long getLimit();
 
-    char get(long index);
+    <P1, P2, E extends Exception> void forEach(long index, P1 parameter1, P2 parameter2, ICharForEach2<P1, P2, E> forEach) throws E;
+
+    char charAt(long index);
 
     String asString(long index);
     void asString(long index, StringBuilder sb);

@@ -51,6 +51,15 @@ public abstract class BaseDatabaseSchema<T extends ISchemaMap> extends DatabaseS
     }
 
     @Override
+    public final <R extends SchemaObject> R getSchemaObjectByName(DDLObjectType ddlObjectType, long schemaObjectName) {
+
+        Objects.requireNonNull(ddlObjectType);
+        StringRef.checkIsString(schemaObjectName);
+
+        return schemaMap.getSchemaObjectByName(ddlObjectType, schemaObjectName);
+    }
+
+    @Override
     public final <R extends SchemaObject> ISchemaObjects<R> getSchemaObjects(DDLObjectType ddlObjectType) {
 
         Objects.requireNonNull(ddlObjectType);

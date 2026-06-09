@@ -36,23 +36,31 @@ public class Checks {
         return value;
     }
 
-    public static <T> T isNull(T value, boolean expectNonNull) {
+    public static void isNull(Object instance) {
+
+        if (instance != null) {
+
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static <T> T isNull(T instance, boolean expectNonNull) {
 
         if (expectNonNull) {
 
-            if (value == null) {
+            if (instance == null) {
 
                 throw new NullPointerException();
             }
         }
         else {
-            if (value != null) {
+            if (instance != null) {
 
                 throw new IllegalArgumentException();
             }
         }
 
-        return value;
+        return instance;
     }
 
     public static boolean checkIsNotNull(Object object) {
@@ -170,30 +178,20 @@ public class Checks {
 
     public static void checkArrayFromIndexSize(Object array, int fromIndex, int size) {
 
-        checkFromIndexSize(fromIndex, size, Array.getLength(array));
+        checkIntFromIndexSize(fromIndex, size, Array.getLength(array));
     }
 
-    public static void checkFromIndexSize(int fromIndex, int size, int length) {
+    public static void checkIntFromIndexSize(int fromIndex, int size, int length) {
 
-        if (fromIndex < 0) {
-
-            throw new IndexOutOfBoundsException();
-        }
-        else if (size < 0) {
-
-            throw new IndexOutOfBoundsException();
-        }
-        else if (fromIndex + size > length) {
-
-            throw new IndexOutOfBoundsException();
-        }
-        else if (length < 0) {
-
-            throw new IndexOutOfBoundsException();
-        }
+        checkLongFromIndexSize(fromIndex, size, length);
     }
 
-    public static void checkFromIndexSize(long fromIndex, long size, long length) {
+    public static void checkIntFromIndexSize(long fromIndex, long size, long length) {
+
+        checkLongFromIndexSize(fromIndex, size, length);
+    }
+
+    public static void checkLongFromIndexSize(long fromIndex, long size, long length) {
 
         if (fromIndex < 0L) {
 
@@ -213,7 +211,12 @@ public class Checks {
         }
     }
 
-    public static void checkFromToIndex(int fromIndex, int toIndex, int length) {
+    public static void checkIntOrLongFromIndexSize(long fromIndex, long size, long length) {
+
+        checkLongFromIndexSize(fromIndex, size, length);
+    }
+
+    public static void checkIntFromToIndex(int fromIndex, int toIndex, int length) {
 
         if (fromIndex < 0) {
 
@@ -233,7 +236,12 @@ public class Checks {
         }
     }
 
-    public static void checkFromIndexNum(long fromIndex, long num, long limit) {
+    public static void checkIntFromIndexNum(long fromIndex, long num, long limit) {
+
+        checkLongFromIndexNum(fromIndex, num, limit);
+    }
+
+    public static void checkLongFromIndexNum(long fromIndex, long num, long limit) {
 
         if (fromIndex < 0L) {
 
@@ -273,20 +281,19 @@ public class Checks {
         }
     }
 
-    public static void checkIndex(int index, int length) {
+    public static void checkIntOrLongFromIndexNum(long fromIndex, long num, long limit) {
 
-        if (index < 0) {
+        checkLongFromIndexNum(fromIndex, num, limit);
+    }
 
-            throw new IndexOutOfBoundsException();
-        }
-        else if (index >= length) {
+    public static void checkIntIndex(int index, int length) {
 
-            throw new IndexOutOfBoundsException();
-        }
-        else if (length < 0) {
+        checkLongIndex(index, length);
+    }
 
-            throw new IndexOutOfBoundsException();
-        }
+    public static void checkIntIndex(long index, long length) {
+
+        checkLongIndex(index, length);
     }
 
     public static void checkLongIndex(long index, long length) {
@@ -305,11 +312,16 @@ public class Checks {
         }
     }
 
+    public static void checkIntOrLongIndex(long index, long length) {
+
+        checkLongIndex(index, length);
+    }
+
     public static void checkIntIndexAndNumElements(int index, int numElements) {
 
         Checks.isIntIndex(index);
         Checks.isIntNumElements(numElements);
-        Checks.checkIndex(index, numElements);
+        Checks.checkIntIndex(index, numElements);
     }
 
     public static void checkIntIndexAndNumElements(long index, long numElements) {
@@ -838,9 +850,27 @@ public class Checks {
         return charSequence;
     }
 
+    public static String isNotEmptyNorBlank(String string) {
+
+        if (string.isEmpty()) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (Strings.containsOnly(string, Character::isWhitespace)) {
+
+            throw new IllegalArgumentException();
+        }
+
+        return string;
+    }
+
     public static String isNotEmptyWithNoBlanks(String string) {
 
-        if (string.isEmpty() || Strings.stringContainsAny(string, Character::isWhitespace)) {
+        if (string.isEmpty()) {
+
+            throw new IllegalArgumentException();
+        }
+        else if (Strings.containsAny(string, Character::isWhitespace)) {
 
             throw new IllegalArgumentException();
         }
@@ -1049,6 +1079,11 @@ public class Checks {
         }
     }
 
+    public static void checkIntOrLongNumElements(long numElements, long length) {
+
+        checkLongNumElements(numElements, length);
+    }
+
     public static void checkArrayNumElements(Object array, int numElements) {
 
         if (numElements < 0) {
@@ -1165,6 +1200,19 @@ public class Checks {
         }
 
         return list;
+    }
+
+    public static <T, U extends IObjectIterableElementsView<T>, P> U areElements(U iterable, P parameter, BiPredicate<T, P> predicate) {
+
+        iterable.forEach(parameter, predicate, (e, p1, p2) -> {
+
+            if (!p2.test(e, p1)) {
+
+                throw new IllegalArgumentException();
+            }
+        } );
+
+        return iterable;
     }
 
     public static int isIntIndex(int index) {
@@ -1339,7 +1387,7 @@ public class Checks {
     private static <T> void checkIntAddFromArray(long startIndex, long numElements, long arrayLength) {
 
         Checks.isIntNumElementsAboveZero(numElements);
-        Checks.checkFromIndexSize(startIndex, numElements, arrayLength);
+        Checks.checkLongFromIndexSize(startIndex, numElements, arrayLength);
     }
 
     public static <T> T isArray(T array) {
@@ -2083,9 +2131,32 @@ public class Checks {
         }
     }
 
-    public static void checkBuffer(Buffer buffer, int offset, int length) {
+    public static void checkLongOffset(long index, long length) {
 
-        checkFromIndexSize(offset, length, buffer.remaining());
+        checkLongIndex(index, length);
+    }
+
+    public static void checkIntFromOffsetSize(int offset, int size, int length) {
+
+        checkIntFromIndexSize(offset, size, length);
+    }
+
+    public static void checkLongFromOffsetSize(long offset, long size, long length) {
+
+        checkLongFromIndexSize(offset, size, length);
+    }
+
+    public static void checkBufferRead(Buffer buffer, int offset, int length) {
+
+        checkIntFromOffsetSize(offset, length, buffer.remaining());
+    }
+
+    public static void checkBufferWriteOffset(Buffer buffer, int offset) {
+
+        if (offset >= buffer.limit() ) {
+
+            throw new IllegalArgumentException();
+        }
     }
 
     public static <T extends Buffer> T isEmpty(T buffer) {

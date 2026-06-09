@@ -81,7 +81,7 @@ public class Integers {
 
         final int charSequenceLength = charSequence.length();
 
-        Checks.checkFromToIndex(startIndex, endIndex, charSequenceLength);
+        Checks.checkIntFromToIndex(startIndex, endIndex, charSequenceLength);
 
         if (charSequenceLength == 0) {
 

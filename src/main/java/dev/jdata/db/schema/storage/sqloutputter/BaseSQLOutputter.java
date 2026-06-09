@@ -2,8 +2,9 @@ package dev.jdata.db.schema.storage.sqloutputter;
 
 import java.util.Objects;
 
-import org.jutils.io.strings.StringResolver;
+import org.jutils.io.strings.StringRef;
 
+import dev.jdata.db.engine.database.strings.IStringWriter;
 import dev.jdata.db.sql.parse.SQLToken;
 
 abstract class BaseSQLOutputter<E extends Exception> implements ISQLOutputter<E> {
@@ -11,7 +12,7 @@ abstract class BaseSQLOutputter<E extends Exception> implements ISQLOutputter<E>
     abstract void append(char c) throws E;
     abstract void append(int i) throws E;
     abstract void append(String string) throws E;
-    abstract void appendString(long stringRef, StringResolver stringResolver) throws E;
+    abstract void appendString(long stringRef, IStringWriter stringWriter) throws E;
 
     private boolean initialized;
 
@@ -70,20 +71,26 @@ abstract class BaseSQLOutputter<E extends Exception> implements ISQLOutputter<E>
     }
 
     @Override
-    public final ISQLOutputter<E> appendName(long stringRef, StringResolver stringResolver) throws E {
+    public final ISQLOutputter<E> appendName(long stringRef, IStringWriter stringWriter) throws E {
 
-        appendString(stringRef, stringResolver);
+        StringRef.checkIsString(stringRef);
+        Objects.requireNonNull(stringWriter);
+
+        appendString(stringRef, stringWriter);
 
         return this;
     }
 
     @Override
-    public final ISQLOutputter<E> appendStringLiteral(long stringRef, StringResolver stringResolver) throws E {
+    public final ISQLOutputter<E> appendStringLiteral(long stringRef, IStringWriter stringWriter) throws E {
+
+        StringRef.checkIsString(stringRef);
+        Objects.requireNonNull(stringWriter);
 
         final char singleQuote = '\'';
 
         append(singleQuote);
-        appendString(stringRef, stringResolver);
+        appendString(stringRef, stringWriter);
         append(singleQuote);
 
         return this;

@@ -220,7 +220,7 @@ public abstract class BaseDBTest extends BaseSQLTest {
 
             this.sb = Objects.requireNonNull(sb);
 
-            initialize(new CharacterBuffersAllocator(), sb, (c, b) -> b.append(c));
+            initialize(sb, (c, b) -> b.append(c));
         }
 
         @Override
@@ -245,9 +245,21 @@ public abstract class BaseDBTest extends BaseSQLTest {
 
         final StringBuilderSQLOutputter result = new StringBuilderSQLOutputter();
 
-        result.initialize(new CharacterBuffersAllocator(), sb);
+        result.initialize(sb);
 
         return result;
+    }
+
+    protected static String makeTestColumnNameWithSuffix(int enumerator) {
+
+        Checks.isAboveZero(enumerator);
+
+        return TEST_COLUMN_NAME + enumerator;
+    }
+
+    protected static String makeIntegerDataType() {
+
+        return "integer";
     }
 
     protected static TextToByteOutputPrerequisites createTextToByteOutputPrerequisites() {

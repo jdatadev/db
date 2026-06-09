@@ -16,9 +16,11 @@ public final class SQLAddColumnDefinition extends BaseSQLElement {
     public SQLAddColumnDefinition(Context context, SQLTableColumnDefinition columnDefinition, long beforeKeyword, long beforeColumnName) {
         super(context);
 
+        checkIsKeywordAndStringOrNot(beforeKeyword, beforeColumnName);
+
         this.columnDefinition = makeSingle(columnDefinition);
-        this.beforeKeyword = checkIsKeyword(beforeKeyword);
-        this.beforeColumnName = checkIsString(beforeColumnName);
+        this.beforeKeyword = beforeKeyword;
+        this.beforeColumnName = beforeColumnName;
     }
 
     public SQLTableColumnDefinition getColumnDefinition() {

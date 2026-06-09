@@ -4,12 +4,12 @@ import java.util.Objects;
 
 import dev.jdata.db.utils.checks.Checks;
 
-public interface IObjectOrderedAddable<T> extends IOrderedAddable<IObjectIterableElementsView<T>> {
+public interface IObjectOrderedAddable<T> extends IOrderedAddable<IObjectIterableElementsView<? extends T>> {
 
     void addTail(T instance);
 
     @Override
-    default void addTail(IObjectIterableElementsView<T> elements) {
+    default void addTail(IObjectIterableElementsView<? extends T> elements) {
 
         Objects.requireNonNull(elements);
 

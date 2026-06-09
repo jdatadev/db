@@ -10,12 +10,13 @@ import java.util.Objects;
 import org.jutils.io.strings.StringResolver;
 
 import dev.jdata.db.DBConstants;
+import dev.jdata.db.engine.database.strings.IStringWriter;
 import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.storage.IDatabaseSchemaStorageFactory.IDatabaseSchemaStorage;
 import dev.jdata.db.schema.storage.sqloutputter.ISQLOutputter;
 import dev.jdata.db.schema.storage.sqloutputter.TextToByteOutputPrerequisites;
 import dev.jdata.db.sql.ast.statements.BaseSQLDDLOperationStatement;
-import dev.jdata.db.sql.parse.ISQLString;
+import dev.jdata.db.sql.strings.ISQLString;
 import dev.jdata.db.storage.file.FileStorage;
 import dev.jdata.db.utils.file.access.IFileSystemAccess.OpenMode;
 import dev.jdata.db.utils.file.access.IRelativeFileSystemAccess;
@@ -58,11 +59,11 @@ final class DatabaseSchemaStorage extends FileStorage implements IDatabaseSchema
     }
 
     @Override
-    public void storeSchemaDiffStatement(BaseSQLDDLOperationStatement sqlDDLStatement, ISQLString sqlString, StringResolver stringResolver) throws IOException {
+    public void storeSchemaDiffStatement(BaseSQLDDLOperationStatement sqlDDLStatement, StringResolver sqlDDLStatementStringResolver, ISQLString sqlString) throws IOException {
 
         Objects.requireNonNull(sqlDDLStatement);
+        Objects.requireNonNull(sqlDDLStatementStringResolver);
         Objects.requireNonNull(sqlString);
-        Objects.requireNonNull(stringResolver);
 
         final int sequenceNo = allocateDiffSequenceNo();
 
@@ -94,15 +95,15 @@ final class DatabaseSchemaStorage extends FileStorage implements IDatabaseSchema
     }
 
     @Override
-    public void completeSchemaDiff(IEffectiveDatabaseSchema completeEffectiveDatabaseSchema, IDatabaseSchemaSerializer schemaSerializer, StringResolver stringResolver,
+    public void completeSchemaDiff(IEffectiveDatabaseSchema completeEffectiveDatabaseSchema, IDatabaseSchemaSerializer schemaSerializer, IStringWriter stringWriter,
             ISQLOutputter<IOException> sqlOutputter) throws IOException {
 
         Objects.requireNonNull(completeEffectiveDatabaseSchema);
         Objects.requireNonNull(schemaSerializer);
-        Objects.requireNonNull(stringResolver);
+        Objects.requireNonNull(stringWriter);
         Objects.requireNonNull(sqlOutputter);
 
-        schemaSerializer.serialize(completeEffectiveDatabaseSchema, stringResolver, sqlOutputter);
+        schemaSerializer.serialize(completeEffectiveDatabaseSchema, stringWriter, sqlOutputter);
 
         schemaStorageFactory.onSchemaComplete(this);
     }

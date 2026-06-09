@@ -73,17 +73,22 @@ public class Strings {
 
     public static boolean containsOnly(String string, CharPredicate predicate) {
 
-        return stringContainsOnly(string, 0, string.length(), predicate);
+        return containsOnly(string, 0, string.length(), predicate);
     }
 
-    public static String containsOnly(String string, int startIndex, int numCharacters, CharPredicate predicate) {
+    private static String containsOnlyOrThrowException(String string, int startIndex, int numCharacters, CharPredicate predicate) {
 
-        if (!stringContainsOnly(string, startIndex, numCharacters, predicate)) {
+        if (!containsOnly(string, startIndex, numCharacters, predicate)) {
 
             throw new IllegalArgumentException();
         }
 
         return string;
+    }
+
+    private static boolean containsOnly(String string, int startIndex, int numCharacters, CharPredicate predicate) {
+
+        return CharSequences.containsOnly(string, startIndex, numCharacters, predicate);
     }
 
     public static boolean containsAny(String string, CharPredicate predicate) {
@@ -104,21 +109,6 @@ public class Strings {
     public static boolean isASCIIAlphaNumeric(String string, CharPredicate additionalPredicate) {
 
         return CharSequences.isASCIIAlphaNumeric(string, additionalPredicate);
-    }
-
-    private static boolean stringContainsOnly(String string, int startIndex, int numCharacters, CharPredicate predicate) {
-
-        return CharSequences.containsOnly(string, startIndex, numCharacters, predicate);
-    }
-
-    public static boolean stringContainsAny(String string, CharPredicate predicate) {
-
-        return stringContainsAny(string, 0, string.length(), predicate);
-    }
-
-    private static boolean stringContainsAny(String string, int startIndex, int numCharacters, CharPredicate predicate) {
-
-        return CharSequences.containsAny(string, startIndex, numCharacters, predicate);
     }
 
     public static boolean hasFirstCharacterAndRemaining(CharSequence charSequence, int numCharacters, CharPredicate firstCharacterPredicate,
@@ -211,7 +201,7 @@ public class Strings {
     public static String of(CharSequence charSequence, int startIndex, int numCharacters) {
 
         Objects.requireNonNull(charSequence);
-        Checks.checkFromIndexSize(startIndex, numCharacters, charSequence.length());
+        Checks.checkIntFromIndexSize(startIndex, numCharacters, charSequence.length());
 
         final char[] charArray = new char[numCharacters];
 

@@ -123,7 +123,8 @@ public class CharSequences {
     public static boolean containsAny(CharSequence charSequence, int startIndex, int numCharacters, CharPredicate predicate) {
 
         Objects.requireNonNull(charSequence);
-        Checks.checkFromIndexNum(startIndex, numCharacters, charSequence.length());
+        Checks.checkIntFromIndexNum(startIndex, numCharacters, charSequence.length());
+        Objects.requireNonNull(predicate);
 
         boolean containsAny = false;
 

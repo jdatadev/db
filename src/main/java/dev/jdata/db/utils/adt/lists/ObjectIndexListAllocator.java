@@ -17,7 +17,7 @@ abstract class ObjectIndexListAllocator<
             CLASS_MUTABLE extends MutableObjectIndexList<T>,
             BUILDER extends IIndexListBuilder<T, IMMUTABLE, HEAP_IMMUTABLE>>
 
-    extends ListAllocator<IMMUTABLE, HEAP_IMMUTABLE, T[], INTERFACE_MUTABLE, CLASS_MUTABLE, BUILDER, IObjectIterableElementsView<T>, Comparator<? super T>>
+    extends ListAllocator<IMMUTABLE, HEAP_IMMUTABLE, T[], INTERFACE_MUTABLE, CLASS_MUTABLE, BUILDER, IObjectIterableElementsView<? extends T>, Comparator<? super T>>
     implements IIndexListAllocator<T, IMMUTABLE, INTERFACE_MUTABLE, BUILDER> {
 
     ObjectIndexListAllocator(AllocationType allocationType, IElementsAllocators<IMMUTABLE, CLASS_MUTABLE, BUILDER, T[]> elementsAllocators) {
@@ -25,7 +25,7 @@ abstract class ObjectIndexListAllocator<
     }
 
     @Override
-    public final IMMUTABLE sortedOf(IObjectIterableElementsView<T> elements, Comparator<? super T> comparator) {
+    public final IMMUTABLE sortedOf(IObjectIterableElementsView<? extends T> elements, Comparator<? super T> comparator) {
 
         checkSortedOfParameters(elements, comparator);
 

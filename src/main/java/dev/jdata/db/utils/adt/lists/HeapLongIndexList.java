@@ -15,16 +15,18 @@ final class HeapLongIndexList extends LongIndexList implements IHeapLongIndexLis
         return emptyList;
     }
 
-    private static HeapLongIndexList of(long value) {
+    static HeapLongIndexList of(AllocationType allocationType, long value) {
 
-        return new HeapLongIndexList(AllocationType.HEAP, value);
+        checkOfValueParameters(allocationType, AllocationMechanism.HEAP);
+
+        return new HeapLongIndexList(allocationType, value);
     }
 
     static HeapLongIndexList of(AllocationType allocationType, long[] values) {
 
         checkOfValuesParameters(allocationType, AllocationMechanism.HEAP, values, values.length);
 
-        return withArray(AllocationType.HEAP, Array.copyOf(values), values.length);
+        return withArray(allocationType, Array.copyOf(values), values.length);
     }
 
     private static HeapLongIndexList copyArray(AllocationType allocationType, long[] values, int numElements) {

@@ -1,8 +1,9 @@
 package dev.jdata.db.utils;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.function.IntPredicate;
+
+import dev.jdata.db.utils.instances.Instances;
 
 public class Initializable {
 
@@ -33,12 +34,7 @@ public class Initializable {
 
     public static <T> T checkNotYetInitialized(T existing, T value) {
 
-        if (existing != null) {
-
-            throw new IllegalStateException();
-        }
-
-        return Objects.requireNonNull(value);
+        return Instances.checkNoExisting(existing, value);
     }
 
     public static <T> T checkNotYetInitializedNullable(T existing, T value) {

@@ -1,24 +1,19 @@
 package dev.jdata.db.schema.storage.sqloutputter;
 
-import java.util.Objects;
-
-import org.jutils.io.strings.StringResolver;
-import org.jutils.io.strings.StringResolver.ICharactersBufferAllocator;
-
+import dev.jdata.db.engine.database.strings.IStringWriter;
+import dev.jdata.db.utils.Initializable;
 import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.scalars.Integers;
 
 abstract class ExceptionAppendableSQLOutputter<P, E extends Exception> extends BaseSQLOutputter<E> implements IResettable {
 
-    private ICharactersBufferAllocator charactersBufferAllocator;
     private P parameter;
     private IExceptionAppendable<P, E> appendable;
 
-    final void initialize(ICharactersBufferAllocator charactersBufferAllocator, P parameter, IExceptionAppendable<P, E> appendable) {
+    final void initialize(P parameter, IExceptionAppendable<P, E> appendable) {
 
-        this.charactersBufferAllocator = Objects.requireNonNull(charactersBufferAllocator);
         this.parameter = parameter;
-        this.appendable = Objects.requireNonNull(appendable);
+        this.appendable = Initializable.checkNotYetInitialized(this.appendable, appendable);
 
         super.initialize();
     }
@@ -28,9 +23,8 @@ abstract class ExceptionAppendableSQLOutputter<P, E extends Exception> extends B
 
         super.reset();
 
-        this.charactersBufferAllocator = null;
         this.parameter = null;
-        this.appendable = null;
+        this.appendable = Initializable.checkResettable(appendable);
     }
 
     @Override
@@ -52,20 +46,9 @@ abstract class ExceptionAppendableSQLOutputter<P, E extends Exception> extends B
     }
 
     @Override
-    final void appendString(long stringRef, StringResolver stringResolver) throws E {
+    final void appendString(long stringRef, IStringWriter stringWriter) throws E {
 
-        stringResolver.makeString(stringRef, this, charactersBufferAllocator, (b, n, i) -> {
-
-            final IExceptionAppendable<P, E> appendable = i.appendable;
-            final P parameter = i.parameter;
-
-            for (int characterIndex = 0; characterIndex < n; ++ characterIndex) {
-
-                appendable.append(b[characterIndex], parameter);
-            }
-
-            return null;
-        });
+        stringWriter.append(stringRef, parameter, appendable);
     }
 
     final P getParameter() {

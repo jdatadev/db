@@ -9,6 +9,31 @@ public final class CapacityTest extends BaseTest {
 
     @Test
     @Category(UnitTest.class)
+    public void testComputeIncreasedIntCapacity() {
+
+        assertThatThrownBy(() -> Capacity.computeIncreasedIntCapacity(-1, 1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Capacity.computeIncreasedIntCapacity(1, -1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Capacity.computeIncreasedIntCapacity(0, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Capacity.computeIncreasedIntCapacity(1, 1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Capacity.computeIncreasedIntCapacity(2, 1)).isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(Capacity.computeIncreasedIntCapacity(0, 1)).isEqualTo(1);
+        assertThat(Capacity.computeIncreasedIntCapacity(0, 2)).isEqualTo(2);
+        assertThat(Capacity.computeIncreasedIntCapacity(0, 3)).isEqualTo(4);
+        assertThat(Capacity.computeIncreasedIntCapacity(1, 2)).isEqualTo(2);
+        assertThat(Capacity.computeIncreasedIntCapacity(1, 3)).isEqualTo(4);
+        assertThat(Capacity.computeIncreasedIntCapacity(1, 4)).isEqualTo(4);
+        assertThat(Capacity.computeIncreasedIntCapacity(1, 5)).isEqualTo(8);
+        assertThat(Capacity.computeIncreasedIntCapacity(2, 3)).isEqualTo(4);
+        assertThat(Capacity.computeIncreasedIntCapacity(2, 4)).isEqualTo(4);
+        assertThat(Capacity.computeIncreasedIntCapacity(2, 5)).isEqualTo(8);
+        assertThat(Capacity.computeIncreasedIntCapacity(3, 5)).isEqualTo(6);
+        assertThat(Capacity.computeIncreasedIntCapacity(3, 6)).isEqualTo(6);
+        assertThat(Capacity.computeIncreasedIntCapacity(3, 7)).isEqualTo(12);
+    }
+
+    @Test
+    @Category(UnitTest.class)
     public void testComputeArrayOuterCapacity() {
 
         assertThatThrownBy(() -> Capacity.computeArrayOuterCapacity(-1, 1)).isInstanceOf(IllegalArgumentException.class);

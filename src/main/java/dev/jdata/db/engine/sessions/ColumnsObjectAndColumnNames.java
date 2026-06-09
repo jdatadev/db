@@ -150,6 +150,6 @@ abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject, U extends IM
 
     private void checkColumnsObjectId(int columnsObjectId) {
 
-        Checks.checkIndex(columnsObjectId, maxColumnsObjectId + 1);
+        Checks.checkIntIndex(columnsObjectId, maxColumnsObjectId + 1);
     }
 }

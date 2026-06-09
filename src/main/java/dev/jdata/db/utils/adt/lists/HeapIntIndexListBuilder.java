@@ -21,11 +21,10 @@ final class HeapIntIndexListBuilder extends IntIndexListBuilder<IHeapIntIndexLis
     }
 
     private HeapIntIndexListBuilder(AllocationType allocationType, int initialCapacity) {
-        this(allocationType, initialCapacity, HeapMutableIntIndexListAllocator.INSTANCE);
+        this(allocationType, initialCapacity, null, (t, c, p) -> HeapMutableIntIndexList.create(t, c));
     }
 
-    private HeapIntIndexListBuilder(AllocationType allocationType, int initialCapacity,
-            HeapMutableIntIndexListAllocator mutableIntIndexListAllocator) {
+    private HeapIntIndexListBuilder(AllocationType allocationType, int initialCapacity, HeapMutableIntIndexListAllocator mutableIntIndexListAllocator) {
         this(allocationType, initialCapacity, mutableIntIndexListAllocator, (t, c, a) -> a.allocateMutable(c));
     }
 

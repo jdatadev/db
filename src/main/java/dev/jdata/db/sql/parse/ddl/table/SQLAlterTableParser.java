@@ -119,8 +119,22 @@ public class SQLAlterTableParser extends SQLStatementParser {
         return new SQLAlterTableStatement(makeContext(), commandKeyword, tableKeyword, tableName, alterTableOperation);
     }
 
+    private static final SQLToken[] AFTER_COLUMN_DEFINITION_TOKENS = new SQLToken[] {
+
+            SQLToken.BEFORE,
+            SQLToken.EOF
+    };
+
+    private static final SQLToken[] AFTER_ADD_COLUMN_TOKENS = new SQLToken[] {
+
+            SQLToken.COMMA,
+            SQLToken.EOF
+    };
+
     private <E extends Exception, I extends CharInput<E>> SQLAddColumnsOperation parseAddColumns(SQLExpressionLexer<E, I> lexer, long addKeyword)
             throws ParserException, E {
+
+        final SQLAddColumnsOperation result;
 
         final ISQLAllocator allocator = lexer.getAllocator();
 
@@ -134,7 +148,7 @@ public class SQLAlterTableParser extends SQLStatementParser {
                 final long beforeKeyword;
                 final long beforeColumnName;
 
-                if (lexer.peek(SQLToken.BEFORE)) {
+                if (lexer.peek(AFTER_COLUMN_DEFINITION_TOKENS) == SQLToken.BEFORE) {
 
                     beforeKeyword = lexer.lexKeyword(SQLToken.BEFORE);
                     beforeColumnName = lexer.lexName();
@@ -148,18 +162,20 @@ public class SQLAlterTableParser extends SQLStatementParser {
 
                 addColumnDefinitions.add(addColumnDefinition);
 
-                if (!lexer.lex(SQLToken.COMMA)) {
+                if (lexer.lex(AFTER_ADD_COLUMN_TOKENS) != SQLToken.COMMA) {
 
                     break;
                 }
             }
+
+            result = new SQLAddColumnsOperation(makeContext(), addKeyword, addColumnDefinitions);
         }
         finally {
 
             allocator.freeList(addColumnDefinitions);
         }
 
-        return new SQLAddColumnsOperation(makeContext(), addKeyword, addColumnDefinitions);
+        return result;
     }
 
     private <E extends Exception, I extends CharInput<E>> SQLModifyColumnsOperation parseModifyColumns(SQLExpressionLexer<E, I> lexer, long modifyKeyword)

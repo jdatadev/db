@@ -166,7 +166,7 @@ final class BucketsStringCache extends InheritableArrayKeysLargeMap<IMutableLong
     public String getOrAddString(CharSequence charSequence, int startIndex, int numCharacters) {
 
         Objects.requireNonNull(charSequence);
-        Checks.checkFromIndexSize(startIndex, numCharacters, charSequence.length());
+        Checks.checkIntFromIndexSize(startIndex, numCharacters, charSequence.length());
 
         if (DEBUG) {
 
@@ -290,7 +290,7 @@ final class BucketsStringCache extends InheritableArrayKeysLargeMap<IMutableLong
     private String getString(CharSequence charSequence, int startIndex, int numCharacters, long hash) {
 
         Objects.requireNonNull(charSequence);
-        Checks.checkFromIndexSize(startIndex, numCharacters, charSequence.length());
+        Checks.checkIntFromIndexSize(startIndex, numCharacters, charSequence.length());
 
         if (DEBUG) {
 

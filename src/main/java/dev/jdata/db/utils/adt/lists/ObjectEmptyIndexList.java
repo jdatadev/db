@@ -12,7 +12,7 @@ abstract class ObjectEmptyIndexList<T> extends ObjectEmptyList<T> implements IIn
     @Override
     public final <P> boolean contains(long startIndex, long numElements, P parameter, BiPredicate<T, P> predicate) {
 
-        Checks.checkFromIndexSize(startIndex, numElements, 0L);
+        Checks.checkIntOrLongFromIndexSize(startIndex, numElements, 0L);
         Objects.requireNonNull(predicate);
 
         return false;
@@ -21,7 +21,7 @@ abstract class ObjectEmptyIndexList<T> extends ObjectEmptyList<T> implements IIn
     @Override
     public final T get(long index) {
 
-        Checks.checkLongIndex(index, 0L);
+        Checks.checkIntOrLongIndex(index, 0L);
 
         throw ElementsExceptions.emptyException();
     }
@@ -35,7 +35,7 @@ abstract class ObjectEmptyIndexList<T> extends ObjectEmptyList<T> implements IIn
     @Override
     public final long closureOrConstantFindAtMostOneIndexInRange(long startIndex, long numElements, Predicate<T> predicate) {
 
-        Checks.checkFromIndexSize(startIndex, numElements, 0L);
+        Checks.checkIntOrLongFromIndexSize(startIndex, numElements, 0L);
         Objects.requireNonNull(predicate);
 
         return -1L;
@@ -44,7 +44,7 @@ abstract class ObjectEmptyIndexList<T> extends ObjectEmptyList<T> implements IIn
     @Override
     public final <P> long findAtMostOneIndexInRange(long startIndex, long numElements, P parameter, BiPredicate<T, P> predicate) {
 
-        Checks.checkFromIndexSize(startIndex, numElements, 0L);
+        Checks.checkIntOrLongFromIndexSize(startIndex, numElements, 0L);
         Objects.requireNonNull(predicate);
 
         return -1L;

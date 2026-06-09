@@ -78,7 +78,7 @@ public interface ILongByIndexOrderedElementsView extends ILongOrderedElementsVie
     default <P> long findAtMostOneIndexInRange(long startIndex, long numElements, P parameter, ILongElementPredicate<P> predicate) {
 
         Objects.requireNonNull(predicate);
-        Checks.checkFromIndexSize(startIndex, numElements, getIndexLimit());
+        Checks.checkIntOrLongFromIndexSize(startIndex, numElements, getIndexLimit());
 
         long foundIndex = -1L;
 

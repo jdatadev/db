@@ -26,16 +26,18 @@ final class HeapMutableLongToObjectDynamicMapAllocator<V>
     }
 
     @Override
-    protected HeapMutableLongToObjectMaxDistanceNonBucketMap<V> allocateMutable(IntFunction<V[]> createElements, int minimumCapacity) {
-
-        return HeapMutableLongToObjectMaxDistanceNonBucketMap.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity, createElements);
-    }
-
-    @Override
     public IHeapMutableLongToObjectDynamicMap<V> copyToMutable(ILongToObjectMapView<V> mutableFrom) {
 
         checkCopyToMutableParameters(mutableFrom);
 
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected HeapMutableLongToObjectMaxDistanceNonBucketMap<V> allocateMutable(int minimumCapacity, IntFunction<V[]> createElements) {
+
+        checkAllocateMutableParameters(minimumCapacity, createElements);
+
+        return HeapMutableLongToObjectMaxDistanceNonBucketMap.create(AllocationType.HEAP_ALLOCATOR, minimumCapacity, createElements);
     }
 }

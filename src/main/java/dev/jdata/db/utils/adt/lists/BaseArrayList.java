@@ -2,21 +2,49 @@ package dev.jdata.db.utils.adt.lists;
 
 import java.util.Objects;
 import java.util.function.IntFunction;
+import java.util.function.ToIntFunction;
 
+import dev.jdata.db.utils.adt.capacity.Capacity;
+import dev.jdata.db.utils.adt.elements.IByIndexOrderedOnlyElementsView;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.function.ObjIntFunction;
 
-abstract class BaseArrayList<T> extends BaseADTList<T, T, T> {
+abstract class BaseArrayList<T> extends BaseADTList<T, T, T> implements IByIndexOrderedOnlyElementsView {
 
-    static int increaseCapacity(int capacity) {
+    final <P> T checkArrayCapacity(int numElementsToAdd, P parameter, ToIntFunction<T> arrayLengthGetter, ObjIntFunction<P, T> createArray) {
 
-        Checks.isIntCapacityAboveZero(capacity);
+        Checks.isIntNumElements(numElementsToAdd);
+        Objects.requireNonNull(arrayLengthGetter);
+        Objects.requireNonNull(createArray);
 
-        return capacity << 1;
+        final T thisArray = elementsArray;
+        final int arrayLength = arrayLengthGetter.applyAsInt(thisArray);
+
+        final int numElementsBeforeAdd = numElements;
+
+        final int requiredArrayLength = numElementsBeforeAdd + numElementsToAdd;
+
+        final T dstArray;
+
+        if (requiredArrayLength > arrayLength) {
+
+            final int newCapacity = Capacity.computeIncreasedIntCapacity(arrayLength, requiredArrayLength);
+
+            dstArray = createArray.apply(parameter, newCapacity);
+
+            System.arraycopy(thisArray, 0, dstArray, 0, numElementsBeforeAdd);
+        }
+        else {
+            dstArray = thisArray;
+        }
+
+        return dstArray;
     }
 
     abstract int getElementsCapacity();
 
     final IntFunction<T> createElementsArray;
+
     private T elementsArray;
     private int numElements;
 
@@ -118,9 +146,9 @@ abstract class BaseArrayList<T> extends BaseADTList<T, T, T> {
         return numElements;
     }
 
-    final void setNumElements(int numElements) {
+    final int getAndIncrementNumElements() {
 
-        this.numElements = Checks.isIntNumElements(numElements);
+        return numElements ++;
     }
 
     final void incrementNumElements() {
@@ -133,11 +161,15 @@ abstract class BaseArrayList<T> extends BaseADTList<T, T, T> {
         -- numElements;
     }
 
-    final void increaseNumElements(int toAddNumElements) {
+    final int getAndIncreaseNumElements(int toAddNumElements) {
 
         Checks.isAboveZero(toAddNumElements);
 
+        final int result = numElements;
+
         numElements += toAddNumElements;
+
+        return result;
     }
 
     final void decreaseNumElements(int toSubtractNumElements) {
@@ -155,16 +187,6 @@ abstract class BaseArrayList<T> extends BaseADTList<T, T, T> {
         checkIsAllocatedRenamed();
 
         return this.elementsArray = createElementsArray.apply(initialCapacity);
-    }
-
-    final void setArray(T elementsArray) {
-
-        Objects.requireNonNull(elementsArray);
-        Checks.areNotSame(elementsArray, this.elementsArray);
-
-        checkIsAllocatedRenamed();
-
-        this.elementsArray = elementsArray;
     }
 
     private void recreateElements(int initialCapacity) {

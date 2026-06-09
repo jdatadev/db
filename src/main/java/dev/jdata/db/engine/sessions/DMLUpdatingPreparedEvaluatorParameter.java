@@ -7,7 +7,7 @@ import java.util.Objects;
 import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.dml.DMLInsertRows.InsertRow;
 import dev.jdata.db.engine.database.SQLExpressionEvaluator;
-import dev.jdata.db.engine.sessions.Session.PreparedStatementParameters;
+import dev.jdata.db.engine.sessions.ISession.IPreparedStatementParameters;
 import dev.jdata.db.utils.adt.arrays.IArrayAllocator;
 import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArray;
 import dev.jdata.db.utils.adt.arrays.IMutableLongLargeArrayAllocator;
@@ -18,7 +18,7 @@ public final class DMLUpdatingPreparedEvaluatorParameter<T extends IMutableLongL
 
     private final IArrayAllocator<InsertRow> insertRowArrayAllocator;
 
-    private PreparedStatementParameters preparedStatementParameters;
+    private IPreparedStatementParameters preparedStatementParameters;
     private int numBytesPerRow;
     private int rowIndex;
 
@@ -47,13 +47,13 @@ public final class DMLUpdatingPreparedEvaluatorParameter<T extends IMutableLongL
         dst.setValue(byteBuffer, byteBufferOffset, jdbcType, parameterIndex);
     }
 
-    void setPreparedStatementParameters(PreparedStatementParameters preparedStatementParameters) {
+    void setPreparedStatementParameters(IPreparedStatementParameters preparedStatementParameters) {
 
         this.preparedStatementParameters = Objects.requireNonNull(preparedStatementParameters);
         this.numBytesPerRow = preparedStatementParameters.computeNumBytesPerRow();
     }
 
-    PreparedStatementParameters getPreparedStatementParameters() {
+    IPreparedStatementParameters getPreparedStatementParameters() {
         return preparedStatementParameters;
     }
 

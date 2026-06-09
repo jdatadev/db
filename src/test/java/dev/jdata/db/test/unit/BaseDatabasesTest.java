@@ -6,18 +6,23 @@ import java.nio.ByteBuffer;
 import dev.jdata.db.common.storagebits.BaseMaxNumStorageBitsAdapter;
 import dev.jdata.db.common.storagebits.INumStorageBitsGetter;
 import dev.jdata.db.common.storagebits.NumStorageBitsParameters;
+import dev.jdata.db.custom.ansi.sql.parser.ANSISQLParserFactory;
 import dev.jdata.db.engine.database.DatabaseParameters;
 import dev.jdata.db.engine.database.DatabaseParameters.DatabaseStorageType;
 import dev.jdata.db.engine.database.DatabaseStringManagement;
 import dev.jdata.db.engine.database.Databases;
 import dev.jdata.db.engine.database.DatabasesParameters;
+import dev.jdata.db.engine.database.IDatabases;
 import dev.jdata.db.engine.database.IStringStorer;
 import dev.jdata.db.engine.database.allocators.HeapDatabasesAllocators;
 import dev.jdata.db.engine.database.strings.IStringCache;
+import dev.jdata.db.engine.server.DatabaseServer;
+import dev.jdata.db.engine.server.SQLDatabaseServer;
 import dev.jdata.db.engine.sessions.DBSession.ILargeObjectStorer;
 import dev.jdata.db.engine.transactions.Transactions.ITransactionFactory;
 import dev.jdata.db.schema.types.SchemaCustomType;
 import dev.jdata.db.schema.types.SchemaDataType;
+import dev.jdata.db.sql.parse.SQLParserFactory;
 import dev.jdata.db.utils.adt.arrays.IHeapMutableLongLargeArray;
 import dev.jdata.db.utils.adt.sets.IHeapMutableLongLargeSet;
 import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
@@ -41,6 +46,20 @@ public abstract class BaseDatabasesTest extends BaseDBTest {
         databaseParameters.initialize(DatabaseStorageType.MEMORY, null);
 
         return databaseParameters;
+    }
+
+    protected static SQLDatabaseServer createSQLDatabaseServer() {
+
+        final SQLParserFactory parserFactory = ANSISQLParserFactory.INSTANCE;
+
+        return new SQLDatabaseServer(createDatabaseServer(), parserFactory);
+    }
+
+    private static DatabaseServer createDatabaseServer() {
+
+        final IDatabases databases = createDatabases();
+
+        return new DatabaseServer(databases);
     }
 
     private static DatabasesParameters<IHeapMutableLongLargeArray, IHeapMutableLongLargeSet> makeDatabasesParameters() {
