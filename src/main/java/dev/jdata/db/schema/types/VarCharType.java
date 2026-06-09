@@ -7,23 +7,22 @@ public final class VarCharType extends StringType {
     private final int minLength;
     private final int maxLength;
 
-    public static VarCharType of(/*boolean nullable, */ int maxLength) {
+    public static VarCharType of(int maxLength) {
 
         Checks.isIntLengthAboveZero(maxLength);
 
-        return new VarCharType(/*nullable, */ 0, maxLength);
+        return new VarCharType(0, maxLength);
     }
 
-    public static VarCharType of(/*boolean nullable, */ int minLength, int maxLength) {
+    public static VarCharType of(int minLength, int maxLength) {
 
         Checks.isNotNegative(minLength);
         Checks.isIntLengthAboveZero(maxLength);
 
-        return new VarCharType(/*nullable, */ minLength, maxLength);
+        return new VarCharType(minLength, maxLength);
     }
 
-    private VarCharType(/*boolean nullable, */ int minLength, int maxLength) {
-//        super(nullable);
+    private VarCharType(int minLength, int maxLength) {
 
         this.minLength = Checks.isNotNegative(minLength);
         this.maxLength = Checks.isIntLengthAboveZero(maxLength);
