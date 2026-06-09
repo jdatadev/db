@@ -316,13 +316,7 @@ abstract class MutableStringsCharLargeArray extends BaseMutableCharLargeArray im
     }
 
     @Override
-    public final boolean equals(long index, IMutableStringsCharLargeArray otherCharArray, long otherIndex) {
-
-        return equals(index, otherCharArray, otherIndex, true);
-    }
-
-    @Override
-    public final boolean equals(long index, IMutableStringsCharLargeArray otherStringsCharLargeArray, long otherIndex, boolean caseSensitive) {
+    public final boolean equals(long index, IStringsCharLargeArrayGetters otherStringsCharLargeArray, long otherIndex, boolean caseSensitive) {
 
         Checks.checkLongIndex(index, getLimit());
 
