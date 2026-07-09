@@ -112,11 +112,4 @@ public final class TransactionSelect extends ObjectCacheNode implements IClearab
     public StringLookup getStringLookup() {
         return stringLookup;
     }
-
-    @Override
-    public String toString() {
-
-        return getClass().getSimpleName() + " [tableId=" + tableId + ", conditionOperator=" + conditionOperator + ", selectColumns=" + selectColumns +
-                ", rowIdsToFilter=" + rowIdsToFilter + ", stringLookup=" + stringLookup + ", selectColumnsMap=" + selectColumnsMap + "]";
-    }
 }

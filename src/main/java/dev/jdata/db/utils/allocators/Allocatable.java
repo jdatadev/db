@@ -212,10 +212,4 @@ public abstract class Allocatable extends PrintDebug {
             throw new IllegalStateException();
         }
     }
-
-    @Override
-    public String toString() {
-
-        return Allocatable.class.getSimpleName() + " [allocationType=" + allocationType + ", allocated=" + state + ']';
-    }
 }

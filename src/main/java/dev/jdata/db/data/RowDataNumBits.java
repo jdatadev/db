@@ -1,12 +1,11 @@
 package dev.jdata.db.data;
 
-import java.util.Arrays;
-
 import dev.jdata.db.utils.adt.IClearable;
 import dev.jdata.db.utils.adt.contains.IContainsView;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.debug.ToStringable;
 
-public class RowDataNumBits implements RowDataNumBitsGetter, IContainsView, IClearable {
+public class RowDataNumBits extends ToStringable implements RowDataNumBitsGetter, IContainsView, IClearable {
 
     public interface IRowDataNumBitsAllocator {
 
@@ -91,12 +90,5 @@ public class RowDataNumBits implements RowDataNumBitsGetter, IContainsView, ICle
 
         this.numColumns = 0;
         this.totalNumRowDataBits = 0;
-    }
-
-    @Override
-    public String toString() {
-
-        return getClass().getSimpleName() + " [rowDataNumBits=" + Arrays.toString(rowDataNumBits) + ", numColumns=" + numColumns +
-                ", totalNumRowDataBits=" + totalNumRowDataBits + "]";
     }
 }

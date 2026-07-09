@@ -1,6 +1,6 @@
 package dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects;
 
-import dev.jdata.db.engine.database.StringManagement;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.ISQLToSchemaStringManagement;
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.Table;
@@ -31,10 +31,10 @@ public final class ProcessAlterTableScratchObject<T extends IIntSetBuilder<?, ?>
         this.addPrimaryConstraintScratchObject = new ProcessAlterTableAddPrimaryConstraintScratchObject(allocationType);
     }
 
-    public void initialize(DatabaseId databaseId, StringManagement stringManagement, Table table, IIntSetAllocator<?, ?, T> intSetAllocator,
+    public void initialize(DatabaseId databaseId, ISQLToSchemaStringManagement sqlToSchemaStringManagement, Table table, IIntSetAllocator<?, ?, T> intSetAllocator,
             IIndexListAllocator<Column, ?, ?, U> columnIndexListAllocator) {
 
-        initialize(stringManagement);
+        initialize(sqlToSchemaStringManagement);
 
         this.databaseId = Initializable.checkNotYetInitialized(this.databaseId, databaseId);
         this.table = Initializable.checkNotYetInitialized(this.table, table);

@@ -591,7 +591,7 @@ public abstract class BaseObjectArrayList<T> extends BaseArrayList<T[]> implemen
     }
 
     @Override
-    public String toString() {
+    protected final String toStringSub() {
 
         return ByIndex.closureOrConstantToString(this, 0, getNumElements(), null, (e, i, b) -> b.append(e.get(i).toString()));
     }

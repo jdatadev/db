@@ -161,9 +161,9 @@ abstract class BaseIntToObjectNonBucketMap<V, M extends BaseIntToObjectNonBucket
     }
 
     @Override
-    public final String toString() {
+    protected final String toStringSub() {
 
-        return Maps.intToObjectMapToString(getClass().getSimpleName(), IOnlyElementsView.intNumElements(this), this,
+        return Maps.intToObjectMapToString(getClassName(), IOnlyElementsView.intNumElements(this), this,
                 (StringBuilder b, BaseIntToObjectNonBucketMap<V, M> i, IIntForEachAppend<V, BaseIntToObjectNonBucketMap<V, M>> f)
                         -> i.forEachKeyAndValue(b, (key, value, stringBuilder) -> f.each(key, value, stringBuilder, null)));
     }

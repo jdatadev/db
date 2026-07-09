@@ -5,7 +5,7 @@ public final class SerialType extends BaseSequenceType {
     public static final SerialType INSTANCE = new SerialType();
 
     @Override
-    public <R, T> R visitInformixType(InformixTypeVisitor<T, R> visitor, T parameter) {
+    public <P, R> R visitInformixType(InformixTypeVisitor<P, R> visitor, P parameter) {
 
         return visitor.onSerial(this, parameter);
     }

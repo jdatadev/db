@@ -17,7 +17,7 @@ public final class MapsTest extends BaseDBTest {
 
         final Integer parameter = 1;
 
-        final String prefix = getClass().getSimpleName();
+        final String prefix = makePrefix();
 
         final IIntToObjectMapForEachCaller<String, Integer> intToObjectMapForEachCaller = (b, p, f) -> {
 
@@ -39,7 +39,7 @@ public final class MapsTest extends BaseDBTest {
 
         final Integer parameter = 1;
 
-        final String prefix = getClass().getSimpleName();
+        final String prefix = makePrefix();
 
         final ILongToObjectMapForEachCaller<String, Integer> longToObjectMapForEachCaller = (b, p, f) -> {
 
@@ -61,7 +61,7 @@ public final class MapsTest extends BaseDBTest {
 
         final Integer parameter = 1;
 
-        final String prefix = getClass().getSimpleName();
+        final String prefix = makePrefix();
 
         final ILongForEachAppendCaller<String, Integer> longForEachAppendCaller = (b, p, f) -> {
 
@@ -77,5 +77,10 @@ public final class MapsTest extends BaseDBTest {
         final String string = Maps.longAppendToString(prefix, 3, parameter, longForEachAppendCaller, longAppendEachValue);
 
         assertThat(string).isEqualTo(prefix + " {123=abc,234=bcd,345=cde}");
+    }
+
+    private String makePrefix() {
+
+        return getClass().getSimpleName();
     }
 }

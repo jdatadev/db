@@ -4,8 +4,9 @@ import java.util.Objects;
 
 import dev.jdata.db.utils.adt.numbers.decimals.IDecimalView;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.debug.ToStringable;
 
-public final class RowValue {
+public final class RowValue extends ToStringable {
 
     private RowValueType type;
 
@@ -130,12 +131,5 @@ public final class RowValue {
     public void setCaseInsensitiveString(CharSequence caseInsensitiveString) {
 
         this.caseInsensitiveString = Objects.requireNonNull(caseInsensitiveString);
-    }
-
-    @Override
-    public String toString() {
-
-        return getClass().getSimpleName() + " [type=" + type + ", integer=" + integer + ", floatingPoint=" + floatingPoint + ", decimal=" + decimal +
-                ", string=" + string + ", caseInsensitiveString=" + caseInsensitiveString + "]";
     }
 }

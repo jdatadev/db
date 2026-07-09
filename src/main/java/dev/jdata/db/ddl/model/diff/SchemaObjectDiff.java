@@ -1,10 +1,11 @@
 package dev.jdata.db.ddl.model.diff;
 
 import dev.jdata.db.schema.model.objects.DBNamedIdentifiableObject;
+import dev.jdata.db.schema.model.objects.SchemaObject;
 
 public abstract class SchemaObjectDiff extends DBNamedIdentifiableObject {
 
-    SchemaObjectDiff(long parsedName, long hashName, int id) {
-        super(parsedName, hashName, id);
+    SchemaObjectDiff(SchemaObject schemaObject) {
+        super(schemaObject);
     }
 }

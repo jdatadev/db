@@ -10,7 +10,7 @@ public final class SQLLikeCondition extends BaseSQLLikeCondition {
     }
 
     @Override
-    public <T, R> R visit(SQLConditionVisitor<T, R> visitor, T parameter) {
+    public <P, R> R visit(SQLConditionVisitor<P, R> visitor, P parameter) {
 
         return visitor.onLike(this, parameter);
     }

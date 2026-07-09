@@ -132,7 +132,7 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
 
     private static void checkTable(SQLCreateTableStatement createTableStatement, StringResolver createTableResolver, Table table, StringResolver tableResolver) {
 
-        assertThat(createTableResolver.asString(createTableStatement.getName())).isEqualTo(tableResolver.asString(table.getParsedName()));
+        assertThat(createTableResolver.asString(createTableStatement.getName())).isEqualTo(tableResolver.asString(table.getStoredSQLName()));
 
         final ASTList<SQLTableColumnDefinition> columnDefinitions = createTableStatement.getColumns();
 
@@ -140,7 +140,7 @@ public abstract class BaseDatabaseSchemaSerializerTest<T extends BaseDatabaseSch
 
             final Column column = table.getColumn(i);
 
-            assertThat(createTableResolver.asString(e.getName())).isEqualTo(tableResolver.asString(column.getParsedName()));
+            assertThat(createTableResolver.asString(e.getName())).isEqualTo(tableResolver.asString(column.getStoredSQLName()));
             assertThat(e.getType()).isEqualTo(column.getSchemaType());
             assertThat(column.isNullable()).isTrue();
         });

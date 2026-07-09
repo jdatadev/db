@@ -845,14 +845,14 @@ final class StringStorer extends InheritableArrayKeysLargeMap<IMutableLongLargeA
     }
 
     @Override
-    public final String toString() {
+    protected final String toStringSub() {
 
         final ILongForEachAppendCaller<IMutableStringsCharLargeArray, StringStorer> forEachAppendCaller
                 = (b, i, f) -> i.forEachKeyAndValue(f, (stringRef, charArray, forEach) -> forEach.each(stringRef, charArray, b, i));
 
         final ILongAppendEachValue<IMutableStringsCharLargeArray, StringStorer> appendEachValue = (r, a, b, p) -> a.asString(r, b);
 
-        return Maps.longAppendToString(getClass().getSimpleName(), IOnlyElementsView.intNumElements(this), this, forEachAppendCaller, appendEachValue);
+        return Maps.longAppendToString(getClassName(), IOnlyElementsView.intNumElements(this), this, forEachAppendCaller, appendEachValue);
     }
 
     private static IMutableLongLargeArray createHashArray(int outerCapacity, int innerCapacityExponent) {

@@ -22,7 +22,7 @@ public final class SQLColumnProjectionElement extends SQLProjectionElement {
     }
 
     @Override
-    public <T, R> R visit(SQLProjectionElementVisitor<T, R> visitor, T parameter) {
+    public <P, R> R visit(SQLProjectionElementVisitor<P, R> visitor, P parameter) {
 
         return visitor.onColumn(this, parameter);
     }

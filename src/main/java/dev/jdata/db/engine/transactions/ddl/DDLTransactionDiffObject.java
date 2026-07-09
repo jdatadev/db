@@ -21,4 +21,8 @@ abstract class DDLTransactionDiffObject<T extends SchemaObjectDiff> extends DDLT
 
         this.schemaObjectDiff = Initializable.checkResettable(schemaObjectDiff);
     }
+
+    final T getSchemaObjectDiff() {
+        return schemaObjectDiff;
+    }
 }

@@ -31,7 +31,7 @@ final class DDLSQLStatements<T extends IIntSetBuilder<?, ?>, U extends IIndexLis
             final Table table = DDLCreateTableSchemasHelper.processCreateTable(createTableStatement, parameter.getStringManagement(), parameter.getColumnIndexListAllocator(),
                     processCreateTableScratchObject, parameter, p -> p.allocateSchemaObjectId(DDLObjectType.TABLE));
 
-            parameter.getSchemaMapBuilder().addSchemaObject(table);
+            parameter.getSchemaMapBuilder().addSchemaObject(DDLObjectType.TABLE, table);
         }
         finally {
 

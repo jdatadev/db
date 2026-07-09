@@ -69,15 +69,11 @@ abstract class BaseAnyDimensionalArray<T, U, V> extends BaseADTElements<T, U, V>
     }
 
     @Override
-    public String toString() {
+    protected final void toStringBuilder(StringBuilder sb) {
 
-        final StringBuilder sb = new StringBuilder(1000);
-
-        sb.append(getClass().getSimpleName()).append(' ');
+        appendHeader(sb);
 
         toString(sb);
-
-        return sb.toString();
     }
 
     @Override

@@ -2,7 +2,7 @@ package dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects;
 
 import org.jutils.io.strings.StringRef;
 
-import dev.jdata.db.engine.database.StringManagement;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.ISQLToSchemaStringManagement;
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.Table;
@@ -23,9 +23,10 @@ public final class ProcessAlterTableAddColumnsScratchObject<T extends IIndexList
         super(allocationType);
     }
 
-    public void initialize(DatabaseId databaseId, StringManagement stringManagement, Table table, IIndexListAllocator<Column, ?, ?, T> columnIndexListAllocator) {
+    public void initialize(DatabaseId databaseId, ISQLToSchemaStringManagement sqlToSchemaStringManagement, Table table,
+            IIndexListAllocator<Column, ?, ?, T> columnIndexListAllocator) {
 
-        initialize(stringManagement, table.getMaxColumnId() + 1);
+        initialize(sqlToSchemaStringManagement, table.getMaxColumnId() + 1);
 
         this.databaseId = Initializable.checkNotYetInitialized(this.databaseId, databaseId);
         this.table = Initializable.checkNotYetInitialized(this.table, table);

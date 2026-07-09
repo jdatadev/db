@@ -17,7 +17,7 @@ public final class SQLIsNotNullCondition extends BaseSQLIsNullCondition {
     }
 
     @Override
-    public <T, R> R visit(SQLConditionVisitor<T, R> visitor, T parameter) {
+    public <P, R> R visit(SQLConditionVisitor<P, R> visitor, P parameter) {
 
         return visitor.onIsNotNull(this, parameter);
     }

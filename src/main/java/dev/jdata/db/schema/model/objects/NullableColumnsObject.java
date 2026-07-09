@@ -105,15 +105,17 @@ abstract class NullableColumnsObject extends ColumnsObject {
         Objects.requireNonNull(stringResolver);
         Objects.requireNonNull(sb);
 
-        sb.append(getClass().getSimpleName()).append(" [getId()=").append(getId()).append(", getHashName()=").append(getHashName()).append(", getColumns()=");
+        appendHeader(sb);
 
-        ByIndex.toString(this, 0L, getNumColumns(), sb, stringResolver, (o, i, b, s) -> o.getColumn((int)i).toString(s));
+        sb.append("[getId()=").append(getId()).append(", getHashKeyName()=").append(getHashKeyName()).append(", getColumns()=");
+
+        ByIndex.toString(this, 0L, getNumColumns(), sb, stringResolver, (o, i, b, s) -> o.getColumn((int)i).toString(s, b));
 
         sb.append(", numNullableColumns=").append(numNullableColumns).append(']');
     }
 
     @Override
-    public String toString() {
+    protected final String toStringSub() {
 
         return toString(RefStringResolver.INSTANCE);
     }

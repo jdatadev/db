@@ -74,7 +74,7 @@ public abstract class ColumnsObject extends SchemaObject implements ToStringWith
 
         for (int i = 0; i < numColumns; ++ i) {
 
-            if (equalityTester.areEqual(name, columns.get(i).getParsedName(), caseSensitive, parameter)) {
+            if (equalityTester.areEqual(name, columns.get(i).getStoredSQLName(), caseSensitive, parameter)) {
 
                 result = true;
                 break;
@@ -153,7 +153,9 @@ public abstract class ColumnsObject extends SchemaObject implements ToStringWith
         Objects.requireNonNull(stringResolver);
         Objects.requireNonNull(sb);
 
-        sb.append(getClass().getSimpleName()).append(" [getId()=").append(getId()).append(", columns=");
+        appendHeader(sb);
+
+        sb.append(" [getId()=").append(getId()).append(", columns=");
 
         columns.toString(sb, stringResolver, (c, b, p) -> c.toString(p, b));
 
@@ -161,7 +163,7 @@ public abstract class ColumnsObject extends SchemaObject implements ToStringWith
     }
 
     @Override
-    public String toString() {
+    protected String toStringSub() {
 
         return toString(RefStringResolver.INSTANCE);
     }

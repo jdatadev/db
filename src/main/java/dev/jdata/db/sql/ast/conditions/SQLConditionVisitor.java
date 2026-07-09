@@ -1,16 +1,16 @@
 package dev.jdata.db.sql.ast.conditions;
 
-public interface SQLConditionVisitor<T, R> {
+public interface SQLConditionVisitor<P, R> {
 
     @Deprecated
-    R onComparison(SQLComparisonCondition comparisonCondition, T parameter);
+    R onComparison(SQLComparisonCondition comparisonCondition, P parameter);
 
-    R onIsNull(SQLIsNullCondition isNullCondition, T parameter);
-    R onIsNotNull(SQLIsNotNullCondition isNotNullCondition, T parameter);
+    R onIsNull(SQLIsNullCondition isNullCondition, P parameter);
+    R onIsNotNull(SQLIsNotNullCondition isNotNullCondition, P parameter);
 
-    R onLike(SQLLikeCondition likeCondition, T parameter);
-    R onNotLike(SQLNotLikeCondition notLikeCondition, T parameter);
+    R onLike(SQLLikeCondition likeCondition, P parameter);
+    R onNotLike(SQLNotLikeCondition notLikeCondition, P parameter);
 
-    R onIn(SQLInCondition inCondition, T parameter);
-    R onNotIn(SQLNotInCondition notInCondition, T parameter);
+    R onIn(SQLInCondition inCondition, P parameter);
+    R onNotIn(SQLNotInCondition notInCondition, P parameter);
 }

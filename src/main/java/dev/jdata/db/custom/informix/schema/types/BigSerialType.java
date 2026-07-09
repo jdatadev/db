@@ -5,7 +5,7 @@ public final class BigSerialType extends BaseSequenceType {
     public static final BigSerialType INSTANCE = new BigSerialType();
 
     @Override
-    public <R, T> R visitInformixType(InformixTypeVisitor<T, R> visitor, T parameter) {
+    public <P, R> R visitInformixType(InformixTypeVisitor<P, R> visitor, P parameter) {
 
         return visitor.onBigSerial(this, parameter);
     }

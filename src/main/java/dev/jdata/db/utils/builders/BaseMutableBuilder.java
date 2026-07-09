@@ -61,10 +61,8 @@ public abstract class BaseMutableBuilder<T extends IImmutable, U extends IImmuta
     }
 
     @Override
-    public String toString() {
+    protected final void checkToString() {
 
         checkIsAllocatedRenamed();
-
-        return getClass().getSimpleName() + " [ mutable=" + mutable + "]";
     }
 }

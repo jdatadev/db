@@ -20,7 +20,7 @@ public abstract class ColumnsObjectDiff extends SchemaObjectDiff {
     private final IHeapIntSet droppedColumns;
 
     ColumnsObjectDiff(ColumnsObject columnsObject, IHeapIndexList<Column> addedColumns, IHeapIndexList<Column> modifiedColumns, IHeapIntSet droppedColumns) {
-        super(columnsObject.getParsedName(), columnsObject.getHashName(), columnsObject.getId());
+        super(columnsObject);
 
         if (IContainsView.isNullOrEmpty(addedColumns) && IContainsView.isNullOrEmpty(modifiedColumns) && IContainsView.isNullOrEmpty(droppedColumns)) {
 
@@ -44,20 +44,26 @@ public abstract class ColumnsObjectDiff extends SchemaObjectDiff {
         return droppedColumns;
     }
 
+    public final <T extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>> ColumnsObject applyToColumnsObject(ColumnsObject columnsObject,
+            IIndexListAllocator<Column, ?, ?, T> columnIndexListAllocator) {
+
+        return applyToColumnsObject(columnsObject, ColumnsObject::makeCopy, columnIndexListAllocator);
+    }
+
     @FunctionalInterface
-    interface ColumnsObjectFactory<T extends ColumnsObject> {
+    private interface ColumnsObjectFactory<T extends ColumnsObject> {
 
         T createFrom(T from, IHeapIndexList<Column> columns);
     }
 
-    final <T extends ColumnsObject, U extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>> T applyToColumnsObject(T columnsObject,
+    private <T extends ColumnsObject, U extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>> T applyToColumnsObject(T columnsObject,
             ColumnsObjectFactory<T> columnsObjectFactory, IIndexListAllocator<Column, ?, ?, U> columnIndexListAllocator) {
 
         Objects.requireNonNull(columnsObject);
         Objects.requireNonNull(columnsObjectFactory);
         Objects.requireNonNull(columnIndexListAllocator);
         Checks.areEqual(getId(), columnsObject.getId());
-        Checks.areEqual(getHashName(), columnsObject.getHashName());
+        Checks.areEqual(getHashKeyName(), columnsObject.getHashKeyName());
 
         final T result;
 
@@ -67,17 +73,29 @@ public abstract class ColumnsObjectDiff extends SchemaObjectDiff {
 
         try {
             final IIntSet dropped = droppedColumns;
-            final IIndexList<Column> modified = modifiedColumns;
 
-            for (int i = 0; i < numColumns; ++ i) {
+            if (dropped != null) {
 
-                final Column column = columnsObject.getColumn(i);
+                final IIndexList<Column> modified = modifiedColumns;
 
-                if (!dropped.contains(column.getId())) {
+                for (int i = 0; i < numColumns; ++ i) {
 
-                    final Column modifiedColumn = modified.findAtMostOne(column, (c, p) -> c.getId() == p.getId());
+                    final Column column = columnsObject.getColumn(i);
 
-                    columnsBuilder.addTail(modifiedColumn != null ? modifiedColumn : column);
+                    if (!dropped.contains(column.getId())) {
+
+                        final Column modifiedColumn;
+
+                        if (modified != null) {
+
+                            modifiedColumn = modified.findAtMostOne(column, (c, p) -> c.getId() == p.getId());
+                        }
+                        else {
+                            modifiedColumn = null;
+                        }
+
+                        columnsBuilder.addTail(modifiedColumn != null ? modifiedColumn : column);
+                    }
                 }
             }
 

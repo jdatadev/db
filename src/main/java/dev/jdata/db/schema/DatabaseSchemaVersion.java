@@ -1,8 +1,9 @@
 package dev.jdata.db.schema;
 
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.debug.ToStringable;
 
-public final class DatabaseSchemaVersion implements Comparable<DatabaseSchemaVersion> {
+public final class DatabaseSchemaVersion extends ToStringable implements Comparable<DatabaseSchemaVersion> {
 
     public static final int NO_VERSION = -1;
     public static final int INITIAL_VERSION = 1;
@@ -71,11 +72,5 @@ public final class DatabaseSchemaVersion implements Comparable<DatabaseSchemaVer
         }
 
         return result;
-    }
-
-    @Override
-    public String toString() {
-
-        return getClass().getSimpleName() + " [versionNumber=" + versionNumber + "]";
     }
 }

@@ -13,16 +13,16 @@ public final class Column extends DBNamedIdentifiableObject {
     private final boolean nullable;
     private final Expression checkCondition;
 
-    public Column(long parsedName, long hashName, int id, SchemaDataType schemaType) {
-        this(parsedName, hashName, id, schemaType, true);
+    public Column(long storedSQLName, long hashName, int id, SchemaDataType schemaType) {
+        this(storedSQLName, hashName, id, schemaType, true);
     }
 
-    public Column(long parsedName, long hashName, int id, SchemaDataType schemaType, boolean nullable) {
-        this(parsedName, hashName, id, schemaType, nullable, null);
+    public Column(long storedSQLName, long hashName, int id, SchemaDataType schemaType, boolean nullable) {
+        this(storedSQLName, hashName, id, schemaType, nullable, null);
     }
 
-    public Column(long parsedName, long hashName, int id, SchemaDataType schemaType, boolean nullable, Expression checkCondition) {
-        super(parsedName, hashName, id);
+    public Column(long storedSQLName, long hashName, int id, SchemaDataType schemaType, boolean nullable, Expression checkCondition) {
+        super(storedSQLName, hashName, id);
 
         this.schemaType = Objects.requireNonNull(schemaType);
         this.nullable = nullable;
@@ -105,9 +105,9 @@ public final class Column extends DBNamedIdentifiableObject {
         Objects.requireNonNull(stringResolver);
         Objects.requireNonNull(sb);
 
-        sb.append(getClass().getSimpleName());
+        appendHeader(sb);
 
-        sb.append(" [super=");
+        sb.append("[super=");
         super.toString(stringResolver, sb);
 
         sb.append(", schemaType=").append(schemaType).append(", nullable=").append(nullable).append(", checkCondition=").append(checkCondition).append(']');

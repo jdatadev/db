@@ -3,12 +3,13 @@ package dev.jdata.db.engine.database;
 import org.jutils.io.strings.StringRef;
 import org.jutils.io.strings.StringResolver;
 
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.ISQLToSchemaStringManagement;
 import dev.jdata.db.engine.database.strings.IStringCache;
 import dev.jdata.db.utils.Initializable;
 import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
-public final class StringManagement extends ObjectCacheNode implements IResettable {
+public final class StringManagement extends ObjectCacheNode implements ISQLToSchemaStringManagement, IResettable {
 
     private DatabaseStringManagement databaseStringManagement;
     private StringResolver parserStringResolver;
@@ -33,14 +34,16 @@ public final class StringManagement extends ObjectCacheNode implements IResettab
         this.stringCache = Initializable.checkResettable(stringCache);
     }
 
+    @Override
     public boolean parsedEqualsStored(long parsedStringRef, long storedStringRef, boolean caseSensitive) {
 
         StringRef.checkIsString(parsedStringRef);
         StringRef.checkIsString(storedStringRef);
 
-        return databaseStringManagement.getStringResolver().equals(storedStringRef, parserStringResolver, parsedStringRef);
+        return databaseStringManagement.getStoredStringResolver().equals(storedStringRef, parserStringResolver, parsedStringRef);
     }
 
+    @Override
     public long storeParsedStringRef(long stringRef) {
 
         StringRef.checkIsString(stringRef);
@@ -48,11 +51,12 @@ public final class StringManagement extends ObjectCacheNode implements IResettab
         return databaseStringManagement.storeParsedStringRef(parserStringResolver, stringRef);
     }
 
-    public long getHashStringRef(long stringRef) {
+    @Override
+    public long storeHashStringRefFromStoredSQLStringRef(long storedSQLStringRef) {
 
-        StringRef.checkIsString(stringRef);
+        StringRef.checkIsString(storedSQLStringRef);
 
-        return databaseStringManagement.getHashStringRef(stringRef);
+        return databaseStringManagement.storeHashStringRefFromStoredSQLStringRef(storedSQLStringRef);
     }
 
     public String getLowerCaseString(long stringRef) {
@@ -62,7 +66,7 @@ public final class StringManagement extends ObjectCacheNode implements IResettab
         return databaseStringManagement.getLowerCaseString(stringRef);
     }
 
-    public IStringCache getStringCache() {
+    private IStringCache getStringCache() {
         return stringCache;
     }
 }

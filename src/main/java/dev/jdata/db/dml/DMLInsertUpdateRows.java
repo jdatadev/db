@@ -29,12 +29,6 @@ public abstract class DMLInsertUpdateRows<T extends DMLInsertUpdateRows.InsertUp
         final long getRowBufferBitOffset() {
             return rowBufferBitOffset;
         }
-
-        @Override
-        public String toString() {
-
-            return getClass().getSimpleName() + " [rowBuffer=" + rowBuffer + ", rowBufferBitOffset=" + rowBufferBitOffset + "]";
-        }
     }
 
     private final int[] tableColumns;
@@ -95,9 +89,11 @@ public abstract class DMLInsertUpdateRows<T extends DMLInsertUpdateRows.InsertUp
     }
 
     @Override
-    public String toString() {
+    public String toStringSub() {
 
-        return getClass().getSimpleName() + " [tableColumns=" + Array.toString(tableColumns, 0, numColumns) + ", rowDataNumBits=" + rowDataNumBits +
-                ", numColumns=" + numColumns + ", getRows()=" + Arrays.toString(getRows()) + "]";
+        appendHeader(null);
+
+        return "[tableColumns=" + Array.toString(tableColumns, 0, numColumns) + ", rowDataNumBits=" + rowDataNumBits + ", numColumns=" + numColumns + ", getRows()="
+                + Arrays.toString(getRows()) + "]";
     }
 }

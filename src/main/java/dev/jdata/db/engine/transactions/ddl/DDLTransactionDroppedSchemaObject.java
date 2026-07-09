@@ -43,10 +43,4 @@ public final class DDLTransactionDroppedSchemaObject extends DDLTransactionObjec
 
         return visitor.onDroppedSchemaObject(this, parameter);
     }
-
-    @Override
-    public String toString() {
-
-        return getClass().getSimpleName() + " [super=" + super.toString() + ", ddlObjectType=" + ddlObjectType + ", schemaObjectId=" + schemaObjectId + ']';
-    }
 }

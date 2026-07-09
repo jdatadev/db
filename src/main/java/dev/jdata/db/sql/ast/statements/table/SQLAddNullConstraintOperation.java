@@ -17,7 +17,7 @@ public final class SQLAddNullConstraintOperation extends SQLAlterTableAddConstra
     }
 
     @Override
-    public <T, R, E extends Exception> R visit(SQLAlterTableOperationVisitor<T, R, E> visitor, T parameter) throws E {
+    public <P, R, E extends Exception> R visit(SQLAlterTableOperationVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onAddNullConstraint(this, parameter);
     }

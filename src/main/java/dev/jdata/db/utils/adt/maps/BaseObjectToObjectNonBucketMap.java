@@ -188,9 +188,9 @@ abstract class BaseObjectToObjectNonBucketMap<K, V, M extends BaseObjectToObject
     }
 
     @Override
-    public final String toString() {
+    protected final String toStringSub() {
 
-        return Maps.objectToObjectMapToString(getClass().getSimpleName(), IOnlyElementsView.intNumElements(this), this,
+        return Maps.objectToObjectMapToString(getClassName(), IOnlyElementsView.intNumElements(this), this,
                 (StringBuilder b, BaseObjectToObjectNonBucketMap<K, V, M> i, IObjectForEachAppend<K, V, BaseObjectToObjectNonBucketMap<K, V, M>> f)
                         -> i.forEachKeyAndValue(b, (k, v, forEachStringBuilder) -> f.each(k, v, b, i)));
     }

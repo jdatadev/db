@@ -4,6 +4,6 @@ public interface IHeapMutableDoublyLinkedListAllocator<T> extends IMutableDoubly
 
     public static <T> IHeapMutableDoublyLinkedListAllocator<T> create() {
 
-        return new HeapMutableDoublyLinkedListAllocator<>();
+        return new HeapMutableObjectDoublyLinkedListAllocator<>();
     }
 }

@@ -6,28 +6,30 @@ import org.jutils.io.strings.StringRef;
 import org.jutils.io.strings.StringResolver;
 import org.jutils.io.strings.StringResolver.ToStringWithStringResolver;
 
-public abstract class DBNamedObject implements ToStringWithStringResolver {
+import dev.jdata.db.utils.debug.ToStringable;
 
-    private final long parsedName;
+public abstract class DBNamedObject extends ToStringable implements ToStringWithStringResolver {
+
+    private final long storedSQLName;
     private final long hashName;
 
-    protected DBNamedObject(long parsedName, long hashName) {
+    protected DBNamedObject(long storedSQLName, long hashName) {
 
-        this.parsedName = StringRef.checkIsString(parsedName);
+        this.storedSQLName = StringRef.checkIsString(storedSQLName);
         this.hashName = StringRef.checkIsString(hashName);
     }
 
     protected DBNamedObject(DBNamedObject toCopy) {
 
-        this.parsedName = toCopy.parsedName;
+        this.storedSQLName = toCopy.storedSQLName;
         this.hashName = toCopy.hashName;
     }
 
-    public final long getParsedName() {
-        return parsedName;
+    public final long getStoredSQLName() {
+        return storedSQLName;
     }
 
-    public final long getHashName() {
+    public final long getHashKeyName() {
         return hashName;
     }
 
@@ -50,8 +52,8 @@ public abstract class DBNamedObject implements ToStringWithStringResolver {
 
         if (caseSensitive) {
 
-            thisName = parsedName;
-            otherName = other.parsedName;
+            thisName = storedSQLName;
+            otherName = other.storedSQLName;
         }
         else {
             thisName = hashName;
@@ -90,7 +92,7 @@ public abstract class DBNamedObject implements ToStringWithStringResolver {
         else {
             final DBNamedObject other = (DBNamedObject)object;
 
-            result = hashName == other.hashName && parsedName == other.parsedName;
+            result = hashName == other.hashName && storedSQLName == other.storedSQLName;
         }
 
         return result;
@@ -103,17 +105,11 @@ public abstract class DBNamedObject implements ToStringWithStringResolver {
         Objects.requireNonNull(sb);
 
         sb.append("[parsedname=");
-        stringResolver.appendString(parsedName, sb);
+        stringResolver.appendString(storedSQLName, sb);
 
         sb.append(", hashName=");
         stringResolver.appendString(hashName, sb);
 
         sb.append(']');
-    }
-
-    @Override
-    public String toString() {
-
-        return DBNamedObject.class.getSimpleName() + " [parsedName=" + parsedName + ", hashName=" + hashName + "]";
     }
 }

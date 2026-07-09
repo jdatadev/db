@@ -20,6 +20,7 @@ import dev.jdata.db.schema.model.objects.View;
 import dev.jdata.db.schema.model.schemaobjects.ISchemaObjects;
 import dev.jdata.db.utils.Initializable;
 import dev.jdata.db.utils.adt.IResettable;
+import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 import dev.jdata.db.utils.checks.Checks;
@@ -156,6 +157,24 @@ public abstract class BaseSchemaMap<T extends ISchemaObjects<?>> extends ObjectC
         return getSchemaObjects(ddlObjectType).maxInt(defaultValue, DBNamedIdentifiableObject::getId);
     }
 
+    @Override
+    public final int getNumSchemaObjects() {
+
+        int numSchemaObjects = 0;
+
+        for (DDLObjectType ddlObjectType : DDLObjectType.values()) {
+
+            final IIndexList<SchemaObject> schemaObjectsList = getSchemaObjectsList(ddlObjectType);
+
+            if (schemaObjectsList != null) {
+
+                numSchemaObjects += IOnlyElementsView.intNumElements(schemaObjectsList);
+            }
+        }
+
+        return numSchemaObjects;
+    }
+
     @SuppressWarnings("unchecked") T getSchemaObjectsForObjectType(DDLObjectType ddlObjectType) {
 
         Objects.requireNonNull(ddlObjectType);
@@ -250,12 +269,5 @@ public abstract class BaseSchemaMap<T extends ISchemaObjects<?>> extends ObjectC
         }
 
         return result;
-    }
-
-    @Override
-    public String toString() {
-
-        return getClass().getSimpleName() + " [createObjectState=" + createObjectState + ", getSchemaObjects=" + getSchemaObjects
-                + ", schemaObjectStates=" + Arrays.toString(schemaObjectStates) + "]";
     }
 }

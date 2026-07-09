@@ -71,7 +71,7 @@ public abstract class DBNamedObjectMap<
 
                 final NAMED_OBJECT namedObject = namedObjects.get(i);
 
-                builder.add(namedObject.getHashName(), namedObject);
+                builder.add(namedObject.getHashKeyName(), namedObject);
             }
 
             this.objectByName = builder.buildNotEmpty();
@@ -240,11 +240,5 @@ public abstract class DBNamedObjectMap<
         }
 
         return result;
-    }
-
-    @Override
-    public final String toString() {
-
-        return getClass().getSimpleName() + " [map=" + objectByName + "]";
     }
 }

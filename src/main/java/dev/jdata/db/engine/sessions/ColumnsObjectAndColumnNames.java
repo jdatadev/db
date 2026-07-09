@@ -60,9 +60,7 @@ abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject, U extends IM
 
             final T columnsObject = databaseSchema.getSchemaObject(ddlObjectType, columnsObjectId);
 
-            final long columnsObjectNameStringRef = columnsObject.getHashName();
-
-            columnsObjectIdByName.put(columnsObjectNameStringRef, columnsObjectId);
+            columnsObjectIdByName.put(columnsObject.getHashKeyName(), columnsObjectId);
 
             final int numColumns = columnsObject.getNumColumns();
 
@@ -72,7 +70,7 @@ abstract class ColumnsObjectAndColumnNames<T extends ColumnsObject, U extends IM
 
                 final Column column = columnsObject.getColumn(columnIndex);
 
-                final long columnNameStringRef = column.getHashName();
+                final long columnNameStringRef = column.getHashKeyName();
 
                 mutableLongToIntMap.put(columnNameStringRef, columnIndex);
             }

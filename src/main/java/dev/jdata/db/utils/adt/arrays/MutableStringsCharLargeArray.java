@@ -585,13 +585,13 @@ abstract class MutableStringsCharLargeArray extends BaseMutableCharLargeArray im
     }
 
     @Override
-    public final String toString() {
+    protected final String toStringSub() {
 
         final ILongForEachAppendCaller<MutableStringsCharLargeArray, MutableStringsCharLargeArray> forEachAppendCaller
                 = (b, i, f) -> i.forEachIndexAndString(f, (index, charArray, forEach) -> forEach.each(index, charArray, b, null));
 
         final ILongAppendEachValue<MutableStringsCharLargeArray, MutableStringsCharLargeArray> appendEachValue = (i, a, b, p) -> a.asString(i, b);
 
-        return Maps.longAppendToString(getClass().getSimpleName(), intLimit(this), this, forEachAppendCaller, appendEachValue);
+        return Maps.longAppendToString(getClassName(), intLimit(this), this, forEachAppendCaller, appendEachValue);
     }
 }

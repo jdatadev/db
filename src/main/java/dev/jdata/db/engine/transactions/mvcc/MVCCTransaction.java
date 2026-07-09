@@ -33,6 +33,7 @@ import dev.jdata.db.utils.bits.BitsUtil;
 import dev.jdata.db.utils.checks.AssertionContants;
 import dev.jdata.db.utils.checks.Assertions;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.debug.ToStringable;
 import dev.jdata.db.utils.scalars.Integers;
 
 public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.MVCCTransactionState> {
@@ -45,13 +46,8 @@ public final class MVCCTransaction extends TransactionMechanism<MVCCTransaction.
 
     private static final long NO_NODE = LargeNodeLists.NO_LONG_NODE;
 
-    public static final class MVCCTransactionState implements ITransactionSharedStateMarker {
+    public static final class MVCCTransactionState extends ToStringable implements ITransactionSharedStateMarker {
 
-        @Override
-        public String toString() {
-
-            return getClass().getSimpleName() + " []";
-        }
     }
 
     private static enum DMLOperation {

@@ -358,11 +358,13 @@ abstract class BaseIntKeyBucketMap<
     }
 
     @Override
-    public String toString() {
+    protected final String toStringSub() {
 
         final StringBuilder sb = new StringBuilder(IOnlyElementsView.intNumElements(this) * 10);
 
-        sb.append(getClass().getSimpleName()).append(" [elements=");
+        appendHeader(sb);
+
+        sb.append("[elements=");
 
         final int[] bucketHeadNodesHashArray = getHashed();
 

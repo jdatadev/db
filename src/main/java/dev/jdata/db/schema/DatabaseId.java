@@ -1,8 +1,9 @@
 package dev.jdata.db.schema;
 
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.debug.ToStringable;
 
-public final class DatabaseId {
+public final class DatabaseId extends ToStringable {
 
     private final int id;
     private final String name;
@@ -47,11 +48,5 @@ public final class DatabaseId {
         }
 
         return result;
-    }
-
-    @Override
-    public String toString() {
-
-        return getClass().getSimpleName() + " [id=" + id + ", name=" + name + "]";
     }
 }

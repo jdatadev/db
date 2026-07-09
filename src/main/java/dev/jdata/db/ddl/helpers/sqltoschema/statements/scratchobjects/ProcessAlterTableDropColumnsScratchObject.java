@@ -2,7 +2,7 @@ package dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects;
 
 import org.jutils.io.strings.StringRef;
 
-import dev.jdata.db.engine.database.StringManagement;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.ISQLToSchemaStringManagement;
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.utils.Initializable;
@@ -21,9 +21,9 @@ public final class ProcessAlterTableDropColumnsScratchObject<T extends IIntSetBu
         super(allocationType);
     }
 
-    public void initialize(DatabaseId databaseId, StringManagement stringManagement, Table table, IIntSetAllocator<?, ?, T> intSetAllocator) {
+    public void initialize(DatabaseId databaseId, ISQLToSchemaStringManagement sqlToSchemaStringManagement, Table table, IIntSetAllocator<?, ?, T> intSetAllocator) {
 
-        initialize(stringManagement);
+        initialize(sqlToSchemaStringManagement);
 
         this.databaseId = Initializable.checkNotYetInitialized(this.databaseId, databaseId);
         this.table = Initializable.checkNotYetInitialized(this.table, table);

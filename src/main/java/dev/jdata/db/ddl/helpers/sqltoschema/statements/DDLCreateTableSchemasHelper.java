@@ -8,7 +8,6 @@ import org.jutils.ast.objects.list.ASTList;
 import dev.jdata.db.DebugConstants;
 import dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects.ProcessCreateTableScratchObject;
 import dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects.ProcessTableColumnsScratchObject;
-import dev.jdata.db.engine.database.StringManagement;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.sql.ast.statements.table.SQLCreateTableStatement;
@@ -24,36 +23,36 @@ public class DDLCreateTableSchemasHelper extends DDLTableSchemasHelper {
     private static final Class<?> debugClass = DDLCreateTableSchemasHelper.class;
 
     public static <T extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>, P> Table processCreateTable(SQLCreateTableStatement sqlCreateTableStatement,
-            StringManagement stringManagement, IIndexListAllocator<Column, ?, ?, T> columnIndexListAllocator, ProcessCreateTableScratchObject processCreateTableScratchObject,
-            P parameter, ToIntFunction<P> allocateTableIdFunction) {
+            ISQLToSchemaStringManagement sqlToSchemaStringManagement, IIndexListAllocator<Column, ?, ?, T> columnIndexListAllocator,
+            ProcessCreateTableScratchObject processCreateTableScratchObject, P parameter, ToIntFunction<P> allocateTableIdFunction) {
 
         Objects.requireNonNull(sqlCreateTableStatement);
-        Objects.requireNonNull(stringManagement);
+        Objects.requireNonNull(sqlToSchemaStringManagement);
         Objects.requireNonNull(columnIndexListAllocator);
         Objects.requireNonNull(processCreateTableScratchObject);
         Objects.requireNonNull(allocateTableIdFunction);
 
         if (DEBUG) {
 
-            enter(debugClass, b -> b.add("sqlCreateTableStatement", sqlCreateTableStatement).add("stringManagement", stringManagement)
+            enter(debugClass, b -> b.add("sqlCreateTableStatement", sqlCreateTableStatement).add("sqlToSchemaStringManagement", sqlToSchemaStringManagement)
                     .add("columnIndexListAllocator", columnIndexListAllocator).add("processCreateTableScratchObject", processCreateTableScratchObject)
                     .add("allocateTableIdFunction", allocateTableIdFunction));
         }
 
         final Table result;
 
-        final long parsedTableName = stringManagement.storeParsedStringRef(sqlCreateTableStatement.getName());
+        final long parsedTableName = sqlToSchemaStringManagement.storeParsedStringRef(sqlCreateTableStatement.getName());
 
         final T columnsBuilder = columnIndexListAllocator.createBuilder(sqlCreateTableStatement.getColumns().size());
 
-        processCreateTableScratchObject.initializeCreateTable(stringManagement, columnsBuilder);
+        processCreateTableScratchObject.initializeCreateTable(sqlToSchemaStringManagement, columnsBuilder);
 
         try {
             convertColumns(sqlCreateTableStatement.getColumns(), processCreateTableScratchObject);
 
             final int tableId = allocateTableIdFunction.applyAsInt(parameter);
 
-            final long hashTableName = stringManagement.getHashStringRef(parsedTableName);
+            final long hashTableName = sqlToSchemaStringManagement.storeHashStringRefFromStoredSQLStringRef(parsedTableName);
 
             result = new Table(parsedTableName, hashTableName, tableId, columnsBuilder.buildHeapAllocatedNotEmpty());
         }
@@ -79,7 +78,7 @@ public class DDLCreateTableSchemasHelper extends DDLTableSchemasHelper {
 
         sqlTableColumnDefinitions.forEachWithIndexAndParameter(scratchObject, (c, i, s) -> {
 
-            final Column column = convertToColumn(c, s.allocateColumnId(), s.getStringManagement());
+            final Column column = convertToColumn(c, s.allocateColumnId(), s.getSQLToSchemaStringManagement());
 
             s.addColumn(column);
         });

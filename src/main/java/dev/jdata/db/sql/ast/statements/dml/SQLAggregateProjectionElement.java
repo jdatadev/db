@@ -11,7 +11,7 @@ public final class SQLAggregateProjectionElement extends BaseSQLFunctionProjecti
     }
 
     @Override
-    public <T, R> R visit(SQLProjectionElementVisitor<T, R> visitor, T parameter) {
+    public <P, R> R visit(SQLProjectionElementVisitor<P, R> visitor, P parameter) {
 
         return visitor.onAggregate(this, parameter);
     }

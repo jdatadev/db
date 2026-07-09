@@ -27,6 +27,7 @@ import dev.jdata.db.schema.model.effective.IEffectiveDatabaseSchema;
 import dev.jdata.db.schema.model.objects.DDLObjectType;
 import dev.jdata.db.schema.model.objects.Table;
 import dev.jdata.db.schema.model.schemamap.IHeapCompleteSchemaMapBuilder;
+import dev.jdata.db.schema.model.schemamap.IHeapCompleteSchemaMapBuilderAllocator;
 import dev.jdata.db.schema.storage.sqloutputter.StringBuilderSQLOutputter;
 import dev.jdata.db.schema.storage.sqloutputter.TextSQLOutputter;
 import dev.jdata.db.schema.storage.sqloutputter.TextToByteOutputPrerequisites;
@@ -142,7 +143,7 @@ public abstract class BaseDBTest extends BaseSQLTest {
         return createTestEffectiveDatabaseSchema(databaseId, tableName, stringStorer, initialSchemaObjectIdAllocator);
     }
 
-    protected static IEffectiveDatabaseSchema createTestEffectiveDatabaseSchema(DatabaseId databaseId, String tableName, IStringStorer stringStorer,
+    private static IEffectiveDatabaseSchema createTestEffectiveDatabaseSchema(DatabaseId databaseId, String tableName, IStringStorer stringStorer,
             ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
 
         Objects.requireNonNull(databaseId);
@@ -152,6 +153,32 @@ public abstract class BaseDBTest extends BaseSQLTest {
 
         return SchemaBuilder.create(databaseId, stringStorer, schemaObjectIdAllocator)
                 .addTable(tableName, b -> createTestTable(b))
+                .buildEffectiveSchema();
+    }
+
+    protected static IEffectiveDatabaseSchema createTestEffectiveDatabaseSchema(DatabaseId databaseId, String tableName, String columnName, IStringStorer stringStorer) {
+
+        return createTestEffectiveDatabaseSchema(databaseId, tableName, columnName, makeIntegerDataType(), stringStorer);
+    }
+
+    protected static IEffectiveDatabaseSchema createTestEffectiveDatabaseSchema(DatabaseId databaseId, String tableName, String columnName, SchemaDataType schemaDataType,
+            IStringStorer stringStorer) {
+
+        return createTestEffectiveDatabaseSchema(databaseId, tableName, columnName, schemaDataType, stringStorer, initialSchemaObjectIdAllocator);
+    }
+
+    private static IEffectiveDatabaseSchema createTestEffectiveDatabaseSchema(DatabaseId databaseId, String tableName, String columnName, SchemaDataType schemaDataType,
+            IStringStorer stringStorer, ToIntFunction<DDLObjectType> schemaObjectIdAllocator) {
+
+        Objects.requireNonNull(databaseId);
+        Checks.isTableName(tableName);
+        Checks.isColumnName(columnName);
+        Objects.requireNonNull(schemaDataType);
+        Objects.requireNonNull(stringStorer);
+        Objects.requireNonNull(schemaObjectIdAllocator);
+
+        return SchemaBuilder.create(databaseId, stringStorer, schemaObjectIdAllocator)
+                .addTable(tableName, b -> b.addColumn(columnName, schemaDataType))
                 .buildEffectiveSchema();
     }
 
@@ -183,6 +210,11 @@ public abstract class BaseDBTest extends BaseSQLTest {
         final CharacterBuffersAllocator characterBuffersAllocator = new CharacterBuffersAllocator();
 
         return new DatabaseStringManagement(characterBuffersAllocator, stringStorer);
+    }
+
+    protected static SchemaBuilder createSchemaBuilder(DatabaseId databaseId, IStringStorer stringStorer) {
+
+        return SchemaBuilder.create(databaseId, stringStorer, initialSchemaObjectIdAllocator);
     }
 
     protected static IStringCache createStringCache() {
@@ -257,9 +289,26 @@ public abstract class BaseDBTest extends BaseSQLTest {
         return TEST_COLUMN_NAME + enumerator;
     }
 
-    protected static String makeIntegerDataType() {
+    protected static SchemaDataType makeIntegerDataType() {
 
-        return "integer";
+        return IntegerType.INSTANCE;
+    }
+
+    protected static String makeDataTypeString(SchemaDataType schemaDataType) {
+
+        Objects.requireNonNull(schemaDataType);
+
+        final String result;
+
+        if (schemaDataType instanceof IntegerType) {
+
+            result = "integer";
+        }
+        else {
+            throw new UnsupportedOperationException();
+        }
+
+        return result;
     }
 
     protected static TextToByteOutputPrerequisites createTextToByteOutputPrerequisites() {
@@ -271,7 +320,12 @@ public abstract class BaseDBTest extends BaseSQLTest {
         return new TextToByteOutputPrerequisites(charsetEncoder, charBufferAllocator, byteBufferAllocator);
     }
 
-    protected static IHeapCompleteSchemaMapBuilder createCompleteSchemaMapsBuilder() {
+    protected static IHeapCompleteSchemaMapBuilderAllocator createCompleteSchemaMapsBuilderAllocator() {
+
+        return IHeapCompleteSchemaMapBuilderAllocator.create();
+    }
+
+    private static IHeapCompleteSchemaMapBuilder createCompleteSchemaMapsBuilder() {
 
         return IHeapCompleteSchemaMapBuilder.create();
     }

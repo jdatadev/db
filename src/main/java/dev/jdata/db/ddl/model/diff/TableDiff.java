@@ -40,8 +40,9 @@ public final class TableDiff extends ColumnsObjectDiff {
         super(table, addedColumns, modifiedColumns, droppedColumns);
     }
 
-    <U extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>> Table applyToTable(Table table, IIndexListAllocator<Column, ?, ?, U> columnIndexListAllocator) {
+    private <T extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>> Table applyToTable(Table table,
+            IIndexListAllocator<Column, ?, ?, T> columnIndexListAllocator) {
 
-        return applyToColumnsObject(table, Table::makeCopy, columnIndexListAllocator);
+        return (Table)applyToColumnsObject(table, columnIndexListAllocator);
     }
 }

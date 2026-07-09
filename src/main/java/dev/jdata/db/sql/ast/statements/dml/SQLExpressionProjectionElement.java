@@ -21,7 +21,7 @@ public final class SQLExpressionProjectionElement extends SQLProjectionElement {
     }
 
     @Override
-    public <T, R> R visit(SQLProjectionElementVisitor<T, R> visitor, T parameter) {
+    public <P, R> R visit(SQLProjectionElementVisitor<P, R> visitor, P parameter) {
 
         return visitor.onExpression(this, parameter);
     }

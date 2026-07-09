@@ -14,8 +14,9 @@ import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.adt.lists.IHeapIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IIndexList;
 import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
+import dev.jdata.db.utils.debug.ToStringable;
 
-public final class VersionedDatabaseSchemas {
+public final class VersionedDatabaseSchemas extends ToStringable {
 
     public static final class VersionedTable {
 
@@ -121,11 +122,5 @@ public final class VersionedDatabaseSchemas {
         Objects.requireNonNull(forEach);
 
         tableSchemasOrderedByVersion.forEachElement(forEach);
-    }
-
-    @Override
-    public String toString() {
-
-        return getClass().getSimpleName() + " [schemasByVersion=" + schemasByVersion + ", tableSchemasOrderedByVersion=" + tableSchemasOrderedByVersion + "]";
     }
 }

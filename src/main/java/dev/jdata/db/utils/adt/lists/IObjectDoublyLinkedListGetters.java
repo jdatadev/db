@@ -2,6 +2,8 @@ package dev.jdata.db.utils.adt.lists;
 
 import java.util.function.BiPredicate;
 
+import dev.jdata.db.utils.adt.elements.ElementsExceptions;
+
 interface IObjectDoublyLinkedListGetters<T> extends IObjectListGetters<T> {
 
     Node<T> getHeadNode();
@@ -13,4 +15,16 @@ interface IObjectDoublyLinkedListGetters<T> extends IObjectListGetters<T> {
     <P> boolean contains(Node<T> startNode, P parameter, BiPredicate<T, P> predicate);
 
     <P> Node<T> findAtMostOneNode(P parameter, BiPredicate<T, P> predicate);
+
+    default <P> Node<T> findExactlyOneNode(P parameter, BiPredicate<T, P> predicate) {
+
+        final Node<T> result = findAtMostOneNode(parameter, predicate);
+
+        if (result == null) {
+
+            throw ElementsExceptions.lessThanOneFoundException();
+        }
+
+        return result;
+    }
 }

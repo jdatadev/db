@@ -23,7 +23,7 @@ public final class CharType extends StringType {
     }
 
     @Override
-    public <T, R, E extends Exception> R visit(SchemaDataTypeVisitor<T, R, E> visitor, T parameter) throws E {
+    public <P, R, E extends Exception> R visit(SchemaDataTypeVisitor<P, R, E> visitor, P parameter) throws E {
 
         return visitor.onCharType(this, parameter);
     }

@@ -19,6 +19,18 @@ interface IObjectOrderedElementsGetters<T> extends IElementsGettersMarker {
         return findAtMostOneIndex(predicate, (e, p) -> p.test(e));
     }
 
+    default <P> long findExactlyOneIndex(P parameter, BiPredicate<T, P> predicate) {
+
+        final long foundIndex = findAtMostOneIndex(parameter, predicate);
+
+        if (foundIndex == -1L) {
+
+            throw ElementsExceptions.lessThanOneFoundException();
+        }
+
+        return foundIndex;
+    }
+
     default long findInstanceIndex(T instance) {
 
         Objects.requireNonNull(instance);

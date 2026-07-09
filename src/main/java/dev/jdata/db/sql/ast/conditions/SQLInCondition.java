@@ -11,7 +11,7 @@ public final class SQLInCondition extends BaseSQLInCondition {
     }
 
     @Override
-    public <T, R> R visit(SQLConditionVisitor<T, R> visitor, T parameter) {
+    public <P, R> R visit(SQLConditionVisitor<P, R> visitor, P parameter) {
 
         return visitor.onIn(this, parameter);
     }

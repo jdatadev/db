@@ -6,7 +6,7 @@ import dev.jdata.db.utils.adt.elements.IObjectIterableElementsView;
 import dev.jdata.db.utils.allocators.Allocatable.AllocationType;
 import dev.jdata.db.utils.allocators.LongCapacityObjectHeapMutableInstanceAllocator;
 
-final class HeapMutableDoublyLinkedListAllocator<T>
+final class HeapMutableObjectDoublyLinkedListAllocator<T>
 
         extends LongCapacityObjectHeapMutableInstanceAllocator<IHeapMutableDoublyLinkedList<T>, HeapMutableObjectDoublyLinkedList<T>, Node<T>, IObjectIterableElementsView<T>>
         implements IHeapMutableDoublyLinkedListAllocator<T> {

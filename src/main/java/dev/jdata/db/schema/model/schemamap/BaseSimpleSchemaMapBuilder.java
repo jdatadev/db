@@ -62,11 +62,13 @@ public abstract class BaseSimpleSchemaMapBuilder<
     }
 
     @Override
-    public final SCHEMA_MAP_BUILDER addSchemaObject(SCHEMA_OBJECT schemaObject) {
+    public final SCHEMA_MAP_BUILDER addSchemaObject(DDLObjectType ddlObjectType, SCHEMA_OBJECT schemaObject) {
 
+        Objects.requireNonNull(ddlObjectType);
         Objects.requireNonNull(schemaObject);
+        Checks.areEqual(ddlObjectType, schemaObject.getDDLObjectType());
 
-        getOrAddSchemaObjectsBuilder(schemaObject.getDDLObjectType(), 1).addUnordered(schemaObject);
+        getOrAddSchemaObjectsBuilder(ddlObjectType, 1).addUnordered(schemaObject);
 
         return getThis();
     }

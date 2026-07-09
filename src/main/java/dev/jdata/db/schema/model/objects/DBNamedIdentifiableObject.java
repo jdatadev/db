@@ -11,13 +11,13 @@ public abstract class DBNamedIdentifiableObject extends DBNamedObject {
 
     private final int id;
 
-    protected DBNamedIdentifiableObject(long parsedName, long hashName, int id) {
-        super(parsedName, hashName);
+    protected DBNamedIdentifiableObject(long storedSQLName, long hashName, int id) {
+        super(storedSQLName, hashName);
 
         this.id = Checks.isSchemaObjectId(id);
     }
 
-    DBNamedIdentifiableObject(DBNamedIdentifiableObject toCopy) {
+    protected DBNamedIdentifiableObject(DBNamedIdentifiableObject toCopy) {
         super(toCopy);
 
         this.id = toCopy.id;
@@ -103,11 +103,5 @@ public abstract class DBNamedIdentifiableObject extends DBNamedObject {
         sb.append(", id=").append(id);
 
         sb.append(']');
-    }
-
-    @Override
-    public String toString() {
-
-        return DBNamedIdentifiableObject.class.getSimpleName() + " [super=" + super.toString() + ", id=" + id + ']';
     }
 }

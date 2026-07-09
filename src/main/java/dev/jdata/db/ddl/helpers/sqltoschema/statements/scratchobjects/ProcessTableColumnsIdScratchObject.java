@@ -1,6 +1,6 @@
 package dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects;
 
-import dev.jdata.db.engine.database.StringManagement;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.ISQLToSchemaStringManagement;
 import dev.jdata.db.utils.checks.Checks;
 
 abstract class ProcessTableColumnsIdScratchObject extends ProcessParsedScratchObject {
@@ -11,9 +11,9 @@ abstract class ProcessTableColumnsIdScratchObject extends ProcessParsedScratchOb
         super(allocationType);
     }
 
-    final void initialize(StringManagement stringManagement, int initialColumnIdSequenceNo) {
+    final void initialize(ISQLToSchemaStringManagement sqlToSchemaStringManagement, int initialColumnIdSequenceNo) {
 
-        initialize(stringManagement);
+        initialize(sqlToSchemaStringManagement);
 
         this.columnIdSequenceNo = Checks.isColumnId(initialColumnIdSequenceNo);
     }

@@ -359,11 +359,13 @@ abstract class BaseLongBucketSet
     }
 
     @Override
-    public final String toString() {
+    protected final String toStringSub() {
 
         final StringBuilder sb = new StringBuilder(IOnlyElementsView.intNumElements(this) * 10);
 
-        sb.append(getClass().getSimpleName()).append(" [elements=");
+        appendHeader(sb);
+
+        sb.append("[elements=");
 
         final long[] bucketHeadNodesHashArray = getHashed();
 

@@ -1,7 +1,7 @@
 package dev.jdata.db.utils.function;
 
 @FunctionalInterface
-public interface CheckedExceptionConsumer<T, E extends Exception> {
+public interface CheckedExceptionConsumer<P, E extends Exception> {
 
-    void accept(T parameter) throws E;
+    void accept(P parameter) throws E;
 }

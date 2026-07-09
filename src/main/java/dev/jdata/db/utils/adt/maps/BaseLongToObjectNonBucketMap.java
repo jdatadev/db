@@ -230,9 +230,9 @@ abstract class BaseLongToObjectNonBucketMap<V, M extends BaseLongToObjectNonBuck
     }
 
     @Override
-    public final String toString() {
+    protected final String toStringSub() {
 
-        return Maps.longToObjectMapToString(getClass().getSimpleName(), IOnlyElementsView.intNumElements(this), this,
+        return Maps.longToObjectMapToString(getClassName(), IOnlyElementsView.intNumElements(this), this,
                 (StringBuilder b, BaseLongToObjectNonBucketMap<V, M> i, ILongForEachAppend<V, BaseLongToObjectNonBucketMap<V, M>> f)
                         -> i.forEachKeyAndValue(b, (key, value, stringBuilder) -> f.each(key, value, stringBuilder, null)));
     }

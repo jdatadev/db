@@ -1,14 +1,10 @@
 package dev.jdata.db.schema.types;
 
-public abstract class SchemaDataType {
+import dev.jdata.db.utils.debug.ToStringable;
 
-    public abstract <T, R, E extends Exception> R visit(SchemaDataTypeVisitor<T, R, E> visitor, T parameter) throws E;
+public abstract class SchemaDataType extends ToStringable {
 
-    @Override
-    public String toString() {
-
-        return getClass().getSimpleName() + " []";
-    }
+    public abstract <P, R, E extends Exception> R visit(SchemaDataTypeVisitor<P, R, E> visitor, P parameter) throws E;
 
     @Override
     public boolean equals(Object object) {

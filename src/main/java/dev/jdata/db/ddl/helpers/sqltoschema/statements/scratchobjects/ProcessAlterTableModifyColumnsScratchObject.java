@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import org.jutils.io.strings.StringRef;
 
-import dev.jdata.db.engine.database.StringManagement;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.ISQLToSchemaStringManagement;
 import dev.jdata.db.schema.DatabaseId;
 import dev.jdata.db.schema.model.objects.Column;
 import dev.jdata.db.schema.model.objects.Table;
@@ -25,9 +25,10 @@ public final class ProcessAlterTableModifyColumnsScratchObject<T extends IIndexL
         super(allocationType);
     }
 
-    public void initialize(DatabaseId databaseId, StringManagement stringManagement, Table table, IIndexListAllocator<Column, ?, ?, T> columnIndexListAllocator) {
+    public void initialize(DatabaseId databaseId, ISQLToSchemaStringManagement sqlToSchemaStringManagement, Table table,
+            IIndexListAllocator<Column, ?, ?, T> columnIndexListAllocator) {
 
-        initialize(stringManagement);
+        initialize(sqlToSchemaStringManagement);
 
         this.databaseId = Initializable.checkNotYetInitialized(this.databaseId, databaseId);
         this.table = Initializable.checkNotYetInitialized(this.table, table);

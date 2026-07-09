@@ -86,6 +86,12 @@ public abstract class BaseDatabaseSchema<T extends ISchemaMap> extends DatabaseS
         return schemaMap.computeMaxId(ddlObjectType, defaultValue);
     }
 
+    @Override
+    public final int getNumSchemaObjects() {
+
+        return schemaMap.getNumSchemaObjects();
+    }
+
     final T getSchemaMap() {
 
         return schemaMap;
@@ -149,11 +155,5 @@ public abstract class BaseDatabaseSchema<T extends ISchemaMap> extends DatabaseS
         }
 
         return result;
-    }
-
-    @Override
-    public String toString() {
-
-        return getClass().getSimpleName() + " [version=" + version + ", schemaMaps=" + schemaMap + ", super=" + super.toString() + "]";
     }
 }

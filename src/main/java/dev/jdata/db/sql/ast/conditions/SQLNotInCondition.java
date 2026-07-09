@@ -19,7 +19,7 @@ public final class SQLNotInCondition extends BaseSQLInCondition {
     }
 
     @Override
-    public <T, R> R visit(SQLConditionVisitor<T, R> visitor, T parameter) {
+    public <P, R> R visit(SQLConditionVisitor<P, R> visitor, P parameter) {
 
         return visitor.onNotIn(this, parameter);
     }

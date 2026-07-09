@@ -11,7 +11,6 @@ import dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects.ProcessAlt
 import dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects.ProcessAlterTableModifyColumnsScratchObject;
 import dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects.ProcessAlterTableScratchObject;
 import dev.jdata.db.ddl.model.diff.TableDiff;
-import dev.jdata.db.engine.database.StringManagement;
 import dev.jdata.db.engine.validation.exceptions.ColumnAlreadyExistsException;
 import dev.jdata.db.engine.validation.exceptions.ColumnDoesNotExistException;
 import dev.jdata.db.engine.validation.exceptions.SQLValidationException;
@@ -47,28 +46,29 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
     private static final Class<?> debugClass = DDLAlterTableSchemasHelper.class;
 
     public static <T extends IIntSetBuilder<?, ? extends IHeapIntSet>, U extends IIndexListBuilder<Column, ?, ? extends IHeapIndexList<Column>>, P> TableDiff processAlterTable(
-            SQLAlterTableStatement sqlAlterTableStatement, DatabaseId databaseId, Table table, StringManagement stringManagement, IIntSetAllocator<?, ?, T> intSetAllocator,
-            IIndexListAllocator<Column, ?, ?, U> columnIndexListAllocator, ProcessAlterTableScratchObject<T, U> alterTableScratchObject) throws SQLValidationException {
+            SQLAlterTableStatement sqlAlterTableStatement, DatabaseId databaseId, Table table, ISQLToSchemaStringManagement sqlToSchemaStringManagement,
+            IIntSetAllocator<?, ?, T> intSetAllocator, IIndexListAllocator<Column, ?, ?, U> columnIndexListAllocator,
+            ProcessAlterTableScratchObject<T, U> alterTableScratchObject) throws SQLValidationException {
 
         Objects.requireNonNull(sqlAlterTableStatement);
         Objects.requireNonNull(databaseId);
         Objects.requireNonNull(table);
         Objects.requireNonNull(intSetAllocator);
-        Objects.requireNonNull(stringManagement);
+        Objects.requireNonNull(sqlToSchemaStringManagement);
         Objects.requireNonNull(columnIndexListAllocator);
         Objects.requireNonNull(alterTableScratchObject);
 
         if (DEBUG) {
 
             enter(debugClass, b -> b.add("sqlAlterTableStatement", sqlAlterTableStatement).add("databaseId", databaseId).add("table", table)
-                    .add("intSetAllocator", intSetAllocator).add("stringManagement", stringManagement).add("columnIndexListAllocator", columnIndexListAllocator)
+                    .add("intSetAllocator", intSetAllocator).add("sqlToSchemaStringManagement", sqlToSchemaStringManagement).add("columnIndexListAllocator", columnIndexListAllocator)
                     .add("alterTableScratchObject", alterTableScratchObject));
         }
 
         final TableDiff result;
 
         try {
-            alterTableScratchObject.initialize(databaseId, stringManagement, table, intSetAllocator, columnIndexListAllocator);
+            alterTableScratchObject.initialize(databaseId, sqlToSchemaStringManagement, table, intSetAllocator, columnIndexListAllocator);
 
             result = sqlAlterTableStatement.getOperation().visit(alterTableOperationVisitor, alterTableScratchObject);
         }
@@ -186,7 +186,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         final ProcessAlterTableAddColumnsScratchObject<T> addColumnsScratchObject = alterTableScratchObject.getAddColumnsScratchObject();
 
-        addColumnsScratchObject.initialize(alterTableScratchObject.getDatabaseId(), alterTableScratchObject.getStringManagement(), alterTableScratchObject.getTable(),
+        addColumnsScratchObject.initialize(alterTableScratchObject.getDatabaseId(), alterTableScratchObject.getSQLToSchemaStringManagement(), alterTableScratchObject.getTable(),
                 alterTableScratchObject.getColumnIndexListAllocator());
 
         try {
@@ -215,7 +215,6 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
         final IIndexListAllocator<Column, ?, ?, T> columnIndexListAllocator = addColumnsScratchObject.getColumnIndexListAllocator();
 
         final ASTList<SQLAddColumnDefinition> sqlAddColumnDefinitions = sqlAddColumnsOperation.getColumnDefinitions();
-
         final int numAddedColumns = sqlAddColumnDefinitions.size();
 
         final Table table = addColumnsScratchObject.getTable();
@@ -234,14 +233,14 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
                 s.setParsedName(parsedColumnName);
 
-                final Column existingColumn = closureTable.findAtMostOneColumn(s, (c, p) -> parsedEqualsStored(p.getStringManagement(), p.getParsedName(), c));
+                final Column existingColumn = closureTable.findAtMostOneColumn(s, (c, p) -> parsedEqualsStored(p.getSQLToSchemaStringManagement(), p.getParsedName(), c));
 
                 if (existingColumn != null) {
 
                     throw new ColumnAlreadyExistsException(s.getDatabaseId(), parsedColumnName);
                 }
 
-                final Column addedColumn = convertToColumn(sqlTableColumnDefinition, s.allocateColumnId(), s.getStringManagement());
+                final Column addedColumn = convertToColumn(sqlTableColumnDefinition, s.allocateColumnId(), s.getSQLToSchemaStringManagement());
 
                 s.addColumn(addedColumn);
             });
@@ -273,11 +272,11 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
         columnDefinitions.forEachWithParameter(addColumnScratchObject, (a, s) -> {
 
-            final long sqlColumnName = a.getColumnDefinition().getName();
+            final long parsedColumnName = a.getColumnDefinition().getName();
 
-            if (containsColumn(s.getTable(), sqlColumnName, s.getStringManagement())) {
+            if (containsColumn(s.getTable(), parsedColumnName, s.getSQLToSchemaStringManagement())) {
 
-                throw new ColumnAlreadyExistsException(s.getDatabaseId(), sqlColumnName);
+                throw new ColumnAlreadyExistsException(s.getDatabaseId(), parsedColumnName);
             }
         });
     }
@@ -312,14 +311,14 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
 
                 s.setParsedName(parsedColumnName);
 
-                final Column existingColumn = table.findAtMostOneColumn(s, (c, p) -> parsedEqualsStored(p.getStringManagement(), p.getParsedName(), c));
+                final Column existingColumn = table.findAtMostOneColumn(s, (c, p) -> parsedEqualsStored(p.getSQLToSchemaStringManagement(), p.getParsedName(), c));
 
                 if (existingColumn == null) {
 
                     throw new ColumnDoesNotExistException(s.getDatabaseId(), parsedColumnName);
                 }
 
-                final Column modifiedColumn = convertToColumn(sqlTableColumnDefinition, existingColumn.getId(), s.getStringManagement());
+                final Column modifiedColumn = convertToColumn(sqlTableColumnDefinition, existingColumn.getId(), s.getSQLToSchemaStringManagement());
 
                 s.addColumn(modifiedColumn);
             });
@@ -339,14 +338,14 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
         return result;
     }
 
-    private static void validateModifyColumns(SQLModifyColumnsOperation sqlModifyColumnsOperation, ProcessAlterTableModifyColumnsScratchObject modifyColumnsScratchObject)
+    private static void validateModifyColumns(SQLModifyColumnsOperation sqlModifyColumnsOperation, ProcessAlterTableModifyColumnsScratchObject<?> modifyColumnsScratchObject)
             throws ColumnDoesNotExistException {
 
         sqlModifyColumnsOperation.getColumns().forEachWithParameter(modifyColumnsScratchObject, (m, s) -> {
 
             final long sqlColumnName = m.getColumnDefinition().getName();
 
-            if (!containsColumn(s.getTable(), sqlColumnName, s.getStringManagement())) {
+            if (!containsColumn(s.getTable(), sqlColumnName, s.getSQLToSchemaStringManagement())) {
 
                 throw new ColumnDoesNotExistException(s.getDatabaseId(), sqlColumnName);
             }
@@ -383,7 +382,7 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
                 dropColumnsScratchObject.setParsedName(sqlColumnName);
 
                 final Column existingColumn = table.findAtMostOneColumn(dropColumnsScratchObject,
-                        (c, s) -> s.getStringManagement().parsedEqualsStored(s.getParsedName(), c.getParsedName(), false));
+                        (c, s) -> s.getSQLToSchemaStringManagement().parsedEqualsStored(s.getParsedName(), c.getStoredSQLName(), false));
 
                 if (existingColumn == null) {
 
@@ -416,13 +415,13 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
         final long numColumnNames = sqlColumnNames.getNumElements();
 
         final Table table = dropColumnsScratchObject.getTable();
-        final StringManagement stringManagement = dropColumnsScratchObject.getStringManagement();
+        final ISQLToSchemaStrings sqlToSchemaStrings = dropColumnsScratchObject.getSQLToSchemaStringManagement();
 
         for (int i = 0; i < numColumnNames; ++ i) {
 
             final long sqlColumnName = sqlColumnNames.get(i);
 
-            if (!containsColumn(table, sqlColumnName, stringManagement)) {
+            if (!containsColumn(table, sqlColumnName, sqlToSchemaStrings)) {
 
                 throw new ColumnDoesNotExistException(dropColumnsScratchObject.getDatabaseId(), sqlColumnName);
             }
@@ -458,26 +457,26 @@ public class DDLAlterTableSchemasHelper extends DDLTableSchemasHelper {
         final long numColumnNames = sqlColumnNames.getNumElements();
 
         final Table table = addPrimaryConstraintScratchObject.getTable();
-        final StringManagement stringManagement = addPrimaryConstraintScratchObject.getStringManagement();
+        final ISQLToSchemaStrings sqlToSchemaStrings = addPrimaryConstraintScratchObject.getSQLToSchemaStringManagement();
 
         for (int i = 0; i < numColumnNames; ++ i) {
 
             final long sqlColumnName = sqlColumnNames.get(i);
 
-            if (!containsColumn(table, sqlColumnName, stringManagement)) {
+            if (!containsColumn(table, sqlColumnName, sqlToSchemaStrings)) {
 
                 throw new ColumnDoesNotExistException(addPrimaryConstraintScratchObject.getDatabaseId(), sqlColumnName);
             }
         }
     }
 
-    private static boolean containsColumn(Table table, long name, StringManagement stringManagement) {
+    private static boolean containsColumn(Table table, long parsedColumnName, ISQLToSchemaStrings sqlToSchemaStrings) {
 
-        return table.containsColumn(name, false, stringManagement, (n, c, s, m) -> m.parsedEqualsStored(n, c, s));
+        return table.containsColumn(parsedColumnName, false, sqlToSchemaStrings, (n, c, s, m) -> m.parsedEqualsStored(n, c, s));
     }
 
-    private static boolean parsedEqualsStored(StringManagement stringManagement, long parsedName, Column column) {
+    private static boolean parsedEqualsStored(ISQLToSchemaStrings sqlToSchemaStrings, long parsedName, Column column) {
 
-        return stringManagement.parsedEqualsStored(parsedName, column.getParsedName(), false);
+        return sqlToSchemaStrings.parsedEqualsStored(parsedName, column.getStoredSQLName(), false);
     }
 }

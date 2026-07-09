@@ -98,7 +98,7 @@ public abstract class BaseDatabaseSchemaSerialization<
 
         sqlOutputter.appendKeyword(SQLToken.CREATE).appendSeparator().appendKeyword(SQLToken.TABLE);
 
-        sqlOutputter.appendSeparator().appendName(table.getParsedName(), stringWriter);
+        sqlOutputter.appendSeparator().appendName(table.getStoredSQLName(), stringWriter);
 
         sqlOutputter.appendSeparator().appendKeyword(SQLToken.LPAREN);
 
@@ -119,7 +119,7 @@ public abstract class BaseDatabaseSchemaSerialization<
 
     private static <E extends Exception> void serializeColumn(Column column, IStringWriter stringWriter, ISQLOutputter<E> sqlOutputter) throws E {
 
-        sqlOutputter.appendName(column.getParsedName(), stringWriter).appendSeparator();
+        sqlOutputter.appendName(column.getStoredSQLName(), stringWriter).appendSeparator();
 
         serializeType(column.getSchemaType(), stringWriter, sqlOutputter);
 

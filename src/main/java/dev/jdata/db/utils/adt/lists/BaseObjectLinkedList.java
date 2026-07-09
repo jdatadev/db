@@ -7,6 +7,7 @@ import java.util.function.ToLongFunction;
 
 import dev.jdata.db.utils.adt.elements.ElementsExceptions;
 import dev.jdata.db.utils.adt.elements.IElementEqualityTester;
+import dev.jdata.db.utils.adt.elements.IElementsToString;
 import dev.jdata.db.utils.adt.elements.IObjectForEachWithResult;
 import dev.jdata.db.utils.adt.elements.IObjectOrderedElementsView;
 
@@ -230,5 +231,23 @@ abstract class BaseObjectLinkedList<T, N extends ObjectSinglyLinkedNode<T, N, L>
 
             throw new IllegalArgumentException();
         }
+    }
+
+    @Override
+    protected final void toStringBuilder(StringBuilder sb) {
+
+        sb.append(IElementsToString.ELEMENTS_TO_STRING_PREFIX);
+
+        final N headNode = getListHeadNode();
+
+        for (N node = headNode; node != null; node = node.next) {
+
+            if (node != headNode) {
+
+                sb.append(IElementsToString.ELEMENTS_TO_STRING_SEPARATOR);
+            }
+        }
+
+        sb.append(IElementsToString.ELEMENTS_TO_STRING_SUFFIX);
     }
 }

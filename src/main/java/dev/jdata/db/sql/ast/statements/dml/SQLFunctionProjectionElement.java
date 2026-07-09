@@ -11,7 +11,7 @@ public final class SQLFunctionProjectionElement extends BaseSQLFunctionProjectio
     }
 
     @Override
-    public <T, R> R visit(SQLProjectionElementVisitor<T, R> visitor, T parameter) {
+    public <P, R> R visit(SQLProjectionElementVisitor<P, R> visitor, P parameter) {
 
         return visitor.onFunction(this, parameter);
     }

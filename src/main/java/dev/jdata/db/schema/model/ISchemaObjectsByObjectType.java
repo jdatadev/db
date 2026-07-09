@@ -21,6 +21,8 @@ public interface ISchemaObjectsByObjectType extends IImmutable {
 
     int computeMaxId(DDLObjectType ddlObjectType, int defaultValue);
 
+    int getNumSchemaObjects();
+
     default Table getTable(int tableId) {
 
         Checks.isTableId(tableId);

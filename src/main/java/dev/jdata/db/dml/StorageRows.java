@@ -4,8 +4,9 @@ import java.util.Objects;
 
 import dev.jdata.db.utils.adt.elements.IOnlyElementsView;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.debug.ToStringable;
 
-public abstract class StorageRows<T> implements IOnlyElementsView {
+public abstract class StorageRows<T> extends ToStringable implements IOnlyElementsView {
 
     private T rows;
     private int numRows;

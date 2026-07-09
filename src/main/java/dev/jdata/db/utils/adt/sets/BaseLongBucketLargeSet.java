@@ -312,13 +312,15 @@ abstract class BaseLongBucketLargeSet
     }
 
     @Override
-    public final String toString() {
+    protected final String toStringSub() {
 
         final int numElements = IOnlyElementsView.intNumElements(this);
 
         final StringBuilder sb = new StringBuilder(numElements * 10);
 
-        sb.append(getClass().getSimpleName()).append(" [elements=");
+        appendHeader(sb);
+
+        sb.append("[elements=");
 
         final IMutableLongLargeArray bucketHeadNodeHashArray = getHashed();
 

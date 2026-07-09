@@ -4,8 +4,9 @@ import java.util.Objects;
 
 import dev.jdata.db.engine.transactions.mvcc.ComparisonOperator;
 import dev.jdata.db.utils.checks.Checks;
+import dev.jdata.db.utils.debug.ToStringable;
 
-public final class SelectColumn {
+public final class SelectColumn extends ToStringable {
 
     public enum SelectColumnOperatorType {
 
@@ -63,11 +64,5 @@ public final class SelectColumn {
 
     public RowValue getRowValue() {
         return rowValue;
-    }
-
-    @Override
-    public String toString() {
-
-        return getClass().getSimpleName() + " [tableColumn=" + tableColumn + ", comparisonOperator=" + comparisonOperator + ", rowValue=" + rowValue + "]";
     }
 }

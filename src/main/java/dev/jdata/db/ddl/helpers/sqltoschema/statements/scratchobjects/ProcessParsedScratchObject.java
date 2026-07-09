@@ -1,35 +1,35 @@
 package dev.jdata.db.ddl.helpers.sqltoschema.statements.scratchobjects;
 
-import dev.jdata.db.engine.database.StringManagement;
+import dev.jdata.db.ddl.helpers.sqltoschema.statements.ISQLToSchemaStringManagement;
 import dev.jdata.db.utils.Initializable;
 import dev.jdata.db.utils.adt.IResettable;
 import dev.jdata.db.utils.allocators.NodeObjectCache.ObjectCacheNode;
 
 abstract class ProcessParsedScratchObject extends ObjectCacheNode implements IResettable {
 
-    private StringManagement stringManagement;
+    private ISQLToSchemaStringManagement sqlToSchemaStringManagement;
 
     ProcessParsedScratchObject(AllocationType allocationType) {
         super(allocationType);
     }
 
-    final void initialize(StringManagement stringManagement) {
+    final void initialize(ISQLToSchemaStringManagement sqlToSchemaStringManagement) {
 
-        this.stringManagement = Initializable.checkNotYetInitialized(this.stringManagement, stringManagement);
+        this.sqlToSchemaStringManagement = Initializable.checkNotYetInitialized(this.sqlToSchemaStringManagement, sqlToSchemaStringManagement);
     }
 
     @Override
     public void reset() {
 
-        this.stringManagement = Initializable.checkResettable(stringManagement);
+        this.sqlToSchemaStringManagement = Initializable.checkResettable(sqlToSchemaStringManagement);
     }
 
-    public final StringManagement getStringManagement() {
-        return stringManagement;
+    public final ISQLToSchemaStringManagement getSQLToSchemaStringManagement() {
+        return sqlToSchemaStringManagement;
     }
 
-    final long getParsedStringRef(long stringRef) {
+    private long storeParsedStringRef(long stringRef) {
 
-        return stringManagement.storeParsedStringRef(stringRef);
+        return sqlToSchemaStringManagement.storeParsedStringRef(stringRef);
     }
 }

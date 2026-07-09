@@ -6,7 +6,7 @@ import dev.jdata.db.sql.ast.BaseSQLElement;
 
 public abstract class SQLProjectionElement extends BaseSQLElement {
 
-    public abstract <T, R> R visit(SQLProjectionElementVisitor<T, R> visitor, T parameter);
+    public abstract <P, R> R visit(SQLProjectionElementVisitor<P, R> visitor, P parameter);
 
     SQLProjectionElement(Context context) {
         super(context);

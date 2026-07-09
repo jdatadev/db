@@ -6,8 +6,9 @@ import org.jutils.io.strings.StringRef;
 import org.jutils.io.strings.StringResolver;
 
 import dev.jdata.db.utils.allocators.CharacterBuffersAllocator;
+import dev.jdata.db.utils.debug.ToStringable;
 
-public final class DatabaseStringManagement {
+public final class DatabaseStringManagement extends ToStringable {
 
     private final IStringStorer stringStorer;
     private final CharacterBuffersAllocator characterBuffersAllocator;
@@ -30,13 +31,13 @@ public final class DatabaseStringManagement {
         return parserStringResolver.makeStringRef(stringRef, this, characterBuffersAllocator, (b, n, i) -> i.stringStorer.getOrAddStringRef(b, n));
     }
 
-    public long getHashStringRef(long parsedStringRef) {
+    public long storeHashStringRefFromStoredSQLStringRef(long storedSQLStringRef) {
 
-        StringRef.checkIsString(parsedStringRef);
+        StringRef.checkIsString(storedSQLStringRef);
 
-        return stringStorer.containsOnly(parsedStringRef, c -> !Character.isUpperCase(c))
-                ? parsedStringRef
-                : stringStorer.toLowerCase(parsedStringRef);
+        return stringStorer.containsOnly(storedSQLStringRef, c -> !Character.isUpperCase(c))
+                ? storedSQLStringRef
+                : stringStorer.toLowerCase(storedSQLStringRef);
     }
 
     public String getLowerCaseString(long stringRef) {
@@ -46,7 +47,7 @@ public final class DatabaseStringManagement {
         return stringStorer.asString(lowerCaseStringRef);
     }
 
-    public StringResolver getStringResolver() {
+    public StringResolver getStoredStringResolver() {
 
         return stringStorer;
     }

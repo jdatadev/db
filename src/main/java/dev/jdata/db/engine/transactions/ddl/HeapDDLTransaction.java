@@ -2,6 +2,8 @@ package dev.jdata.db.engine.transactions.ddl;
 
 import dev.jdata.db.engine.transactions.ddl.DDLTransaction.DDLTransactionStatement;
 import dev.jdata.db.schema.model.objects.Column;
+import dev.jdata.db.schema.model.objects.SchemaObject;
+import dev.jdata.db.schema.model.schemamap.IHeapCompleteSchemaMapBuilder;
 import dev.jdata.db.utils.adt.lists.IHeapIndexList;
 import dev.jdata.db.utils.adt.lists.IHeapIndexListAllocator;
 import dev.jdata.db.utils.adt.lists.IHeapIndexListBuilder;
@@ -20,6 +22,8 @@ final class HeapDDLTransaction
                     IHeapIndexList<DDLTransactionObject>,
                     IHeapIndexListBuilder<DDLTransactionObject>,
                     IHeapMutableDoublyLinkedList<DDLTransactionObject>,
+                    IHeapMutableDoublyLinkedList<SchemaObject>,
+                    IHeapCompleteSchemaMapBuilder,
                     IHeapIntSet,
                     IHeapIntSetBuilder,
                     IHeapIndexList<Column>,
@@ -34,13 +38,17 @@ final class HeapDDLTransaction
                             IHeapIndexList<DDLTransactionObject>,
                             IHeapIndexListBuilder<DDLTransactionObject>,
                             IHeapMutableDoublyLinkedList<DDLTransactionObject>,
+                            IHeapMutableDoublyLinkedList<SchemaObject>,
+                            IHeapCompleteSchemaMapBuilder,
                             IHeapIntSet,
                             IHeapIntSetBuilder,
                             IHeapIndexList<Column>,
                             IHeapIndexListBuilder<Column>> {
 
         HeapDDLTransactionCachedObjects() {
-            super(IHeapIndexListAllocator.create(DDLTransactionStatement[]::new), IHeapIndexListAllocator.create(DDLTransactionObject[]::new),
+            super(AllocationType.HEAP);
+
+            initialize(IHeapIndexListAllocator.create(DDLTransactionStatement[]::new), IHeapIndexListAllocator.create(DDLTransactionObject[]::new),
                     IHeapMutableDoublyLinkedListAllocator.create(), IHeapIntSetAllocator.create(), IHeapIndexListAllocator.create(Column[]::new));
         }
     }

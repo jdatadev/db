@@ -113,11 +113,4 @@ abstract class SchemaObjectsBuilder<
 
         return heapCreate(schemaObjectsBuilder.buildNotEmpty(), createValuesArray);
     }
-
-    @Override
-    public final String toString() {
-
-        return getClass().getSimpleName() + " [createValuesArray=" + createValuesArray + ", indexListAllocator=" + indexListAllocator
-                + ", schemaObjectsBuilder=" + schemaObjectsBuilder + "]";
-    }
 }

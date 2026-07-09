@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 import dev.jdata.db.utils.checks.Checks;
 import dev.jdata.db.utils.jdk.adt.strings.Strings;
 
-public abstract class PrintDebug {
+public abstract class PrintDebug extends ToStringable {
 
     protected static final class NameValue {
 
@@ -107,12 +107,12 @@ public abstract class PrintDebug {
 
         final StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
 
-        String methodName = null;
-
         final int numStackTraceElements = stackTraceElements.length;
 
         final String printDebugClassName = PrintDebug.class.getName();
         final String iprintDebugClassName = IPrintDebug.class.getName();
+
+        String methodName = null;
 
         for (int i = 1; i < numStackTraceElements; ++ i) {
 
@@ -447,7 +447,7 @@ public abstract class PrintDebug {
         Objects.requireNonNull(javaClass);
         Objects.requireNonNull(message);
 
-        System.out.println(javaClass.getSimpleName() + ' ' + message);
+        System.out.println(getClassName(javaClass) + ' ' + message);
     }
 
     protected static void formatln(Class<?> javaClass, String format, Object ... parameters) {
